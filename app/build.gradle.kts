@@ -67,7 +67,9 @@ dependencies {
     // DI
     implementation(libs.bundles.koin)
 
-    // On-device LLM (Gemma via MediaPipe LLM Inference)
+    // On-device LLM: Gemini Nano via ML Kit Prompt API (primary, Pixel 10)
+    implementation(libs.mlkit.genai.prompt)
+    // Optional fallback: Gemma via MediaPipe LLM Inference
     implementation(libs.mediapipe.tasks.genai)
 
     // Unit tests
