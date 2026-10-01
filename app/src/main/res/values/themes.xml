@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Setwise" parent="android:Theme.Material.NoActionBar" />
+    <style name="Theme.Setwise" parent="android:Theme.Material.NoActionBar">
+        <!-- Avoids a white flash before Compose draws the first frame -->
+        <item name="android:windowBackground">@color/setwise_background</item>
+    </style>
 </resources>

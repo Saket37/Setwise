@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Only for XML resources (launcher icon, window background). Compose colours live in ui/theme/Color.kt -->
+    <color name="setwise_background">#FF0E1210</color>
+    <color name="setwise_volt">#FFB8F04A</color>
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification small icon: single colour, the system tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <group>
+        <path android:fillColor="#FFFFFFFF" android:pathData="M8,30 A4,4 0 0 1 16,30 V36 A4,4 0 0 1 8,36 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M20,21 A4,4 0 0 1 28,21 V36 A4,4 0 0 1 20,36 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M32,12 A4,4 0 0 1 40,12 V36 A4,4 0 0 1 32,36 Z" />
+    </group>
+</vector>
