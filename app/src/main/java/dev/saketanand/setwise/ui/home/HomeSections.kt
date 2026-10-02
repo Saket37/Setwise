@@ -1,11 +1,7 @@
 package dev.saketanand.setwise.ui.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -21,19 +17,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -51,11 +38,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.designsystem.components.HorizontalGap
+import dev.saketanand.setwise.ui.designsystem.components.IconTile
 import dev.saketanand.setwise.ui.designsystem.components.RoutineCard
 import dev.saketanand.setwise.ui.designsystem.components.RoutineCardDefaults
+import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseConfirmDialog
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButton
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCard
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardDefaults
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseTag
+import dev.saketanand.setwise.ui.designsystem.components.StatTile
 import dev.saketanand.setwise.ui.designsystem.components.VerticalGap
-import dev.saketanand.setwise.ui.designsystem.theme.numberLarge
 import dev.saketanand.setwise.ui.designsystem.theme.pr
 import dev.saketanand.setwise.ui.designsystem.theme.spacing
 import dev.saketanand.setwise.util.toClockLabel
@@ -216,11 +212,7 @@ fun PlanYourRoutineSection(
     ) {
         // First run: comes right after "Start an empty workout", hence "Or …".
         val label = if (lastWorkout == null) R.string.or_plan_your_routine else R.string.plan_your_routine
-        Text(
-            text = stringResource(label).uppercase(),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        SectionLabel(stringResource(label))
         lastWorkout?.let { workout ->
             SaveLastWorkoutAsTemplateCard(
                 workoutName = workout.name,
@@ -297,11 +289,11 @@ fun StartWorkoutButton(
     startIcon: Int
 ) {
     SetwiseButton(
-        modifier = modifier,
         text = text,
-        onclick = onClick,
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
         startIcon = startIcon,
-        enabled = !isStarting
+        enabled = !isStarting,
     )
 }
 
@@ -312,44 +304,32 @@ fun ResumeWorkoutCard(
     onResume: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    SetwiseListCard(
         onClick = onResume,
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = stringResource(R.string.workout_in_progress).uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                )
-                Text(text = activeWorkout.name, style = MaterialTheme.typography.titleMedium)
-                RunningForText(
-                    startedAtMillis = activeWorkout.startedAtMillis,
-                    completedSets = activeWorkout.completedSets,
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_play),
-                    contentDescription = null, // the card's text already says what tapping does
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-        }
-    }
+        modifier = modifier,
+        colors = SetwiseListCardDefaults.highlightedColors(),
+        contentPadding = PaddingValues(16.dp),
+        overlineContent = {
+            SectionLabel(stringResource(R.string.workout_in_progress), color = LocalContentColor.current)
+        },
+        headlineContent = { Text(activeWorkout.name) },
+        supportingContent = {
+            RunningForText(
+                startedAtMillis = activeWorkout.startedAtMillis,
+                completedSets = activeWorkout.completedSets,
+            )
+        },
+        // Decorative: the card's text already says what tapping does.
+        trailingContent = {
+            IconTile(
+                icon = R.drawable.ic_play,
+                size = 44.dp,
+                cornerRadius = 22.dp,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            )
+        },
+    )
 }
 
 /**
@@ -372,7 +352,6 @@ private fun RunningForText(startedAtMillis: Long, completedSets: Int) {
             running.toClockLabel(),
             pluralStringResource(R.plurals.sets_done, completedSets, completedSets),
         ),
-        style = MaterialTheme.typography.bodyMedium,
     )
 }
 
@@ -437,28 +416,6 @@ fun WeekStatsRow(
     }
 }
 
-@Composable
-private fun StatTile(
-    value: String,
-    label: String,
-    modifier: Modifier = Modifier,
-    valueColor: Color = MaterialTheme.colorScheme.onSurface,
-) {
-    Column(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.surfaceContainer, MaterialTheme.shapes.large)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(text = value, style = MaterialTheme.typography.numberLarge, color = valueColor)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
 /**
  * Artboard 13: "Your week" card. Recap text from the LLM (placeholder while isGeneratingRecap),
  * highlights, and "See <exercise> plan" when there's a plateau.
@@ -486,17 +443,13 @@ fun TemplatesHeader(
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.weight(1f),
         )
-        OutlinedButton(
+        SetwiseButton(
+            text = stringResource(R.string.new_template),
             onClick = onNewClick,
-            modifier = Modifier.height(36.dp),
-            contentPadding = PaddingValues(horizontal = 14.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-        ) {
-            Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(16.dp))
-            HorizontalGap(6.dp)
-            Text(stringResource(R.string.new_template), style = MaterialTheme.typography.labelMedium)
-        }
+            style = SetwiseButtonStyle.Outlined,
+            size = SetwiseButtonSize.Small,
+            startIcon = R.drawable.ic_add,
+        )
     }
 }
 
@@ -516,64 +469,30 @@ fun TemplateCard(
         template.lastUsedDaysAgo?.let { add(relativeDaysText(it)) }
     }.joinToString(" · ")
 
-    Surface(
+    SetwiseListCard(
         onClick = { onAction(HomeAction.OnTemplateClick(template.id)) },
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainer,
-    ) {
-        Row(
-            modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 14.dp, bottom = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = template.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
-                    template.category?.let { CategoryTag(it) }
-                }
+        modifier = modifier,
+        contentPadding = PaddingValues(start = 16.dp, top = 14.dp, end = 14.dp, bottom = 14.dp),
+        textSpacing = 3.dp,
+        headlineContent = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = detail,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = template.name,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
+                template.category?.let { SetwiseTag(it) }
             }
-            IconButton(
+        },
+        supportingContent = { Text(text = detail, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        trailingContent = {
+            SetwiseIconButton(
+                icon = R.drawable.ic_play,
+                contentDescription = stringResource(R.string.start_template, template.name),
                 onClick = { onAction(HomeAction.OnStartFromTemplate(template.id)) },
-                modifier = Modifier.size(44.dp),
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_play),
-                    contentDescription = stringResource(R.string.start_template, template.name),
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-        }
-    }
-}
-
-/** Small outlined tag, e.g. "PUSH". */
-@Composable
-private fun CategoryTag(text: String) {
-    Text(
-        text = text.uppercase(),
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier
-            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp))
-            .padding(horizontal = 6.dp, vertical = 1.dp),
+            )
+        },
     )
 }
 
@@ -632,30 +551,16 @@ fun DiscardWorkoutDialog(
     dialog: DiscardDialogUi,
     onAction: (HomeAction) -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = { onAction(HomeAction.OnDismissDiscardDialog) },
-        title = { Text(stringResource(R.string.discard_workout_title, dialog.runningWorkoutName)) },
-        text = {
-            Text(
-                stringResource(
-                    R.string.discard_workout_message,
-                    dialog.runningWorkoutName,
-                    pluralStringResource(R.plurals.sets_done, dialog.runningCompletedSets, dialog.runningCompletedSets),
-                )
-            )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onAction(HomeAction.OnConfirmDiscardAndStart) },
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            ) {
-                Text(stringResource(R.string.discard_and_start))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = { onAction(HomeAction.OnDismissDiscardDialog) }) {
-                Text(stringResource(R.string.cancel))
-            }
-        },
+    SetwiseConfirmDialog(
+        title = stringResource(R.string.discard_workout_title, dialog.runningWorkoutName),
+        message = stringResource(
+            R.string.discard_workout_message,
+            dialog.runningWorkoutName,
+            pluralStringResource(R.plurals.sets_done, dialog.runningCompletedSets, dialog.runningCompletedSets),
+        ),
+        confirmText = stringResource(R.string.discard_and_start),
+        onConfirm = { onAction(HomeAction.OnConfirmDiscardAndStart) },
+        onDismiss = { onAction(HomeAction.OnDismissDiscardDialog) },
+        isDestructive = true,
     )
 }

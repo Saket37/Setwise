@@ -2,14 +2,13 @@ package dev.saketanand.setwise.ui.home
 
 import android.text.format.DateFormat
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
@@ -30,22 +28,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.designsystem.components.HorizontalGap
+import dev.saketanand.setwise.ui.designsystem.components.IconTile
+import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCard
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardDefaults
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardOutline
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
 import dev.saketanand.setwise.util.toShortTimeLabel
 import java.time.LocalTime
@@ -90,11 +88,7 @@ fun StartWorkoutSheet(
             EmptyWorkoutRow(enabled = enabled, onClick = { onAction(HomeAction.OnStartEmptyWorkout) })
 
             if (uiState.templates.isNotEmpty()) {
-                Text(
-                    text = stringResource(R.string.from_a_template).uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                SectionLabel(stringResource(R.string.from_a_template))
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     uiState.templates.forEach { template ->
                         SheetTemplateRow(
@@ -129,41 +123,25 @@ fun StartWorkoutSheet(
 /** "+ Empty workout · Add exercises as you go", with a dashed border (design). */
 @Composable
 private fun EmptyWorkoutRow(enabled: Boolean, onClick: () -> Unit) {
-    val outline = MaterialTheme.colorScheme.outline
-    Surface(
+    SetwiseListCard(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier
-            .fillMaxWidth()
-            .dashedBorder(outline, cornerRadius = 16.dp),
-        shape = MaterialTheme.shapes.large,
-        color = Color.Transparent,
-    ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        colors = SetwiseListCardDefaults.transparentColors(),
+        outline = SetwiseListCardOutline.Dashed(MaterialTheme.colorScheme.outline),
+        contentPadding = PaddingValues(14.dp),
+        horizontalSpacing = 14.dp,
+        leadingContent = {
+            IconTile(
+                icon = R.drawable.ic_add,
+                size = 44.dp,
+                iconSize = 22.dp,
+                cornerRadius = 12.dp,
                 contentColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(44.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(22.dp))
-                }
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(stringResource(R.string.empty_workout), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.empty_workout_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
+            )
+        },
+        headlineContent = { Text(stringResource(R.string.empty_workout)) },
+        supportingContent = { Text(stringResource(R.string.empty_workout_description)) },
+    )
 }
 
 /** "Push Day · 6 exercises · 20 sets · ~65 min ›" */
@@ -175,36 +153,23 @@ private fun SheetTemplateRow(template: TemplateUi, enabled: Boolean, onClick: ()
         template.estimatedMinutes?.let { add(stringResource(R.string.approx_minutes, it)) }
     }.joinToString(" · ")
 
-    Surface(
+    SetwiseListCard(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(template.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(
-                    detail,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+        colors = SetwiseListCardDefaults.raisedColors(),
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
+        horizontalSpacing = 14.dp,
+        headlineContent = { Text(template.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        supportingContent = { Text(detail, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        trailingContent = {
             Icon(
                 painterResource(R.drawable.ic_chevron_right),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp),
             )
-        }
-    }
+        },
+    )
 }
 
 /** "🕑 Starts now · 6:42 PM          Change" */
@@ -237,9 +202,13 @@ private fun StartTimeRow(customStartTime: LocalTime?, onChangeClick: () -> Unit)
                 style = MaterialTheme.typography.numberSmall,
                 modifier = Modifier.weight(1f),
             )
-            TextButton(onClick = onChangeClick) {
-                Text(stringResource(R.string.change), style = MaterialTheme.typography.titleSmall)
-            }
+            SetwiseButton(
+                text = stringResource(R.string.change),
+                onClick = onChangeClick,
+                style = SetwiseButtonStyle.Text,
+                size = SetwiseButtonSize.Medium,
+                textStyle = MaterialTheme.typography.titleSmall,
+            )
         }
     }
 }
@@ -261,25 +230,20 @@ private fun StartTimePickerDialog(
         title = { Text(stringResource(R.string.pick_start_time)) },
         text = { TimePicker(state = state) },
         confirmButton = {
-            TextButton(onClick = { onConfirm(LocalTime.of(state.hour, state.minute)) }) {
-                Text(stringResource(R.string.ok))
-            }
+            SetwiseButton(
+                text = stringResource(R.string.ok),
+                onClick = { onConfirm(LocalTime.of(state.hour, state.minute)) },
+                style = SetwiseButtonStyle.Text,
+                size = SetwiseButtonSize.Medium,
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+            SetwiseButton(
+                text = stringResource(R.string.cancel),
+                onClick = onDismiss,
+                style = SetwiseButtonStyle.Text,
+                size = SetwiseButtonSize.Medium,
+            )
         },
     )
 }
-
-/** Dashed rounded border; Compose's border() can't dash, so it's drawn by hand. */
-private fun Modifier.dashedBorder(color: Color, cornerRadius: Dp, width: Dp = 1.dp): Modifier =
-    drawBehind {
-        val stroke = width.toPx()
-        drawRoundRect(
-            color = color,
-            topLeft = Offset(stroke / 2, stroke / 2),
-            size = Size(size.width - stroke, size.height - stroke),
-            cornerRadius = CornerRadius(cornerRadius.toPx()),
-            style = Stroke(width = stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()))),
-        )
-    }
