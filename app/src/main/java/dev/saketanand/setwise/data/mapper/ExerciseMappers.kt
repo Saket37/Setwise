@@ -4,6 +4,7 @@ import dev.saketanand.setwise.data.local.entity.ExerciseEntity
 import dev.saketanand.setwise.data.seed.ExerciseSeedDto
 import dev.saketanand.setwise.domain.model.CalorieMethod
 import dev.saketanand.setwise.domain.model.CardioMetric
+import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
 
 /**
@@ -21,5 +22,34 @@ fun ExerciseSeedDto.toEntity(): ExerciseEntity = ExerciseEntity(
     // JSON metrics are lowercase ("duration"); enum constants are uppercase.
     metrics = metrics?.map { CardioMetric.valueOf(it.uppercase()) },
     calorieMethod = calorieMethod?.let { CalorieMethod.valueOf(it) },
+    met = met,
+)
+
+fun ExerciseEntity.toDomain(): Exercise = Exercise(
+    id = id,
+    name = name,
+    type = type,
+    muscleGroup = muscleGroup,
+    equipment = equipment,
+    defaultRestSec = defaultRestSec,
+    isTimed = isTimed,
+    isCustom = isCustom,
+    metrics = metrics,
+    calorieMethod = calorieMethod,
+    met = met,
+)
+
+/** For saving a user-created exercise (id = 0 lets Room assign one). */
+fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
+    id = id,
+    name = name,
+    type = type,
+    muscleGroup = muscleGroup,
+    equipment = equipment,
+    defaultRestSec = defaultRestSec,
+    isTimed = isTimed,
+    isCustom = isCustom,
+    metrics = metrics,
+    calorieMethod = calorieMethod,
     met = met,
 )

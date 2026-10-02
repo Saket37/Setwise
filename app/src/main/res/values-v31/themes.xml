@@ -4,7 +4,7 @@
     <style name="Theme.Setwise.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/setwise_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/avd_splash_mark</item>
-        <item name="windowSplashScreenAnimationDuration">340</item>
+        <item name="windowSplashScreenAnimationDuration">720</item>
         <item name="postSplashScreenTheme">@style/Theme.Setwise</item>
     </style>
 </resources>

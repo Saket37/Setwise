@@ -43,5 +43,5 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/** Matches the total length of avd_splash_mark.xml (last bar: 120ms offset + 220ms). */
-private const val SPLASH_ANIMATION_MS = 340L
+/** Matches the total length of avd_splash_mark.xml (last bar: 340ms offset + 380ms). */
+private const val SPLASH_ANIMATION_MS = 720L

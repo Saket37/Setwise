@@ -6,11 +6,14 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
 import dev.saketanand.setwise.data.local.SetwiseDatabase
+import dev.saketanand.setwise.data.repository.ExerciseRepositoryImpl
 import dev.saketanand.setwise.data.seed.ExerciseSeeder
 import dev.saketanand.setwise.data.seed.SeedPreferences
+import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val appModule = module {
@@ -32,4 +35,6 @@ val appModule = module {
 
     singleOf(::ExerciseSeeder)
 
+    // Repositories: bound to their domain interface, so callers depend on ExerciseRepository.
+    singleOf(::ExerciseRepositoryImpl) bind ExerciseRepository::class
 }

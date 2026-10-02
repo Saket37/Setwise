@@ -4,7 +4,7 @@
     baseline one after another, with a slight overshoot, like sets getting heavier.
     Same geometry as ic_launcher_foreground (48-unit grid scaled into a 108dp canvas).
     Each bar scales from its own bottom edge (pivotY = 40, the baseline).
-    Whole rise takes ~340ms; MainActivity keeps the splash up until it finishes (SPLASH_ANIMATION_MS).
+    Whole rise takes ~720ms (starts at 100ms); MainActivity keeps the splash up until it finishes (SPLASH_ANIMATION_MS).
 -->
 <animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt">
@@ -54,10 +54,10 @@
     <target android:name="bar1">
         <aapt:attr name="android:animation">
             <objectAnimator
-                android:duration="180"
+                android:duration="320"
                 android:interpolator="@android:anim/overshoot_interpolator"
                 android:propertyName="scaleY"
-                android:startOffset="0"
+                android:startOffset="100"
                 android:valueFrom="0"
                 android:valueTo="1"
                 android:valueType="floatType" />
@@ -67,10 +67,10 @@
     <target android:name="bar2">
         <aapt:attr name="android:animation">
             <objectAnimator
-                android:duration="180"
+                android:duration="320"
                 android:interpolator="@android:anim/overshoot_interpolator"
                 android:propertyName="scaleY"
-                android:startOffset="60"
+                android:startOffset="220"
                 android:valueFrom="0"
                 android:valueTo="1"
                 android:valueType="floatType" />
@@ -80,10 +80,10 @@
     <target android:name="bar3">
         <aapt:attr name="android:animation">
             <objectAnimator
-                android:duration="220"
+                android:duration="380"
                 android:interpolator="@android:anim/overshoot_interpolator"
                 android:propertyName="scaleY"
-                android:startOffset="120"
+                android:startOffset="340"
                 android:valueFrom="0"
                 android:valueTo="1"
                 android:valueType="floatType" />
