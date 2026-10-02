@@ -15,11 +15,14 @@ import androidx.room.PrimaryKey
             childColumns = ["workoutId"],
             onDelete = ForeignKey.CASCADE,
         ),
+        // RESTRICT: an exercise used in any workout can't be deleted, so history is never
+        // silently wiped. Catch SQLiteConstraintException and tell the user instead
+        // (or add soft delete via an isArchived flag later).
         ForeignKey(
             entity = ExerciseEntity::class,
             parentColumns = ["id"],
             childColumns = ["exerciseId"],
-            onDelete = ForeignKey.CASCADE,
+            onDelete = ForeignKey.RESTRICT,
         ),
     ],
     indices = [Index(value = ["workoutId"]), Index(value = ["exerciseId"])],
