@@ -2,10 +2,17 @@ package dev.saketanand.setwise.ui.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -17,9 +24,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.designsystem.components.HorizontalGap
+import dev.saketanand.setwise.ui.designsystem.components.RoutineCard
+import dev.saketanand.setwise.ui.designsystem.components.RoutineCardDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.VerticalGap
 import dev.saketanand.setwise.ui.designsystem.theme.spacing
@@ -34,23 +44,33 @@ import dev.saketanand.setwise.ui.designsystem.theme.spacing
 /** Artboard 1b: nothing tracked, no templates, nothing running. */
 @Composable
 fun HomeFirstRunContent(
+    exerciseCount: Int,
     onAction: (HomeAction) -> Unit,
     modifier: Modifier = Modifier,
-    count: Int
 ) {
-    Column(
-        modifier = modifier.verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.lg),
-    ) {
-        FirstRunHero()
-        StartWorkoutButton(
-            text = stringResource(R.string.start_an_empty_workout),
-            isStarting = false,
-            onClick = { onAction(HomeAction.OnStartEmptyWorkout) },
-            startIcon = R.drawable.ic_play
-        )
-        PlanYourRoutineSection(lastWorkout = null, onAction = onAction)
-        ExerciseLibraryHint(count = count)
+    // "Fill or scroll": the column is at least as tall as the screen area, so the hero's
+    // weight(1f) can take the spare height and centre itself (design 1b). If the content is
+    // taller (small phone, large font), it simply scrolls instead.
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = maxHeight),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            FirstRunHero(modifier = Modifier.weight(1f))
+            StartWorkoutButton(
+                text = stringResource(R.string.start_an_empty_workout),
+                isStarting = false,
+                onClick = { onAction(HomeAction.OnStartEmptyWorkout) },
+                startIcon = R.drawable.ic_play
+            )
+            PlanYourRoutineSection(lastWorkout = null, onAction = onAction)
+            // Hidden until the library count has loaded, so "0 exercises" never flashes.
+            if (exerciseCount > 0) {
+                ExerciseLibraryHint(count = exerciseCount)
+            }
+        }
     }
 }
 
@@ -63,7 +83,7 @@ fun HomeDashboardContent(
 ) {
     Column(
         modifier = modifier.verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.lg),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         // A running workout comes first: it's the most likely thing the user wants.
         uiState.activeWorkout?.let { active ->
@@ -111,10 +131,16 @@ fun PlanYourRoutineSection(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        // TODO: section label "OR PLAN YOUR ROUTINE" / "PLAN YOUR ROUTINE" (labelSmall, onSurfaceVariant)
+        // First run: comes right after "Start an empty workout", hence "Or …".
+        val label = if (lastWorkout == null) R.string.or_plan_your_routine else R.string.plan_your_routine
+        Text(
+            text = stringResource(label).uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         lastWorkout?.let { workout ->
             SaveLastWorkoutAsTemplateCard(
                 workoutName = workout.name,
@@ -136,36 +162,41 @@ fun FirstRunHero(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 42.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(horizontal = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
         Image(painterResource(R.drawable.ic_setwise_mark_empty), contentDescription = null)
         VerticalGap(18.dp)
         Text(
             stringResource(R.string.your_first_set_starts_here),
             style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
         )
         VerticalGap(MaterialTheme.spacing.xs)
         Text(
             stringResource(R.string.first_run_description),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
     }
 }
 
 /** "128 exercises ready, or add your own" footnote (artboard 1b). */
 @Composable
-fun ExerciseLibraryHint(modifier: Modifier = Modifier, count: Int) {
+fun ExerciseLibraryHint(count: Int, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             painterResource(R.drawable.ic_nav_workout),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            contentDescription = null
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
         )
         HorizontalGap(MaterialTheme.spacing.xs)
         Text(
@@ -256,7 +287,13 @@ fun SaveLastWorkoutAsTemplateCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // TODO
+    RoutineCard(
+        title = stringResource(R.string.save_workout_as_template, workoutName),
+        description = stringResource(R.string.save_workout_as_template_description),
+        icon = R.drawable.ic_add,
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+    )
 }
 
 /** Two cards side by side: "Create a template" and "✦ Build from a goal" (artboard 1b). */
@@ -266,18 +303,27 @@ fun PlanRoutineCards(
     onBuildFromGoal: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
+    // IntrinsicSize.Min + fillMaxHeight: both cards get the height of the taller one.
+    Row(
+        modifier = modifier.height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Text(
-            stringResource(R.string.plan_your_routine).uppercase(),
-            style = MaterialTheme.typography.labelSmall.copy(),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        RoutineCard(
+            title = stringResource(R.string.create_a_template),
+            description = stringResource(R.string.create_a_template_description),
+            icon = R.drawable.ic_add,
+            onClick = onCreateTemplate,
+            modifier = Modifier.weight(1f).fillMaxHeight(),
         )
-        VerticalGap(10.dp)
-
+        RoutineCard(
+            title = stringResource(R.string.build_from_a_goal),
+            description = stringResource(R.string.build_from_a_goal_description),
+            icon = R.drawable.ic_ai_sparkle,
+            onClick = onBuildFromGoal,
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+            colors = RoutineCardDefaults.highlightedColors(),
+        )
     }
-
 }
 
 /**

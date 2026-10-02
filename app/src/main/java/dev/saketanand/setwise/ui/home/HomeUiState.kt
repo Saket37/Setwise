@@ -37,6 +37,9 @@ data class HomeUiState(
     val customStartTime: LocalTime? = null,
     /** A workout row is being created; disable the start buttons to avoid double taps. */
     val isStartingWorkout: Boolean = false,
+
+    /** Size of the exercise library, for "128 exercises ready". 0 until loaded. */
+    val exerciseCount: Int = 0,
 ) {
     /**
      * Which layout HomeScreen draws. Derived from the fields above, so it can never disagree

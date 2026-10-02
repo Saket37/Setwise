@@ -13,4 +13,7 @@ interface ExerciseRepository {
     fun observeExercises(query: String, muscleGroup: String?): Flow<List<Exercise>>
 
     fun observeMuscleGroups(): Flow<List<String>>
+
+    /** Live size of the exercise library ("128 exercises ready"). */
+    fun observeExerciseCount(): Flow<Int>
 }

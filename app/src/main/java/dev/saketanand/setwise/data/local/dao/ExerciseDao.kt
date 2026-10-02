@@ -50,6 +50,10 @@ interface ExerciseDao {
     @Query("SELECT COUNT(*) FROM exercises")
     suspend fun count(): Int
 
+    /** Live number of exercises; emits again when exercises are added (seeding, custom ones). */
+    @Query("SELECT COUNT(*) FROM exercises")
+    fun observeCount(): Flow<Int>
+
     /** Null if no exercise has this id. */
     @Query("SELECT * FROM exercises WHERE id = :id")
     suspend fun getById(id: Long): ExerciseEntity?

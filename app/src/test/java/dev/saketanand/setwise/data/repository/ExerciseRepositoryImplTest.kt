@@ -67,6 +67,7 @@ class ExerciseRepositoryImplTest {
 
         override suspend fun insertAll(exercises: List<ExerciseEntity>): List<Long> = error("unused")
         override suspend fun count(): Int = rows.size
+        override fun observeCount(): Flow<Int> = flowOf(rows.size)
         override suspend fun getById(id: Long): ExerciseEntity? = rows.find { it.id == id }
         override suspend fun insert(exercise: ExerciseEntity): Long = error("unused")
     }

@@ -5,7 +5,16 @@
     <string name="start_an_empty_workout">Start an empty workout</string>
     <string name="your_first_set_starts_here">Your first set starts here</string>
     <string name="first_run_description">Log your sets and Setwise remembers last time’s numbers, spots your PRs and keeps the rest timer running.</string>
-    <string name="plan_your_routine">OR PLAN YOUR ROUTINE</string>
+    <!-- Section labels are written in normal case and uppercased in code. -->
+    <string name="or_plan_your_routine">Or plan your routine</string>
+    <string name="plan_your_routine">Plan your routine</string>
+    <string name="create_a_template">Create a template</string>
+    <string name="create_a_template_description">Save a routine like Push Day</string>
+    <string name="build_from_a_goal">Build from a goal</string>
+    <string name="build_from_a_goal_description">Describe it; drafted on-device</string>
+    <!-- %1$s = name of the user's last workout, e.g. "Pull Day". -->
+    <string name="save_workout_as_template">Save %1$s as a template</string>
+    <string name="save_workout_as_template_description">Turn your last workout into a reusable routine</string>
 
     <!-- Footnote on the first-run screen. %d = number of exercises in the library. -->
     <plurals name="exercises_ready">

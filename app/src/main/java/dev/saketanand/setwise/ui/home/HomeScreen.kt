@@ -126,7 +126,7 @@ fun HomeScreen(
         // Which layout to show under the header (see HomeUiState.content).
         when (uiState.content) {
             HomeContent.Loading -> Unit // TODO: optional placeholder; showing nothing avoids a flash
-            HomeContent.FirstRun -> HomeFirstRunContent(onAction = onAction, count = 128)
+            HomeContent.FirstRun -> HomeFirstRunContent(exerciseCount = uiState.exerciseCount, onAction = onAction)
             HomeContent.Dashboard -> HomeDashboardContent(uiState = uiState, onAction = onAction)
         }
     }

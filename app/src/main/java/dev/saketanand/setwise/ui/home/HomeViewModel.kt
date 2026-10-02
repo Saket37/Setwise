@@ -1,17 +1,23 @@
 package dev.saketanand.setwise.ui.home
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import java.time.LocalDate
 
 /** Screen: [HomeScreenRoot]. */
-class HomeViewModel : ViewModel() {
+class HomeViewModel(
+    private val exerciseRepository: ExerciseRepository,
+) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeUiState())
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
@@ -25,6 +31,11 @@ class HomeViewModel : ViewModel() {
         //  fill lastWorkout, activeWorkout, weekStats and templates.
         //  Until then there is no data, so content = FirstRun.
         _state.update { it.copy(isLoading = false, today = LocalDate.now()) }
+
+        // Live library size for the first-run footnote; updates when seeding finishes.
+        exerciseRepository.observeExerciseCount()
+            .onEach { count -> _state.update { it.copy(exerciseCount = count) } }
+            .launchIn(viewModelScope)
     }
 
     fun onAction(action: HomeAction) {

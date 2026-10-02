@@ -17,4 +17,6 @@ class ExerciseRepositoryImpl(
             .map { entities -> entities.map { it.toDomain() } }
 
     override fun observeMuscleGroups(): Flow<List<String>> = exerciseDao.observeMuscleGroups()
+
+    override fun observeExerciseCount(): Flow<Int> = exerciseDao.observeCount()
 }
