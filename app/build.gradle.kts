@@ -51,6 +51,7 @@ dependencies {
     // Core / lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.service)
+    implementation(libs.androidx.core.splashscreen)
 
     // Compose (UI, Material 3, icons, navigation)
     implementation(platform(libs.androidx.compose.bom))
@@ -67,10 +68,8 @@ dependencies {
     // DI
     implementation(libs.bundles.koin)
 
-    // On-device LLM: Gemini Nano via ML Kit Prompt API (primary, Pixel 10)
+    // On-device LLM: Gemini Nano via ML Kit Prompt API (AICore)
     implementation(libs.mlkit.genai.prompt)
-    // Optional fallback: Gemma via MediaPipe LLM Inference
-    implementation(libs.mediapipe.tasks.genai)
 
     // Unit tests
     testImplementation(libs.bundles.test)

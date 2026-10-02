@@ -4,4 +4,12 @@
         <!-- Avoids a white flash before Compose draws the first frame -->
         <item name="android:windowBackground">@color/setwise_background</item>
     </style>
+
+    <!-- Launch theme for MainActivity. Android 11 and below show the static mark;
+         values-v31 swaps in the animated one. -->
+    <style name="Theme.Setwise.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/setwise_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Setwise</item>
+    </style>
 </resources>
