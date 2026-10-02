@@ -21,4 +21,58 @@
         <item quantity="one">%d exercise ready, or add your own</item>
         <item quantity="other">%d exercises ready, or add your own</item>
     </plurals>
+
+    <!-- Workout tab: dashboard -->
+    <string name="start_workout">Start workout</string>
+    <string name="ready_to_train">Ready to train?</string>
+    <!-- %1$s = workout name, %2$s = when, e.g. "2 days ago" -->
+    <string name="last_session">Last session: %1$s · %2$s</string>
+    <string name="today">today</string>
+    <string name="yesterday">yesterday</string>
+    <plurals name="days_ago">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+    <string name="stat_workouts_this_week">workouts this week</string>
+    <string name="stat_time_trained">time trained</string>
+    <string name="stat_new_prs">new PRs</string>
+    <string name="templates">Templates</string>
+    <string name="new_template">New</string>
+    <!-- Template card: "+2" more exercises -->
+    <string name="more_count">+%d</string>
+    <string name="start_template">Start %1$s</string>
+    <string name="workout_in_progress">Workout in progress</string>
+    <string name="resume_workout">Resume workout</string>
+    <!-- Discard dialog. %1$s = running workout name, %2$s = "6 sets done" -->
+    <string name="discard_workout_title">Discard %1$s?</string>
+    <string name="discard_workout_message">%1$s is still in progress (%2$s). Starting a new workout deletes it. This can\'t be undone.</string>
+    <string name="discard_and_start">Discard and start</string>
+    <!-- %1$s = running time "12:34", %2$s = "6 sets done" -->
+    <string name="running_for">Running %1$s · %2$s</string>
+    <plurals name="sets_done">
+        <item quantity="one">%d set done</item>
+        <item quantity="other">%d sets done</item>
+    </plurals>
+
+    <!-- Start workout sheet -->
+    <string name="start_a_workout">Start a workout</string>
+    <string name="start_sheet_subtitle">Pick a template, or build it as you go.</string>
+    <string name="empty_workout">Empty workout</string>
+    <string name="empty_workout_description">Add exercises as you go</string>
+    <string name="from_a_template">From a template</string>
+    <plurals name="exercise_count">
+        <item quantity="one">%d exercise</item>
+        <item quantity="other">%d exercises</item>
+    </plurals>
+    <plurals name="set_count">
+        <item quantity="one">%d set</item>
+        <item quantity="other">%d sets</item>
+    </plurals>
+    <string name="approx_minutes">~%d min</string>
+    <string name="starts_now">Starts now ·</string>
+    <string name="starts_at">Starts at ·</string>
+    <string name="change">Change</string>
+    <string name="pick_start_time">Start time</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 </resources>

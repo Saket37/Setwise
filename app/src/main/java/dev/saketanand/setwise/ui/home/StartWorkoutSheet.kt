@@ -1,0 +1,285 @@
+package dev.saketanand.setwise.ui.home
+
+import android.text.format.DateFormat
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import dev.saketanand.setwise.R
+import dev.saketanand.setwise.ui.designsystem.components.HorizontalGap
+import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
+import dev.saketanand.setwise.util.toShortTimeLabel
+import java.time.LocalTime
+
+/**
+ * Artboard 2: "Start a workout" bottom sheet. Empty workout, one row per template, and the
+ * start time ("Starts now · 6:42 PM", with "Change" to back-date it).
+ * Actions: OnStartEmptyWorkout, OnStartFromTemplate, OnStartTimeChange, OnStartSheetDismiss.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StartWorkoutSheet(
+    uiState: HomeUiState,
+    onAction: (HomeAction) -> Unit,
+) {
+    var showTimePicker by rememberSaveable { mutableStateOf(false) }
+    val enabled = !uiState.isStartingWorkout
+
+    ModalBottomSheet(
+        onDismissRequest = { onAction(HomeAction.OnStartSheetDismiss) },
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.start_a_workout),
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+                Text(
+                    text = stringResource(R.string.start_sheet_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            EmptyWorkoutRow(enabled = enabled, onClick = { onAction(HomeAction.OnStartEmptyWorkout) })
+
+            if (uiState.templates.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.from_a_template).uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    uiState.templates.forEach { template ->
+                        SheetTemplateRow(
+                            template = template,
+                            enabled = enabled,
+                            onClick = { onAction(HomeAction.OnStartFromTemplate(template.id)) },
+                        )
+                    }
+                }
+            }
+
+            StartTimeRow(
+                customStartTime = uiState.customStartTime,
+                onChangeClick = { showTimePicker = true },
+            )
+        }
+    }
+
+    if (showTimePicker) {
+        StartTimePickerDialog(
+            initial = uiState.customStartTime ?: LocalTime.now(),
+            onConfirm = { time ->
+                // A start time in the future makes no sense; treat it as "now".
+                onAction(HomeAction.OnStartTimeChange(time.takeIf { it.isBefore(LocalTime.now()) }))
+                showTimePicker = false
+            },
+            onDismiss = { showTimePicker = false },
+        )
+    }
+}
+
+/** "+ Empty workout · Add exercises as you go", with a dashed border (design). */
+@Composable
+private fun EmptyWorkoutRow(enabled: Boolean, onClick: () -> Unit) {
+    val outline = MaterialTheme.colorScheme.outline
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier
+            .fillMaxWidth()
+            .dashedBorder(outline, cornerRadius = 16.dp),
+        shape = MaterialTheme.shapes.large,
+        color = Color.Transparent,
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                contentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(44.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(22.dp))
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(stringResource(R.string.empty_workout), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.empty_workout_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+/** "Push Day · 6 exercises · 20 sets · ~65 min ›" */
+@Composable
+private fun SheetTemplateRow(template: TemplateUi, enabled: Boolean, onClick: () -> Unit) {
+    val detail = buildList {
+        add(pluralStringResource(R.plurals.exercise_count, template.exerciseCount, template.exerciseCount))
+        if (template.setCount > 0) add(pluralStringResource(R.plurals.set_count, template.setCount, template.setCount))
+        template.estimatedMinutes?.let { add(stringResource(R.string.approx_minutes, it)) }
+    }.joinToString(" · ")
+
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(template.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    detail,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Icon(
+                painterResource(R.drawable.ic_chevron_right),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
+/** "🕑 Starts now · 6:42 PM          Change" */
+@Composable
+private fun StartTimeRow(customStartTime: LocalTime?, onChangeClick: () -> Unit) {
+    val time = customStartTime ?: remember { LocalTime.now() }
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.background,
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 14.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painterResource(R.drawable.ic_nav_history),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
+            HorizontalGap(10.dp)
+            Text(
+                text = stringResource(if (customStartTime == null) R.string.starts_now else R.string.starts_at),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            HorizontalGap(4.dp)
+            Text(
+                text = time.toShortTimeLabel(),
+                style = MaterialTheme.typography.numberSmall,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onChangeClick) {
+                Text(stringResource(R.string.change), style = MaterialTheme.typography.titleSmall)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StartTimePickerDialog(
+    initial: LocalTime,
+    onConfirm: (LocalTime) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val state = rememberTimePickerState(
+        initialHour = initial.hour,
+        initialMinute = initial.minute,
+        is24Hour = DateFormat.is24HourFormat(LocalContext.current),
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.pick_start_time)) },
+        text = { TimePicker(state = state) },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(LocalTime.of(state.hour, state.minute)) }) {
+                Text(stringResource(R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
+}
+
+/** Dashed rounded border; Compose's border() can't dash, so it's drawn by hand. */
+private fun Modifier.dashedBorder(color: Color, cornerRadius: Dp, width: Dp = 1.dp): Modifier =
+    drawBehind {
+        val stroke = width.toPx()
+        drawRoundRect(
+            color = color,
+            topLeft = Offset(stroke / 2, stroke / 2),
+            size = Size(size.width - stroke, size.height - stroke),
+            cornerRadius = CornerRadius(cornerRadius.toPx()),
+            style = Stroke(width = stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()))),
+        )
+    }

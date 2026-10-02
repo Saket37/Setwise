@@ -134,6 +134,10 @@ fun HomeScreen(
     if (uiState.isStartSheetVisible) {
         StartWorkoutSheet(uiState = uiState, onAction = onAction)
     }
+
+    uiState.discardDialog?.let { dialog ->
+        DiscardWorkoutDialog(dialog = dialog, onAction = onAction)
+    }
 }
 
 // Previews: one per scenario

@@ -51,6 +51,14 @@ sealed interface HomeAction {
      */
     data class OnSaveLastWorkoutAsTemplate(val workoutId: Long) : HomeAction
 
+    // "Discard <running workout>?" dialog (starting a workout while one is running)
+
+    /** "Discard and start": delete the running workout and start the requested one. */
+    data object OnConfirmDiscardAndStart : HomeAction
+
+    /** "Cancel", back, or tap outside: keep the running workout. */
+    data object OnDismissDiscardDialog : HomeAction
+
     // Weekly summary card (artboard 13)
 
     /** "See overhead press plan". → nav */

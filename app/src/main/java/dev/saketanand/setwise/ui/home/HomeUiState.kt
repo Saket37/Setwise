@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.ui.home
 
+import androidx.compose.runtime.Immutable
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.time.Duration
@@ -8,6 +9,9 @@ import kotlin.time.Duration
  * Everything the Workout tab (Home) shows. Design artboards:
  * 1 Workout tab · 1b first run (empty) · 2 start workout sheet · 13 weekly summary card.
  */
+// @Immutable: these UI models are never mutated after creation (lists included), so Compose can
+// compare them with equals() and skip redrawing parts whose data didn't change.
+@Immutable
 data class HomeUiState(
     /** True until the first data arrives; avoids flashing the empty state on launch. */
     val isLoading: Boolean = true,
@@ -40,6 +44,9 @@ data class HomeUiState(
 
     /** Size of the exercise library, for "128 exercises ready". 0 until loaded. */
     val exerciseCount: Int = 0,
+
+    /** Set when the user starts a workout while one is running: shows the discard dialog. */
+    val discardDialog: DiscardDialogUi? = null,
 ) {
     /**
      * Which layout HomeScreen draws. Derived from the fields above, so it can never disagree
@@ -75,6 +82,7 @@ enum class HomeContent {
 }
 
 /** Most recent finished workout, for the header subtitle. */
+@Immutable
 data class LastWorkoutUi(
     val workoutId: Long,
     val name: String,
@@ -83,6 +91,7 @@ data class LastWorkoutUi(
 )
 
 /** An unfinished workout the user can resume. */
+@Immutable
 data class ActiveWorkoutUi(
     val workoutId: Long,
     val name: String,
@@ -92,6 +101,7 @@ data class ActiveWorkoutUi(
 )
 
 /** The three tiles: workouts · time trained · new PRs (current week, Monday–Sunday). */
+@Immutable
 data class WeekStatsUi(
     val workouts: Int = 0,
     val timeTrained: Duration = Duration.ZERO,
@@ -99,6 +109,7 @@ data class WeekStatsUi(
 )
 
 /** One template card on Home, and one row in the start sheet. */
+@Immutable
 data class TemplateUi(
     val id: Long,
     val name: String,
@@ -118,6 +129,7 @@ data class TemplateUi(
 )
 
 /** Recap of the previous week (artboard 13). */
+@Immutable
 data class WeeklySummaryUi(
     val weekStart: LocalDate,
     val weekEnd: LocalDate,
@@ -135,6 +147,7 @@ data class WeeklySummaryUi(
     val plateauExercise: PlateauExerciseUi?,
 )
 
+@Immutable
 data class WeeklyHighlightUi(
     /** "Back Squat best set" */
     val label: String,
@@ -146,6 +159,20 @@ data class WeeklyHighlightUi(
 /** Decides the highlight's dot colour: PR = Ember, improvement = Volt, neutral = grey. */
 enum class HighlightKind { PR, IMPROVEMENT, NEUTRAL }
 
+/**
+ * "Discard Pull Day?" dialog. Captures the running workout's id when the dialog opens, so
+ * confirming deletes exactly the workout the user was asked about.
+ */
+@Immutable
+data class DiscardDialogUi(
+    val runningWorkoutId: Long,
+    val runningWorkoutName: String,
+    val runningCompletedSets: Int,
+    /** What to start after discarding; null = empty workout. */
+    val templateIdToStart: Long?,
+)
+
+@Immutable
 data class PlateauExerciseUi(
     val exerciseId: Long,
     val name: String,

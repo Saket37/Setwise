@@ -54,6 +54,10 @@ interface ExerciseDao {
     @Query("SELECT COUNT(*) FROM exercises")
     fun observeCount(): Flow<Int>
 
+    /** Exact name match, e.g. "Bench Press (Barbell)". Null if there's none. */
+    @Query("SELECT * FROM exercises WHERE name = :name")
+    suspend fun getByName(name: String): ExerciseEntity?
+
     /** Null if no exercise has this id. */
     @Query("SELECT * FROM exercises WHERE id = :id")
     suspend fun getById(id: Long): ExerciseEntity?

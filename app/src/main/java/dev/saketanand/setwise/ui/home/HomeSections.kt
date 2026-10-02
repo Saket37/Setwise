@@ -1,10 +1,15 @@
 package dev.saketanand.setwise.ui.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,18 +18,36 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.designsystem.components.HorizontalGap
@@ -32,7 +55,13 @@ import dev.saketanand.setwise.ui.designsystem.components.RoutineCard
 import dev.saketanand.setwise.ui.designsystem.components.RoutineCardDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.VerticalGap
+import dev.saketanand.setwise.ui.designsystem.theme.numberLarge
+import dev.saketanand.setwise.ui.designsystem.theme.pr
 import dev.saketanand.setwise.ui.designsystem.theme.spacing
+import dev.saketanand.setwise.util.toClockLabel
+import dev.saketanand.setwise.util.toShortDurationLabel
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 
 /*
  * Sections of the Workout tab. The layout logic (which section shows when) is done;
@@ -49,7 +78,7 @@ fun HomeFirstRunContent(
     modifier: Modifier = Modifier,
 ) {
     // "Fill or scroll": the column is at least as tall as the screen area, so the hero's
-    // weight(1f) can take the spare height and centre itself (design 1b). If the content is
+    // weight(1f) can take the spare height and center itself (design 1b). If the content is
     // taller (small phone, large font), it simply scrolls instead.
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         Column(
@@ -74,49 +103,100 @@ fun HomeFirstRunContent(
     }
 }
 
-/** Artboard 1 (+ 13): the normal Workout tab. */
+/**
+ * Artboard 1 (+ 13): the normal Workout tab.
+ *
+ * A LazyColumn: each section is one item and each template card is its own item, so only the
+ * cards on screen are composed however many templates the user has. Spacing is per item
+ * (20dp between sections, 10dp between template cards) because one LazyColumn can only
+ * have one Arrangement.
+ */
 @Composable
 fun HomeDashboardContent(
     uiState: HomeUiState,
     onAction: (HomeAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-    ) {
+    LazyColumn(modifier = modifier.fillMaxSize()) {
         // A running workout comes first: it's the most likely thing the user wants.
         uiState.activeWorkout?.let { active ->
-            ResumeWorkoutCard(
-                activeWorkout = active,
-                onResume = { onAction(HomeAction.OnResumeWorkout(active.workoutId)) },
-            )
+            item(key = "resume", contentType = "resume") {
+                ResumeWorkoutCard(
+                    activeWorkout = active,
+                    onResume = { onAction(HomeAction.OnResumeWorkout(active.workoutId)) },
+                    modifier = Modifier.animateItem().padding(bottom = SectionGap),
+                )
+            }
         }
 
-        HomeGreeting(lastWorkout = uiState.lastWorkout)
+        item(key = "greeting", contentType = "greeting") {
+            HomeGreeting(lastWorkout = uiState.lastWorkout, modifier = Modifier.padding(bottom = SectionGap))
+        }
 
         // Start of a new week: recap of the last one (artboard 13).
         uiState.weeklySummary?.let { summary ->
-            WeeklySummaryCard(summary = summary, onAction = onAction)
+            item(key = "weeklySummary", contentType = "weeklySummary") {
+                WeeklySummaryCard(
+                    summary = summary,
+                    onAction = onAction,
+                    modifier = Modifier.animateItem().padding(bottom = SectionGap),
+                )
+            }
         }
 
-        WeekStatsRow(stats = uiState.weekStats)
+        item(key = "weekStats", contentType = "weekStats") {
+            WeekStatsRow(stats = uiState.weekStats, modifier = Modifier.padding(bottom = SectionGap))
+        }
 
-        StartWorkoutButton(
-            text = "Start workout", // TODO: move to strings.xml
-            isStarting = uiState.isStartingWorkout,
-            onClick = { onAction(HomeAction.OnStartWorkoutClick) },
-            startIcon = R.drawable.ic_play
-        )
+        item(key = "startWorkout", contentType = "startWorkout") {
+            // Only one workout can run at a time: while one is running, this resumes it.
+            val running = uiState.activeWorkout
+            StartWorkoutButton(
+                text = stringResource(if (running != null) R.string.resume_workout else R.string.start_workout),
+                isStarting = uiState.isStartingWorkout,
+                onClick = {
+                    onAction(
+                        if (running != null) HomeAction.OnResumeWorkout(running.workoutId)
+                        else HomeAction.OnStartWorkoutClick
+                    )
+                },
+                startIcon = R.drawable.ic_play,
+                modifier = Modifier.padding(bottom = SectionGap),
+            )
+        }
 
         if (uiState.showPlanYourRoutine) {
             // Has trained but never saved a template.
-            PlanYourRoutineSection(lastWorkout = uiState.lastWorkout, onAction = onAction)
+            item(key = "planYourRoutine", contentType = "planYourRoutine") {
+                PlanYourRoutineSection(lastWorkout = uiState.lastWorkout, onAction = onAction)
+            }
         } else {
-            TemplatesSection(templates = uiState.templates, onAction = onAction)
+            item(key = "templatesHeader", contentType = "templatesHeader") {
+                TemplatesHeader(
+                    onNewClick = { onAction(HomeAction.OnCreateTemplateClick) },
+                    modifier = Modifier.padding(bottom = CardGap),
+                )
+            }
+            items(
+                items = uiState.templates,
+                key = { template -> "template-${template.id}" },
+                contentType = { "template" },
+            ) { template ->
+                TemplateCard(
+                    template = template,
+                    onAction = onAction,
+                    modifier = Modifier.animateItem().padding(bottom = CardGap),
+                )
+            }
         }
     }
 }
+
+/** Space between dashboard sections (design: 20). */
+private val SectionGap = 20.dp
+
+/** Space between template cards (design: 10). */
+private val CardGap = 10.dp
 
 // Shared sections
 
@@ -154,7 +234,7 @@ fun PlanYourRoutineSection(
     }
 }
 
-// Pieces to build (TODO)
+// Pieces
 
 /** Artboard 1b: logo with first bar filled, others outlined (ic_setwise_mark_empty), headline, subtitle. */
 @Composable
@@ -232,7 +312,68 @@ fun ResumeWorkoutCard(
     onResume: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // TODO
+    Surface(
+        onClick = onResume,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = stringResource(R.string.workout_in_progress).uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+                Text(text = activeWorkout.name, style = MaterialTheme.typography.titleMedium)
+                RunningForText(
+                    startedAtMillis = activeWorkout.startedAtMillis,
+                    completedSets = activeWorkout.completedSets,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_play),
+                    contentDescription = null, // the card's text already says what tapping does
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * "Running 12:34 · 6 sets done", ticking once a second. Kept in its own composable so the tick
+ * redraws only this line, not the whole Resume card.
+ */
+@Composable
+private fun RunningForText(startedAtMillis: Long, completedSets: Int) {
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(startedAtMillis) {
+        while (true) {
+            now = System.currentTimeMillis()
+            delay(1_000.milliseconds)
+        }
+    }
+    val running = (now - startedAtMillis).coerceAtLeast(0).milliseconds
+    Text(
+        text = stringResource(
+            R.string.running_for,
+            running.toClockLabel(),
+            pluralStringResource(R.plurals.sets_done, completedSets, completedSets),
+        ),
+        style = MaterialTheme.typography.bodyMedium,
+    )
 }
 
 /** "Ready to train?" + "Last session: Pull Day · 2 days ago" (subtitle only when lastWorkout != null). */
@@ -241,7 +382,28 @@ fun HomeGreeting(
     lastWorkout: LastWorkoutUi?,
     modifier: Modifier = Modifier,
 ) {
-    // TODO
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = stringResource(R.string.ready_to_train),
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        lastWorkout?.let {
+            Text(
+                text = stringResource(R.string.last_session, it.name, relativeDaysText(it.daysAgo)),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/** "today", "yesterday", "3 days ago". */
+@Composable
+fun relativeDaysText(daysAgo: Int): String = when (daysAgo) {
+    0 -> stringResource(R.string.today)
+    1 -> stringResource(R.string.yesterday)
+    else -> pluralStringResource(R.plurals.days_ago, daysAgo, daysAgo)
 }
 
 /** Three tiles: workouts this week · time trained · new PRs (PR count in Ember). */
@@ -250,7 +412,51 @@ fun WeekStatsRow(
     stats: WeekStatsUi,
     modifier: Modifier = Modifier,
 ) {
-    // TODO
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        StatTile(
+            value = stats.workouts.toString(),
+            label = stringResource(R.string.stat_workouts_this_week),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
+        StatTile(
+            value = stats.timeTrained.toShortDurationLabel(),
+            label = stringResource(R.string.stat_time_trained),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
+        StatTile(
+            value = stats.newPrs.toString(),
+            label = stringResource(R.string.stat_new_prs),
+            valueColor = MaterialTheme.colorScheme.pr,
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
+    }
+}
+
+@Composable
+private fun StatTile(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Column(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.surfaceContainer, MaterialTheme.shapes.large)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Text(text = value, style = MaterialTheme.typography.numberLarge, color = valueColor)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 /**
@@ -267,17 +473,108 @@ fun WeeklySummaryCard(
     // TODO
 }
 
+/** "Templates" title with a "+ New" button (OnCreateTemplateClick). */
+@Composable
+fun TemplatesHeader(
+    onNewClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(R.string.templates),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1f),
+        )
+        OutlinedButton(
+            onClick = onNewClick,
+            modifier = Modifier.height(36.dp),
+            contentPadding = PaddingValues(horizontal = 14.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+        ) {
+            Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(16.dp))
+            HorizontalGap(6.dp)
+            Text(stringResource(R.string.new_template), style = MaterialTheme.typography.labelMedium)
+        }
+    }
+}
+
 /**
- * "Templates" header with a "New" button (OnCreateTemplateClick), then one card per template:
- * tap = OnTemplateClick, ▶ button = OnStartFromTemplate.
+ * Card: name + tag, "Bench · Incline DB · OHP · +2 · 4 days ago", and a ▶ start button.
+ * Tap = OnTemplateClick (edit), ▶ = OnStartFromTemplate.
  */
 @Composable
-fun TemplatesSection(
-    templates: List<TemplateUi>,
+fun TemplateCard(
+    template: TemplateUi,
     onAction: (HomeAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // TODO
+    val detail = buildList {
+        addAll(template.exercisePreview)
+        if (template.moreExerciseCount > 0) add(stringResource(R.string.more_count, template.moreExerciseCount))
+        template.lastUsedDaysAgo?.let { add(relativeDaysText(it)) }
+    }.joinToString(" · ")
+
+    Surface(
+        onClick = { onAction(HomeAction.OnTemplateClick(template.id)) },
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 14.dp, bottom = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = template.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    template.category?.let { CategoryTag(it) }
+                }
+                Text(
+                    text = detail,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            IconButton(
+                onClick = { onAction(HomeAction.OnStartFromTemplate(template.id)) },
+                modifier = Modifier.size(44.dp),
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_play),
+                    contentDescription = stringResource(R.string.start_template, template.name),
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
+    }
+}
+
+/** Small outlined tag, e.g. "PUSH". */
+@Composable
+private fun CategoryTag(text: String) {
+    Text(
+        text = text.uppercase(),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp))
+            .padding(horizontal = 6.dp, vertical = 1.dp),
+    )
 }
 
 /** "Save Pull Day as a template": one tap turns the last workout into a template. */
@@ -327,13 +624,38 @@ fun PlanRoutineCards(
 }
 
 /**
- * Artboard 2: ModalBottomSheet with "Empty workout", the templates, and "Starts now · Change".
- * Actions: OnStartEmptyWorkout, OnStartFromTemplate, OnStartTimeChange, OnStartSheetDismiss.
+ * "Discard Pull Day?": shown when starting a workout while another is running.
+ * Confirm = OnConfirmDiscardAndStart, Cancel / back / outside = OnDismissDiscardDialog.
  */
 @Composable
-fun StartWorkoutSheet(
-    uiState: HomeUiState,
+fun DiscardWorkoutDialog(
+    dialog: DiscardDialogUi,
     onAction: (HomeAction) -> Unit,
 ) {
-    // TODO
+    AlertDialog(
+        onDismissRequest = { onAction(HomeAction.OnDismissDiscardDialog) },
+        title = { Text(stringResource(R.string.discard_workout_title, dialog.runningWorkoutName)) },
+        text = {
+            Text(
+                stringResource(
+                    R.string.discard_workout_message,
+                    dialog.runningWorkoutName,
+                    pluralStringResource(R.plurals.sets_done, dialog.runningCompletedSets, dialog.runningCompletedSets),
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onAction(HomeAction.OnConfirmDiscardAndStart) },
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            ) {
+                Text(stringResource(R.string.discard_and_start))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onAction(HomeAction.OnDismissDiscardDialog) }) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
 }

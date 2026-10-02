@@ -39,7 +39,14 @@ android {
     }
     buildFeatures {
         compose = true
+        // BuildConfig.DEBUG gates debug-only code such as the fake-data seeder.
+        buildConfig = true
     }
+}
+
+composeCompiler {
+    // Marks java.time.* as stable so composables taking LocalDate/LocalTime can be skipped.
+    stabilityConfigurationFiles.add(layout.projectDirectory.file("compose_stability.conf"))
 }
 
 room {

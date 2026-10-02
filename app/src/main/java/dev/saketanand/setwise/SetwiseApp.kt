@@ -1,6 +1,7 @@
 package dev.saketanand.setwise
 
 import android.app.Application
+import dev.saketanand.setwise.data.dev.DevDataSeeder
 import dev.saketanand.setwise.data.seed.ExerciseSeeder
 import dev.saketanand.setwise.di.appModule
 import dev.saketanand.setwise.di.viewModelModule
@@ -28,6 +29,12 @@ class SetwiseApp : Application() {
 
         // Load the built-in exercise library on first launch (no-op afterwards).
         val exerciseSeeder: ExerciseSeeder = get()
-        appScope.launch { exerciseSeeder.seedIfNeeded() }
+        appScope.launch {
+            exerciseSeeder.seedIfNeeded()
+            // Debug builds only: fake templates + history, after the exercises exist.
+            if (BuildConfig.DEBUG && DevDataSeeder.ENABLED) {
+                get<DevDataSeeder>().seedIfEmpty()
+            }
+        }
     }
 }
