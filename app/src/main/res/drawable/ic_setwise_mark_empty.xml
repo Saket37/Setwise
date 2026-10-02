@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Empty-state illustration (Workout tab, first run): first bar filled in Volt, the other two
-    as outlines. The design draws the outlines dashed; VectorDrawable can't dash strokes, so
-    they're solid here. For dashes, draw it in Compose with PathEffect.dashPathEffect().
+    Empty-state illustration (Workout tab, first run): first bar filled, the other two as
+    outlines. Colours follow light/dark mode via setwise_mark_empty_* (values / values-night),
+    so draw it with Image(painterResource(...)), not Icon (Icon would tint it one colour).
+    The design draws the outlines dashed; VectorDrawable can't dash strokes, so they're solid.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="120dp"
@@ -10,14 +11,14 @@
     android:viewportWidth="48"
     android:viewportHeight="48">
     <path
-        android:fillColor="@color/setwise_volt"
+        android:fillColor="@color/setwise_mark_empty_fill"
         android:pathData="M8,30 A4,4 0 0 1 16,30 V36 A4,4 0 0 1 8,36 Z" />
     <path
         android:pathData="M20.5,21 A3.5,3.5 0 0 1 27.5,21 V36 A3.5,3.5 0 0 1 20.5,36 Z"
         android:strokeWidth="1"
-        android:strokeColor="#FF3A443D" />
+        android:strokeColor="@color/setwise_mark_empty_outline" />
     <path
         android:pathData="M32.5,12 A3.5,3.5 0 0 1 39.5,12 V36 A3.5,3.5 0 0 1 32.5,36 Z"
         android:strokeWidth="1"
-        android:strokeColor="#FF3A443D" />
+        android:strokeColor="@color/setwise_mark_empty_outline" />
 </vector>

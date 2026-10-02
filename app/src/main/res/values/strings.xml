@@ -1,4 +1,15 @@
 <resources>
     <string name="app_name">Setwise</string>
     <string name="start_workout_failed">Couldn\'t start the workout. Please try again.</string>
+    <string name="save_template_failed">Couldn\'t save the template. Please try again.</string>
+    <string name="start_an_empty_workout">Start an empty workout</string>
+    <string name="your_first_set_starts_here">Your first set starts here</string>
+    <string name="first_run_description">Log your sets and Setwise remembers last time’s numbers, spots your PRs and keeps the rest timer running.</string>
+    <string name="plan_your_routine">OR PLAN YOUR ROUTINE</string>
+
+    <!-- Footnote on the first-run screen. %d = number of exercises in the library. -->
+    <plurals name="exercises_ready">
+        <item quantity="one">%d exercise ready, or add your own</item>
+        <item quantity="other">%d exercises ready, or add your own</item>
+    </plurals>
 </resources>

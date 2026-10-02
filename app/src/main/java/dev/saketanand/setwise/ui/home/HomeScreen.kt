@@ -25,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.ObserveAsEvents
 import dev.saketanand.setwise.ui.designsystem.components.HorizontalGap
+import dev.saketanand.setwise.ui.designsystem.components.VerticalGap
 import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.designsystem.theme.spacing
@@ -32,6 +33,7 @@ import dev.saketanand.setwise.ui.designsystem.theme.wordmark
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.toShortDayLabel
 import org.koin.androidx.compose.koinViewModel
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Destination: [Route.Home].
@@ -57,6 +59,10 @@ fun HomeScreenRoot(
             // TODO: replace with a snackbar once the screen has a SnackbarHost.
             HomeEvent.StartWorkoutFailed ->
                 Toast.makeText(context, R.string.start_workout_failed, Toast.LENGTH_SHORT).show()
+
+            is HomeEvent.TemplateCreated -> onEditTemplate(event.templateId)
+            HomeEvent.SaveTemplateFailed ->
+                Toast.makeText(context, R.string.save_template_failed, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -87,7 +93,7 @@ fun HomeScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(20.dp)
+            .padding(MaterialTheme.spacing.screenHorizontal)
     ) {
         Row(
             modifier = Modifier
@@ -114,14 +120,88 @@ fun HomeScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+
+        VerticalGap(20.dp)
+
+        // Which layout to show under the header (see HomeUiState.content).
+        when (uiState.content) {
+            HomeContent.Loading -> Unit // TODO: optional placeholder; showing nothing avoids a flash
+            HomeContent.FirstRun -> HomeFirstRunContent(onAction = onAction, count = 128)
+            HomeContent.Dashboard -> HomeDashboardContent(uiState = uiState, onAction = onAction)
+        }
     }
+
+    if (uiState.isStartSheetVisible) {
+        StartWorkoutSheet(uiState = uiState, onAction = onAction)
+    }
+}
+
+// Previews: one per scenario
+
+@ScreenPreviews
+@Composable
+private fun HomeScreenFirstRunPreview() = SetwiseScreenPreview {
+    HomeScreen(uiState = HomeUiState(isLoading = false), onAction = {})
 }
 
 @ScreenPreviews
 @Composable
-private fun HomeScreenPreview() = SetwiseScreenPreview {
+private fun HomeScreenDashboardPreview() = SetwiseScreenPreview {
     HomeScreen(
-        uiState = HomeUiState(isLoading = false),
+        uiState = HomeUiState(
+            isLoading = false,
+            lastWorkout = previewLastWorkout,
+            weekStats = WeekStatsUi(workouts = 3, timeTrained = 204.minutes, newPrs = 2),
+            templates = previewTemplates,
+        ),
         onAction = {},
     )
 }
+
+@ScreenPreviews
+@Composable
+private fun HomeScreenPlanYourRoutinePreview() = SetwiseScreenPreview {
+    // Trained, but no templates saved yet → "Plan your routine" + "Save Pull Day as a template".
+    HomeScreen(
+        uiState = HomeUiState(
+            isLoading = false,
+            lastWorkout = previewLastWorkout,
+            weekStats = WeekStatsUi(workouts = 1, timeTrained = 62.minutes, newPrs = 0),
+        ),
+        onAction = {},
+    )
+}
+
+@ScreenPreviews
+@Composable
+private fun HomeScreenResumePreview() = SetwiseScreenPreview {
+    HomeScreen(
+        uiState = HomeUiState(
+            isLoading = false,
+            activeWorkout = ActiveWorkoutUi(
+                workoutId = 7,
+                name = "Push Day",
+                startedAtMillis = 0,
+                completedSets = 6
+            ),
+            lastWorkout = previewLastWorkout,
+            templates = previewTemplates,
+        ),
+        onAction = {},
+    )
+}
+
+private val previewLastWorkout = LastWorkoutUi(workoutId = 1, name = "Pull Day", daysAgo = 2)
+
+private val previewTemplates = listOf(
+    TemplateUi(
+        id = 1, name = "Push Day", category = "PUSH",
+        exercisePreview = listOf("Bench", "Incline DB", "OHP", "Dips"), moreExerciseCount = 2,
+        exerciseCount = 6, setCount = 20, estimatedMinutes = 65, lastUsedDaysAgo = 4,
+    ),
+    TemplateUi(
+        id = 2, name = "Leg Day", category = "LEGS",
+        exercisePreview = listOf("Squat", "RDL", "Leg press", "Calf raise"), moreExerciseCount = 1,
+        exerciseCount = 5, setCount = 18, estimatedMinutes = 70, lastUsedDaysAgo = 6,
+    ),
+)

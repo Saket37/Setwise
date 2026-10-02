@@ -37,13 +37,38 @@ data class HomeUiState(
     val customStartTime: LocalTime? = null,
     /** A workout row is being created; disable the start buttons to avoid double taps. */
     val isStartingWorkout: Boolean = false,
-
-    /** Has the user ever finished a workout? Drives the first-run screen. */
-    val hasWorkoutHistory: Boolean = false,
 ) {
-    /** First run (artboard 1b): nothing to show yet, so show the welcome layout. */
-    val isFirstRun: Boolean
-        get() = !isLoading && !hasWorkoutHistory && templates.isEmpty() && activeWorkout == null
+    /**
+     * Which layout HomeScreen draws. Derived from the fields above, so it can never disagree
+     * with them. Use it as `when (uiState.content) { … }`.
+     */
+    val content: HomeContent
+        get() = when {
+            isLoading -> HomeContent.Loading
+            // Nothing to show: no finished workout, no template, nothing in progress.
+            lastWorkout == null && templates.isEmpty() && activeWorkout == null -> HomeContent.FirstRun
+            else -> HomeContent.Dashboard
+        }
+
+    /**
+     * Dashboard only: the user has trained (or has a workout running) but hasn't saved any
+     * template yet. Show the "Plan your routine" section (create a template / build from a goal)
+     * in place of the template cards. On FirstRun that section is already part of the layout.
+     */
+    val showPlanYourRoutine: Boolean
+        get() = content == HomeContent.Dashboard && templates.isEmpty()
+}
+
+/** The three layouts of the Workout tab. */
+enum class HomeContent {
+    /** Data not loaded yet; show nothing (or a placeholder) instead of flashing the wrong layout. */
+    Loading,
+
+    /** Artboard 1b: welcome screen with "Start an empty workout" and template options. */
+    FirstRun,
+
+    /** Artboard 1 (+13): greeting, week stats, resume card, weekly summary, templates. */
+    Dashboard,
 }
 
 /** Most recent finished workout, for the header subtitle. */

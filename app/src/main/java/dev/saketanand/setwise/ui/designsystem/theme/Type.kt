@@ -74,30 +74,72 @@ private fun dmSans(size: Int, lineHeight: Int, weight: FontWeight, letterSpacing
         letterSpacing = letterSpacing.sp,
     )
 
+/*
+ * The Setwise type scale. The design canvas uses ONLY these styles (see the brand board's
+ * "Type scale" table), so a design value maps to exactly one style here.
+ *
+ * Barlow Condensed (numbers, display; tabular figures) · DM Sans (UI text).
+ */
 val SetwiseTypography = Typography(
-    // Session clock, rest timer
-    displayLarge = barlow(64, 64),
+    // Barlow: big numbers and titles
+    /** Big number inputs: cardio duration "32:00". */
+    displayLarge = barlow(56, 60),
+    /** Workout name on the Summary screen. */
     displayMedium = barlow(44, 48),
+    /** Spare display size. */
     displaySmall = barlow(36, 40),
-    // Screen titles ("History"), workout names, set values
-    headlineLarge = barlow(40, 44),
+    /** Screen titles ("History", "Settings", "Ready to train?") and the first-run headline. */
+    headlineLarge = barlow(40, 44, weight = FontWeight.SemiBold),
+    /** Sheet titles ("Start a workout"), rest-timer countdown. */
     headlineMedium = barlow(32, 36),
-    headlineSmall = barlow(24, 28),
-    // Exercise names, section headers
-    titleLarge = dmSans(22, 28, FontWeight.SemiBold),
-    titleMedium = dmSans(16, 24, FontWeight.SemiBold),
+    /** Session clock, large stat values (Summary tiles, 1RM, incline). */
+    headlineSmall = barlow(28, 32),
+
+    // DM Sans: UI text
+    /** Top-bar titles ("Add exercise", "Treadmill"). */
+    titleLarge = dmSans(20, 26, FontWeight.SemiBold),
+    /** Card titles, exercise names, section headers ("Templates"). */
+    titleMedium = dmSans(16, 22, FontWeight.SemiBold),
+    /** Small bold labels and compact actions ("Finish", "Change"). */
     titleSmall = dmSans(14, 20, FontWeight.SemiBold),
-    bodyLarge = dmSans(16, 24, FontWeight.Normal),
-    bodyMedium = dmSans(14, 20, FontWeight.Normal),
+    /** Paragraphs (LLM summaries), text inputs, list-row text. */
+    bodyLarge = dmSans(15, 22, FontWeight.Normal),
+    /** Secondary text: "Last: 60 × 8", subtitles, meta lines. */
+    bodyMedium = dmSans(13, 18, FontWeight.Normal),
+    /** Captions and footnotes. */
     bodySmall = dmSans(12, 16, FontWeight.Normal),
-    labelLarge = dmSans(14, 20, FontWeight.Medium),
+    /** Secondary / outlined buttons ("Add exercise", "Save as template"). Same as [button]. */
+    labelLarge = dmSans(15, 20, FontWeight.SemiBold),
+    /** Chips, badges ("PR · Weight"), bottom-bar labels. */
     labelMedium = dmSans(12, 16, FontWeight.SemiBold),
-    // Uppercase captions: "PREVIOUS", "REST", month headers
+    /** UPPERCASE captions: "PREVIOUS", "REST", "TEMPLATES". */
     labelSmall = dmSans(11, 16, FontWeight.SemiBold, letterSpacing = 0.8),
 )
 
-/** "Setwise" wordmark in the app header (design: Barlow Condensed Bold 26). */
-private val WordmarkStyle = barlow(26, 30, FontWeight.Bold)
+/*
+ * Styles that Material's scale doesn't have. Use as MaterialTheme.typography.<name>.
+ */
 
-/** Use as `MaterialTheme.typography.wordmark`. Only for the brand name next to the logo. */
+private val WordmarkStyle = barlow(26, 30, FontWeight.Bold)
+private val NumberLargeStyle = barlow(26, 30)
+private val NumberMediumStyle = barlow(22, 26)
+private val NumberSmallStyle = barlow(18, 22)
+private val ButtonLargeStyle = dmSans(17, 24, FontWeight.Bold)
+
+/** "Setwise" next to the logo. Barlow Condensed Bold 26. */
 val Typography.wordmark: TextStyle get() = WordmarkStyle
+
+/** Stat tiles ("3", "3h 24m"), day numbers in History. Barlow 26. */
+val Typography.numberLarge: TextStyle get() = NumberLargeStyle
+
+/** Set values and set numbers ("62.5", "8", "1"), PR values. Barlow 22. */
+val Typography.numberMedium: TextStyle get() = NumberMediumStyle
+
+/** Inline numbers: "6:42 PM", "4 × 5", "100 × 5". Barlow 18. */
+val Typography.numberSmall: TextStyle get() = NumberSmallStyle
+
+/** Primary full-width 56dp buttons: "Start workout", "Log cardio", "Done". DM Sans Bold 17. */
+val Typography.buttonLarge: TextStyle get() = ButtonLargeStyle
+
+/** Secondary / outlined buttons. Alias of labelLarge (DM Sans SemiBold 15). */
+val Typography.button: TextStyle get() = labelLarge

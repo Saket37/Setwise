@@ -11,4 +11,10 @@ sealed interface HomeEvent {
 
     /** Creating the workout failed; show a snackbar. */
     data object StartWorkoutFailed : HomeEvent
+
+    /** A template was saved from the last workout; open it in the editor to review/rename. */
+    data class TemplateCreated(val templateId: Long) : HomeEvent
+
+    /** Saving the last workout as a template failed; show a snackbar. */
+    data object SaveTemplateFailed : HomeEvent
 }

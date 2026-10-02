@@ -45,6 +45,12 @@ sealed interface HomeAction {
     /** "Build from a goal" on the first-run screen. → nav */
     data object OnCreateTemplateFromGoalClick : HomeAction
 
+    /**
+     * "Save Pull Day as a template" in the Plan your routine section (trained, no templates yet).
+     * The ViewModel creates the template, then sends [HomeEvent.TemplateCreated].
+     */
+    data class OnSaveLastWorkoutAsTemplate(val workoutId: Long) : HomeAction
+
     // Weekly summary card (artboard 13)
 
     /** "See overhead press plan". → nav */

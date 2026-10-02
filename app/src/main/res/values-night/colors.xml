@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark-mode overrides. Only colours that differ from values/colors.xml go here. -->
+
+    <!-- Empty-state mark: filled bar = colorScheme.primary (Volt); outlines = colorScheme.outline. -->
+    <color name="setwise_mark_empty_fill">#FFB8F04A</color>
+    <color name="setwise_mark_empty_outline">#FF3A443D</color>
+</resources>

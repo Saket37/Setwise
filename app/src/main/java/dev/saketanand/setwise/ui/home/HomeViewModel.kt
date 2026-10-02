@@ -22,8 +22,8 @@ class HomeViewModel : ViewModel() {
 
     init {
         // TODO (milestones 2–3): observe workouts and templates from their repositories and
-        //  fill lastWorkout, activeWorkout, weekStats, templates and hasWorkoutHistory.
-        //  Until then there is no data, so Home shows the first-run layout.
+        //  fill lastWorkout, activeWorkout, weekStats and templates.
+        //  Until then there is no data, so content = FirstRun.
         _state.update { it.copy(isLoading = false, today = LocalDate.now()) }
     }
 
@@ -41,6 +41,8 @@ class HomeViewModel : ViewModel() {
             HomeAction.OnStartEmptyWorkout -> startWorkout(templateId = null)
 
             is HomeAction.OnStartFromTemplate -> startWorkout(templateId = action.templateId)
+
+            is HomeAction.OnSaveLastWorkoutAsTemplate -> saveWorkoutAsTemplate(action.workoutId)
 
             HomeAction.OnWeeklySummaryDismiss ->
                 // TODO (milestone 14): remember the dismissal (DataStore) so it stays hidden.
@@ -69,6 +71,16 @@ class HomeViewModel : ViewModel() {
         //          .onSuccess { id -> eventChannel.send(HomeEvent.WorkoutStarted(id)) }
         //          .onFailure { eventChannel.send(HomeEvent.StartWorkoutFailed) }
         //      _state.update { it.copy(isStartingWorkout = false, isStartSheetVisible = false, customStartTime = null) }
+        //  }
+    }
+
+    /** Copies a finished workout's exercises (and set counts) into a new template. */
+    private fun saveWorkoutAsTemplate(workoutId: Long) {
+        // TODO (milestone 3): needs TemplateRepository. Roughly:
+        //  viewModelScope.launch {
+        //      runCatching { templateRepository.createFromWorkout(workoutId) }
+        //          .onSuccess { id -> eventChannel.send(HomeEvent.TemplateCreated(id)) }
+        //          .onFailure { eventChannel.send(HomeEvent.SaveTemplateFailed) }
         //  }
     }
 }
