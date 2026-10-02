@@ -1,0 +1,124 @@
+package dev.saketanand.setwise.ui.home
+
+import java.time.LocalDate
+import java.time.LocalTime
+import kotlin.time.Duration
+
+/**
+ * Everything the Workout tab (Home) shows. Design artboards:
+ * 1 Workout tab · 1b first run (empty) · 2 start workout sheet · 13 weekly summary card.
+ */
+data class HomeUiState(
+    /** True until the first data arrives; avoids flashing the empty state on launch. */
+    val isLoading: Boolean = true,
+
+    // Header
+    /** Shown top-right, e.g. "Fri, 2 Oct". Format in the UI. */
+    val today: LocalDate = LocalDate.now(),
+    /** "Last session: Pull Day · 2 days ago". Null if no workout has been finished yet. */
+    val lastWorkout: LastWorkoutUi? = null,
+
+    // A workout that was started but not finished (app closed, minimised…)
+    /** Shows a "Resume workout" card above everything else. */
+    val activeWorkout: ActiveWorkoutUi? = null,
+
+    // This week strip
+    val weekStats: WeekStatsUi = WeekStatsUi(),
+
+    // Weekly summary card (artboard 13), shown at the start of a new week
+    val weeklySummary: WeeklySummaryUi? = null,
+
+    // Templates
+    val templates: List<TemplateUi> = emptyList(),
+
+    // Start workout sheet (artboard 2)
+    val isStartSheetVisible: Boolean = false,
+    /** Null means "Starts now". Set when the user taps "Change" to back-date the start. */
+    val customStartTime: LocalTime? = null,
+    /** A workout row is being created; disable the start buttons to avoid double taps. */
+    val isStartingWorkout: Boolean = false,
+
+    /** Has the user ever finished a workout? Drives the first-run screen. */
+    val hasWorkoutHistory: Boolean = false,
+) {
+    /** First run (artboard 1b): nothing to show yet, so show the welcome layout. */
+    val isFirstRun: Boolean
+        get() = !isLoading && !hasWorkoutHistory && templates.isEmpty() && activeWorkout == null
+}
+
+/** Most recent finished workout, for the header subtitle. */
+data class LastWorkoutUi(
+    val workoutId: Long,
+    val name: String,
+    /** 0 = today, 1 = yesterday, … */
+    val daysAgo: Int,
+)
+
+/** An unfinished workout the user can resume. */
+data class ActiveWorkoutUi(
+    val workoutId: Long,
+    val name: String,
+    /** For the live "running for 12:34" text. */
+    val startedAtMillis: Long,
+    val completedSets: Int,
+)
+
+/** The three tiles: workouts · time trained · new PRs (current week, Monday–Sunday). */
+data class WeekStatsUi(
+    val workouts: Int = 0,
+    val timeTrained: Duration = Duration.ZERO,
+    val newPrs: Int = 0,
+)
+
+/** One template card on Home, and one row in the start sheet. */
+data class TemplateUi(
+    val id: Long,
+    val name: String,
+    /** Small tag on the card, e.g. "PUSH". Null if the template has no category. */
+    val category: String?,
+    /** First few exercise names for the card subtitle: "Bench · Incline DB · OHP". */
+    val exercisePreview: List<String>,
+    /** Exercises beyond the preview, shown as "+2". */
+    val moreExerciseCount: Int,
+    // Start sheet details: "6 exercises · 20 sets · ~65 min"
+    val exerciseCount: Int,
+    val setCount: Int,
+    /** Rough length from sets × rest; null for cardio-only or when unknown. */
+    val estimatedMinutes: Int?,
+    /** "4 days ago"; null if never used. */
+    val lastUsedDaysAgo: Int?,
+)
+
+/** Recap of the previous week (artboard 13). */
+data class WeeklySummaryUi(
+    val weekStart: LocalDate,
+    val weekEnd: LocalDate,
+    val workouts: Int,
+    val timeTrained: Duration,
+    val prs: Int,
+    /** Volume change vs the week before, e.g. 8 for "+8%". Null if there's no previous week. */
+    val volumeChangePercent: Int?,
+    /** On-device LLM recap. Null while generating, or if the LLM isn't available. */
+    val recap: String?,
+    /** True while the LLM is writing the recap; show a placeholder line. */
+    val isGeneratingRecap: Boolean,
+    val highlights: List<WeeklyHighlightUi>,
+    /** Exercise to link to ("See overhead press plan"); null if no plateau was found. */
+    val plateauExercise: PlateauExerciseUi?,
+)
+
+data class WeeklyHighlightUi(
+    /** "Back Squat best set" */
+    val label: String,
+    /** "100 × 5", "+18%", "flat 4 wks" */
+    val value: String,
+    val kind: HighlightKind,
+)
+
+/** Decides the highlight's dot colour: PR = Ember, improvement = Volt, neutral = grey. */
+enum class HighlightKind { PR, IMPROVEMENT, NEUTRAL }
+
+data class PlateauExerciseUi(
+    val exerciseId: Long,
+    val name: String,
+)

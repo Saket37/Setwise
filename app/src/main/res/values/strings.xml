@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Setwise</string>
+    <string name="start_workout_failed">Couldn\'t start the workout. Please try again.</string>
 </resources>

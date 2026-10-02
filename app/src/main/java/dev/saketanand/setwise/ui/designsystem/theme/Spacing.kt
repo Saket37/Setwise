@@ -1,4 +1,4 @@
-package dev.saketanand.setwise.ui.theme
+package dev.saketanand.setwise.ui.designsystem.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf

@@ -8,7 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dev.saketanand.setwise.ui.SetwiseAppRoot
-import dev.saketanand.setwise.ui.theme.SetwiseTheme
+import dev.saketanand.setwise.ui.designsystem.theme.SetwiseTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

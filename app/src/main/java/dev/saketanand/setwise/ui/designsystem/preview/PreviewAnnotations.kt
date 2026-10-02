@@ -1,4 +1,4 @@
-package dev.saketanand.setwise.ui.preview
+package dev.saketanand.setwise.ui.designsystem.preview
 
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES

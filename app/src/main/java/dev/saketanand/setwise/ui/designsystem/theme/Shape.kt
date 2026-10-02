@@ -1,4 +1,4 @@
-package dev.saketanand.setwise.ui.theme
+package dev.saketanand.setwise.ui.designsystem.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
