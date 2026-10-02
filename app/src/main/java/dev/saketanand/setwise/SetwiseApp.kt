@@ -3,6 +3,7 @@ package dev.saketanand.setwise
 import android.app.Application
 import dev.saketanand.setwise.data.seed.ExerciseSeeder
 import dev.saketanand.setwise.di.appModule
+import dev.saketanand.setwise.di.viewModelModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,7 +23,7 @@ class SetwiseApp : Application() {
         startKoin {
             androidLogger()
             androidContext(this@SetwiseApp)
-            modules(appModule)
+            modules(appModule, viewModelModule)
         }
 
         // Load the built-in exercise library on first launch (no-op afterwards).
