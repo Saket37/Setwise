@@ -9,7 +9,7 @@ data class Exercise(
     val defaultRestSec: Int,
     val isTimed: Boolean,
     val isCustom: Boolean,
-    /** Cardio inputs to show (e.g. treadmill: duration, incline, speed, distance). Empty for strength/bodyweight. */
+    /** Cardio inputs to show (e.g. treadmill: duration, incline, speed, distance). Null for strength/bodyweight. */
     val metrics: List<CardioMetric>?,
     val calorieMethod: CalorieMethod?,
     /** MET value for [CalorieMethod.MET] cardio; null otherwise. */

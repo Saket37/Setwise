@@ -41,11 +41,12 @@ interface ExerciseDao {
     /**
      * Seeding. IGNORE + the unique index on `name` makes this safe to re-run:
      * exercises that already exist are skipped instead of duplicated.
+     * Returns the new row ids, with -1 for each skipped exercise.
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertAll(exercises: List<ExerciseEntity>)
+    suspend fun insertAll(exercises: List<ExerciseEntity>): List<Long>
 
-    /** Used by the seeder to check whether the library is empty. */
+    /** Number of exercises in the library. */
     @Query("SELECT COUNT(*) FROM exercises")
     suspend fun count(): Int
 
