@@ -110,6 +110,20 @@ class QuickLogInterpreterTest {
     }
 
     @Test
+    fun `a misheard name and bare numbers still log, for bodyweight`() = runTest {
+        val pullUp = exercise(8, "Pull-up", ExerciseType.BODYWEIGHT)
+
+        val reps = interpreter.interpret("Full Ops 10, 8, 6.", session, null, recent, library + pullUp) as QuickLogResult.Sets
+        assertEquals(QuickLogTarget(pullUp, null, "full ops"), reps.target)
+        assertEquals(listOf(SetFact(null, 10, null), SetFact(null, 8, null), SetFact(null, 6, null)), reps.sets)
+
+        val holds = interpreter.interpret("flank 45, 40", session, null, recent, library) as QuickLogResult.Sets
+        assertEquals(plank, holds.target.exercise)
+        assertEquals(listOf(SetFact(null, null, 45), SetFact(null, null, 40)), holds.sets)
+        assertTrue(model.requests.isEmpty())
+    }
+
+    @Test
     fun `nothing to log, or no exercise, is said so`() = runTest {
         assertEquals(QuickLogResult.NotUnderstood(QuickLogResult.Reason.NothingToLog), interpreter.interpret("bench", session, null, recent, library))
         assertEquals(QuickLogResult.NotUnderstood(QuickLogResult.Reason.NoExercise), interpreter.interpret("zercher squat 3x5 at 80", session, null, recent, library))

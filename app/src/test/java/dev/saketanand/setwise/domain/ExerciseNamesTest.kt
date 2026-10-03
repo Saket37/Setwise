@@ -38,6 +38,19 @@ class ExerciseNamesTest {
     }
 
     @Test
+    fun `words speech-to-text mishears are put right against exercise names`() {
+        val names = library + listOf("Back Squat (Barbell)", "Plank", "Treadmill").mapIndexed { i, name -> library.first().copy(id = 100L + i, name = name) }
+
+        assertEquals("squat", ExerciseNames.soundAlikeFixed("squad", names))
+        assertEquals("plank", ExerciseNames.soundAlikeFixed("flank", names))
+        assertEquals("plank", ExerciseNames.soundAlikeFixed("Blank", names))
+        assertEquals("pull ups", ExerciseNames.soundAlikeFixed("Full Ops", names))
+        // Known words stay; a word with no single close one stays too.
+        assertEquals("bench press", ExerciseNames.soundAlikeFixed("bench press", names))
+        assertEquals("left pull down", ExerciseNames.soundAlikeFixed("left pull down", names))
+    }
+
+    @Test
     fun `a name that only adds its equipment is the same exercise`() {
         assertEquals("Deadlift (Barbell)", ExerciseNames.onlyOneBesidesEquipment("deadlift", library)?.name)
         assertEquals(null, ExerciseNames.onlyOneBesidesEquipment("bench press", library)) // barbell or dumbbell?

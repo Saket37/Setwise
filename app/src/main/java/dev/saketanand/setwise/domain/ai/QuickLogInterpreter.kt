@@ -5,6 +5,7 @@ import com.google.mlkit.genai.schema.annotations.Generable
 import com.google.mlkit.genai.schema.annotations.Guide
 import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.ExerciseNames
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.QuickLogParser
 import dev.saketanand.setwise.domain.model.SetFact
@@ -81,6 +82,14 @@ class QuickLogInterpreter(
         }
         if (parse.isComplete) return QuickLogResult.Sets(target, parse.sets.fitTo(exercise), SuggestionSource.Keywords)
 
+        // Bodyweight, numbers alone ("pull ups 10, 8, 6"): a set each, reps (or a hold's seconds).
+        if (exercise.type == ExerciseType.BODYWEIGHT && parse.sets.isEmpty() && parse.bare.isNotEmpty() &&
+            parse.leftover.all { it.toIntOrNull() != null } && parse.bare.all { it in 1..MAX_BARE }
+        ) {
+            val sets = parse.bare.map { if (exercise.isTimed) SetFact(null, null, it) else SetFact(null, it, null) }
+            return QuickLogResult.Sets(target, sets, SuggestionSource.Keywords)
+        }
+
         // Words the parser couldn't place ("last one", "twice"): the model, if it's there.
         modelSets(line, exercise, parse.sets)?.let { return QuickLogResult.Sets(target, it.fitTo(exercise), SuggestionSource.Model) }
         if (parse.sets.isNotEmpty()) return QuickLogResult.Sets(target, parse.sets.fitTo(exercise), SuggestionSource.Keywords)
@@ -101,10 +110,12 @@ class QuickLogInterpreter(
             return QuickLogTarget(open.exercise, open.id, matchedFrom = null)
         }
         // Clear matches in today's workout, then in what they've done; the model only judges the
-        // whole library (one call at most).
-        val exercise = assistant.clearMatch(phrase, session.exercises.map { it.exercise })
-            ?: assistant.clearMatch(phrase, recent)
-            ?: assistant.findMatch(phrase, library)
+        // whole library (one call at most). Words speech-to-text misheard ("squad") are put right
+        // against exercise names first.
+        val heard = ExerciseNames.soundAlikeFixed(phrase, library).ifEmpty { phrase }
+        val exercise = assistant.clearMatch(heard, session.exercises.map { it.exercise })
+            ?: assistant.clearMatch(heard, recent)
+            ?: assistant.findMatch(heard, library)
             ?: return null
         // In today's workout (however it was found): its open card, not a second one.
         val items = session.exercises.filter { it.exercise.id == exercise.id }
@@ -130,6 +141,9 @@ class QuickLogInterpreter(
 
     companion object {
         private const val TAG = "QuickLogInterpreter"
+
+        /** Bare numbers up to this are reps (or seconds of a hold). */
+        private const val MAX_BARE = 300
 
         /**
          * The model's sets, or null if any number in them isn't in [text] (no invented weights or

@@ -13,6 +13,8 @@ data class QuickLogParse(
     val cardio: CardioValues? = null,
     val sameAsLastTime: Boolean = false,
     val leftover: List<String> = emptyList(),
+    /** Whole numbers on their own, read as nothing ("pull ups 10, 8, 6"). */
+    val bare: List<Int> = emptyList(),
 ) {
     val hasSomething: Boolean get() = sets.isNotEmpty() || cardio != null || sameAsLastTime
     val isComplete: Boolean get() = hasSomething && leftover.isEmpty()
@@ -81,8 +83,9 @@ object QuickLogParser {
         take(REPS_AT_WEIGHT) { sets(it, 1, num(it, 2), int(it, 1), null) }
         take(WEIGHT_KG_REPS) { sets(it, 1, num(it, 1), int(it, 2), null) }
         take(X_REPS) { sets(it, 1, null, int(it, 1), null) }
-        take(SECONDS) { sets(it, 1, null, null, int(it, 1)) }
-        take(REPS) { sets(it, 1, null, int(it, 1), null) }
+        // "45 seconds, three times", "20 reps twice".
+        take(SECONDS) { sets(it, int(it, 2) ?: if (it.groups[3] != null) 2 else 1, null, null, int(it, 1)) }
+        take(REPS) { sets(it, int(it, 2) ?: if (it.groups[3] != null) 2 else 1, null, int(it, 1), null) }
         // "last one at 37.5": a weight alone only changes the final set.
         take(WEIGHT_ONLY) { m -> lastSetAt?.let { m.range.first > it } == true && sets(m, 1, num(m, 1), null, null) }
 
@@ -101,6 +104,7 @@ object QuickLogParser {
         if (lastSetAt != null && changed == null) leftover += "last"
         return QuickLogParse(
             exercisePhrase = phrase,
+            bare = words.mapNotNull { word -> word.takeIf { w -> w.all { it.isDigit() } }?.toIntOrNull() },
             sets = sets,
             cardio = cardio.takeUnless { it.isEmpty },
             sameAsLastTime = same,
@@ -243,8 +247,8 @@ object QuickLogParser {
     private val REPS_AT_WEIGHT = r("$I rep (?:at|with) $N(?: kg)?")
     private val WEIGHT_KG_REPS = r("$N kg $I rep")
     private val X_REPS = r("xr $I")
-    private val SECONDS = r("$I s")
-    private val REPS = r("$I rep")
+    private val SECONDS = r("$I s(?: (?:$I times|(twice)))?")
+    private val REPS = r("$I rep(?: (?:$I times|(twice)))?")
     private val WEIGHT_ONLY = r("(?:at|with) $N(?: kg)?")
 
     private val FILLER = setOf(
@@ -261,7 +265,7 @@ object QuickLogParser {
 
     /** Words around a number in a log line: a number word next to one is a number. */
     private val NUMBER_CONTEXT = setOf(
-        "set", "sets", "of", "rep", "reps", "at", "for", "with", "x", "by", "times", "and", "point",
+        "set", "sets", "of", "rep", "reps", "at", "for", "with", "x", "by", "times", "and", "point", "more",
         "kg", "kgs", "kilo", "kilos", "kilograms", "s", "sec", "secs", "second", "seconds", "min", "mins", "minute", "minutes",
         "km", "kms", "kilometers", "kilometres", "level", "percent", "%", "incline",
     )
