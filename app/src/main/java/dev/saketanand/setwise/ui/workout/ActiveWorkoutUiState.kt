@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.workout
 
 import androidx.compose.runtime.Immutable
+import java.time.LocalDate
 import java.time.LocalTime
 
 /** Everything [ActiveWorkoutScreen] draws. */
@@ -13,6 +14,8 @@ data class ActiveWorkoutUiState(
     val startedAtMillis: Long = 0,
     /** "Started 6:42 PM", and the time picker's starting value. */
     val startTime: LocalTime? = null,
+    /** Set when the workout is logged for an earlier day ("Started Wed, 30 Sep · 6:00 PM"). */
+    val pastDay: LocalDate? = null,
     val exercises: List<WorkoutExerciseUi> = emptyList(),
     /** The one exercise shown with its set table; the others are collapsed. Null = all collapsed. */
     val expandedExerciseId: Long? = null,

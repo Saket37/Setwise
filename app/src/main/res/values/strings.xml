@@ -108,6 +108,8 @@
     <string name="minimise_workout">Minimise workout</string>
     <!-- %1$s = start time, e.g. "6:42 PM" -->
     <string name="started_at">Started %1$s</string>
+    <!-- A workout logged for a past day. %1$s = "Wed, 30 Sep", %2$s = "6:00 PM" -->
+    <string name="started_on">Started %1$s · %2$s</string>
     <string name="change_start_time">Change start time</string>
     <string name="finish">Finish</string>
     <string name="exercise_options">Exercise options</string>
@@ -267,4 +269,17 @@
     <string name="a11y_week_day_trained">%1$s, trained</string>
     <string name="no_workout_logged">No workout logged</string>
     <string name="clear_selected_day">Clear selected day</string>
+    <string name="a11y_day_rest">%1$s, rest day</string>
+    <string name="a11y_day_missed">%1$s, missed</string>
+    <string name="log_workout">Log workout</string>
+    <string name="mark_rest">Rest</string>
+    <string name="mark_missed">Missed</string>
+    <string name="rest_day">Rest day</string>
+    <string name="missed_day">Missed</string>
+    <string name="workout_already_running">Finish or discard the workout in progress first</string>
+    <string name="check_in_title">Did you train?</string>
+    <string name="check_in_subtitle">Nothing was logged on these days.</string>
+    <string name="not_now">Not now</string>
+    <string name="mark_all_as_rest">Mark all as rest</string>
+    <string name="check_in_settings_hint">You can turn these questions off in Settings.</string>
 </resources>

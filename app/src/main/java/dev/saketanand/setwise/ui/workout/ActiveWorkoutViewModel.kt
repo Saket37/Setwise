@@ -12,6 +12,7 @@ import dev.saketanand.setwise.timer.RestTimer
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.DateProvider
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -86,6 +87,8 @@ class ActiveWorkoutViewModel(
             name = session.name,
             startedAtMillis = session.startedAt.toEpochMilli(),
             startTime = startedAt.toLocalTime(),
+            // Logged afterwards (a past day): show the date, not a days-long clock.
+            pastDay = startedAt.toLocalDate().takeIf { isLoggedAfterwards(session.startedAt, dateProvider.now()) },
             exercises = exercises,
             expandedExerciseId = expandedExerciseId(exercises, expandedChoice),
             dialog = overlays.dialog,
@@ -239,7 +242,9 @@ class ActiveWorkoutViewModel(
         isClosing = true
         write {
             // Goes through the queue, so edits made just before Finish are saved first.
-            val finished = runCatching { workoutRepository.finishWorkout(workoutId, dateProvider.now()) }
+            val startedAt = session?.startedAt ?: dateProvider.now()
+            val endedAt = finishTime(startedAt, dateProvider.now())
+            val finished = runCatching { workoutRepository.finishWorkout(workoutId, endedAt) }
                 .onFailure { e -> Log.e(TAG, "Finishing workout $workoutId failed", e) }
                 .getOrDefault(false)
             if (finished) {

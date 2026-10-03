@@ -98,6 +98,7 @@ fun SetwiseNavHost(
             TabScreen {
                 HistoryScreenRoot(
                     onOpenWorkout = { workoutId -> navController.navigate(Route.WorkoutSummary(workoutId)) },
+                    onWorkoutStarted = { workoutId -> navController.navigate(Route.ActiveWorkout(workoutId)) },
                 )
             }
         }

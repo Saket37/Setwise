@@ -61,9 +61,12 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
+import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.rememberElapsedTime
 import dev.saketanand.setwise.util.toClockLabel
+import dev.saketanand.setwise.util.toShortDayLabel
 import dev.saketanand.setwise.util.toShortTimeLabel
+import java.time.LocalDate
 import java.time.LocalTime
 import org.koin.androidx.compose.koinViewModel
 
@@ -167,10 +170,13 @@ fun ActiveWorkoutScreen(
             navigationIcon = R.drawable.ic_chevron_down,
             navigationContentDescription = stringResource(R.string.minimise_workout),
             subtitle = {
-                uiState.startTime?.let { StartTimeButton(it, onClick = { onAction(ActiveWorkoutAction.OnStartTimeClick) }) }
+                uiState.startTime?.let {
+                    StartTimeButton(it, pastDay = uiState.pastDay, onClick = { onAction(ActiveWorkoutAction.OnStartTimeClick) })
+                }
             },
         ) {
-            if (!uiState.isLoading) {
+            // No running clock for a workout logged afterwards for a past day.
+            if (!uiState.isLoading && uiState.pastDay == null) {
                 WorkoutClock(startedAtMillis = uiState.startedAtMillis, modifier = Modifier.padding(end = 6.dp))
             }
             SetwiseButton(
@@ -274,7 +280,7 @@ private fun ExerciseCards(
 
 /** "Started 6:42 PM ✎": opens the time picker to back-date the start. */
 @Composable
-private fun StartTimeButton(startTime: LocalTime, onClick: () -> Unit) {
+private fun StartTimeButton(startTime: LocalTime, pastDay: LocalDate?, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .heightIn(min = 24.dp)
@@ -282,7 +288,13 @@ private fun StartTimeButton(startTime: LocalTime, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(stringResource(R.string.started_at, startTime.toShortTimeLabel()))
+        Text(
+            if (pastDay != null) {
+                stringResource(R.string.started_on, pastDay.toShortDayLabel(currentLocale()), startTime.toShortTimeLabel())
+            } else {
+                stringResource(R.string.started_at, startTime.toShortTimeLabel())
+            }
+        )
         Icon(painterResource(R.drawable.ic_edit), contentDescription = null, modifier = Modifier.size(13.dp))
     }
 }

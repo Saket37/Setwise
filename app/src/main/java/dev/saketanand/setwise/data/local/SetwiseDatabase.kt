@@ -3,9 +3,11 @@ package dev.saketanand.setwise.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import dev.saketanand.setwise.data.local.dao.DayMarkDao
 import dev.saketanand.setwise.data.local.dao.ExerciseDao
 import dev.saketanand.setwise.data.local.dao.TemplateDao
 import dev.saketanand.setwise.data.local.dao.WorkoutDao
+import dev.saketanand.setwise.data.local.entity.DayMarkEntity
 import dev.saketanand.setwise.data.local.entity.ExerciseEntity
 import dev.saketanand.setwise.data.local.entity.SetEntity
 import dev.saketanand.setwise.data.local.entity.TemplateEntity
@@ -29,6 +31,7 @@ import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
         WorkoutExerciseEntity::class,
         TemplateEntity::class,
         TemplateExerciseEntity::class,
+        DayMarkEntity::class,
     ],
     version = 1,
     exportSchema = true,
@@ -41,4 +44,6 @@ abstract class SetwiseDatabase : RoomDatabase() {
     abstract fun workoutDao(): WorkoutDao
 
     abstract fun templateDao(): TemplateDao
+
+    abstract fun dayMarkDao(): DayMarkDao
 }

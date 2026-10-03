@@ -1,6 +1,14 @@
 package dev.saketanand.setwise.ui.history
 
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.material3.Icon
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import dev.saketanand.setwise.domain.model.DayState
+import dev.saketanand.setwise.domain.model.DayStatus
+import dev.saketanand.setwise.ui.ObserveAsEvents
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseDayChoices
 import androidx.compose.foundation.border
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -70,13 +78,25 @@ import org.koin.androidx.compose.koinViewModel
 /**
  * Destination: [Route.History].
  * @param onOpenWorkout Opens the workout summary.
+ * @param onWorkoutStarted Opens a workout just started for a past day ("Log workout").
  */
 @Composable
 fun HistoryScreenRoot(
     onOpenWorkout: (workoutId: Long) -> Unit,
+    onWorkoutStarted: (workoutId: Long) -> Unit,
     viewModel: HistoryViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    ObserveAsEvents(viewModel.events) { event ->
+        when (event) {
+            is HistoryEvent.WorkoutStarted -> onWorkoutStarted(event.workoutId)
+            // TODO: replace with a snackbar once the screen has a SnackbarHost.
+            HistoryEvent.WorkoutAlreadyRunning ->
+                Toast.makeText(context, R.string.workout_already_running, Toast.LENGTH_LONG).show()
+            HistoryEvent.SaveFailed -> Toast.makeText(context, R.string.save_failed, Toast.LENGTH_SHORT).show()
+        }
+    }
     HistoryScreen(
         uiState = uiState,
         onAction = { action ->
@@ -117,7 +137,12 @@ fun HistoryScreen(
             }
             val selected = uiState.selectedDate
             if (selected != null && uiState.isSelectedDayEmpty) {
-                EmptyDayCard(date = selected, onClear = { onAction(HistoryAction.OnDayClick(selected)) })
+                EmptyDayCard(
+                    date = selected,
+                    state = uiState.selectedDayState,
+                    canCheckIn = uiState.canCheckInSelectedDay,
+                    onAction = onAction,
+                )
             }
         }
         when {
@@ -187,7 +212,12 @@ private fun DayStrip(days: List<DayUi>, onDayClick: (LocalDate) -> Unit) {
 private fun DayChip(day: DayUi, onClick: () -> Unit) {
     val locale = currentLocale()
     val dayName = day.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale))
-    val description = if (day.trained) stringResource(R.string.a11y_week_day_trained, dayName) else dayName
+    val description = when (day.state) {
+        DayState.Trained -> stringResource(R.string.a11y_week_day_trained, dayName)
+        DayState.Rest -> stringResource(R.string.a11y_day_rest, dayName)
+        DayState.Missed -> stringResource(R.string.a11y_day_missed, dayName)
+        DayState.Unanswered, DayState.None -> dayName
+    }
     val shape = MaterialTheme.shapes.large
     val textColor = if (day.isToday) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
     Column(
@@ -218,39 +248,82 @@ private fun DayChip(day: DayUi, onClick: () -> Unit) {
             maxLines = 1,
         )
         Text(day.date.dayOfMonth.toString(), style = MaterialTheme.typography.numberMedium, color = textColor)
-        Box(
-            Modifier
-                .size(6.dp)
-                .background(if (day.trained) MaterialTheme.colorScheme.primary else Color.Transparent, CircleShape),
-        )
+        DayMark(day.state)
     }
 }
 
-/** "Wed, 23 Sep · No workout logged  ✕": the selected day has nothing to jump to. */
+/** Under the date: • trained, ✕ missed, moon = rest; nothing otherwise (same height either way). */
 @Composable
-private fun EmptyDayCard(date: LocalDate, onClear: () -> Unit) {
-    SetwiseListCard(
-        headlineContent = { Text(date.toShortDayLabel(currentLocale())) },
-        supportingContent = { Text(stringResource(R.string.no_workout_logged)) },
-        leadingContent = {
-            IconTile(
-                icon = R.drawable.ic_nav_history,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+private fun DayMark(state: DayState) {
+    val size = Modifier.size(10.dp)
+    when (state) {
+        DayState.Trained -> Box(Modifier.size(6.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
+        DayState.Missed -> Icon(painterResource(R.drawable.ic_close), null, size, tint = MaterialTheme.colorScheme.error)
+        DayState.Rest -> Icon(painterResource(R.drawable.ic_moon), null, size, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        DayState.Unanswered, DayState.None -> Box(size)
+    }
+}
+
+/**
+ * "Wed, 23 Sep · No workout logged  ✕": the selected day has nothing to jump to. A past day also
+ * gets "+ Log workout [Rest] [Missed]" (tapping the selected one clears it).
+ */
+@Composable
+private fun EmptyDayCard(date: LocalDate, state: DayState, canCheckIn: Boolean, onAction: (HistoryAction) -> Unit) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .clip(MaterialTheme.shapes.large)
+            .background(SetwiseListCardDefaults.raisedColors().containerColor),
+    ) {
+        SetwiseListCard(
+            headlineContent = { Text(date.toShortDayLabel(currentLocale())) },
+            supportingContent = {
+                Text(
+                    stringResource(
+                        when (state) {
+                            DayState.Rest -> R.string.rest_day
+                            DayState.Missed -> R.string.missed_day
+                            else -> R.string.no_workout_logged
+                        },
+                    ),
+                )
+            },
+            leadingContent = {
+                IconTile(
+                    icon = when (state) {
+                        DayState.Rest -> R.drawable.ic_moon
+                        DayState.Missed -> R.drawable.ic_close
+                        else -> R.drawable.ic_nav_history
+                    },
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            },
+            trailingContent = {
+                SetwiseIconButton(
+                    icon = R.drawable.ic_close,
+                    contentDescription = stringResource(R.string.clear_selected_day),
+                    onClick = { onAction(HistoryAction.OnDayClick(date)) },
+                    size = 40.dp,
+                    colors = SetwiseIconButtonDefaults.plainColors(MaterialTheme.colorScheme.onSurfaceVariant),
+                )
+            },
+            colors = SetwiseListCardDefaults.transparentColors(),
+            contentPadding = PaddingValues(start = 14.dp, top = 10.dp, end = 6.dp, bottom = if (canCheckIn) 4.dp else 10.dp),
+        )
+        if (canCheckIn) {
+            val isRest = state == DayState.Rest
+            val isMissed = state == DayState.Missed
+            SetwiseDayChoices(
+                isRest = isRest,
+                isMissed = isMissed,
+                onLogWorkout = { onAction(HistoryAction.OnLogWorkoutClick(date)) },
+                onRestClick = { onAction(HistoryAction.OnMarkDay(date, if (isRest) null else DayStatus.Rest)) },
+                onMissedClick = { onAction(HistoryAction.OnMarkDay(date, if (isMissed) null else DayStatus.Missed)) },
+                modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
             )
-        },
-        trailingContent = {
-            SetwiseIconButton(
-                icon = R.drawable.ic_close,
-                contentDescription = stringResource(R.string.clear_selected_day),
-                onClick = onClear,
-                size = 40.dp,
-                colors = SetwiseIconButtonDefaults.plainColors(MaterialTheme.colorScheme.onSurfaceVariant),
-            )
-        },
-        colors = SetwiseListCardDefaults.raisedColors(),
-        contentPadding = PaddingValues(start = 14.dp, top = 10.dp, end = 6.dp, bottom = 10.dp),
-        modifier = Modifier.padding(horizontal = 20.dp),
-    )
+        }
+    }
 }
 
 /** 7 chips fill a phone's width (like the design's week); more scroll in. */

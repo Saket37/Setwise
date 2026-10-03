@@ -2,6 +2,7 @@ package dev.saketanand.setwise.domain.repository
 
 import dev.saketanand.setwise.domain.model.UserSettings
 import java.time.DayOfWeek
+import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
 /** The user's settings, stored on the phone. */
@@ -18,4 +19,6 @@ interface UserSettingsRepository {
     suspend fun setAskAboutUnloggedDays(ask: Boolean)
 
     suspend fun setOnboardingDone()
+
+    suspend fun setCheckInLastAskedOn(day: LocalDate)
 }

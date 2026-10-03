@@ -159,6 +159,27 @@ class ActiveWorkoutUiMappersTest {
         assertEquals(NextUp.Nothing, nextUpAfter(5, card(3, "Curl", row(5, done = false)), listOf(card(3, "Curl", row(5, done = false)))))
     }
 
+    @Test
+    fun `a workout logged for a past day keeps its day when the start time changes`() {
+        val zone = ZoneId.of("Asia/Kolkata")
+        val start = at(2026, 9, 30, 18, 0, zone)
+        val now = at(2026, 10, 3, 12, 0, zone)
+
+        assertEquals(at(2026, 9, 30, 17, 0, zone), pickedStartTime(LocalTime.of(17, 0), start, now, zone))
+    }
+
+    @Test
+    fun `finish ends a workout logged afterwards an hour after its start, a live one now`() {
+        val zone = ZoneId.of("Asia/Kolkata")
+        val now = at(2026, 10, 3, 12, 0, zone)
+
+        assertEquals(at(2026, 9, 30, 19, 0, zone), finishTime(at(2026, 9, 30, 18, 0, zone), now))
+        assertEquals(now, finishTime(at(2026, 10, 3, 11, 0, zone), now))
+        // A live session past midnight (23:00 → 01:00) keeps its real end.
+        val oneAm = at(2026, 10, 3, 1, 0, zone)
+        assertEquals(oneAm, finishTime(at(2026, 10, 2, 23, 0, zone), oneAm))
+    }
+
     private fun at(y: Int, m: Int, d: Int, h: Int, min: Int, zone: ZoneId) = LocalDateTime.of(y, m, d, h, min).atZone(zone).toInstant()
 
     private fun exercise(type: ExerciseType, timed: Boolean = false) = Exercise(

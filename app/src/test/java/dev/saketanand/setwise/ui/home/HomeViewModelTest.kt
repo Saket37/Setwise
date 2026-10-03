@@ -1,10 +1,12 @@
 package dev.saketanand.setwise.ui.home
 
 import dev.saketanand.setwise.domain.model.ActiveWorkout
+import dev.saketanand.setwise.domain.model.DayStatus
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.model.Template
+import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.TemplateRepository
@@ -26,6 +28,8 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import dev.saketanand.setwise.testing.FakeDayMarkRepository
+import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 import dev.saketanand.setwise.testing.StubWorkoutRepository
 import dev.saketanand.setwise.util.DateProvider
 import java.time.Instant
@@ -42,7 +46,76 @@ class HomeViewModelTest {
     @Before fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
     @After fun tearDown() = Dispatchers.resetMain()
 
-    private fun viewModel() = HomeViewModel(FakeExerciseRepository, workouts, FakeTemplateRepository, FixedDateProvider)
+    private val marks = FakeDayMarkRepository()
+    private val settings = FakeUserSettingsRepository()
+
+    private fun viewModel() =
+        HomeViewModel(FakeExerciseRepository, workouts, FakeTemplateRepository, marks, settings, FixedDateProvider)
+
+    // Day check-in. Today is Sat 3 Oct; the only workout was Wed 30 Sep.
+
+    @Test
+    fun `check-in asks about the unlogged days since the first workout, once a day`() = runTest {
+        workouts.history.value = listOf(historyItem(LocalDate.of(2026, 9, 30)))
+
+        val vm = viewModel()
+
+        assertEquals(
+            listOf(LocalDate.of(2026, 10, 2), LocalDate.of(2026, 10, 1)),
+            vm.state.value.checkIn?.days?.map { it.date },
+        )
+        assertEquals(LocalDate.of(2026, 10, 3), settings.settings.value.checkInLastAskedOn)
+
+        vm.onAction(HomeAction.OnCheckInDismiss)
+        assertNull(vm.state.value.checkIn)
+        assertNull(viewModel().state.value.checkIn) // asked today already
+    }
+
+    @Test
+    fun `check-in isn't shown during a workout, when switched off, or before the first workout`() = runTest {
+        assertNull(viewModel().state.value.checkIn) // no workout yet
+
+        workouts.history.value = listOf(historyItem(LocalDate.of(2026, 9, 30)))
+        settings.setAskAboutUnloggedDays(false)
+        assertNull(viewModel().state.value.checkIn)
+
+        settings.setAskAboutUnloggedDays(true)
+        workouts.active.value = ActiveWorkout(1, "Push Day", Instant.EPOCH, completedSets = 0)
+        assertNull(viewModel().state.value.checkIn)
+    }
+
+    @Test
+    fun `check-in answers show in the sheet, and mark all as rest fills the rest`() = runTest {
+        workouts.history.value = listOf(historyItem(LocalDate.of(2026, 9, 30)))
+        val vm = viewModel()
+
+        vm.onAction(HomeAction.OnCheckInMark(LocalDate.of(2026, 10, 2), DayStatus.Missed))
+        assertEquals(listOf(DayStatus.Missed, null), vm.state.value.checkIn?.days?.map { it.status })
+
+        vm.onAction(HomeAction.OnCheckInMarkAllRest)
+        assertNull(vm.state.value.checkIn)
+        assertEquals(
+            mapOf(LocalDate.of(2026, 10, 2) to DayStatus.Missed, LocalDate.of(2026, 10, 1) to DayStatus.Rest),
+            marks.marks.value,
+        )
+    }
+
+    @Test
+    fun `check-in log workout starts one at 6 PM on that day`() = runTest {
+        workouts.history.value = listOf(historyItem(LocalDate.of(2026, 9, 30)))
+        val vm = viewModel()
+
+        vm.onAction(HomeAction.OnCheckInLogWorkout(LocalDate.of(2026, 10, 1)))
+
+        assertNull(vm.state.value.checkIn)
+        assertEquals(HomeEvent.WorkoutStarted(100), vm.events.first())
+        assertEquals(LocalDate.of(2026, 10, 1).atTime(18, 0).atZone(FixedDateProvider.zone).toInstant(), workouts.lastStartedAt)
+    }
+
+    private fun historyItem(day: LocalDate): WorkoutHistoryItem {
+        val start = day.atTime(18, 0).atZone(FixedDateProvider.zone).toInstant()
+        return WorkoutHistoryItem(1, "Push Day", start, start.plusSeconds(3600), 10, 1000.0, 0.0, 0, null)
+    }
 
     @Test
     fun `no running workout - starting from a template starts it directly`() = runTest {
@@ -144,17 +217,21 @@ class HomeViewModelTest {
 
     private class FakeWorkoutRepository : StubWorkoutRepository() {
         val active = MutableStateFlow<ActiveWorkout?>(null)
+        val history = MutableStateFlow<List<WorkoutHistoryItem>>(emptyList())
+        var lastStartedAt: Instant? = null
         val startCalls = mutableListOf<StartCall>()
         var failStart = false
 
         override fun observeLastFinishedWorkout(): Flow<FinishedWorkout?> = flowOf(null)
         override fun observeActiveWorkout(): Flow<ActiveWorkout?> = active
+        override fun observeHistory(): Flow<List<WorkoutHistoryItem>> = history
         override fun observeStats(from: Instant, to: Instant): Flow<WorkoutStats> =
             flowOf(WorkoutStats(workouts = 0, timeTrained = Duration.ZERO, prs = 0))
 
         override suspend fun startWorkout(templateId: Long?, startedAt: Instant, discardRunningWorkoutId: Long?): Long {
             if (failStart) error("database is full")
             startCalls += StartCall(templateId, discardRunningWorkoutId)
+            lastStartedAt = startedAt
             return 100
         }
     }
