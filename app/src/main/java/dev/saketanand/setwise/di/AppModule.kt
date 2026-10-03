@@ -49,6 +49,10 @@ import dev.saketanand.setwise.domain.ai.QuickLogInterpreter
 import dev.saketanand.setwise.domain.ai.ModelDownloader
 import dev.saketanand.setwise.domain.ai.AiCheck
 import org.koin.core.module.dsl.factoryOf
+import dev.saketanand.setwise.domain.ai.SpeechInput
+import dev.saketanand.setwise.domain.ai.SpokenTextFixer
+import dev.saketanand.setwise.llm.GenAiSpeechInput
+import dev.saketanand.setwise.llm.GenAiSpokenTextFixer
 
 val appModule = module {
     // The app's clock ("now", today + midnight rollover); swapped for a fixed date in tests.
@@ -64,6 +68,8 @@ val appModule = module {
     single { RestAlert(androidContext()) }
     // On-device model (Gemini Nano). Features take OnDeviceModel, so tests use a fake.
     single<OnDeviceModel> { GeminiNanoModel() }
+    single<SpeechInput> { GenAiSpeechInput() }
+    single<SpokenTextFixer> { GenAiSpokenTextFixer(androidContext()) }
     singleOf(::CalorieEstimator)
     singleOf(::WorkoutInsightWriter)
     singleOf(::ExerciseAssistant)
