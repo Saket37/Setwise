@@ -168,4 +168,18 @@
     <string name="a11y_rest_minus_15">Subtract 15 seconds</string>
     <string name="a11y_rest_plus_15">Add 15 seconds</string>
     <string name="skip">Skip</string>
+
+    <!-- Rest timer notifications -->
+    <string name="channel_rest_timer">Rest timer</string>
+    <string name="channel_rest_timer_description">The countdown between sets</string>
+    <string name="channel_rest_over">Rest over</string>
+    <string name="channel_rest_over_description">Tells you when it\'s time for the next set</string>
+    <string name="rest_notification_text">Tap to go back to your workout</string>
+    <string name="rest_notification_add">+15s</string>
+    <string name="rest_over">Rest over</string>
+    <!-- %1$d = next set number -->
+    <string name="rest_over_next_set">Time for set %1$d</string>
+    <!-- %1$s = next exercise name -->
+    <string name="rest_over_next_exercise">Time for %1$s</string>
+    <string name="rest_over_next_nothing">Time to finish your workout</string>
 </resources>

@@ -63,6 +63,8 @@ dependencies {
     // Core / lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.service)
+    // Is the app on screen? (rest-over alert: in-app vibration vs notification)
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.core.splashscreen)
 
     // Compose (UI, Material 3, icons, navigation)

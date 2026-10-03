@@ -5,4 +5,7 @@
     <!-- Empty-state mark: filled bar = colorScheme.primary (Volt); outlines = colorScheme.outline. -->
     <color name="setwise_mark_empty_fill">#FFB8F04A</color>
     <color name="setwise_mark_empty_outline">#FF3A443D</color>
+
+    <!-- Notification accent = colorScheme.primary (Volt). -->
+    <color name="notification_accent">#FFB8F04A</color>
 </resources>

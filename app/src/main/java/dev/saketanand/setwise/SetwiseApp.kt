@@ -5,6 +5,8 @@ import dev.saketanand.setwise.data.dev.DevDataSeeder
 import dev.saketanand.setwise.data.seed.ExerciseSeeder
 import dev.saketanand.setwise.di.appModule
 import dev.saketanand.setwise.di.viewModelModule
+import dev.saketanand.setwise.timer.RestNotifications
+import dev.saketanand.setwise.timer.RestTimerCoordinator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,6 +28,10 @@ class SetwiseApp : Application() {
             androidContext(this@SetwiseApp)
             modules(appModule, viewModelModule)
         }
+
+        // Rest timer: notification channels, and the link to its foreground service and alerts.
+        RestNotifications.createChannels(this)
+        get<RestTimerCoordinator>().start()
 
         // Load the built-in exercise library on first launch (no-op afterwards).
         val exerciseSeeder: ExerciseSeeder = get()

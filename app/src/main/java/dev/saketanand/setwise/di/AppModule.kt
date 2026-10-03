@@ -16,7 +16,9 @@ import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.TemplateRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import dev.saketanand.setwise.timer.DefaultRestTimer
+import dev.saketanand.setwise.timer.RestAlert
 import dev.saketanand.setwise.timer.RestTimer
+import dev.saketanand.setwise.timer.RestTimerCoordinator
 import dev.saketanand.setwise.util.DateProvider
 import dev.saketanand.setwise.util.ElapsedClock
 import dev.saketanand.setwise.util.SystemElapsedClock
@@ -41,6 +43,8 @@ val appModule = module {
     // notification's buttons). Counts on the boot clock, which doesn't jump with time changes.
     single<ElapsedClock> { SystemElapsedClock }
     single<RestTimer> { DefaultRestTimer(CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate), get()) }
+    single { RestAlert(androidContext()) }
+    single { RestTimerCoordinator(androidContext(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)) }
 
     // Shared JSON parser. ignoreUnknownKeys: new fields in exercises.json won't crash older builds.
     single { Json { ignoreUnknownKeys = true } }
