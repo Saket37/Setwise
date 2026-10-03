@@ -135,10 +135,12 @@ class WorkoutRepositoryImpl(
 
     override suspend fun finishWorkout(workoutId: Long, endedAt: Instant): Boolean =
         database.withTransaction {
+            // Only a running workout is finished and tidied; a finished one is left untouched.
+            if (workoutDao.markFinished(workoutId, endedAt.toEpochMilli()) == 0) return@withTransaction false
             workoutDao.deleteIncompleteSets(workoutId)
             workoutDao.deleteExercisesWithoutSets(workoutId)
             workoutDao.workoutExerciseIds(workoutId).forEach { renumberSets(it) }
-            workoutDao.markFinished(workoutId, endedAt.toEpochMilli()) == 1
+            true
         }
 
     override suspend fun discardWorkout(workoutId: Long) {

@@ -106,6 +106,21 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun finishingTwiceLeavesTheFinishedWorkoutAlone() = runTest {
+        val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(1_000))
+        repository.addExercises(current, listOf(bench))
+        val firstSet = repository.observeSession(current).first()!!.exercises.single().sets.first()
+        repository.setCompleted(firstSet.id, Instant.ofEpochMilli(2_000), 60.0, 8, null)
+        repository.finishWorkout(current, Instant.ofEpochMilli(3_000))
+
+        assertFalse(repository.finishWorkout(current, Instant.ofEpochMilli(9_000)))
+
+        val session = repository.observeSession(current).first()!!
+        assertEquals(Instant.ofEpochMilli(3_000), session.endedAt)
+        assertEquals(1, session.exercises.single().sets.size)
+    }
+
+    @Test
     fun startTimeCanOnlyChangeWhileRunning() = runTest {
         val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(1_000))
         repository.updateStartTime(current, Instant.ofEpochMilli(500))
