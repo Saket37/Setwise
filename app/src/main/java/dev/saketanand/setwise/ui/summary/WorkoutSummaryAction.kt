@@ -19,4 +19,7 @@ sealed interface WorkoutSummaryAction {
 
     /** "Done" or ✕. */
     data object OnDoneClick : WorkoutSummaryAction
+
+    /** An exercise row: its detail (progress, past sessions). → nav */
+    data class OnExerciseClick(val exerciseId: Long) : WorkoutSummaryAction
 }

@@ -268,6 +268,23 @@
     <string name="no_workouts_yet">No workouts yet</string>
     <string name="no_workouts_yet_message">Finished workouts show up here, newest first.</string>
     <string name="unit_km">km</string>
+    <string name="unit_seconds">s</string>
+    <string name="unit_minutes">min</string>
+    <string name="unit_reps">reps</string>
+    <!-- Exercise detail -->
+    <string name="exercise_muscle_and_equipment">%1$s · %2$s</string>
+    <string name="progress_e1rm">Estimated 1RM · last %1$d weeks</string>
+    <string name="progress_reps">Most reps · last %1$d weeks</string>
+    <string name="progress_duration">Longest hold · last %1$d weeks</string>
+    <string name="progress_distance">Distance per week · last %1$d weeks</string>
+    <string name="progress_minutes">Minutes per week · last %1$d weeks</string>
+    <string name="progress_none_recently">Not done in the last %1$d weeks</string>
+    <string name="this_week">This week</string>
+    <string name="a11y_progress_chart">%1$s. %2$d of %3$d weeks trained, latest %4$s.</string>
+    <string name="recent_sessions">Recent sessions</string>
+    <string name="exercise_history_and_progress">History &amp; progress</string>
+    <string name="exercise_no_sessions">Not done yet</string>
+    <string name="exercise_no_sessions_message">Finish a workout with this exercise to see its progress and sessions here.</string>
     <!-- Personal-record pill on a History row -->
     <plurals name="pr_count">
         <item quantity="one">%d PR</item>

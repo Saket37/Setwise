@@ -140,6 +140,7 @@ fun ActiveWorkoutScreenRoot(
                 ActiveWorkoutAction.OnMinimizeClick -> minimize()
                 ActiveWorkoutAction.OnAddExerciseClick -> addExercises()
                 is ActiveWorkoutAction.OnLogCardioClick -> onOpenCardioEntry(action.workoutExerciseId)
+                is ActiveWorkoutAction.OnExerciseHistoryClick -> onOpenExercise(action.exerciseId)
                 else -> viewModel.onAction(action)
             }
         },

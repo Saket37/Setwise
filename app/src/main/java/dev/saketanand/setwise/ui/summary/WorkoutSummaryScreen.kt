@@ -21,6 +21,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
@@ -58,6 +60,11 @@ fun WorkoutSummaryScreenRoot(
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val done = dropUnlessResumed(block = onDone)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    // Like dropUnlessResumed, for a click that carries an id: no double navigation.
+    val openExercise: (Long) -> Unit = { id ->
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) onOpenExercise(id)
+    }
 
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
@@ -74,6 +81,7 @@ fun WorkoutSummaryScreenRoot(
         onAction = { action ->
             when (action) {
                 WorkoutSummaryAction.OnDoneClick -> done()
+                is WorkoutSummaryAction.OnExerciseClick -> openExercise(action.exerciseId)
                 else -> viewModel.onAction(action)
             }
         },
@@ -107,7 +115,12 @@ fun WorkoutSummaryScreen(
                 SummaryHeader(uiState = uiState, onAction = onAction)
                 SummaryStats(uiState = uiState)
                 if (uiState.records.isNotEmpty()) PersonalRecordsSection(records = uiState.records)
-                if (uiState.exercises.isNotEmpty()) ExercisesSection(exercises = uiState.exercises)
+                if (uiState.exercises.isNotEmpty()) {
+                    ExercisesSection(
+                        exercises = uiState.exercises,
+                        onExerciseClick = { onAction(WorkoutSummaryAction.OnExerciseClick(it)) },
+                    )
+                }
             }
             SummaryButtons(uiState = uiState, onAction = onAction)
         }
@@ -236,9 +249,9 @@ private val previewState = WorkoutSummaryUiState(
         RecordUi("Pull-up", PrKind.Reps, SetKind.Bodyweight, PreviousSet(null, 12), PreviousSet(null, 10)),
     ),
     exercises = listOf(
-        SummaryExerciseUi(1, "Bench Press (Barbell)", 4, "62.5 × 8"),
-        SummaryExerciseUi(2, "Overhead Press (Barbell)", 3, "40 × 7"),
-        SummaryExerciseUi(3, "Pull-up", 3, "12"),
+        SummaryExerciseUi(1, 11, "Bench Press (Barbell)", 4, "62.5 × 8"),
+        SummaryExerciseUi(2, 12, "Overhead Press (Barbell)", 3, "40 × 7"),
+        SummaryExerciseUi(3, 13, "Pull-up", 3, "12"),
     ),
     canSaveAsTemplate = true,
 )

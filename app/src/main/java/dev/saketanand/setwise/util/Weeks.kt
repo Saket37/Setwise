@@ -16,4 +16,5 @@ fun weekRange(today: LocalDate, zone: ZoneId): Pair<Instant, Instant> {
     return monday.atStartOfDay(zone).toInstant() to monday.plusWeeks(1).atStartOfDay(zone).toInstant()
 }
 
-private fun LocalDate.mondayOfWeek(): LocalDate = with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+/** The Monday on or before this day. */
+fun LocalDate.mondayOfWeek(): LocalDate = with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))

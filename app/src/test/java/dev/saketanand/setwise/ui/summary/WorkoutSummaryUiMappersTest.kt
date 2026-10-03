@@ -48,7 +48,7 @@ class WorkoutSummaryUiMappersTest {
         ).toSummaryUi(zone)
 
         assertEquals(
-            listOf(SummaryExerciseUi(1, "Bench", 2, "62.5 × 6"), SummaryExerciseUi(2, "Pull-up", 2, "12")),
+            listOf(SummaryExerciseUi(1, 1, "Bench", 2, "62.5 × 6"), SummaryExerciseUi(2, 2, "Pull-up", 2, "12")),
             ui.exercises,
         )
     }
