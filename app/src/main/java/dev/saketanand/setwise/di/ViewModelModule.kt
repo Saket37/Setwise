@@ -38,6 +38,8 @@ val viewModelModule = module {
             writeScope = get(ApplicationScope),
             restTimer = get(),
             restNotifications = get(),
+            quickLogInterpreter = get(),
+            exerciseRepository = get(),
         )
     }
     viewModel { params ->

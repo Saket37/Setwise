@@ -47,10 +47,7 @@ class MainActivity : ComponentActivity() {
         // Fresh launch only: after a rotation or a restore the link was already handled (the
         // activity is recreated with the same intent).
         if (savedInstanceState == null) AppLinks.from(intent)?.let(appLinks::trySend)
-        // Debug builds only: `--ez ai_check true` logs the on-device model's estimates (AiCheck).
-        if (BuildConfig.DEBUG && savedInstanceState == null && intent.getBooleanExtra(AiCheck.EXTRA, false)) {
-            get<CoroutineScope>(ApplicationScope).launch { get<AiCheck>().run() }
-        }
+        startAiCheck(intent)
         setContent {
             SetwiseTheme {
                 val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
@@ -67,6 +64,19 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         AppLinks.from(intent)?.let(appLinks::trySend)
+        startAiCheck(intent)
+    }
+
+    /**
+     * Debug builds only: `--ez ai_check true` logs the on-device model's answers (AiCheck). Any
+     * launch with it, also one restoring the app or reaching it open; the extra is then removed,
+     * so a rotation doesn't run it again (and AiCheck runs one at a time).
+     */
+    private fun startAiCheck(intent: Intent) {
+        if (!BuildConfig.DEBUG || !intent.getBooleanExtra(AiCheck.EXTRA, false)) return
+        val quickLogOnly = intent.getBooleanExtra(AiCheck.EXTRA_QUICK_LOG_ONLY, false)
+        intent.removeExtra(AiCheck.EXTRA)
+        get<CoroutineScope>(ApplicationScope).launch { get<AiCheck>().run(quickLogOnly) }
     }
 }
 

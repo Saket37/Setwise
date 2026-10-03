@@ -69,6 +69,14 @@ import dev.saketanand.setwise.util.toShortTimeLabel
 import java.time.LocalDate
 import java.time.LocalTime
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import dev.saketanand.setwise.ui.RecognizeSpeech
 
 /**
  * Destination: [Route.ActiveWorkout].
@@ -122,6 +130,22 @@ fun ActiveWorkoutScreenRoot(
     val minimize = dropUnlessResumed(block = onMinimize)
     val addExercises = dropUnlessResumed(block = onAddExercises)
 
+    // The quick-log line lives here (typing stays in sync); changing it drops a card about the old one.
+    val quickLogField = rememberTextFieldState()
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(quickLogField) {
+        snapshotFlow { quickLogField.text.toString() }.collect { viewModel.onAction(ActiveWorkoutAction.OnQuickLogEdited(it)) }
+    }
+    // Speaking: what was heard goes in the bar and is read straight away.
+    val canSpeak = remember(context) { RecognizeSpeech.isAvailable(context) }
+    val speakPrompt = stringResource(R.string.quick_log_speak_prompt)
+    val speak = rememberLauncherForActivityResult(RecognizeSpeech()) { heard ->
+        if (heard != null) {
+            quickLogField.setTextAndPlaceCursorAtEnd(heard)
+            viewModel.onAction(ActiveWorkoutAction.OnQuickLogSubmit(heard))
+        }
+    }
+
     // Events navigate directly (not through dropUnlessResumed): they're delivered from STARTED,
     // where dropUnlessResumed would silently ignore them, and the ViewModel sends each only once.
     ObserveAsEvents(viewModel.events) { event ->
@@ -130,11 +154,17 @@ fun ActiveWorkoutScreenRoot(
             ActiveWorkoutEvent.Closed -> onMinimize()
             // TODO: replace with a snackbar once the screen has a SnackbarHost.
             ActiveWorkoutEvent.SaveFailed -> Toast.makeText(context, R.string.save_failed, Toast.LENGTH_SHORT).show()
+            ActiveWorkoutEvent.QuickLogAdded -> {
+                quickLogField.clearText()
+                focusManager.clearFocus()
+            }
         }
     }
 
     ActiveWorkoutScreen(
         uiState = uiState,
+        quickLogField = quickLogField,
+        onSpeak = if (canSpeak) dropUnlessResumed { speak.launch(speakPrompt) } else null,
         onAction = { action ->
             when (action) {
                 ActiveWorkoutAction.OnMinimizeClick -> minimize()
@@ -156,7 +186,12 @@ fun ActiveWorkoutScreen(
     uiState: ActiveWorkoutUiState,
     onAction: (ActiveWorkoutAction) -> Unit,
     modifier: Modifier = Modifier,
+    quickLogField: TextFieldState = rememberTextFieldState(),
+    /** The quick-log mic; null hides it. */
+    onSpeak: (() -> Unit)? = null,
 ) {
+    var isQuickLogFocused by remember { mutableStateOf(false) }
+    val quickLogFocus = remember { FocusRequester() }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -205,6 +240,22 @@ fun ActiveWorkoutScreen(
             exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
         ) {
             lastRest?.let { RestTimerBar(rest = it, onAction = onAction) }
+        }
+
+        if (!uiState.isLoading) {
+            QuickLogSection(
+                field = quickLogField,
+                quickLog = uiState.quickLog,
+                isFieldFocused = isQuickLogFocused,
+                onFieldFocusChange = { isQuickLogFocused = it },
+                focusRequester = quickLogFocus,
+                onAction = { action ->
+                    // "Edit": back into the line.
+                    if (action == ActiveWorkoutAction.OnQuickLogEdit) quickLogFocus.requestFocus()
+                    onAction(action)
+                },
+                onSpeak = onSpeak,
+            )
         }
     }
 

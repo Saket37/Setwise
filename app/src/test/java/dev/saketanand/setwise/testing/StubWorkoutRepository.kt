@@ -3,6 +3,7 @@ package dev.saketanand.setwise.testing
 import dev.saketanand.setwise.domain.model.CardioEntry
 import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.ExerciseSession
+import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
@@ -28,6 +29,8 @@ open class StubWorkoutRepository : WorkoutRepository {
     override fun observeWorkoutsWithoutCalories(): Flow<List<Long>> = flowOf(emptyList())
     override suspend fun setCalories(workoutId: Long, estimate: CalorieEstimate, source: String) = Unit
     override suspend fun setInsight(workoutId: Long, insight: String) = Unit
+    override suspend fun logSets(workoutId: Long, workoutExerciseId: Long?, exerciseId: Long, sets: List<SetFact>, completedAt: Instant): Long =
+        workoutExerciseId ?: 0
     override suspend fun deleteFinishedWorkout(workoutId: Long): Boolean = false
     override fun observeCardioEntry(workoutExerciseId: Long): Flow<CardioEntry?> = flowOf(null)
     override suspend fun logCardio(workoutExerciseId: Long, values: CardioValues, completedAt: Instant) = Unit

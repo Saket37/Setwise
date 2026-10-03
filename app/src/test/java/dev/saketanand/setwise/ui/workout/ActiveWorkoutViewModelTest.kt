@@ -37,6 +37,15 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import dev.saketanand.setwise.domain.ai.ExerciseAssistant
+import dev.saketanand.setwise.domain.ai.QuickLogInterpreter
+import dev.saketanand.setwise.domain.ai.QuickLogResult
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
+import dev.saketanand.setwise.domain.model.NewExercise
+import dev.saketanand.setwise.domain.model.RecentExercise
+import dev.saketanand.setwise.domain.model.SetFact
+import dev.saketanand.setwise.domain.repository.ExerciseRepository
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ActiveWorkoutViewModelTest {
@@ -49,8 +58,17 @@ class ActiveWorkoutViewModelTest {
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
     @After fun tearDown() = Dispatchers.resetMain()
 
+    private val model = FakeOnDeviceModel()
+
     private fun TestScope.viewModel() =
-        ActiveWorkoutViewModel(WORKOUT_ID, repository, FixedDateProvider, SavedStateHandle(), writeScope = backgroundScope, restTimer = restTimer, restNotifications = { notificationRefreshes++ }).also { vm ->
+        ActiveWorkoutViewModel(
+            WORKOUT_ID, repository, FixedDateProvider, SavedStateHandle(),
+            writeScope = backgroundScope,
+            restTimer = restTimer,
+            restNotifications = { notificationRefreshes++ },
+            quickLogInterpreter = QuickLogInterpreter(model, ExerciseAssistant(model)),
+            exerciseRepository = FakeLibrary,
+        ).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
         }
 
@@ -365,7 +383,72 @@ class ActiveWorkoutViewModelTest {
     private data class Completion(val setId: Long, val done: Boolean, val weightKg: Double?, val reps: Int?, val durationSec: Int?)
     private data class Values(val setId: Long, val weightKg: Double?, val reps: Int?, val durationSec: Int?)
 
+    // Quick log
+
+    @Test
+    fun `a quick-logged line is shown, then added into the exercise's open sets`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogSubmit("bench 3x8 at 60"))
+        val preview = vm.state.value.quickLog.preview!!
+        assertEquals("Bench Press", preview.exerciseName)
+        assertEquals("bench", preview.matchedFrom)
+        assertEquals(List(3) { SetFact(60.0, 8, null) }, preview.sets)
+        assertTrue(repository.loggedSets.isEmpty()) // nothing until confirmed
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogConfirm)
+
+        assertEquals(listOf(Triple(BENCH, 10L, List(3) { SetFact(60.0, 8, null) })), repository.loggedSets)
+        assertEquals(null, vm.state.value.quickLog.preview)
+        assertTrue(restTimer.starts.isEmpty()) // a quick log is after the fact: no rest
+    }
+
+    @Test
+    fun `a line it can't use says why, until it's changed`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogSubmit("zercher squat 3x5 at 80"))
+        assertEquals(QuickLogResult.Reason.NoExercise, vm.state.value.quickLog.problem)
+
+        // The same line (as when a spoken one is filled in and read at once): still said.
+        vm.onAction(ActiveWorkoutAction.OnQuickLogEdited("zercher squat 3x5 at 80"))
+        assertEquals(QuickLogResult.Reason.NoExercise, vm.state.value.quickLog.problem)
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogEdited("zercher squat 3x5 at 8"))
+        assertEquals(null, vm.state.value.quickLog.problem)
+    }
+
+    @Test
+    fun `edit drops the card without adding anything`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAction(ActiveWorkoutAction.OnQuickLogSubmit("60 for 8")) // the open exercise
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogEdit)
+        vm.onAction(ActiveWorkoutAction.OnQuickLogConfirm)
+
+        assertEquals(null, vm.state.value.quickLog.preview)
+        assertTrue(repository.loggedSets.isEmpty())
+    }
+
+    private object FakeLibrary : ExerciseRepository {
+        private val library = listOf(bench().exercise, press().exercise, plank().exercise)
+        override fun observeExercises(query: String, muscleGroup: String?): Flow<List<Exercise>> = flowOf(library)
+        override fun observeMuscleGroups(): Flow<List<String>> = flowOf(emptyList())
+        override fun observeRecentExercises(limit: Int): Flow<List<RecentExercise>> = flowOf(emptyList())
+        override fun observeExerciseCount(): Flow<Int> = flowOf(library.size)
+        override suspend fun createExercise(exercise: NewExercise): CreateExerciseResult = CreateExerciseResult.Created(0)
+        override suspend fun getExercises(ids: List<Long>): List<Exercise> = emptyList()
+        override fun observeExercise(id: Long): Flow<Exercise?> = flowOf(null)
+    }
+
     private class FakeWorkoutRepository : StubWorkoutRepository() {
+        val loggedSets = mutableListOf<Triple<Long?, Long, List<SetFact>>>()
+
+        override suspend fun logSets(workoutId: Long, workoutExerciseId: Long?, exerciseId: Long, sets: List<SetFact>, completedAt: Instant): Long {
+            loggedSets += Triple(workoutExerciseId, exerciseId, sets)
+            return workoutExerciseId ?: 0
+        }
+
         val session = MutableStateFlow<WorkoutSession?>(session(bench(), press()))
         val completions = mutableListOf<Completion>()
         val valueUpdates = mutableListOf<Values>()

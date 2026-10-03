@@ -4,6 +4,8 @@ import androidx.compose.runtime.Immutable
 import dev.saketanand.setwise.domain.model.CardioValues
 import java.time.LocalDate
 import java.time.LocalTime
+import dev.saketanand.setwise.domain.ai.QuickLogResult
+import dev.saketanand.setwise.domain.model.SetFact
 
 /** Everything [ActiveWorkoutScreen] draws. */
 @Immutable
@@ -26,6 +28,8 @@ data class ActiveWorkoutUiState(
     val isFinishing: Boolean = false,
     /** The rest countdown after a set; null when not resting. */
     val rest: RestUi? = null,
+    /** The quick-log bar's state: reading, the "Understood as" card, or why it wasn't understood. */
+    val quickLog: QuickLogUi = QuickLogUi(),
 ) {
     val completedSets: Int get() = exercises.sumOf { it.completedSets }
 
@@ -121,4 +125,30 @@ data class SetUi(
     val repsHint: String,
     val isCompleted: Boolean,
     val isPr: Boolean,
+)
+
+/** The quick-log bar (design "Quick log"). */
+@Immutable
+data class QuickLogUi(
+    /** A line is being read (the model can take a second or two). */
+    val isReading: Boolean = false,
+    /** "Understood as": shown until added or edited. */
+    val preview: QuickLogPreview? = null,
+    /** Why the last line couldn't be used; cleared when the line is edited. */
+    val problem: QuickLogResult.Reason? = null,
+)
+
+/** "Overhead Press (Barbell) · Matched from “ohp” · in today's workout", then the sets (or cardio). */
+@Immutable
+data class QuickLogPreview(
+    val exerciseName: String,
+    /** The words it was matched from; null when it's the open exercise. */
+    val matchedFrom: String?,
+    /** In today's workout already (else it's added). */
+    val isInWorkout: Boolean,
+    val kind: SetKind,
+    val sets: List<SetFact> = emptyList(),
+    val cardio: CardioValues? = null,
+    /** Read by the on-device model (the line had words the parser couldn't place). */
+    val byModel: Boolean = false,
 )
