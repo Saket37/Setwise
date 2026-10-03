@@ -2,6 +2,7 @@ package dev.saketanand.setwise.domain.repository
 
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +13,9 @@ interface WorkoutRepository {
     fun observeLastFinishedWorkout(): Flow<FinishedWorkout?>
 
     fun observeActiveWorkout(): Flow<ActiveWorkout?>
+
+    /** Finished workouts, newest first (History tab). */
+    fun observeHistory(): Flow<List<WorkoutHistoryItem>>
 
     /** Finished workouts that started in [from, to). */
     fun observeStats(from: Instant, to: Instant): Flow<WorkoutStats>
