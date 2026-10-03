@@ -8,6 +8,7 @@ import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.LoggedSet
@@ -22,8 +23,8 @@ import dev.saketanand.setwise.domain.model.Progression
  * and text, "New exercise" help on sample names, quick-log lines, then plateau notes (tags
  * SetwiseAiCheck, CalorieEstimator, WorkoutInsightWriter, ExerciseAssistant, QuickLogInterpreter,
  * PlateauNoteWriter, GeminiNanoModel). Saves nothing. One run at a time. Started by
- * MainActivity from a debug launch extra (add `--es ai_check_only quick_log` or `plateau` for
- * one part alone, which finishes before the screen times out):
+ * MainActivity from a debug launch extra (add `--es ai_check_only quick_log`, `plateau` or
+ * `client` for one part alone, which finishes before the screen times out):
  *
  *     adb shell am start -n dev.saketanand.setwise/.MainActivity --ez ai_check true
  */
@@ -48,6 +49,7 @@ class AiCheck(
             when (only) {
                 ONLY_QUICK_LOG -> checkQuickLog()
                 ONLY_PLATEAU -> checkPlateauNotes()
+                ONLY_CLIENT -> checkClientReopen()
                 else -> checkAll(workouts)
             }
             Log.i(TAG, "Done")
@@ -68,6 +70,25 @@ class AiCheck(
         checkExerciseNames()
         checkQuickLog()
         checkPlateauNotes()
+    }
+
+    /**
+     * The model's client closed (as when the app goes to the background) and reopened between
+     * two answers: both should come back.
+     */
+    private suspend fun checkClientReopen() {
+        val request = ModelRequest(system = "Answer with one word.", prompt = "Say ok.", temperature = 0f, maxOutputTokens = 8)
+        suspend fun ask() = try {
+            "'${model.generate(request).trim()}'"
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            "failed: ${e.message}"
+        }
+        Log.i(TAG, "Before closing: ${ask()}")
+        model.onAppInBackground(true)
+        model.onAppInBackground(false)
+        Log.i(TAG, "After reopening: ${ask()}")
     }
 
     /**
@@ -158,6 +179,7 @@ class AiCheck(
         const val EXTRA_ONLY = "ai_check_only"
         const val ONLY_QUICK_LOG = "quick_log"
         const val ONLY_PLATEAU = "plateau"
+        const val ONLY_CLIENT = "client"
 
         private val SAMPLE_PLATEAUS: List<Triple<String, Plateau, ExerciseSession>> = run {
             val since = Instant.parse("2026-09-07T12:00:00Z")

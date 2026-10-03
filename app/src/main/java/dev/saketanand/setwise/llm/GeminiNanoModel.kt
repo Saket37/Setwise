@@ -54,9 +54,9 @@ class GeminiNanoModel : OnDeviceModel {
 
     /** Runs [block] with the client, created if needed and kept open until [block] ends. */
     private suspend fun <T> withClient(block: suspend (GenerativeModel) -> T): T {
+        // Counted only once there is a client: if getting one throws, nothing is left in use.
         val client = synchronized(lock) {
-            users++
-            client ?: Generation.getClient().also { client = it }
+            (client ?: Generation.getClient().also { client = it }).also { users++ }
         }
         try {
             return block(client)
