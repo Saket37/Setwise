@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.ui.designsystem.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,9 +8,12 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -27,13 +31,18 @@ import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
  *
  * Draws no status-bar inset: the app Scaffold already pads every screen for it.
  *
- * @param onBack null hides the back arrow; the title then lines up with the 20dp screen margin.
+ * @param onBack null hides the navigation button; the title then lines up with the 20dp screen margin.
+ * @param navigationIcon back arrow by default; the active workout uses a "minimise" chevron.
+ * @param subtitle optional line under the title ("Started 6:42 PM").
  */
 @Composable
 fun SetwiseTopAppBar(
     title: String,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
+    @DrawableRes navigationIcon: Int = R.drawable.ic_arrow_back,
+    navigationContentDescription: String = stringResource(R.string.back),
+    subtitle: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -46,8 +55,8 @@ fun SetwiseTopAppBar(
     ) {
         if (onBack != null) {
             SetwiseIconButton(
-                icon = R.drawable.ic_arrow_back,
-                contentDescription = stringResource(R.string.back),
+                icon = navigationIcon,
+                contentDescription = navigationContentDescription,
                 onClick = onBack,
                 size = 48.dp,
                 iconSize = 22.dp,
@@ -56,17 +65,22 @@ fun SetwiseTopAppBar(
         } else {
             HorizontalGap(8.dp) // 8 + 4 + 8 = the 20dp screen margin
         }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            // Lets screen-reader users jump straight to the screen title.
-            modifier = Modifier
-                .weight(1f)
-                .semantics { heading() },
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                // Lets screen-reader users jump straight to the screen title.
+                modifier = Modifier.semantics { heading() },
+            )
+            if (subtitle != null) {
+                CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {
+                    ProvideTextStyle(MaterialTheme.typography.bodyMedium, subtitle)
+                }
+            }
+        }
         actions()
     }
 }
@@ -84,6 +98,13 @@ private fun SetwiseTopAppBarPreview() = SetwisePreview(padding = 0.dp) {
                 textStyle = MaterialTheme.typography.titleSmall,
             )
         }
+        SetwiseTopAppBar(
+            title = "Push Day",
+            onBack = {},
+            navigationIcon = R.drawable.ic_chevron_down,
+            navigationContentDescription = "Minimise workout",
+            subtitle = { Text("Started 6:42 PM") },
+        )
         SetwiseTopAppBar(title = "Settings")
     }
 }
