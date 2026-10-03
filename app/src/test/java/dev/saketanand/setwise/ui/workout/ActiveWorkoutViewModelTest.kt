@@ -141,6 +141,18 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
+    fun `ticking off a set in a workout logged for a past day starts no rest`() = runTest(dispatcher) {
+        val pastDay = LocalDate.of(2026, 9, 28).atTime(18, 0).atZone(FixedDateProvider.zone).toInstant()
+        repository.session.value = repository.session.value?.copy(startedAt = pastDay)
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "", reps = ""))
+
+        assertEquals(1, repository.completions.size) // still logged
+        assertTrue(restTimer.starts.isEmpty())
+    }
+
+    @Test
     fun `after an exercise's last set, the rest names the next exercise`() = runTest(dispatcher) {
         repository.session.value = session(bench(sets = listOf(set(1, 60.0, 8, done = true), set(2))), press())
         val vm = viewModel()

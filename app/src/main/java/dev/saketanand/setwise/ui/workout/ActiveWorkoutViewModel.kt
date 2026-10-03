@@ -194,6 +194,10 @@ class ActiveWorkoutViewModel(
         if (wasLastOpenSet && state.value.expandedExerciseId == exercise.id) {
             savedStateHandle[KEY_EXPANDED] = null
         }
+        // Logged afterwards (a past day): nobody is resting now, so no timer, notification or
+        // notification-permission prompt.
+        val startedAt = session?.startedAt
+        if (startedAt != null && isLoggedAfterwards(startedAt, dateProvider.now())) return
         // Rest before the next set (a new rest replaces a running one).
         restTimer.start(workoutId, exercise.restSec, nextUpAfter(setId, exercise, state.value.exercises))
     }
