@@ -8,11 +8,13 @@ import androidx.room.Room
 import dev.saketanand.setwise.data.local.SetwiseDatabase
 import dev.saketanand.setwise.data.dev.DevDataSeeder
 import dev.saketanand.setwise.data.prefs.DataStoreUserSettingsRepository
+import dev.saketanand.setwise.data.repository.DayMarkRepositoryImpl
 import dev.saketanand.setwise.data.repository.ExerciseRepositoryImpl
 import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
 import dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl
 import dev.saketanand.setwise.data.seed.ExerciseSeeder
 import dev.saketanand.setwise.data.seed.SeedPreferences
+import dev.saketanand.setwise.domain.repository.DayMarkRepository
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.TemplateRepository
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
@@ -61,6 +63,7 @@ val appModule = module {
     single { get<SetwiseDatabase>().exerciseDao() }
     single { get<SetwiseDatabase>().workoutDao() }
     single { get<SetwiseDatabase>().templateDao() }
+    single { get<SetwiseDatabase>().dayMarkDao() }
 
     // App preferences (seed version now; settings like body weight later). One instance per file.
     single<DataStore<Preferences>> {
@@ -76,6 +79,7 @@ val appModule = module {
     singleOf(::ExerciseRepositoryImpl) bind ExerciseRepository::class
     singleOf(::WorkoutRepositoryImpl) bind WorkoutRepository::class
     singleOf(::TemplateRepositoryImpl) bind TemplateRepository::class
+    singleOf(::DayMarkRepositoryImpl) bind DayMarkRepository::class
 
     // Debug-only fake data (only invoked when BuildConfig.DEBUG; see SetwiseApp).
     singleOf(::DevDataSeeder)
