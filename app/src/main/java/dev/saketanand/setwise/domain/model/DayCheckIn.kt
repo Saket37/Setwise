@@ -1,7 +1,10 @@
 package dev.saketanand.setwise.domain.model
 
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
 
 /** How a day looks in History's strip. */
 enum class DayState {
@@ -29,6 +32,11 @@ enum class DayState {
 object DayCheckIn {
 
     const val LOOKBACK_DAYS = 7
+
+    /** When a workout logged for a past day starts; the user can change it on the workout. */
+    val BACKFILL_START_TIME: LocalTime = LocalTime.of(18, 0)
+
+    fun backfillStartedAt(day: LocalDate, zone: ZoneId): Instant = day.atTime(BACKFILL_START_TIME).atZone(zone).toInstant()
 
     /** Days to ask about, newest first. */
     fun daysToAsk(

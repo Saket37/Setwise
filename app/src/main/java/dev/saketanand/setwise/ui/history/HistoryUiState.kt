@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.history
 
 import androidx.compose.runtime.Immutable
+import dev.saketanand.setwise.domain.model.DayState
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.time.Duration
@@ -15,20 +16,28 @@ data class HistoryUiState(
     val months: List<HistoryMonthUi> = emptyList(),
     /** Day tapped in the strip: the list jumps there and outlines its workouts. */
     val selectedDate: LocalDate? = null,
+    val today: LocalDate? = null,
 ) {
     val isEmpty: Boolean get() = !isLoading && months.isEmpty()
 
     /** A day is selected but nothing was logged on it: shown as a card, the list doesn't move. */
     val isSelectedDayEmpty: Boolean
         get() = selectedDate != null && months.none { month -> month.workouts.any { it.date == selectedDate } }
+
+    /** The empty selected day is in the past: it can be logged, or marked rest / missed. */
+    val canCheckInSelectedDay: Boolean
+        get() = isSelectedDayEmpty && today != null && selectedDate!!.isBefore(today)
+
+    val selectedDayState: DayState
+        get() = days.firstOrNull { it.date == selectedDate }?.state ?: DayState.None
 }
 
-/** One chip of the day strip: "S 3 •" (dot = trained that day). */
+/** One chip of the day strip: "S 3" and its mark: • trained, ✕ missed, moon = rest, blank = unanswered. */
 @Immutable
 data class DayUi(
     val date: LocalDate,
     val isToday: Boolean,
-    val trained: Boolean,
+    val state: DayState,
     val isSelected: Boolean,
 )
 

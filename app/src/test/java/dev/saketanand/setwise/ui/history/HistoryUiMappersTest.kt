@@ -2,6 +2,9 @@ package dev.saketanand.setwise.ui.history
 
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import java.time.Instant
+import dev.saketanand.setwise.domain.model.DayState
+import dev.saketanand.setwise.domain.model.DayStatus
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -23,7 +26,7 @@ class HistoryUiMappersTest {
         assertEquals(today, ui.days.first().date)
         assertEquals(today.minusDays(MIN_STRIP_DAYS - 1L), ui.days.last().date)
         assertEquals(listOf(today), ui.days.filter { it.isToday }.map { it.date })
-        assertEquals(listOf(LocalDate.of(2026, 10, 2), LocalDate.of(2026, 9, 30)), ui.days.filter { it.trained }.map { it.date })
+        assertEquals(listOf(LocalDate.of(2026, 10, 2), LocalDate.of(2026, 9, 30)), ui.days.filter { it.state == DayState.Trained }.map { it.date })
 
         val old = historyUi(listOf(workout(1, 2026, 6, 1)), today, zone)
         assertEquals(LocalDate.of(2026, 6, 1), old.days.last().date)
@@ -76,6 +79,35 @@ class HistoryUiMappersTest {
     fun `no workouts is empty, not loading`() {
         val ui = historyUi(emptyList(), today, zone)
         assertTrue(ui.isEmpty)
+    }
+
+    @Test
+    fun `the strip marks rest, missed and unanswered days`() {
+        // Sat 3 Oct; trains Mon / Wed / Fri; first workout Mon 28 Sep.
+        val ui = historyUi(
+            history = listOf(workout(1, 2026, 9, 28), workout(2, 2026, 9, 30)),
+            today = today,
+            zone = zone,
+            marks = mapOf(LocalDate.of(2026, 10, 1) to DayStatus.Missed),
+            trainingDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+        )
+        val state = ui.days.associate { it.date to it.state }
+
+        assertEquals(DayState.None, state[today])
+        assertEquals(DayState.Unanswered, state[LocalDate.of(2026, 10, 2)]) // a Friday, nothing said
+        assertEquals(DayState.Missed, state[LocalDate.of(2026, 10, 1)]) // said missed on a Thursday
+        assertEquals(DayState.Trained, state[LocalDate.of(2026, 9, 30)])
+        assertEquals(DayState.Rest, state[LocalDate.of(2026, 9, 29)]) // not a training day
+        assertEquals(DayState.None, state[LocalDate.of(2026, 9, 27)]) // before the first workout
+    }
+
+    @Test
+    fun `only an empty past day can be checked in`() {
+        val history = listOf(workout(1, 2026, 9, 30))
+
+        assertTrue(historyUi(history, today, zone, selectedDate = LocalDate.of(2026, 10, 1)).canCheckInSelectedDay)
+        assertEquals(false, historyUi(history, today, zone, selectedDate = today).canCheckInSelectedDay)
+        assertEquals(false, historyUi(history, today, zone, selectedDate = LocalDate.of(2026, 9, 30)).canCheckInSelectedDay)
     }
 
     private fun workout(id: Long, y: Int, m: Int, d: Int, hour: Int = 18, minute: Int = 0): WorkoutHistoryItem {
