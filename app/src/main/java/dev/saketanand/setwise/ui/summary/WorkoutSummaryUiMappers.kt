@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.ui.summary
 
+import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSession
@@ -28,7 +29,8 @@ fun WorkoutSession.toSummaryUi(zone: ZoneId): WorkoutSummaryUiState {
         endTime = end.toLocalTime(),
         duration = JavaDuration.between(startedAt, endedAt ?: startedAt).coerceAtLeast(JavaDuration.ZERO).toKotlinDuration(),
         volumeKg = done.sumOf { (_, sets) -> sets.sumOf { (it.weightKg ?: 0.0) * (it.reps ?: 0) } },
-        completedSets = done.sumOf { (_, sets) -> sets.size },
+        // Cardio is one entry, not sets.
+        completedSets = done.filter { (exercise, _) -> exercise.exercise.type != ExerciseType.CARDIO }.sumOf { (_, sets) -> sets.size },
         exerciseCount = done.size,
         records = exercises.mapNotNull { exercise ->
             exercise.personalRecord?.let { record ->
