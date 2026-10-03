@@ -9,24 +9,43 @@ import dev.saketanand.setwise.ui.workout.setKind
 import dev.saketanand.setwise.util.mondayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
+import dev.saketanand.setwise.domain.model.Plateau
+import dev.saketanand.setwise.domain.model.Progression
+import java.time.Instant
+import kotlin.math.roundToInt
 
 /** Domain → UI for Exercise detail. Plain functions, unit-tested without Android. */
 
 /** Weeks in the progress chart, this week included. */
 const val PROGRESS_WEEKS = 8
 
-fun exerciseDetailUi(exercise: Exercise, sessions: List<ExerciseSession>, today: LocalDate, zone: ZoneId): ExerciseDetailUiState {
+/**
+ * @param sessions newest first.
+ * @param now for the plateau rule ([Progression.plateau]: still being trained?).
+ */
+fun exerciseDetailUi(exercise: Exercise, sessions: List<ExerciseSession>, today: LocalDate, zone: ZoneId, now: Instant): ExerciseDetailUiState {
     val sessionsUi = sessions.map { ExerciseSessionUi(it.workoutId, it.startedAt.atZone(zone).toLocalDate(), it.sets) }
+    val progress = if (sessionsUi.isEmpty()) null else progress(exercise.setKind, sessionsUi, today)
     return ExerciseDetailUiState(
         isLoading = false,
         name = exercise.name,
         muscleGroup = exercise.muscleGroup,
         equipment = exercise.equipment,
         kind = exercise.setKind,
-        progress = if (sessionsUi.isEmpty()) null else progress(exercise.setKind, sessionsUi, today),
+        progress = progress,
+        plateau = progress?.let { Progression.plateau(exercise, sessions, now)?.toUi(it.metric, zone) },
+        nextSession = Progression.next(exercise, sessions, now),
         sessions = sessionsUi,
     )
 }
+
+private fun Plateau.toUi(metric: ProgressMetric, zone: ZoneId) = PlateauUi(
+    weeks = weeks,
+    sessions = sessions,
+    since = since.atZone(zone).toLocalDate(),
+    best = best.roundToInt(),
+    metric = metric,
+)
 
 private fun progress(kind: SetKind, sessions: List<ExerciseSessionUi>, today: LocalDate): ProgressUi {
     val metric = when (kind) {

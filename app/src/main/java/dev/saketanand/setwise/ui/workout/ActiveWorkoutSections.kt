@@ -60,6 +60,8 @@ import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 import dev.saketanand.setwise.ui.designsystem.theme.pr
 import kotlinx.coroutines.flow.drop
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseHintBanner
+import dev.saketanand.setwise.ui.exercises.hint
 
 /*
  * Pieces of the active workout screen: exercise cards, the set table and its rows, dialogs.
@@ -89,6 +91,17 @@ fun ExpandedExerciseCard(
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         ExerciseCardHeader(exercise = exercise, onAction = onAction)
+
+        // Until its sets are done: what the progression rules suggest (opens its progress).
+        val hint = exercise.nextSession?.takeIf { exercise.completedSets < exercise.sets.size }?.hint()
+        if (hint != null) {
+            SetwiseHintBanner(
+                text = hint,
+                onClick = { onAction(ActiveWorkoutAction.OnExerciseHistoryClick(exercise.exerciseId)) },
+                onClickLabel = stringResource(R.string.progression_hint_open),
+                modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 4.dp),
+            )
+        }
 
         if (exercise.kind == SetKind.Cardio) {
             // Logged: what was done, and Edit. Not yet: Log cardio.

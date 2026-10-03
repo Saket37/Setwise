@@ -2,11 +2,14 @@ package dev.saketanand.setwise.ui.workout
 
 import dev.saketanand.setwise.util.parseWeight
 import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.domain.model.PersonalBests
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSet
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
@@ -42,6 +45,21 @@ class ActiveWorkoutUiMappersTest {
         assertEquals("65" to "6", third.weightHint to third.repsHint)
         assertNull(third.previous)
         assertEquals("60 × 8 · 62.5 × 7", ui.lastTime)
+    }
+
+    @Test
+    fun `a progression hint shows a change, never for a workout logged afterwards`() {
+        val startedAt = at(2026, 10, 4, 18, 0, ZoneId.of("Asia/Kolkata"))
+        fun done(daysBefore: Long, vararg reps: Int) =
+            ExerciseSession(daysBefore, startedAt.minus(Duration.ofDays(daysBefore)), reps.map { LoggedSet(60.0, it, null, null) })
+        fun item(vararg history: ExerciseSession) =
+            SessionExercise(1, exercise(ExerciseType.STRENGTH), listOf(set(1), set(2), set(3)), emptyList(), history = history.toList())
+
+        val ready = item(done(3, 8, 8, 8), done(6, 8, 8, 8))
+        assertEquals(62.5 to 8, ready.toUi(hintsAt = startedAt).nextSession?.let { it.weightKg to it.reps })
+        assertNull(ready.toUi(hintsAt = null).nextSession)
+        // Same again (reps short last time): nothing to say during the workout.
+        assertNull(item(done(3, 8, 8, 6), done(6, 8, 8, 8)).toUi(hintsAt = startedAt).nextSession)
     }
 
     @Test

@@ -93,7 +93,9 @@ class ActiveWorkoutViewModel(
         restTimer.state.map { rest -> rest?.takeIf { it.workoutId == workoutId } },
     ) { session, expandedChoice, overlays, rest ->
         if (session == null) return@combine ActiveWorkoutUiState(isLoading = false)
-        val exercises = session.exercises.map { it.toUi() }
+        val loggedAfterwards = isLoggedAfterwards(session.startedAt, dateProvider.now())
+        // Progression hints are for the session at hand, not one logged afterwards.
+        val exercises = session.exercises.map { it.toUi(hintsAt = session.startedAt.takeUnless { loggedAfterwards }) }
         val startedAt = session.startedAt.atZone(dateProvider.zone)
         ActiveWorkoutUiState(
             isLoading = false,
@@ -101,7 +103,7 @@ class ActiveWorkoutViewModel(
             startedAtMillis = session.startedAt.toEpochMilli(),
             startTime = startedAt.toLocalTime(),
             // Logged afterwards (a past day): show the date, not a days-long clock.
-            pastDay = startedAt.toLocalDate().takeIf { isLoggedAfterwards(session.startedAt, dateProvider.now()) },
+            pastDay = startedAt.toLocalDate().takeIf { loggedAfterwards },
             exercises = exercises,
             expandedExerciseId = expandedExerciseId(exercises, expandedChoice),
             dialog = overlays.dialog,

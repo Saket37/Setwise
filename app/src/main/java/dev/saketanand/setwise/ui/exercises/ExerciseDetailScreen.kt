@@ -46,6 +46,17 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import dev.saketanand.setwise.domain.model.NextSession
+import dev.saketanand.setwise.domain.model.ProgressionRule
+import dev.saketanand.setwise.domain.model.SetFact
+import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
 
 /**
  * Destination: [Route.ExerciseDetail].
@@ -68,8 +79,8 @@ fun ExerciseDetailScreenRoot(
 }
 
 /**
- * Design "Exercise detail": the name, a progress chart (one bar per week) and its sessions.
- * (The plateau note and next-session suggestion come with milestone 13, progression hints.)
+ * Design "Exercise detail": the name, a progress chart (one bar per week), a plateau note when
+ * it has stalled, what to try next session (and the rule behind it), and its sessions.
  */
 @Composable
 fun ExerciseDetailScreen(
@@ -109,7 +120,15 @@ fun ExerciseDetailScreen(
                 contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                item(key = "progress") { ProgressCard(progress = uiState.progress) }
+                item(key = "progress") {
+                    ProgressCard(
+                        progress = uiState.progress,
+                        // On the chart only when it's within the chart's weeks.
+                        flatSince = uiState.plateau?.since?.takeIf { !it.isBefore(uiState.progress.firstWeek) },
+                    )
+                }
+                uiState.plateau?.let { plateau -> item(key = "plateau") { PlateauCard(plateau) } }
+                uiState.nextSession?.let { next -> item(key = "next") { NextSessionCard(next, uiState.kind) } }
                 item(key = "sessions-title") {
                     Text(
                         text = stringResource(R.string.recent_sessions),
@@ -128,9 +147,9 @@ fun ExerciseDetailScreen(
     }
 }
 
-/** "Estimated 1RM · last 8 weeks   48 kg", the bars, "10 Aug … This week". */
+/** "Estimated 1RM · last 8 weeks   48 kg", the bars, "10 Aug … flat since 7 Sep … This week". */
 @Composable
-private fun ProgressCard(progress: ProgressUi) {
+private fun ProgressCard(progress: ProgressUi, flatSince: LocalDate?) {
     val locale = currentLocale()
     val caption = stringResource(progress.metric.captionRes(), progress.weeks.size)
     val latest = progress.latest?.let { formatValue(progress.metric, it, locale) }
@@ -175,6 +194,15 @@ private fun ProgressCard(progress: ProgressUi) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )
+            if (flatSince != null) {
+                Text(
+                    text = stringResource(R.string.flat_since, flatSince.format(DateTimeFormatter.ofPattern("d MMM", locale))),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f),
+                )
+            }
             Text(
                 text = if (latest == null) {
                     stringResource(R.string.progress_none_recently, progress.weeks.size)
@@ -184,9 +212,90 @@ private fun ProgressCard(progress: ProgressUi) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.End,
+                modifier = if (flatSince != null) Modifier.weight(1f) else Modifier,
             )
         }
     }
+}
+
+/**
+ * "📉 Plateau · 4 weeks", the note (written on-device, or the template from the same facts)
+ * and where it came from.
+ */
+@Composable
+private fun PlateauCard(plateau: PlateauUi) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainer, MaterialTheme.shapes.large)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .semantics(mergeDescendants = true) {},
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(painterResource(R.drawable.ic_trend), null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.tertiary)
+            Text(
+                text = pluralStringResource(R.plurals.plateau_title, plateau.weeks, plateau.weeks),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.semantics { heading() },
+            )
+        }
+        Text(
+            text = when {
+                plateau.note != null -> plateau.note
+                plateau.isWriting -> stringResource(R.string.plateau_writing)
+                else -> stringResource(plateau.metric.plateauNoteRes(), plateau.best, plateau.weeks, plateau.sessions)
+            },
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (plateau.isWriting) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (plateau.note != null) {
+                Icon(painterResource(R.drawable.ic_ai_sparkle), null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(
+                text = stringResource(if (plateau.note != null) R.string.plateau_source_model else R.string.plateau_source_rules),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/** "NEXT SESSION  40 kg × 8 · 3 sets", and the rule that decided it. */
+@Composable
+private fun NextSessionCard(next: NextSession, kind: SetKind) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.primaryContainer, MaterialTheme.shapes.large)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .semantics(mergeDescendants = true) {},
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        SectionLabel(text = stringResource(R.string.next_session))
+        Text(
+            text = pluralStringResource(R.plurals.next_session_sets, next.sets, next.target(), next.sets),
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = listOfNotNull(
+                next.ruleText(kind),
+                stringResource(R.string.progression_rule_shows_in_workout).takeIf { next.isChange },
+            ).joinToString(" "),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+private fun ProgressMetric.plateauNoteRes(): Int = when (this) {
+    ProgressMetric.Reps -> R.string.plateau_note_reps
+    ProgressMetric.Duration -> R.string.plateau_note_seconds
+    else -> R.string.plateau_note_weight
 }
 
 /** "Fri, 2 Oct   40 × 6 · 40 × 6 · 37.5 × 8"; opens the workout. */
@@ -272,6 +381,8 @@ private fun ExerciseDetailPreview() = SetwiseScreenPreview {
                 firstWeek = LocalDate.of(2026, 8, 10),
                 latest = 48.0,
             ),
+            plateau = PlateauUi(weeks = 4, sessions = 8, since = LocalDate.of(2026, 9, 7), best = 48, metric = ProgressMetric.EstimatedOneRepMax),
+            nextSession = NextSession(37.5, 8, null, 3, ProgressionRule.Lighter, SetFact(40.0, 6, null)),
             sessions = listOf(
                 ExerciseSessionUi(1, LocalDate.of(2026, 10, 2), listOf(LoggedSet(40.0, 6, null, null), LoggedSet(37.5, 8, null, null))),
                 ExerciseSessionUi(2, LocalDate.of(2026, 9, 29), listOf(LoggedSet(40.0, 6, null, null), LoggedSet(40.0, 5, null, null))),

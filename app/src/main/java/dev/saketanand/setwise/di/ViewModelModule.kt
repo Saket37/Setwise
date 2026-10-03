@@ -72,6 +72,7 @@ val viewModelModule = module {
             exerciseRepository = get(),
             workoutRepository = get(),
             dateProvider = get(),
+            plateauNotes = get(),
         )
     }
 

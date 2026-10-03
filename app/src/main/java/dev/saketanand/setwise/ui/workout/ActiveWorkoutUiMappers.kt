@@ -13,6 +13,7 @@ import dev.saketanand.setwise.util.toWeightLabel
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
+import dev.saketanand.setwise.domain.model.Progression
 
 /** Domain → UI for the active workout. Plain functions, unit-tested without Android. */
 
@@ -24,7 +25,11 @@ val Exercise.setKind: SetKind
         else -> SetKind.WeightReps
     }
 
-fun SessionExercise.toUi(): WorkoutExerciseUi {
+/**
+ * @param hintsAt the workout's start, for its progression hint ([Progression.next] from the
+ *   sessions before it); null: no hint (a workout logged afterwards).
+ */
+fun SessionExercise.toUi(hintsAt: Instant? = null): WorkoutExerciseUi {
     val kind = exercise.setKind
     // Hints: the same set last time; for extra sets beyond last time's count, the row above
     // (what was typed there, or its hint), so set 5 suggests what set 4 was done with.
@@ -59,6 +64,7 @@ fun SessionExercise.toUi(): WorkoutExerciseUi {
         sets = rows,
         lastTime = previousSets.mapNotNull { it.label(kind) }.takeIf { it.isNotEmpty() }?.joinToString(" · "),
         cardio = sets.firstOrNull { it.isCompleted }?.cardio,
+        nextSession = hintsAt?.let { Progression.next(exercise, history, it) }?.takeIf { it.isChange },
     )
 }
 
