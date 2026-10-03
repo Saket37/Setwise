@@ -100,7 +100,10 @@ fun ActiveWorkoutScreenRoot(
 
     // Ask for notifications the first time a rest starts (Android 13+), when it's clear why:
     // the countdown and "rest over" alert show there. Without it the timer still works in the app.
-    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    // Allowed → show the countdown that was dropped while the prompt was up.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) viewModel.onAction(ActiveWorkoutAction.OnNotificationsAllowed)
+    }
     var askedForNotifications by rememberSaveable { mutableStateOf(false) }
     val isResting = uiState.rest != null
     LaunchedEffect(isResting) {

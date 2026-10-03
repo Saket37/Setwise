@@ -27,7 +27,7 @@ class RestTimerCoordinator(
     private val restTimer: RestTimer,
     private val restAlert: RestAlert,
     private val scope: CoroutineScope,
-) {
+) : RestNotificationRefresher {
 
     fun start() {
         scope.launch {
@@ -44,9 +44,15 @@ class RestTimerCoordinator(
         }
     }
 
-    private fun startService() {
+    override fun refresh() {
+        // The service posts the countdown on every start command; it's already running, so this
+        // just shows the notification again (now that it's allowed).
+        if (restTimer.state.value != null) startService(WorkoutTimerService.ACTION_REFRESH)
+    }
+
+    private fun startService(action: String? = null) {
         try {
-            ContextCompat.startForegroundService(context, Intent(context, WorkoutTimerService::class.java))
+            ContextCompat.startForegroundService(context, Intent(context, WorkoutTimerService::class.java).setAction(action))
         } catch (e: IllegalStateException) {
             // Android 12+ refuses to start one from the background (shouldn't happen: rests start
             // from a tap). The timer still works in the app, just without the notification.

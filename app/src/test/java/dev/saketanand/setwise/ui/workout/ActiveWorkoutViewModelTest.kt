@@ -44,12 +44,13 @@ class ActiveWorkoutViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeWorkoutRepository()
     private val restTimer = FakeRestTimer()
+    private var notificationRefreshes = 0
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
     @After fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel() =
-        ActiveWorkoutViewModel(WORKOUT_ID, repository, FixedDateProvider, SavedStateHandle(), writeScope = backgroundScope, restTimer = restTimer).also { vm ->
+        ActiveWorkoutViewModel(WORKOUT_ID, repository, FixedDateProvider, SavedStateHandle(), writeScope = backgroundScope, restTimer = restTimer, restNotifications = { notificationRefreshes++ }).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
         }
 
@@ -173,6 +174,15 @@ class ActiveWorkoutViewModelTest {
         vm.onAction(ActiveWorkoutAction.OnRestSkip)
         assertEquals(listOf(15), restTimer.adjustments)
         assertEquals(1, restTimer.skips)
+    }
+
+    @Test
+    fun `allowing notifications shows the rest notification again`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnNotificationsAllowed)
+
+        assertEquals(1, notificationRefreshes)
     }
 
     @Test

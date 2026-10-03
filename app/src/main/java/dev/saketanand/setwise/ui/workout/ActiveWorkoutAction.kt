@@ -51,6 +51,9 @@ sealed interface ActiveWorkoutAction {
     data class OnRestAdjust(val deltaSec: Int) : ActiveWorkoutAction
     data object OnRestSkip : ActiveWorkoutAction
 
+    /** The user just allowed notifications (Android 13+ prompt). */
+    data object OnNotificationsAllowed : ActiveWorkoutAction
+
     // Navigation (handled in ActiveWorkoutScreenRoot)
 
     data object OnMinimizeClick : ActiveWorkoutAction

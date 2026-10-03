@@ -32,6 +32,7 @@ class WorkoutTimerService : LifecycleService() {
         when (intent?.action) {
             ACTION_ADD_15 -> restTimer.adjust(15)
             ACTION_SKIP -> restTimer.skip()
+            ACTION_REFRESH -> Unit // just post the notification again, below
         }
         // Android requires startForeground soon after the service is started, even if the rest
         // has already ended in the meantime (it's then stopped right away below).
@@ -86,6 +87,7 @@ class WorkoutTimerService : LifecycleService() {
     companion object {
         const val ACTION_ADD_15 = "dev.saketanand.setwise.action.REST_ADD_15"
         const val ACTION_SKIP = "dev.saketanand.setwise.action.REST_SKIP"
+        const val ACTION_REFRESH = "dev.saketanand.setwise.action.REST_REFRESH"
         private const val WAKE_LOCK_MARGIN_MS = 5_000L
     }
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
+import dev.saketanand.setwise.timer.RestNotificationRefresher
 import dev.saketanand.setwise.timer.RestTimer
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.DateProvider
@@ -47,6 +48,7 @@ class ActiveWorkoutViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val writeScope: CoroutineScope,
     private val restTimer: RestTimer,
+    private val restNotifications: RestNotificationRefresher,
 ) : ViewModel() {
 
     /** Exercise the user opened or closed; null = automatic (first one with sets left). */
@@ -151,6 +153,8 @@ class ActiveWorkoutViewModel(
 
             is ActiveWorkoutAction.OnRestAdjust -> restTimer.adjust(action.deltaSec)
             ActiveWorkoutAction.OnRestSkip -> restTimer.skip()
+            // The running rest's notification was posted before this was allowed: post it again.
+            ActiveWorkoutAction.OnNotificationsAllowed -> restNotifications.refresh()
 
             // Navigation: ActiveWorkoutScreenRoot handles these.
             ActiveWorkoutAction.OnMinimizeClick,
