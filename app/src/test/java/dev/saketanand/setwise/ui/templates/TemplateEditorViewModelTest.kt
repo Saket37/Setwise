@@ -29,6 +29,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
+import dev.saketanand.setwise.domain.model.NewExercise
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TemplateEditorViewModelTest {
@@ -132,6 +134,7 @@ class TemplateEditorViewModelTest {
         override fun observeRecentExercises(limit: Int): Flow<List<RecentExercise>> = flowOf(emptyList())
         override fun observeExerciseCount(): Flow<Int> = flowOf(0)
         override suspend fun getExercises(ids: List<Long>): List<Exercise> = ids.map(::exercise)
+        override suspend fun createExercise(exercise: NewExercise): CreateExerciseResult = CreateExerciseResult.Created(0)
         override fun observeExercise(id: Long): Flow<Exercise?> = flowOf(exercise(id))
     }
 

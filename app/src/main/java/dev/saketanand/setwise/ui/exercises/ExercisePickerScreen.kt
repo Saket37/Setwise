@@ -43,16 +43,27 @@ import org.koin.androidx.compose.koinViewModel
 /**
  * Destination: [Route.ExercisePicker].
  * @param onExercisesPicked Returns the selection to the caller.
+ * @param createdExerciseId Result from "New exercise": selected here; null when there is none.
+ * @param onCreatedExerciseConsumed Call after selecting it, so it isn't handled twice.
  * @param onCreateExercise "Create new", pre-filled with the search text.
  */
 @Composable
 fun ExercisePickerScreenRoot(
+    createdExerciseId: Long?,
+    onCreatedExerciseConsumed: () -> Unit,
     onExercisesPicked: (exerciseIds: List<Long>) -> Unit,
     onCreateExercise: (initialName: String) -> Unit,
     onBack: () -> Unit,
     viewModel: ExercisePickerViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(createdExerciseId) {
+        if (createdExerciseId != null) {
+            viewModel.onAction(ExercisePickerAction.OnExerciseCreated(createdExerciseId))
+            onCreatedExerciseConsumed()
+        }
+    }
 
     // The search text lives here, not in the ViewModel: the field must change in the same frame
     // as the keystroke (a round trip through a StateFlow can drop letters or move the cursor).

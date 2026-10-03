@@ -215,7 +215,9 @@ fun PlanYourRoutineSection(
         }
         PlanRoutineCards(
             onCreateTemplate = { onAction(HomeAction.OnCreateTemplateClick) },
-            onBuildFromGoal = { onAction(HomeAction.OnCreateTemplateFromGoalClick) },
+            // Hidden until "Build from a goal" exists (milestone 15, on-device LLM):
+            // { onAction(HomeAction.OnCreateTemplateFromGoalClick) }
+            onBuildFromGoal = null,
         )
     }
 }
@@ -499,11 +501,14 @@ fun SaveLastWorkoutAsTemplateCard(
     )
 }
 
-/** Two cards side by side: "Create a template" and "✦ Build from a goal" (artboard 1b). */
+/**
+ * Two cards side by side: "Create a template" and "✦ Build from a goal" (artboard 1b).
+ * @param onBuildFromGoal null hides that card (not built yet).
+ */
 @Composable
 fun PlanRoutineCards(
     onCreateTemplate: () -> Unit,
-    onBuildFromGoal: () -> Unit,
+    onBuildFromGoal: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     // IntrinsicSize.Min + fillMaxHeight: both cards get the height of the taller one.
@@ -518,14 +523,16 @@ fun PlanRoutineCards(
             onClick = onCreateTemplate,
             modifier = Modifier.weight(1f).fillMaxHeight(),
         )
-        RoutineCard(
-            title = stringResource(R.string.build_from_a_goal),
-            description = stringResource(R.string.build_from_a_goal_description),
-            icon = R.drawable.ic_ai_sparkle,
-            onClick = onBuildFromGoal,
-            modifier = Modifier.weight(1f).fillMaxHeight(),
-            colors = RoutineCardDefaults.highlightedColors(),
-        )
+        if (onBuildFromGoal != null) {
+            RoutineCard(
+                title = stringResource(R.string.build_from_a_goal),
+                description = stringResource(R.string.build_from_a_goal_description),
+                icon = R.drawable.ic_ai_sparkle,
+                onClick = onBuildFromGoal,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                colors = RoutineCardDefaults.highlightedColors(),
+            )
+        }
     }
 }
 

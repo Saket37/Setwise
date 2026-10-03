@@ -60,9 +60,8 @@ fun HomeScreenRoot(
             HomeEvent.StartWorkoutFailed ->
                 Toast.makeText(context, R.string.start_workout_failed, Toast.LENGTH_SHORT).show()
 
-            // TODO (milestone 3): open onEditTemplate(event.templateId) once the editor exists.
-            is HomeEvent.TemplateCreated ->
-                Toast.makeText(context, R.string.template_saved, Toast.LENGTH_SHORT).show()
+            // Saved from the last workout: open it to review and rename.
+            is HomeEvent.TemplateCreated -> onEditTemplate(event.templateId)
             HomeEvent.SaveTemplateFailed ->
                 Toast.makeText(context, R.string.save_template_failed, Toast.LENGTH_SHORT).show()
         }

@@ -25,6 +25,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
+import dev.saketanand.setwise.domain.model.NewExercise
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExercisePickerViewModelTest {
@@ -65,6 +67,17 @@ class ExercisePickerViewModelTest {
 
         vm.onAction(ExercisePickerAction.OnExerciseToggle(3))
         assertEquals(listOf(1L), vm.state.value.selectedIds)
+    }
+
+    @Test
+    fun `an exercise made on New exercise comes back selected`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAction(ExercisePickerAction.OnExerciseToggle(1))
+
+        vm.onAction(ExercisePickerAction.OnExerciseCreated(3))
+        vm.onAction(ExercisePickerAction.OnExerciseCreated(3)) // already selected: stays
+
+        assertEquals(listOf(1L, 3L), vm.state.value.selectedIds)
     }
 
     @Test
@@ -166,6 +179,7 @@ class ExercisePickerViewModelTest {
         )
         override fun observeExercise(id: Long): Flow<Exercise?> = library.map { list -> list.firstOrNull { it.id == id } }
         override suspend fun getExercises(ids: List<Long>): List<Exercise> = ids.mapNotNull { id -> library.value.firstOrNull { it.id == id } }
+        override suspend fun createExercise(exercise: NewExercise): CreateExerciseResult = CreateExerciseResult.Created(0)
         val searches = mutableListOf<String>()
 
         override fun observeExercises(query: String, muscleGroup: String?): Flow<List<Exercise>> {

@@ -40,6 +40,17 @@ class WorkoutSummaryUiMappersTest {
     }
 
     @Test
+    fun `a cardio entry isn't counted as a set`() {
+        val ui = session(
+            exercise(1, "Bench", ExerciseType.STRENGTH, listOf(set(1, 60.0, 8), set(2, 62.5, 6))),
+            exercise(2, "Treadmill", ExerciseType.CARDIO, listOf(set(3, null, null))),
+        ).toSummaryUi(zone)
+
+        assertEquals(2, ui.completedSets)
+        assertEquals(2, ui.exerciseCount)
+    }
+
+    @Test
     fun `each exercise shows its set count and best set`() {
         val ui = session(
             exercise(1, "Bench", ExerciseType.STRENGTH, listOf(set(1, 60.0, 8), set(2, 62.5, 6))),

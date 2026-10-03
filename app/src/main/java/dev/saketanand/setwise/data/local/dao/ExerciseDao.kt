@@ -95,6 +95,10 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercises WHERE name = :name")
     suspend fun getByName(name: String): ExerciseEntity?
 
+    /** Same name ignoring case ("bench press" finds "Bench Press"), for duplicate checks. */
+    @Query("SELECT * FROM exercises WHERE name = :name COLLATE NOCASE LIMIT 1")
+    suspend fun findByNameIgnoringCase(name: String): ExerciseEntity?
+
     /** Null if no exercise has this id. */
     @Query("SELECT * FROM exercises WHERE id = :id")
     suspend fun getById(id: Long): ExerciseEntity?

@@ -46,6 +46,11 @@ import java.time.LocalTime
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.foundation.clickable
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseConfirmDialog
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseMenuItem
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseOverflowMenu
 
 /**
  * Destination: [Route.WorkoutSummary].
@@ -126,6 +131,27 @@ fun WorkoutSummaryScreen(
         }
     }
 
+    if (uiState.isConfirmingDelete) {
+        SetwiseConfirmDialog(
+            title = stringResource(R.string.delete_workout_title, uiState.name),
+            message = stringResource(R.string.delete_workout_message),
+            confirmText = stringResource(R.string.delete),
+            onConfirm = { onAction(WorkoutSummaryAction.OnConfirmDelete) },
+            onDismiss = { onAction(WorkoutSummaryAction.OnDeleteDismiss) },
+            isDestructive = true,
+        )
+    }
+
+    if (uiState.isRenaming) {
+        SetwiseTextInputDialog(
+            title = stringResource(R.string.rename_workout),
+            label = stringResource(R.string.template_name),
+            initialText = uiState.name,
+            onConfirm = { onAction(WorkoutSummaryAction.OnRenameConfirm(it)) },
+            onDismiss = { onAction(WorkoutSummaryAction.OnRenameDismiss) },
+        )
+    }
+
     uiState.editTimes?.let { edit ->
         EditTimesDialog(edit = edit, onAction = onAction)
         edit.picking?.let { field ->
@@ -149,6 +175,17 @@ private fun SummaryHeader(uiState: WorkoutSummaryUiState, onAction: (WorkoutSumm
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f),
             )
+            SetwiseOverflowMenu(
+                contentDescription = stringResource(R.string.workout_options),
+                items = listOf(
+                    SetwiseMenuItem(stringResource(R.string.rename_workout), { onAction(WorkoutSummaryAction.OnRenameClick) }),
+                    SetwiseMenuItem(
+                        label = stringResource(R.string.delete_workout),
+                        onClick = { onAction(WorkoutSummaryAction.OnDeleteClick) },
+                        isDestructive = true,
+                    ),
+                ),
+            )
             SetwiseIconButton(
                 icon = R.drawable.ic_close,
                 contentDescription = stringResource(R.string.close),
@@ -162,7 +199,9 @@ private fun SummaryHeader(uiState: WorkoutSummaryUiState, onAction: (WorkoutSumm
             text = uiState.name,
             style = MaterialTheme.typography.displayMedium,
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.semantics { heading() },
+            modifier = Modifier
+                .clickable(onClickLabel = stringResource(R.string.rename_workout)) { onAction(WorkoutSummaryAction.OnRenameClick) }
+                .semantics { heading() },
         )
         if (uiState.date != null && uiState.startTime != null && uiState.endTime != null) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {

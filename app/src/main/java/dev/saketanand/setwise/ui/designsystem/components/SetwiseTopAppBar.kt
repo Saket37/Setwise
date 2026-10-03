@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
+import androidx.compose.foundation.clickable
 
 /**
  * Top bar of pushed screens (exercise picker, create exercise, template editor…): back arrow,
@@ -43,6 +44,9 @@ fun SetwiseTopAppBar(
     @DrawableRes navigationIcon: Int = R.drawable.ic_arrow_back,
     navigationContentDescription: String = stringResource(R.string.back),
     subtitle: (@Composable () -> Unit)? = null,
+    /** Makes the title tappable (e.g. rename), labelled [titleClickLabel] for screen readers. */
+    onTitleClick: (() -> Unit)? = null,
+    titleClickLabel: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -73,7 +77,9 @@ fun SetwiseTopAppBar(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 // Lets screen-reader users jump straight to the screen title.
-                modifier = Modifier.semantics { heading() },
+                modifier = Modifier
+                    .then(if (onTitleClick != null) Modifier.clickable(onClickLabel = titleClickLabel, onClick = onTitleClick) else Modifier)
+                    .semantics { heading() },
             )
             if (subtitle != null) {
                 CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) {

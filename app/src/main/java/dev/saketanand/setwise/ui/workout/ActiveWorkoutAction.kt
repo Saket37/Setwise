@@ -20,6 +20,10 @@ sealed interface ActiveWorkoutAction {
     data object OnConfirmRemoveExercise : ActiveWorkoutAction
     data object OnDismissDialog : ActiveWorkoutAction
 
+    /** Tap on the workout's name: the rename dialog. */
+    data object OnRenameClick : ActiveWorkoutAction
+    data class OnRenameConfirm(val name: String) : ActiveWorkoutAction
+
     // Exercises
 
     /** Tap on a card's header: expand it, or collapse it if it's the open one. */

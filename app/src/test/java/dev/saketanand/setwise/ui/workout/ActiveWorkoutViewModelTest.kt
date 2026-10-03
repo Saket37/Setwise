@@ -336,6 +336,18 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
+    fun `tapping the name renames the workout`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnRenameClick)
+        assertTrue(vm.state.value.dialog is ActiveWorkoutDialog.Rename)
+        vm.onAction(ActiveWorkoutAction.OnRenameConfirm("Leg Day"))
+
+        assertEquals(null, vm.state.value.dialog)
+        assertEquals(listOf("Leg Day"), repository.renames)
+    }
+
+    @Test
     fun `a start time later than now becomes now`() = runTest(dispatcher) {
         val vm = viewModel()
 
@@ -362,6 +374,11 @@ class ActiveWorkoutViewModelTest {
         val removed = mutableListOf<Long>()
         val added = mutableListOf<List<Long>>()
         val startTimes = mutableListOf<Instant>()
+        val renames = mutableListOf<String>()
+
+        override suspend fun renameWorkout(workoutId: Long, name: String) {
+            renames += name
+        }
 
         override fun observeSession(workoutId: Long): Flow<WorkoutSession?> = session
 

@@ -49,6 +49,9 @@ private fun TabScreen(content: @Composable () -> Unit) {
 /** Key under which the exercise picker hands its selection back to the screen that opened it. */
 private const val PICKED_EXERCISE_IDS = "picked_exercise_ids"
 
+/** Result key: the exercise made on "New exercise" (or chosen there instead), for the picker. */
+private const val CREATED_EXERCISE_ID = "created_exercise_id"
+
 /**
  * All destinations and how they connect. Screens never touch the NavController: they expose
  * callbacks, and this file decides where each callback goes.
@@ -148,8 +151,12 @@ fun SetwiseNavHost(
 
         // Exercises
 
-        composable<Route.ExercisePicker> {
+        composable<Route.ExercisePicker> { entry ->
+            val createdExerciseId by entry.savedStateHandle.getStateFlow<Long?>(CREATED_EXERCISE_ID, null)
+                .collectAsStateWithLifecycle()
             ExercisePickerScreenRoot(
+                createdExerciseId = createdExerciseId,
+                onCreatedExerciseConsumed = { entry.savedStateHandle[CREATED_EXERCISE_ID] = null },
                 onExercisesPicked = { ids ->
                     navController.previousBackStackEntry
                         ?.savedStateHandle
@@ -161,10 +168,15 @@ fun SetwiseNavHost(
             )
         }
 
-        composable<Route.CreateExercise> {
+        composable<Route.CreateExercise> { entry ->
+            val route = entry.toRoute<Route.CreateExercise>()
             CreateExerciseScreenRoot(
-                // The picker's list is a Room Flow, so the new exercise shows up there by itself.
-                onExerciseCreated = { navController.popBackStack() },
+                viewModel = koinViewModel { parametersOf(route.initialName) },
+                onExerciseCreated = { exerciseId ->
+                    // The picker selects it (and its list, a Room Flow, already shows a new one).
+                    navController.previousBackStackEntry?.savedStateHandle?.set(CREATED_EXERCISE_ID, exerciseId)
+                    navController.popBackStack()
+                },
                 onBack = { navController.popBackStack() },
             )
         }
