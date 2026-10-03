@@ -7,6 +7,7 @@ import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.flow.first
 
 /**
@@ -15,7 +16,8 @@ import kotlinx.coroutines.flow.first
  * number, the model's answer, whether it was used and how long it took, the insight's facts
  * and text, "New exercise" help on sample names, then quick-log lines (tags SetwiseAiCheck,
  * CalorieEstimator, WorkoutInsightWriter, ExerciseAssistant, QuickLogInterpreter, GeminiNanoModel).
- * Saves nothing. Started by MainActivity from a debug launch extra:
+ * Saves nothing. One run at a time. Started by MainActivity from a debug launch extra (add
+ * `--ez ai_check_quick_log true` for the quick-log lines alone):
  *
  *     adb shell am start -n dev.saketanand.setwise/.MainActivity --ez ai_check true
  */
@@ -29,7 +31,20 @@ class AiCheck(
     private val workoutRepository: WorkoutRepository,
     private val userSettingsRepository: UserSettingsRepository,
 ) {
-    suspend fun run(workouts: Int = DEFAULT_WORKOUTS) {
+    suspend fun run(quickLogOnly: Boolean = false, workouts: Int = DEFAULT_WORKOUTS) {
+        if (!running.compareAndSet(false, true)) {
+            Log.i(TAG, "Already running")
+            return
+        }
+        try {
+            if (quickLogOnly) checkQuickLog() else checkAll(workouts)
+            Log.i(TAG, "Done")
+        } finally {
+            running.set(false)
+        }
+    }
+
+    private suspend fun checkAll(workouts: Int) {
         val availability = model.availability()
         val weight = userSettingsRepository.settings.first().bodyWeightKg
         Log.i(TAG, "Start: model $availability, body weight ${weight ?: "not set"}")
@@ -40,7 +55,6 @@ class AiCheck(
         }
         checkExerciseNames()
         checkQuickLog()
-        Log.i(TAG, "Done")
     }
 
     private suspend fun checkWorkouts(workouts: Int, weight: Double) {
@@ -111,6 +125,8 @@ class AiCheck(
             "landmine press", "bulgarian split squat", "hip thrust machine", "copenhagen plank",
         )
         const val EXTRA = "ai_check"
+        const val EXTRA_QUICK_LOG_ONLY = "ai_check_quick_log"
+        private val running = AtomicBoolean(false)
         private const val DEFAULT_WORKOUTS = 5
     }
 }
