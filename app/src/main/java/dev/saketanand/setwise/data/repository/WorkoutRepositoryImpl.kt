@@ -10,6 +10,8 @@ import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
 import dev.saketanand.setwise.data.mapper.toDomain
 import dev.saketanand.setwise.data.mapper.toFinishedWorkout
 import dev.saketanand.setwise.data.mapper.toSession
+import dev.saketanand.setwise.domain.model.ExerciseSession
+import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
@@ -35,6 +37,18 @@ class WorkoutRepositoryImpl(
 
     override fun observeHistory(): Flow<List<WorkoutHistoryItem>> =
         workoutDao.observeHistory().map { rows -> rows.map { it.toDomain() } }
+
+    override fun observeExerciseSessions(exerciseId: Long): Flow<List<ExerciseSession>> =
+        workoutDao.observeExerciseLog(exerciseId).map { rows ->
+            // Rows come newest workout first, sets in order; groupBy keeps both orders.
+            rows.groupBy { it.workoutId }.map { (workoutId, sets) ->
+                ExerciseSession(
+                    workoutId = workoutId,
+                    startedAt = Instant.ofEpochMilli(sets.first().startedAt),
+                    sets = sets.map { LoggedSet(it.weightKg, it.reps, it.durationSec, it.distanceKm) },
+                )
+            }
+        }
 
     override fun observeStats(from: Instant, to: Instant): Flow<WorkoutStats> =
         workoutDao.observeStats(from.toEpochMilli(), to.toEpochMilli()).map { it.toDomain() }
