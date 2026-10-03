@@ -336,4 +336,24 @@ interface WorkoutDao {
      */
     @Query("DELETE FROM workouts WHERE id = :workoutId AND endedAt IS NULL")
     suspend fun deleteRunningWorkout(workoutId: Long): Int
+
+    /** Deletes a finished workout with its exercises and sets. Returns 1 if it was deleted. */
+    @Query("DELETE FROM workouts WHERE id = :workoutId AND endedAt IS NOT NULL")
+    suspend fun deleteFinishedWorkout(workoutId: Long): Int
+
+    @Query("SELECT startedAt FROM workouts WHERE id = :workoutId")
+    suspend fun startedAtOf(workoutId: Long): Long?
+
+    @Query("SELECT DISTINCT exerciseId FROM workout_exercises WHERE workoutId = :workoutId")
+    suspend fun exerciseIdsOf(workoutId: Long): List<Long>
+
+    /** Finished workouts from [fromStartedAt] on that include any of [exerciseIds]. */
+    @Query(
+        """
+        SELECT DISTINCT w.id FROM workouts w
+        JOIN workout_exercises we ON we.workoutId = w.id
+        WHERE w.endedAt IS NOT NULL AND w.startedAt >= :fromStartedAt AND we.exerciseId IN (:exerciseIds)
+        """
+    )
+    suspend fun finishedWorkoutsWithExercisesFrom(exerciseIds: List<Long>, fromStartedAt: Long): List<Long>
 }

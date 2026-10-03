@@ -49,6 +49,17 @@ class WorkoutSummaryViewModelTest {
     }
 
     @Test
+    fun `delete asks first, then deletes and closes the summary`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(WorkoutSummaryAction.OnDeleteClick)
+        assertEquals(true, vm.state.value.isConfirmingDelete)
+        vm.onAction(WorkoutSummaryAction.OnConfirmDelete)
+
+        assertEquals(WorkoutSummaryEvent.Closed, vm.events.first())
+    }
+
+    @Test
     fun `save as template creates it once`() = runTest(dispatcher) {
         val vm = viewModel()
 
@@ -101,6 +112,10 @@ class WorkoutSummaryViewModelTest {
         val session = MutableStateFlow<WorkoutSession?>(session())
         val timeUpdates = mutableListOf<Pair<Instant, Instant>>()
         override fun observeSession(workoutId: Long): Flow<WorkoutSession?> = session
+        override suspend fun deleteFinishedWorkout(workoutId: Long): Boolean {
+            session.value = null // like Room: the observed workout is gone
+            return true
+        }
         override suspend fun updateFinishedTimes(workoutId: Long, startedAt: Instant, endedAt: Instant): Boolean {
             timeUpdates += startedAt to endedAt
             return true

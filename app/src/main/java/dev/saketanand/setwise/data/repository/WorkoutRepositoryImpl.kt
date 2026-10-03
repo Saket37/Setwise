@@ -173,14 +173,18 @@ class WorkoutRepositoryImpl(
             workoutDao.deleteIncompleteSets(workoutId)
             workoutDao.deleteExercisesWithoutSets(workoutId)
             workoutDao.workoutExerciseIds(workoutId).forEach { renumberSets(it) }
-            markPersonalRecords(workoutId)
+            // This workout's records, and later ones it may have taken them from (it can be a
+            // past day logged afterwards).
+            markRecordsFrom(workoutDao.exerciseIdsOf(workoutId), workoutDao.startedAtOf(workoutId) ?: 0)
             true
         }
 
     override suspend fun updateFinishedTimes(workoutId: Long, startedAt: Instant, endedAt: Instant): Boolean =
         database.withTransaction {
+            val oldStartedAt = workoutDao.startedAtOf(workoutId)
             val updated = workoutDao.updateFinishedTimes(workoutId, startedAt.toEpochMilli(), endedAt.toEpochMilli()) == 1
-            if (updated) markPersonalRecords(workoutId)
+            // Moving it can change which workouts come before which: check from the earlier start.
+            if (updated) markRecordsFrom(workoutDao.exerciseIdsOf(workoutId), minOf(oldStartedAt ?: Long.MAX_VALUE, startedAt.toEpochMilli()))
             updated
         }
 
@@ -196,6 +200,26 @@ class WorkoutRepositoryImpl(
         workoutDao.clearPersonalRecords(workoutId)
         val recordSetIds = session.exercises.mapNotNull { it.personalRecord?.set?.id }
         if (recordSetIds.isNotEmpty()) workoutDao.markPersonalRecords(recordSetIds)
+    }
+
+    override suspend fun deleteFinishedWorkout(workoutId: Long): Boolean =
+        database.withTransaction {
+            val startedAt = workoutDao.startedAtOf(workoutId) ?: return@withTransaction false
+            val exerciseIds = workoutDao.exerciseIdsOf(workoutId)
+            if (workoutDao.deleteFinishedWorkout(workoutId) == 0) return@withTransaction false
+            // Later records were measured against this workout's sets.
+            markRecordsFrom(exerciseIds, startedAt)
+            true
+        }
+
+    /**
+     * Marks records again in every finished workout from [fromStartedAt] on that has any of
+     * [exerciseIds]. Each workout is measured against the sets before it, so order doesn't
+     * matter. Call inside a transaction.
+     */
+    private suspend fun markRecordsFrom(exerciseIds: List<Long>, fromStartedAt: Long) {
+        if (exerciseIds.isEmpty()) return
+        workoutDao.finishedWorkoutsWithExercisesFrom(exerciseIds, fromStartedAt).forEach { markPersonalRecords(it) }
     }
 
     override suspend fun discardWorkout(workoutId: Long) {

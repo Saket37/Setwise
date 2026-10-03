@@ -48,6 +48,9 @@ import kotlin.time.Duration.Companion.seconds
 import org.koin.androidx.compose.koinViewModel
 import androidx.compose.foundation.clickable
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseConfirmDialog
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseMenuItem
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseOverflowMenu
 
 /**
  * Destination: [Route.WorkoutSummary].
@@ -128,6 +131,17 @@ fun WorkoutSummaryScreen(
         }
     }
 
+    if (uiState.isConfirmingDelete) {
+        SetwiseConfirmDialog(
+            title = stringResource(R.string.delete_workout_title, uiState.name),
+            message = stringResource(R.string.delete_workout_message),
+            confirmText = stringResource(R.string.delete),
+            onConfirm = { onAction(WorkoutSummaryAction.OnConfirmDelete) },
+            onDismiss = { onAction(WorkoutSummaryAction.OnDeleteDismiss) },
+            isDestructive = true,
+        )
+    }
+
     if (uiState.isRenaming) {
         SetwiseTextInputDialog(
             title = stringResource(R.string.rename_workout),
@@ -160,6 +174,17 @@ private fun SummaryHeader(uiState: WorkoutSummaryUiState, onAction: (WorkoutSumm
                 text = stringResource(R.string.workout_complete),
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f),
+            )
+            SetwiseOverflowMenu(
+                contentDescription = stringResource(R.string.workout_options),
+                items = listOf(
+                    SetwiseMenuItem(stringResource(R.string.rename_workout), { onAction(WorkoutSummaryAction.OnRenameClick) }),
+                    SetwiseMenuItem(
+                        label = stringResource(R.string.delete_workout),
+                        onClick = { onAction(WorkoutSummaryAction.OnDeleteClick) },
+                        isDestructive = true,
+                    ),
+                ),
             )
             SetwiseIconButton(
                 icon = R.drawable.ic_close,

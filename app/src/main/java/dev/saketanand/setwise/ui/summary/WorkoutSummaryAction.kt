@@ -25,6 +25,11 @@ sealed interface WorkoutSummaryAction {
     data class OnRenameConfirm(val name: String) : WorkoutSummaryAction
     data object OnRenameDismiss : WorkoutSummaryAction
 
+    /** ⋮ → "Delete workout": asks first; confirming deletes it and closes the summary. */
+    data object OnDeleteClick : WorkoutSummaryAction
+    data object OnConfirmDelete : WorkoutSummaryAction
+    data object OnDeleteDismiss : WorkoutSummaryAction
+
     /** An exercise row: its detail (progress, past sessions). → nav */
     data class OnExerciseClick(val exerciseId: Long) : WorkoutSummaryAction
 }

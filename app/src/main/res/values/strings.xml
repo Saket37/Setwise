@@ -309,6 +309,10 @@
     <string name="recent_sessions">Recent sessions</string>
     <string name="exercise_history_and_progress">History &amp; progress</string>
     <string name="rename_workout">Rename workout</string>
+    <string name="workout_options">Workout options</string>
+    <string name="delete_workout">Delete workout</string>
+    <string name="delete_workout_title">Delete %1$s?</string>
+    <string name="delete_workout_message">Its sets are removed from your history and progress. This can\'t be undone.</string>
     <!-- Create exercise -->
     <string name="new_exercise">New exercise</string>
     <string name="exercise_name">Name</string>

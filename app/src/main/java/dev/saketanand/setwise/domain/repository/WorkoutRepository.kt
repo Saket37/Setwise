@@ -92,6 +92,12 @@ interface WorkoutRepository {
     /** Deletes a running workout and everything in it. */
     suspend fun discardWorkout(workoutId: Long)
 
+    /**
+     * Deletes a finished workout (from its summary). Records of later workouts with the same
+     * exercises are checked again. Returns false if it wasn't a finished workout.
+     */
+    suspend fun deleteFinishedWorkout(workoutId: Long): Boolean
+
     /** Renames a workout (running or finished); a blank name is ignored. */
     suspend fun renameWorkout(workoutId: Long, name: String)
 

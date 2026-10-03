@@ -234,6 +234,47 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun aPastDayLoggedAfterwardsTakesTheRecordFromLaterWorkouts() = runTest {
+        finishedWorkout(startedAt = 1_000, bench to listOf(60.0 to 8))
+        val wednesday = finishWithBench(startedAt = 5_000, kg = 80.0) // a record over 60
+        assertEquals(true, isRecord(wednesday))
+
+        // Monday, logged afterwards: heavier, and before Wednesday.
+        val monday = finishWithBench(startedAt = 3_000, kg = 90.0)
+
+        assertEquals(true, isRecord(monday))
+        assertEquals(false, isRecord(wednesday)) // no longer beats what came before it
+    }
+
+    @Test
+    fun deletingAWorkoutGivesTheRecordBack() = runTest {
+        finishedWorkout(startedAt = 1_000, bench to listOf(60.0 to 8))
+        val monday = finishWithBench(startedAt = 3_000, kg = 90.0)
+        val wednesday = finishWithBench(startedAt = 5_000, kg = 80.0)
+        assertEquals(false, isRecord(wednesday))
+
+        assertTrue(repository.deleteFinishedWorkout(monday))
+
+        assertNull(repository.observeSession(monday).first())
+        assertEquals(true, isRecord(wednesday))
+        assertFalse(repository.deleteFinishedWorkout(monday)) // already gone
+    }
+
+    @Test
+    fun movingAWorkoutEarlierChecksRecordsAgain() = runTest {
+        finishedWorkout(startedAt = 1_000, bench to listOf(60.0 to 8))
+        val first = finishWithBench(startedAt = 3_000, kg = 80.0)
+        val second = finishWithBench(startedAt = 5_000, kg = 90.0)
+        assertEquals(true, isRecord(second))
+
+        // The 90 kg workout really happened before the 80 kg one.
+        repository.updateFinishedTimes(second, Instant.ofEpochMilli(2_000), Instant.ofEpochMilli(2_500))
+
+        assertEquals(true, isRecord(second))
+        assertEquals(false, isRecord(first))
+    }
+
+    @Test
     fun historyListsFinishedWorkoutsNewestFirstWithTotals() = runTest {
         finishedWorkout(startedAt = 1_000, bench to listOf(60.0 to 8, 60.0 to 6))
         finishedWorkout(startedAt = 5_000, squat to listOf(100.0 to 5))
@@ -279,6 +320,19 @@ class WorkoutRepositoryTest {
 
         assertNull(repository.observeSession(current).first())
     }
+
+    /** A finished workout of one bench set of [kg] × 8, through the repository (so records are marked). */
+    private suspend fun finishWithBench(startedAt: Long, kg: Double): Long {
+        val id = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(startedAt))
+        repository.addExercises(id, listOf(bench))
+        val sets = repository.observeSession(id).first()!!.exercises.single().sets
+        repository.setCompleted(sets.first().id, Instant.ofEpochMilli(startedAt + 100), kg, 8, null)
+        repository.finishWorkout(id, Instant.ofEpochMilli(startedAt + 600))
+        return id
+    }
+
+    private suspend fun isRecord(workoutId: Long): Boolean =
+        repository.observeSession(workoutId).first()!!.exercises.single().sets.any { it.isPr }
 
     private suspend fun finishedWorkout(startedAt: Long, vararg exercises: Pair<Long, List<Pair<Double, Int>>>) {
         val dao = db.workoutDao()

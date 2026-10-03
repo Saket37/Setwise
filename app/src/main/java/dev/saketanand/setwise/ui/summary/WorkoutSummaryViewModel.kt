@@ -52,6 +52,7 @@ class WorkoutSummaryViewModel(
             isTemplateSaved = overlays.isTemplateSaved,
             editTimes = overlays.editTimes,
             isRenaming = overlays.isRenaming,
+            isConfirmingDelete = overlays.isConfirmingDelete,
         )
     }
         .catch { e ->
@@ -75,6 +76,20 @@ class WorkoutSummaryViewModel(
             WorkoutSummaryAction.OnTimePickerDismiss -> updateEditTimes { it.copy(picking = null) }
             WorkoutSummaryAction.OnSaveTimes -> saveTimes()
             WorkoutSummaryAction.OnEditTimesDismiss -> overlays.update { it.copy(editTimes = null) }
+
+            WorkoutSummaryAction.OnDeleteClick -> overlays.update { it.copy(isConfirmingDelete = true) }
+            WorkoutSummaryAction.OnDeleteDismiss -> overlays.update { it.copy(isConfirmingDelete = false) }
+            WorkoutSummaryAction.OnConfirmDelete -> {
+                overlays.update { it.copy(isConfirmingDelete = false) }
+                viewModelScope.launch {
+                    // Gone from the database → observeSession emits null → the summary closes.
+                    runCatching { workoutRepository.deleteFinishedWorkout(workoutId) }
+                        .onFailure { e ->
+                            Log.e(TAG, "Deleting workout $workoutId failed", e)
+                            eventChannel.send(WorkoutSummaryEvent.SaveFailed)
+                        }
+                }
+            }
 
             WorkoutSummaryAction.OnRenameClick -> overlays.update { it.copy(isRenaming = true) }
             WorkoutSummaryAction.OnRenameDismiss -> overlays.update { it.copy(isRenaming = false) }
@@ -148,6 +163,7 @@ class WorkoutSummaryViewModel(
     private data class Overlays(
         val editTimes: EditTimesUi? = null,
         val isRenaming: Boolean = false,
+        val isConfirmingDelete: Boolean = false,
         val isSavingTemplate: Boolean = false,
         val isTemplateSaved: Boolean = false,
     )
