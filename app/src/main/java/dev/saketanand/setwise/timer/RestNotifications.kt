@@ -11,6 +11,8 @@ import androidx.core.content.ContextCompat
 import dev.saketanand.setwise.MainActivity
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.service.WorkoutTimerService
+import dev.saketanand.setwise.ui.navigation.AppLink
+import dev.saketanand.setwise.ui.navigation.AppLinks
 
 /**
  * The rest timer's notification channels and notifications, in one place.
@@ -54,7 +56,7 @@ object RestNotifications {
             .setColor(ContextCompat.getColor(context, R.color.notification_accent))
             .setContentTitle(rest?.let { label(context, it.next) } ?: context.getString(R.string.rest))
             .setContentText(context.getString(R.string.rest_notification_text))
-            .setContentIntent(openApp(context))
+            .setContentIntent(openWorkout(context, rest?.workoutId))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setSilent(true)
@@ -82,7 +84,7 @@ object RestNotifications {
                     NextUp.Nothing -> context.getString(R.string.rest_over_next_nothing)
                 }
             )
-            .setContentIntent(openApp(context))
+            .setContentIntent(openWorkout(context, rest.workoutId))
             .setAutoCancel(true)
             .setTimeoutAfter(60_000)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -96,11 +98,15 @@ object RestNotifications {
         NextUp.Nothing -> context.getString(R.string.rest)
     }
 
-    // TODO: open the active workout directly (deep link) instead of the app's start screen.
-    private fun openApp(context: Context): PendingIntent = PendingIntent.getActivity(
+    /** Tapping the notification opens the workout (or just the app if there's no rest anymore). */
+    private fun openWorkout(context: Context, workoutId: Long?): PendingIntent = PendingIntent.getActivity(
         context,
         0,
-        Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+        if (workoutId != null) {
+            AppLinks.intent(context, AppLink.Workout(workoutId))
+        } else {
+            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        },
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
 
