@@ -255,7 +255,7 @@ private fun DayChip(day: DayUi, onClick: () -> Unit) {
 /** Under the date: • trained, ✕ missed, moon = rest; nothing otherwise (same height either way). */
 @Composable
 private fun DayMark(state: DayState) {
-    val size = Modifier.size(8.dp)
+    val size = Modifier.size(10.dp)
     when (state) {
         DayState.Trained -> Box(Modifier.size(6.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
         DayState.Missed -> Icon(painterResource(R.drawable.ic_close), null, size, tint = MaterialTheme.colorScheme.error)

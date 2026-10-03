@@ -3,11 +3,16 @@ package dev.saketanand.setwise.ui.home
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.saketanand.setwise.domain.model.DayCheckIn
+import dev.saketanand.setwise.domain.model.DayStatus
+import dev.saketanand.setwise.domain.repository.DayMarkRepository
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.TemplateRepository
+import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import dev.saketanand.setwise.util.DateProvider
 import dev.saketanand.setwise.util.weekRange
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,6 +35,8 @@ class HomeViewModel(
     private val exerciseRepository: ExerciseRepository,
     private val workoutRepository: WorkoutRepository,
     private val templateRepository: TemplateRepository,
+    private val dayMarkRepository: DayMarkRepository,
+    private val userSettingsRepository: UserSettingsRepository,
     private val dateProvider: DateProvider,
 ) : ViewModel() {
 
@@ -80,6 +87,44 @@ class HomeViewModel(
                 _state.update { it.copy(isLoading = false) }
             }
             .launchIn(viewModelScope)
+
+        observeCheckIn()
+    }
+
+    /**
+     * The day check-in ([DayCheckIn]): opens the sheet when there are unlogged past days to ask
+     * about (at most once a day, never during a workout), and keeps the answers in it live.
+     */
+    private fun observeCheckIn() {
+        combine(
+            dateProvider.today(),
+            workoutRepository.observeHistory(),
+            workoutRepository.observeActiveWorkout(),
+            dayMarkRepository.observeMarks(),
+            userSettingsRepository.settings,
+        ) { today, history, activeWorkout, marks, settings ->
+            val open = _state.value.checkIn
+            if (open != null) {
+                // Already showing: the days stay put, their answers follow the database.
+                _state.update { it.copy(checkIn = CheckInUi(open.days.map { day -> day.copy(status = marks[day.date]) })) }
+                return@combine
+            }
+            val workoutDays = history.map { it.startedAt.atZone(zone).toLocalDate() }
+            val days = DayCheckIn.daysToAsk(
+                today = today,
+                trainedDays = workoutDays.toSet(),
+                marks = marks,
+                trainingDays = settings.trainingDays,
+                firstWorkoutDate = workoutDays.minOrNull(),
+            )
+            if (DayCheckIn.shouldAsk(settings, today, settings.checkInLastAskedOn, activeWorkout != null, days)) {
+                // Counts as asked once shown, whatever the answer: tomorrow at the earliest again.
+                userSettingsRepository.setCheckInLastAskedOn(today)
+                _state.update { it.copy(checkIn = CheckInUi(days.map { day -> CheckInDayUi(day, status = null) })) }
+            }
+        }
+            .catch { e -> Log.e(TAG, "The day check-in failed", e) }
+            .launchIn(viewModelScope)
     }
 
     fun onAction(action: HomeAction) {
@@ -111,6 +156,24 @@ class HomeViewModel(
             HomeAction.OnWeeklySummaryDismiss ->
                 // TODO (milestone 14): remember the dismissal (DataStore) so it stays hidden.
                 _state.update { it.copy(weeklySummary = null) }
+
+            is HomeAction.OnCheckInMark -> mark(listOf(action.date), action.status)
+
+            HomeAction.OnCheckInMarkAllRest -> {
+                val unanswered = _state.value.checkIn?.days.orEmpty().filter { it.status == null }.map { it.date }
+                _state.update { it.copy(checkIn = null) }
+                mark(unanswered, DayStatus.Rest)
+            }
+
+            is HomeAction.OnCheckInLogWorkout -> {
+                _state.update { it.copy(checkIn = null) }
+                // No discard dialog: the check-in never shows while a workout is running.
+                if (_state.value.activeWorkout == null) {
+                    startWorkout(templateId = null, startedAt = DayCheckIn.backfillStartedAt(action.date, zone))
+                }
+            }
+
+            HomeAction.OnCheckInDismiss -> _state.update { it.copy(checkIn = null) }
 
             // Navigation actions: HomeScreenRoot sends these straight to its nav callbacks.
             is HomeAction.OnResumeWorkout,
@@ -151,13 +214,14 @@ class HomeViewModel(
      * @param templateId null for an empty workout.
      * @param discardRunningWorkoutId running workout to delete in the same transaction.
      */
-    private fun startWorkout(templateId: Long?, discardRunningWorkoutId: Long? = null) {
+    private fun startWorkout(templateId: Long?, discardRunningWorkoutId: Long? = null, startedAt: Instant? = null) {
         if (_state.value.isStartingWorkout) return // ignore double taps
         _state.update { it.copy(isStartingWorkout = true) }
         viewModelScope.launch {
-            // "Change" in the sheet back-dates the start to that time today; otherwise now.
-            val startedAt = _state.value.customStartTime
-                ?.atDate(_state.value.today)?.atZone(zone)?.toInstant()
+            // Given (a past day from the check-in); else "Change" in the sheet back-dates the
+            // start to that time today; otherwise now.
+            val startedAt = startedAt
+                ?: _state.value.customStartTime?.atDate(_state.value.today)?.atZone(zone)?.toInstant()
                 ?: dateProvider.now()
             runCatching { workoutRepository.startWorkout(templateId, startedAt, discardRunningWorkoutId) }
                 .onSuccess { id -> eventChannel.send(HomeEvent.WorkoutStarted(id)) }
@@ -165,6 +229,14 @@ class HomeViewModel(
             _state.update {
                 it.copy(isStartingWorkout = false, isStartSheetVisible = false, customStartTime = null)
             }
+        }
+    }
+
+    private fun mark(days: List<LocalDate>, status: DayStatus?) {
+        if (days.isEmpty()) return
+        viewModelScope.launch {
+            runCatching { dayMarkRepository.mark(days, status, dateProvider.now()) }
+                .onFailure { e -> Log.e(TAG, "Marking $days as $status failed", e) }
         }
     }
 

@@ -140,6 +140,10 @@ fun HomeScreen(
     uiState.discardDialog?.let { dialog ->
         DiscardWorkoutDialog(dialog = dialog, onAction = onAction)
     }
+
+    uiState.checkIn?.let { checkIn ->
+        DayCheckInSheet(checkIn = checkIn, onAction = onAction)
+    }
 }
 
 // Previews: one per scenario

@@ -32,7 +32,7 @@ fun SetwiseDayChoices(
         SetwiseButton(
             text = stringResource(R.string.log_workout),
             onClick = onLogWorkout,
-            style = SetwiseButtonStyle.Tonal,
+            style = SetwiseButtonStyle.Outlined,
             size = SetwiseButtonSize.Small,
             startIcon = R.drawable.ic_add,
         )

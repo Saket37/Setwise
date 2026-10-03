@@ -1,5 +1,7 @@
 package dev.saketanand.setwise.ui.home
 
+import dev.saketanand.setwise.domain.model.DayStatus
+import java.time.LocalDate
 import java.time.LocalTime
 
 /**
@@ -66,4 +68,18 @@ sealed interface HomeAction {
 
     /** Hide this week's summary card. */
     data object OnWeeklySummaryDismiss : HomeAction
+
+    // "Did you train?" sheet (day check-in)
+
+    /** "Rest" / "Missed" for a day; null clears the answer. */
+    data class OnCheckInMark(val date: LocalDate, val status: DayStatus?) : HomeAction
+
+    /** "Mark all as rest": every day not answered yet is a rest day; closes the sheet. */
+    data object OnCheckInMarkAllRest : HomeAction
+
+    /** "Log workout" for a day: closes the sheet and starts a workout on that day. */
+    data class OnCheckInLogWorkout(val date: LocalDate) : HomeAction
+
+    /** "Not now" / "Done", swipe down or back: closes the sheet until tomorrow. */
+    data object OnCheckInDismiss : HomeAction
 }

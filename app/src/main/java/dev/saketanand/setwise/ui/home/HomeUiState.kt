@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.home
 
 import androidx.compose.runtime.Immutable
+import dev.saketanand.setwise.domain.model.DayStatus
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.time.Duration
@@ -47,6 +48,9 @@ data class HomeUiState(
 
     /** Set when the user starts a workout while one is running: shows the discard dialog. */
     val discardDialog: DiscardDialogUi? = null,
+
+    /** "Did you train?": past days without a workout, asked about once a day. Null = hidden. */
+    val checkIn: CheckInUi? = null,
 ) {
     /**
      * Which layout HomeScreen draws. Derived from the fields above, so it can never disagree
@@ -170,6 +174,19 @@ data class DiscardDialogUi(
     val runningCompletedSets: Int,
     /** What to start after discarding; null = empty workout. */
     val templateIdToStart: Long?,
+)
+
+/** The day check-in sheet: the days it asks about, newest first, with what the user answered. */
+@Immutable
+data class CheckInUi(val days: List<CheckInDayUi>) {
+    val isAnyAnswered: Boolean get() = days.any { it.status != null }
+}
+
+@Immutable
+data class CheckInDayUi(
+    val date: LocalDate,
+    /** Rest / Missed once answered; null = not yet. */
+    val status: DayStatus?,
 )
 
 @Immutable
