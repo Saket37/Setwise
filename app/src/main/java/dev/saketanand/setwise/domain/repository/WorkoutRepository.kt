@@ -62,9 +62,16 @@ interface WorkoutRepository {
 
     /**
      * Ends the workout: sets that weren't ticked off are deleted, then exercises left without
-     * sets, and the remaining sets are renumbered. Returns false if it wasn't running.
+     * sets, the remaining sets are renumbered, and personal-record sets are marked (isPr).
+     * Returns false if it wasn't running.
      */
     suspend fun finishWorkout(workoutId: Long, endedAt: Instant): Boolean
+
+    /**
+     * Corrects the start and end of a finished workout (its records are re-checked, since
+     * "earlier workouts" may have changed). Returns false if it isn't finished.
+     */
+    suspend fun updateFinishedTimes(workoutId: Long, startedAt: Instant, endedAt: Instant): Boolean
 
     /** Deletes a running workout and everything in it. */
     suspend fun discardWorkout(workoutId: Long)

@@ -37,7 +37,15 @@ val viewModelModule = module {
         )
     }
     viewModelOf(::CardioEntryViewModel)
-    viewModelOf(::WorkoutSummaryViewModel)
+    // Route argument passed by SetwiseNavHost.
+    viewModel { params ->
+        WorkoutSummaryViewModel(
+            workoutId = params.get(),
+            workoutRepository = get(),
+            templateRepository = get(),
+            dateProvider = get(),
+        )
+    }
 
     viewModelOf(::ExercisePickerViewModel)
     viewModelOf(::CreateExerciseViewModel)

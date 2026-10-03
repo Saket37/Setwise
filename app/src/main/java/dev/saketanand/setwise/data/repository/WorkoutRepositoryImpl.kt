@@ -76,7 +76,8 @@ class WorkoutRepositoryImpl(
         combine(
             workoutDao.observeWorkoutWithExercises(workoutId),
             workoutDao.observePreviousSets(workoutId),
-        ) { workout, previous -> workout?.toSession(previous) }
+            workoutDao.observeHistorySets(workoutId),
+        ) { workout, previous, history -> workout?.toSession(previous, history) }
 
     override suspend fun addExercises(workoutId: Long, exerciseIds: List<Long>): List<Long> =
         database.withTransaction {
@@ -140,8 +141,26 @@ class WorkoutRepositoryImpl(
             workoutDao.deleteIncompleteSets(workoutId)
             workoutDao.deleteExercisesWithoutSets(workoutId)
             workoutDao.workoutExerciseIds(workoutId).forEach { renumberSets(it) }
+            markPersonalRecords(workoutId)
             true
         }
+
+    override suspend fun updateFinishedTimes(workoutId: Long, startedAt: Instant, endedAt: Instant): Boolean =
+        database.withTransaction {
+            val updated = workoutDao.updateFinishedTimes(workoutId, startedAt.toEpochMilli(), endedAt.toEpochMilli()) == 1
+            if (updated) markPersonalRecords(workoutId)
+            updated
+        }
+
+    /** Sets isPr on this workout's record sets (and clears it elsewhere in it). Call inside a transaction. */
+    private suspend fun markPersonalRecords(workoutId: Long) {
+        val session = workoutDao.getWorkoutWithExercises(workoutId)
+            ?.toSession(previous = emptyList(), history = workoutDao.getHistorySets(workoutId))
+            ?: return
+        workoutDao.clearPersonalRecords(workoutId)
+        val recordSetIds = session.exercises.mapNotNull { it.personalRecord?.set?.id }
+        if (recordSetIds.isNotEmpty()) workoutDao.markPersonalRecords(recordSetIds)
+    }
 
     override suspend fun discardWorkout(workoutId: Long) {
         workoutDao.deleteRunningWorkout(workoutId)

@@ -403,6 +403,7 @@ class ActiveWorkoutViewModelTest {
         fun session(vararg exercises: SessionExercise) = WorkoutSession(
             id = WORKOUT_ID,
             name = "Push Day",
+            templateId = null,
             startedAt = LocalDate.of(2026, 10, 3).atTime(18, 0).atZone(FixedDateProvider.zone).toInstant(),
             endedAt = null,
             exercises = exercises.toList(),

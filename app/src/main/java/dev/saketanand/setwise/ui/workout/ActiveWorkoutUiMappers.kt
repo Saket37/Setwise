@@ -27,6 +27,8 @@ fun SessionExercise.toUi(): WorkoutExerciseUi {
     val kind = exercise.setKind
     // Hints: the same set last time; for extra sets beyond last time's count, the row above
     // (what was typed there, or its hint), so set 5 suggests what set 4 was done with.
+    // 🏆 as soon as a ticked-off set beats the earlier best (stored when the workout finishes).
+    val recordSetId = personalRecord?.set?.id
     var weightAbove = ""
     var repsAbove = ""
     val rows = sets.mapIndexed { index, set ->
@@ -41,7 +43,7 @@ fun SessionExercise.toUi(): WorkoutExerciseUi {
             weightHint = previous?.weightKg?.toWeightInput() ?: weightAbove,
             repsHint = previous?.amount(kind)?.toString() ?: repsAbove,
             isCompleted = set.isCompleted,
-            isPr = set.isPr,
+            isPr = set.id == recordSetId,
         )
         weightAbove = row.weight.ifEmpty { row.weightHint }
         repsAbove = row.reps.ifEmpty { row.repsHint }

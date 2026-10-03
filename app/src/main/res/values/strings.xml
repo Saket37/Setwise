@@ -182,4 +182,43 @@
     <!-- %1$s = next exercise name -->
     <string name="rest_over_next_exercise">Time for %1$s</string>
     <string name="rest_over_next_nothing">Time to finish your workout</string>
+
+    <!-- Workout summary -->
+    <string name="workout_complete">Workout complete</string>
+    <string name="close">Close</string>
+    <string name="edit_workout_times">Edit start and end time</string>
+    <!-- %1$s = day like "Fri, 2 Oct", %2$s = start time, %3$s = end time -->
+    <string name="workout_date_and_times">%1$s · %2$s – %3$s</string>
+    <string name="stat_duration">Duration</string>
+    <string name="stat_volume">Volume</string>
+    <string name="stat_sets">Sets</string>
+    <string name="stat_exercises">Exercises</string>
+    <string name="stat_calories">Calories</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_kcal">kcal</string>
+    <plurals name="personal_records">
+        <item quantity="one">%d personal record</item>
+        <item quantity="other">%d personal records</item>
+    </plurals>
+    <!-- %1$s = earlier best set, e.g. "60 × 8" -->
+    <string name="previous_best">Previous best %1$s</string>
+    <!-- Kind of personal record (uppercased in code) -->
+    <string name="pr_kind_weight">Weight</string>
+    <string name="pr_kind_estimated_1rm">Est. 1RM</string>
+    <string name="pr_kind_reps">Reps</string>
+    <string name="pr_kind_duration">Time</string>
+    <string name="exercises">Exercises</string>
+    <!-- %1$s = "4 sets", %2$s = best set like "62.5 × 8" -->
+    <string name="exercise_sets_and_best">%1$s · best %2$s</string>
+    <string name="save_as_template">Save as template</string>
+    <!-- Short: shares a half-width button with a ✓ icon -->
+    <string name="saved_as_template">Saved</string>
+    <string name="template_saved">Saved as a template</string>
+    <string name="done">Done</string>
+    <string name="workout_times">Workout times</string>
+    <string name="start">Start</string>
+    <string name="end">End</string>
+    <string name="end_time">End time</string>
+    <string name="save">Save</string>
+    <string name="workout_times_invalid">The end has to be after the start.</string>
 </resources>

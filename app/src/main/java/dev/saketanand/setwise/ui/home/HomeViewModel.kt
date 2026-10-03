@@ -169,13 +169,20 @@ class HomeViewModel(
 
     /** Copies a finished workout's exercises (and set counts) into a new template. */
     private fun saveWorkoutAsTemplate(workoutId: Long) {
-        // TODO (milestone 3): needs TemplateRepository. Roughly:
-        //  viewModelScope.launch {
-        //      runCatching { templateRepository.createFromWorkout(workoutId) }
-        //          .onSuccess { id -> eventChannel.send(HomeEvent.TemplateCreated(id)) }
-        //          .onFailure { eventChannel.send(HomeEvent.SaveTemplateFailed) }
-        //  }
+        if (isSavingTemplate) return // ignore double taps
+        isSavingTemplate = true
+        viewModelScope.launch {
+            runCatching { templateRepository.createFromWorkout(workoutId, dateProvider.now()) }
+                .onSuccess { id -> eventChannel.send(HomeEvent.TemplateCreated(id)) }
+                .onFailure { e ->
+                    Log.e(TAG, "Saving workout $workoutId as a template failed", e)
+                    eventChannel.send(HomeEvent.SaveTemplateFailed)
+                }
+            isSavingTemplate = false
+        }
     }
+
+    private var isSavingTemplate = false
 
     private companion object {
         const val TAG = "HomeViewModel"
