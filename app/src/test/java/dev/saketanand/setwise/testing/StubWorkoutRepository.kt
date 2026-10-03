@@ -13,6 +13,7 @@ import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlin.time.Duration
+import dev.saketanand.setwise.domain.model.CalorieEstimate
 
 /**
  * WorkoutRepository that does nothing. Test fakes extend it and override only what their test
@@ -24,6 +25,8 @@ open class StubWorkoutRepository : WorkoutRepository {
     override fun observeHistory(): Flow<List<WorkoutHistoryItem>> = flowOf(emptyList())
     override fun observeExerciseSessions(exerciseId: Long): Flow<List<ExerciseSession>> = flowOf(emptyList())
     override suspend fun renameWorkout(workoutId: Long, name: String) = Unit
+    override fun observeWorkoutsWithoutCalories(): Flow<List<Long>> = flowOf(emptyList())
+    override suspend fun setCalories(workoutId: Long, estimate: CalorieEstimate, source: String) = Unit
     override suspend fun deleteFinishedWorkout(workoutId: Long): Boolean = false
     override fun observeCardioEntry(workoutExerciseId: Long): Flow<CardioEntry?> = flowOf(null)
     override suspend fun logCardio(workoutExerciseId: Long, values: CardioValues, completedAt: Instant) = Unit

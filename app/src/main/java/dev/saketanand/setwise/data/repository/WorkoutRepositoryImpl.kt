@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
+import dev.saketanand.setwise.domain.model.CalorieEstimate
 
 class WorkoutRepositoryImpl(
     private val database: SetwiseDatabase,
@@ -225,6 +226,11 @@ class WorkoutRepositoryImpl(
     override suspend fun discardWorkout(workoutId: Long) {
         workoutDao.deleteRunningWorkout(workoutId)
     }
+
+    override fun observeWorkoutsWithoutCalories(): Flow<List<Long>> = workoutDao.observeWorkoutsWithoutCalories()
+
+    override suspend fun setCalories(workoutId: Long, estimate: CalorieEstimate, source: String) =
+        workoutDao.setCalories(workoutId, estimate.kcal, estimate.intensity.storedName, source)
 
     override suspend fun renameWorkout(workoutId: Long, name: String) {
         val trimmed = name.trim()

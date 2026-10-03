@@ -9,6 +9,7 @@ import dev.saketanand.setwise.data.local.relation.TemplateWithExercises
 import dev.saketanand.setwise.data.local.relation.WorkoutHistoryRow
 import dev.saketanand.setwise.data.local.relation.WorkoutStatsRow
 import dev.saketanand.setwise.data.local.relation.WorkoutWithExercises
+import dev.saketanand.setwise.domain.model.Intensity
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
@@ -92,6 +93,8 @@ fun WorkoutWithExercises.toSession(
         templateId = workout.templateId,
         startedAt = Instant.ofEpochMilli(workout.startedAt),
         endedAt = workout.endedAt?.let(Instant::ofEpochMilli),
+        calories = workout.calories,
+        intensity = Intensity.fromStored(workout.intensity),
         exercises = items
             .sortedWith(compareBy({ it.item.position }, { it.item.id }))
             .map { row ->

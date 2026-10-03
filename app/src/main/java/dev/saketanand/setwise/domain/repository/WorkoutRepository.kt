@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 import dev.saketanand.setwise.domain.model.CardioEntry
 import dev.saketanand.setwise.domain.model.CardioValues
+import dev.saketanand.setwise.domain.model.CalorieEstimate
 
 interface WorkoutRepository {
 
@@ -97,6 +98,11 @@ interface WorkoutRepository {
      * exercises are checked again. Returns false if it wasn't a finished workout.
      */
     suspend fun deleteFinishedWorkout(workoutId: Long): Boolean
+
+    /** Finished workouts that don't have a calorie estimate yet. */
+    fun observeWorkoutsWithoutCalories(): Flow<List<Long>>
+
+    suspend fun setCalories(workoutId: Long, estimate: CalorieEstimate, source: String)
 
     /** Renames a workout (running or finished); a blank name is ignored. */
     suspend fun renameWorkout(workoutId: Long, name: String)
