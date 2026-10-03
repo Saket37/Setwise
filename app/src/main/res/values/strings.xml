@@ -308,6 +308,24 @@
     <string name="a11y_progress_chart">%1$s. %2$d of %3$d weeks trained, latest %4$s.</string>
     <string name="recent_sessions">Recent sessions</string>
     <string name="exercise_history_and_progress">History &amp; progress</string>
+    <!-- Create exercise -->
+    <string name="new_exercise">New exercise</string>
+    <string name="exercise_name">Name</string>
+    <string name="exercise_name_placeholder">e.g. Flat Dumbbell Press</string>
+    <string name="already_in_library">Already in your library?</string>
+    <string name="name_taken">This name is already in your library.</string>
+    <string name="use_this">Use this</string>
+    <string name="logged_as">Logged as</string>
+    <string name="kind_weight_reps">Weight × reps</string>
+    <string name="kind_bodyweight">Bodyweight reps</string>
+    <string name="kind_timed">Timed hold</string>
+    <string name="kind_cardio">Cardio</string>
+    <string name="muscle_group">Muscle group</string>
+    <string name="equipment">Equipment</string>
+    <string name="rest_between_sets">Rest between sets</string>
+    <string name="decrease_rest">Less rest</string>
+    <string name="increase_rest">More rest</string>
+    <string name="create_exercise">Create exercise</string>
     <!-- Template editor -->
     <string name="new_template_title">New template</string>
     <string name="edit_template">Edit template</string>

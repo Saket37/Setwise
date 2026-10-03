@@ -3,6 +3,8 @@ package dev.saketanand.setwise.domain.repository
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.RecentExercise
 import kotlinx.coroutines.flow.Flow
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
+import dev.saketanand.setwise.domain.model.NewExercise
 
 /** The exercise library as the rest of the app sees it: domain models only, no Room. */
 interface ExerciseRepository {
@@ -21,6 +23,9 @@ interface ExerciseRepository {
 
     /** Live size of the exercise library ("128 exercises ready"). */
     fun observeExerciseCount(): Flow<Int>
+
+    /** Adds a custom exercise, unless one with the same name (ignoring case) exists. */
+    suspend fun createExercise(exercise: NewExercise): CreateExerciseResult
 
     /** The exercises with these ids, in the same order; unknown ids are left out. */
     suspend fun getExercises(ids: List<Long>): List<Exercise>

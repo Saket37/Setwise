@@ -38,6 +38,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import kotlin.time.Duration
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
+import dev.saketanand.setwise.domain.model.NewExercise
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
@@ -263,5 +265,6 @@ class HomeViewModelTest {
         override fun observeExerciseCount(): Flow<Int> = flowOf(128)
         override fun observeExercise(id: Long): Flow<Exercise?> = flowOf(null)
         override suspend fun getExercises(ids: List<Long>): List<Exercise> = emptyList()
+        override suspend fun createExercise(exercise: NewExercise): CreateExerciseResult = CreateExerciseResult.Created(0)
     }
 }

@@ -14,6 +14,9 @@ sealed interface ExercisePickerAction {
     /** "Add N exercises": return the selection to the screen that opened the picker. */
     data object OnAddClick : ExercisePickerAction
 
+    /** Made on "New exercise" (or a library one chosen there instead): selected. */
+    data class OnExerciseCreated(val exerciseId: Long) : ExercisePickerAction
+
     /** "Create new" / "Create “xyz”": the search text pre-fills the name. */
     data object OnCreateNewClick : ExercisePickerAction
 

@@ -116,6 +116,10 @@ class ExercisePickerViewModel(
 
             is ExercisePickerAction.OnExerciseToggle -> toggle(action.exerciseId)
 
+            // Back from "New exercise": select it (unless it already is).
+            is ExercisePickerAction.OnExerciseCreated ->
+                if (action.exerciseId !in selectedIds.value) toggle(action.exerciseId)
+
             // Navigation: ExercisePickerScreenRoot handles these.
             ExercisePickerAction.OnAddClick,
             ExercisePickerAction.OnCreateNewClick,
