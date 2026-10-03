@@ -2,6 +2,7 @@ package dev.saketanand.setwise.domain.repository
 
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
@@ -27,4 +28,49 @@ interface WorkoutRepository {
         startedAt: Instant,
         discardRunningWorkoutId: Long? = null,
     ): Long
+
+    // Active workout
+
+    /** The workout with its exercises, sets and "previous" sets; null once it's deleted. */
+    fun observeSession(workoutId: Long): Flow<WorkoutSession?>
+
+    /**
+     * Appends exercises (in the given order), each with as many empty sets as last time
+     * (or [DEFAULT_SET_COUNT] for a new exercise). Returns the new workout-exercise ids.
+     */
+    suspend fun addExercises(workoutId: Long, exerciseIds: List<Long>): List<Long>
+
+    /** Removes an exercise and its sets from the workout. */
+    suspend fun removeExercise(workoutExerciseId: Long)
+
+    /** Adds an empty set at the end of an exercise. */
+    suspend fun addSet(workoutExerciseId: Long)
+
+    /** Saves what's typed into a set row; null = empty field. */
+    suspend fun updateSetValues(setId: Long, weightKg: Double?, reps: Int?, durationSec: Int?)
+
+    /**
+     * Ticks a set off with the values it was done with ([completedAt] non-null), or un-ticks it
+     * ([completedAt] null, values kept).
+     */
+    suspend fun setCompleted(setId: Long, completedAt: Instant?, weightKg: Double?, reps: Int?, durationSec: Int?)
+
+    /** Deletes a set; the sets after it are renumbered so there are no gaps. */
+    suspend fun deleteSet(setId: Long)
+
+    suspend fun updateStartTime(workoutId: Long, startedAt: Instant)
+
+    /**
+     * Ends the workout: sets that weren't ticked off are deleted, then exercises left without
+     * sets, and the remaining sets are renumbered. Returns false if it wasn't running.
+     */
+    suspend fun finishWorkout(workoutId: Long, endedAt: Instant): Boolean
+
+    /** Deletes a running workout and everything in it. */
+    suspend fun discardWorkout(workoutId: Long)
+
+    companion object {
+        /** Sets added for an exercise the user has never done. */
+        const val DEFAULT_SET_COUNT = 3
+    }
 }

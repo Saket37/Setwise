@@ -9,9 +9,10 @@ data class RecentExercise(
 
 /**
  * A set from an earlier workout, shown for reference ("last 60 kg × 8").
- * Bodyweight sets have no [weightKg]; timed and cardio sets have neither value.
+ * Bodyweight sets have no [weightKg]; timed sets (Plank) have [durationSec] instead of reps.
  */
 data class PreviousSet(
     val weightKg: Double?,
     val reps: Int?,
+    val durationSec: Int? = null,
 )

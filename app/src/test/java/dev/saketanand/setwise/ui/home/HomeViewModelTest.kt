@@ -26,6 +26,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import dev.saketanand.setwise.testing.StubWorkoutRepository
 import dev.saketanand.setwise.util.DateProvider
 import java.time.Instant
 import java.time.LocalDate
@@ -114,7 +115,7 @@ class HomeViewModelTest {
 
     private data class StartCall(val templateId: Long?, val discard: Long?)
 
-    private class FakeWorkoutRepository : WorkoutRepository {
+    private class FakeWorkoutRepository : StubWorkoutRepository() {
         val active = MutableStateFlow<ActiveWorkout?>(null)
         val startCalls = mutableListOf<StartCall>()
         var failStart = false

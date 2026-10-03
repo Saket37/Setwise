@@ -9,11 +9,14 @@ import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
 import dev.saketanand.setwise.data.mapper.toDomain
 import dev.saketanand.setwise.data.mapper.toFinishedWorkout
+import dev.saketanand.setwise.data.mapper.toSession
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
@@ -68,6 +71,86 @@ class WorkoutRepositoryImpl(
                 }
             workoutId
         }
+
+    override fun observeSession(workoutId: Long): Flow<WorkoutSession?> =
+        combine(
+            workoutDao.observeWorkoutWithExercises(workoutId),
+            workoutDao.observePreviousSets(workoutId),
+        ) { workout, previous -> workout?.toSession(previous) }
+
+    override suspend fun addExercises(workoutId: Long, exerciseIds: List<Long>): List<Long> =
+        database.withTransaction {
+            val firstPosition = workoutDao.nextExercisePosition(workoutId)
+            exerciseIds.mapIndexed { index, exerciseId ->
+                val workoutExerciseId = workoutDao.insertWorkoutExercise(
+                    WorkoutExerciseEntity(workoutId = workoutId, exerciseId = exerciseId, position = firstPosition + index)
+                )
+                val setCount = workoutDao.lastSessionSetCount(exerciseId)
+                    .takeIf { it > 0 } ?: WorkoutRepository.DEFAULT_SET_COUNT
+                workoutDao.insertSets(
+                    (1..setCount).map { number -> SetEntity(workoutExerciseId = workoutExerciseId, setNumber = number) }
+                )
+                workoutExerciseId
+            }
+        }
+
+    override suspend fun removeExercise(workoutExerciseId: Long) =
+        workoutDao.deleteWorkoutExercise(workoutExerciseId)
+
+    override suspend fun addSet(workoutExerciseId: Long) {
+        database.withTransaction {
+            val number = workoutDao.nextSetNumber(workoutExerciseId)
+            workoutDao.insertSets(listOf(SetEntity(workoutExerciseId = workoutExerciseId, setNumber = number)))
+        }
+    }
+
+    override suspend fun updateSetValues(setId: Long, weightKg: Double?, reps: Int?, durationSec: Int?) =
+        workoutDao.updateSetValues(setId, weightKg, reps, durationSec)
+
+    override suspend fun setCompleted(
+        setId: Long,
+        completedAt: Instant?,
+        weightKg: Double?,
+        reps: Int?,
+        durationSec: Int?,
+    ) = workoutDao.updateSetCompletion(
+        setId = setId,
+        completed = completedAt != null,
+        completedAt = completedAt?.toEpochMilli(),
+        weightKg = weightKg,
+        reps = reps,
+        durationSec = durationSec,
+    )
+
+    override suspend fun deleteSet(setId: Long) {
+        database.withTransaction {
+            val workoutExerciseId = workoutDao.workoutExerciseIdOfSet(setId) ?: return@withTransaction
+            workoutDao.deleteSet(setId)
+            renumberSets(workoutExerciseId)
+        }
+    }
+
+    override suspend fun updateStartTime(workoutId: Long, startedAt: Instant) =
+        workoutDao.updateStartedAt(workoutId, startedAt.toEpochMilli())
+
+    override suspend fun finishWorkout(workoutId: Long, endedAt: Instant): Boolean =
+        database.withTransaction {
+            workoutDao.deleteIncompleteSets(workoutId)
+            workoutDao.deleteExercisesWithoutSets(workoutId)
+            workoutDao.workoutExerciseIds(workoutId).forEach { renumberSets(it) }
+            workoutDao.markFinished(workoutId, endedAt.toEpochMilli()) == 1
+        }
+
+    override suspend fun discardWorkout(workoutId: Long) {
+        workoutDao.deleteRunningWorkout(workoutId)
+    }
+
+    /** 1, 2, 3… in the current order. Call inside a transaction. */
+    private suspend fun renumberSets(workoutExerciseId: Long) {
+        workoutDao.setIdsInOrder(workoutExerciseId).forEachIndexed { index, setId ->
+            workoutDao.updateSetNumber(setId, index + 1)
+        }
+    }
 
     private companion object {
         // TODO: let the user rename it on the active workout screen.
