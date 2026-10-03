@@ -100,6 +100,10 @@ class ProgressionTest {
         val rising = (1..8).map { i -> session(i * 4, kg(50.0 - i * 2.5, 6, 6, 5)) }
         assertNull(Progression.plateau(ohp, rising, now))
 
+        // About 0.75% a week (39 → 40 kg over 3½ weeks): slow, but a new best every week.
+        val slow = (1..9).map { i -> session(i * 3 + 1, kg(40.0 - (i - 1) * 0.125, 6, 6, 5)) }
+        assertNull(Progression.plateau(ohp, slow, now))
+
         val flat = (1..6).map { i -> session(i * 4, kg(40.0, 6, 6, 5)) }
         assertNull(Progression.plateau(ohp, flat.map { it.copy(startedAt = it.startedAt.minus(Duration.ofDays(30))) }, now))
         assertNull(Progression.plateau(ohp, flat.take(3), now))

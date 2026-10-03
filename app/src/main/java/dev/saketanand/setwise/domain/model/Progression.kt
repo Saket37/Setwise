@@ -93,9 +93,10 @@ object Progression {
     }
 
     /**
-     * A stall in the last [WINDOW_DAYS] days: the best hasn't moved more than [FLAT_TOLERANCE]
-     * for [MIN_WEEKS]+ weeks over [MIN_SESSIONS]+ sessions, and it's still being trained. Not
-     * when the last two sessions say it's ready for more (that's progress about to happen).
+     * A stall in the last [WINDOW_DAYS] days: no new best (by more than [FLAT_TOLERANCE]) for
+     * [MIN_WEEKS]+ weeks over [MIN_SESSIONS]+ sessions, and it's still being trained. Slow but
+     * steady gains keep setting new bests, so they aren't one. Not when the last two sessions
+     * say it's ready for more (that's progress about to happen).
      */
     fun plateau(exercise: Exercise, history: List<ExerciseSession>, now: Instant): Plateau? {
         val measure = measureOf(exercise) ?: return null
@@ -194,6 +195,7 @@ object Progression {
     private const val STILL_TRAINING_DAYS = 21L
     private const val MIN_SESSIONS = 4
     private const val MIN_WEEKS = 3L
-    private const val FLAT_TOLERANCE = 0.025
+    /** A session within 1% of the best is "about as good": noise, not a new best. */
+    private const val FLAT_TOLERANCE = 0.01
     private const val EPSILON = 1e-6
 }
