@@ -10,6 +10,9 @@ import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.DateProvider
 import java.time.Instant
 import java.time.LocalTime
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +31,9 @@ import kotlinx.coroutines.launch
  *
  * The database is the source of truth: every edit is saved at once (so nothing is lost if the
  * app is killed mid-workout), and the screen redraws from the Room flow. All writes go through
- * one queue, so they reach the database in the order the user made them.
+ * one queue, so they reach the database in the order the user made them. The queue runs in
+ * [writeScope] (app-wide), not viewModelScope: minimising right after typing clears this
+ * ViewModel, and the last edits must still be saved.
  *
  * @param workoutId from [Route.ActiveWorkout], passed in by SetwiseNavHost (Koin parametersOf)
  *   rather than read with toRoute(), which needs an Android Bundle and can't run in unit tests.
@@ -38,6 +43,7 @@ class ActiveWorkoutViewModel(
     private val workoutRepository: WorkoutRepository,
     private val dateProvider: DateProvider,
     private val savedStateHandle: SavedStateHandle,
+    private val writeScope: CoroutineScope,
 ) : ViewModel() {
 
     /** Exercise the user opened or closed; null = automatic (first one with sets left). */
@@ -58,8 +64,8 @@ class ActiveWorkoutViewModel(
     val state: StateFlow<ActiveWorkoutUiState> = combine(
         workoutRepository.observeSession(workoutId).onEach { session ->
             this.session = session
-            // Deleted (e.g. discarded): nothing left to show.
-            if (session == null) close()
+            // Deleted (discarded) or already finished: nothing to edit here.
+            if (session == null || session.endedAt != null) close()
         },
         expandedChoice,
         overlays,
@@ -86,15 +92,25 @@ class ActiveWorkoutViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ActiveWorkoutUiState())
 
     init {
-        // The write queue: one write at a time, in order.
-        viewModelScope.launch {
+        // The write queue: one write at a time, in order. Main.immediate: the writes also update
+        // SavedStateHandle, which belongs on the main thread (Room does its own threading).
+        writeScope.launch(Dispatchers.Main.immediate) {
             for (write in writes) {
-                runCatching { write() }.onFailure { e ->
+                try {
+                    write()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
                     Log.e(TAG, "Saving workout $workoutId failed", e)
-                    eventChannel.send(ActiveWorkoutEvent.SaveFailed)
+                    eventChannel.trySend(ActiveWorkoutEvent.SaveFailed)
                 }
             }
         }
+    }
+
+    override fun onCleared() {
+        // No new writes; the queued ones still run, then the loop above ends.
+        writes.close()
     }
 
     fun onAction(action: ActiveWorkoutAction) {
@@ -152,7 +168,7 @@ class ActiveWorkoutViewModel(
         }
         // Empty fields mean "same as the hint" (usually last time's numbers).
         val weightKg = parseWeight(weight) ?: parseWeight(set.weightHint)
-        val amount = parseAmount(reps) ?: parseAmount(set.repsHint) ?: return // nothing to log
+        val amount = loggedAmount(reps, set.repsHint) ?: return // nothing to log
         write {
             workoutRepository.setCompleted(setId, exercise.kind, completedAt = dateProvider.now(), weightKg, amount)
         }
@@ -204,15 +220,20 @@ class ActiveWorkoutViewModel(
     private fun finish() {
         if (overlays.value.isFinishing) return
         overlays.update { it.copy(dialog = null, isFinishing = true) }
+        // Set before the workout is marked finished, so seeing it finished doesn't also "close".
+        isClosing = true
         write {
-            try {
-                // Goes through the queue, so edits made just before Finish are saved first.
-                if (workoutRepository.finishWorkout(workoutId, dateProvider.now())) {
-                    isClosing = true
-                    eventChannel.send(ActiveWorkoutEvent.Finished(workoutId))
-                }
-            } finally {
+            // Goes through the queue, so edits made just before Finish are saved first.
+            val finished = runCatching { workoutRepository.finishWorkout(workoutId, dateProvider.now()) }
+                .onFailure { e -> Log.e(TAG, "Finishing workout $workoutId failed", e) }
+                .getOrDefault(false)
+            if (finished) {
+                // Stays "finishing" (Finish disabled) until the summary opens.
+                eventChannel.trySend(ActiveWorkoutEvent.Finished(workoutId))
+            } else {
+                isClosing = false
                 overlays.update { it.copy(isFinishing = false) }
+                eventChannel.trySend(ActiveWorkoutEvent.SaveFailed)
             }
         }
     }
@@ -229,17 +250,14 @@ class ActiveWorkoutViewModel(
     private fun close() {
         if (isClosing) return
         isClosing = true
-        viewModelScope.launch { eventChannel.send(ActiveWorkoutEvent.Closed) }
+        eventChannel.trySend(ActiveWorkoutEvent.Closed)
     }
 
     private fun changeStartTime(time: LocalTime) {
         overlays.update { it.copy(isStartTimePickerVisible = false) }
         val current = session?.startedAt ?: return
-        val zone = dateProvider.zone
-        // Same day, new time; a start in the future makes no sense, so that becomes "now".
-        val picked = current.atZone(zone).with(time).toInstant()
-        val now = dateProvider.now()
-        write { workoutRepository.updateStartTime(workoutId, if (picked.isAfter(now)) now else picked) }
+        val startedAt = pickedStartTime(time, current, dateProvider.now(), dateProvider.zone)
+        write { workoutRepository.updateStartTime(workoutId, startedAt) }
     }
 
     private fun showDialog(dialog: ActiveWorkoutDialog?) = overlays.update { it.copy(dialog = dialog) }

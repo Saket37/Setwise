@@ -25,7 +25,15 @@ val viewModelModule = module {
     viewModelOf(::SettingsViewModel)
 
     // Route argument passed by SetwiseNavHost: koinViewModel { parametersOf(route.workoutId) }.
-    viewModel { params -> ActiveWorkoutViewModel(workoutId = params.get(), get(), get(), get()) }
+    viewModel { params ->
+        ActiveWorkoutViewModel(
+            workoutId = params.get(),
+            workoutRepository = get(),
+            dateProvider = get(),
+            savedStateHandle = get(),
+            writeScope = get(ApplicationScope),
+        )
+    }
     viewModelOf(::CardioEntryViewModel)
     viewModelOf(::WorkoutSummaryViewModel)
 

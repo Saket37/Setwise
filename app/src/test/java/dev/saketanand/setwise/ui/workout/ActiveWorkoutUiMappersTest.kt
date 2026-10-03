@@ -5,6 +5,10 @@ import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSet
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -76,6 +80,54 @@ class ActiveWorkoutUiMappersTest {
         assertEquals(8, parseAmount("8"))
         assertNull(parseAmount(""))
     }
+
+    @Test
+    fun `field values parse back in any locale, labels follow the locale`() {
+        val default = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.forLanguageTag("ar"))
+            val ui = SessionExercise(1, exercise(ExerciseType.STRENGTH), listOf(set(1, weightKg = 62.5, reps = 8)), listOf(PreviousSet(60.5, 8)))
+                .toUi()
+            val row = ui.sets.single()
+            assertEquals("62.5", row.weight)
+            assertEquals("60.5", row.weightHint)
+            assertEquals(62.5, parseWeight(row.weight))
+        } finally {
+            Locale.setDefault(default)
+        }
+    }
+
+    @Test
+    fun `0 reps doesn't count as a set`() {
+        assertEquals(8, loggedAmount(typed = "0", hint = "8"))
+        assertNull(loggedAmount(typed = "0", hint = ""))
+        assertEquals(10, loggedAmount(typed = "10", hint = "8"))
+        assertEquals(false, canCompleteSet("", ""))
+        assertEquals(true, canCompleteSet("", "8"))
+    }
+
+    @Test
+    fun `picked start time is today, clamped to now`() {
+        val zone = ZoneId.of("Asia/Kolkata")
+        val now = LocalDateTime.of(2026, 10, 3, 18, 30).atZone(zone).toInstant()
+        val start = LocalDateTime.of(2026, 10, 3, 18, 0).atZone(zone).toInstant()
+
+        assertEquals(at(2026, 10, 3, 17, 45, zone), pickedStartTime(LocalTime.of(17, 45), start, now, zone))
+        assertEquals("future → now", now, pickedStartTime(LocalTime.of(23, 0), start, now, zone))
+    }
+
+    @Test
+    fun `picked start time works across midnight`() {
+        val zone = ZoneId.of("Asia/Kolkata")
+        // Started 23:30 on the 2nd; it's now 00:20 on the 3rd.
+        val start = at(2026, 10, 2, 23, 30, zone)
+        val now = at(2026, 10, 3, 0, 20, zone)
+
+        assertEquals("00:10 is tonight, not the night before", at(2026, 10, 3, 0, 10, zone), pickedStartTime(LocalTime.of(0, 10), start, now, zone))
+        assertEquals("23:15 is yesterday evening", at(2026, 10, 2, 23, 15, zone), pickedStartTime(LocalTime.of(23, 15), start, now, zone))
+    }
+
+    private fun at(y: Int, m: Int, d: Int, h: Int, min: Int, zone: ZoneId) = LocalDateTime.of(y, m, d, h, min).atZone(zone).toInstant()
 
     private fun exercise(type: ExerciseType, timed: Boolean = false) = Exercise(
         id = 10, name = "Bench Press", type = type, muscleGroup = "Chest", equipment = "Barbell",

@@ -24,7 +24,9 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -275,10 +277,12 @@ private fun RowScope.OpenSetFields(set: SetUi, kind: SetKind, onAction: (ActiveW
     // Created from the saved values when the row opens; after that the field owns the text.
     val weight = remember(set.id) { TextFieldState(set.weight) }
     val reps = remember(set.id) { TextFieldState(set.reps) }
+    // The effect outlives recompositions; always call the latest onAction.
+    val currentOnAction by rememberUpdatedState(onAction)
     LaunchedEffect(set.id) {
         snapshotFlow { weight.text.toString() to reps.text.toString() }
             .drop(1) // the initial values are already saved
-            .collect { (w, r) -> onAction(ActiveWorkoutAction.OnSetValuesChange(set.id, w, r)) }
+            .collect { (w, r) -> currentOnAction(ActiveWorkoutAction.OnSetValuesChange(set.id, w, r)) }
     }
     val focusManager = LocalFocusManager.current
 
@@ -304,8 +308,8 @@ private fun RowScope.OpenSetFields(set: SetUi, kind: SetKind, onAction: (ActiveW
         onKeyboardAction = { focusManager.clearFocus() },
         modifier = Modifier.width(SetColumns.Reps),
     )
-    // Needs reps (typed or a hint) to have something to log.
-    val canComplete = reps.text.isNotEmpty() || set.repsHint.isNotEmpty()
+    // Needs reps (typed or a hint, more than 0) to have something to log.
+    val canComplete = canCompleteSet(reps.text.toString(), set.repsHint)
     CheckCell {
         SetwiseCheckButton(
             checked = false,

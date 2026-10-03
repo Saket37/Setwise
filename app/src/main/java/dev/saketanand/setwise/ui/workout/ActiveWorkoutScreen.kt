@@ -87,10 +87,12 @@ fun ActiveWorkoutScreenRoot(
     val minimize = dropUnlessResumed(block = onMinimize)
     val addExercises = dropUnlessResumed(block = onAddExercises)
 
+    // Events navigate directly (not through dropUnlessResumed): they're delivered from STARTED,
+    // where dropUnlessResumed would silently ignore them, and the ViewModel sends each only once.
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
             is ActiveWorkoutEvent.Finished -> onFinished(event.workoutId)
-            ActiveWorkoutEvent.Closed -> minimize()
+            ActiveWorkoutEvent.Closed -> onMinimize()
             // TODO: replace with a snackbar once the screen has a SnackbarHost.
             ActiveWorkoutEvent.SaveFailed -> Toast.makeText(context, R.string.save_failed, Toast.LENGTH_SHORT).show()
         }

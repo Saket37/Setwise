@@ -5,7 +5,11 @@ import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSet
+import dev.saketanand.setwise.util.toWeightInput
 import dev.saketanand.setwise.util.toWeightLabel
+import java.time.Instant
+import java.time.LocalTime
+import java.time.ZoneId
 
 /** Domain → UI for the active workout. Plain functions, unit-tested without Android. */
 
@@ -29,9 +33,10 @@ fun SessionExercise.toUi(): WorkoutExerciseUi {
             id = set.id,
             number = index + 1,
             previous = previous?.label(kind),
-            weight = set.weightKg?.toWeightLabel().orEmpty(),
+            // Field text and hints are parsed back, so they use the locale-independent format.
+            weight = set.weightKg?.toWeightInput().orEmpty(),
             reps = set.amount(kind)?.toString().orEmpty(),
-            weightHint = previous?.weightKg?.toWeightLabel() ?: weightAbove,
+            weightHint = previous?.weightKg?.toWeightInput() ?: weightAbove,
             repsHint = previous?.amount(kind)?.toString() ?: repsAbove,
             isCompleted = set.isCompleted,
             isPr = set.isPr,
@@ -71,3 +76,27 @@ private fun PreviousSet.amount(kind: SetKind): Int? = if (kind == SetKind.Durati
 fun parseWeight(text: String): Double? = text.trim().replace(',', '.').toDoubleOrNull()
 
 fun parseAmount(text: String): Int? = text.trim().toIntOrNull()
+
+/**
+ * Reps (or seconds) a set is ticked off with: what's typed, else the hint. Null when there's
+ * nothing to log; 0 doesn't count, a set of 0 reps wasn't done.
+ */
+fun loggedAmount(typed: String, hint: String): Int? =
+    parseAmount(typed)?.takeIf { it > 0 } ?: parseAmount(hint)?.takeIf { it > 0 }
+
+/** Whether ✓ can be tapped: there's a reps (or seconds) value to log. Same rule as [loggedAmount]. */
+fun canCompleteSet(typedReps: String, repsHint: String): Boolean = loggedAmount(typedReps, repsHint) != null
+
+/**
+ * The start instant for a time picked on the clock. Today at that time, except:
+ * - the workout began yesterday (it's running past midnight) and the time is still ahead
+ *   today → yesterday at that time;
+ * - otherwise a time still ahead → now (a workout can't start in the future).
+ */
+fun pickedStartTime(time: LocalTime, currentStart: Instant, now: Instant, zone: ZoneId): Instant {
+    val today = now.atZone(zone).toLocalDate()
+    val picked = today.atTime(time).atZone(zone).toInstant()
+    if (!picked.isAfter(now)) return picked
+    val startedBeforeToday = currentStart.atZone(zone).toLocalDate().isBefore(today)
+    return if (startedBeforeToday) today.minusDays(1).atTime(time).atZone(zone).toInstant() else now
+}

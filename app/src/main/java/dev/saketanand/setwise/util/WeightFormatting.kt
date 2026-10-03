@@ -14,3 +14,10 @@ fun Double.toWeightLabel(locale: Locale = Locale.getDefault()): String =
         maximumFractionDigits = 2
         isGroupingUsed = false
     }.format(this)
+
+/**
+ * Weight for a text field the user edits: always ASCII digits and "." ("62.5"), so it can be
+ * parsed back whatever the phone's locale (some locales use other digits, e.g. "٦٢٫٥").
+ * For read-only labels use [toWeightLabel].
+ */
+fun Double.toWeightInput(): String = toWeightLabel(Locale.ROOT)

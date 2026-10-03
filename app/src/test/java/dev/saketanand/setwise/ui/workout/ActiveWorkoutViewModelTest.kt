@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.workout
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -43,7 +45,7 @@ class ActiveWorkoutViewModelTest {
     @After fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel() =
-        ActiveWorkoutViewModel(WORKOUT_ID, repository, FixedDateProvider, SavedStateHandle()).also { vm ->
+        ActiveWorkoutViewModel(WORKOUT_ID, repository, FixedDateProvider, SavedStateHandle(), writeScope = backgroundScope).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
         }
 
@@ -97,6 +99,29 @@ class ActiveWorkoutViewModelTest {
 
         assertEquals(listOf(Values(30, null, null, 45)), repository.valueUpdates)
         assertEquals(Completion(30, done = true, weightKg = null, reps = null, durationSec = 45), repository.completions.single())
+    }
+
+    @Test
+    fun `0 reps is not a set, so it falls back to the hint or isn't logged`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "60", reps = "0"))
+        assertEquals("hint used instead of 0", 8, repository.completions.single().reps)
+
+        repository.session.value = session(bench(previous = emptyList()))
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 2, weight = "60", reps = "0"))
+        assertEquals(1, repository.completions.size)
+    }
+
+    @Test
+    fun `edits are still saved after the screen's ViewModel scope is gone`() = runTest(dispatcher) {
+        val vm = viewModel()
+        // Minimising clears the ViewModel; the write queue runs in the app scope, not viewModelScope.
+        vm.viewModelScope.cancel()
+
+        vm.onAction(ActiveWorkoutAction.OnSetValuesChange(setId = 1, weight = "65", reps = "8"))
+
+        assertEquals(listOf(Values(1, 65.0, 8, null)), repository.valueUpdates)
     }
 
     // Which exercise is open
@@ -165,13 +190,35 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
-    fun `finish with every set done needs no confirmation`() = runTest(dispatcher) {
+    fun `finish with every set done needs no confirmation and keeps Finish disabled`() = runTest(dispatcher) {
         repository.session.value = session(bench(sets = listOf(set(1, 60.0, 8, done = true))))
         val vm = viewModel()
 
         vm.onAction(ActiveWorkoutAction.OnFinishClick)
+        vm.onAction(ActiveWorkoutAction.OnFinishClick)
 
-        assertEquals(listOf(WORKOUT_ID), repository.finished)
+        assertEquals("finished once", listOf(WORKOUT_ID), repository.finished)
+        assertTrue("disabled until the summary opens", vm.state.value.isFinishing)
+    }
+
+    @Test
+    fun `a failed finish re-enables Finish and says so`() = runTest(dispatcher) {
+        repository.session.value = session(bench(sets = listOf(set(1, 60.0, 8, done = true))))
+        repository.failFinish = true
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnFinishClick)
+
+        assertEquals(ActiveWorkoutEvent.SaveFailed, vm.events.first())
+        assertEquals(false, vm.state.value.isFinishing)
+    }
+
+    @Test
+    fun `a workout that is already finished closes the screen`() = runTest(dispatcher) {
+        repository.session.value = session(bench()).copy(endedAt = FixedDateProvider.now())
+        val vm = viewModel()
+
+        assertEquals(ActiveWorkoutEvent.Closed, vm.events.first())
     }
 
     @Test
@@ -240,7 +287,10 @@ class ActiveWorkoutViewModelTest {
             valueUpdates += Values(setId, weightKg, reps, durationSec)
         }
 
+        var failFinish = false
+
         override suspend fun finishWorkout(workoutId: Long, endedAt: Instant): Boolean {
+            if (failFinish) error("disk full")
             finished += workoutId
             return true
         }
