@@ -1,0 +1,53 @@
+package dev.saketanand.setwise.ui.workout
+
+import java.time.LocalTime
+
+/** What the user can do on [ActiveWorkoutScreen]. */
+sealed interface ActiveWorkoutAction {
+
+    // Header
+
+    data object OnFinishClick : ActiveWorkoutAction
+    data object OnStartTimeClick : ActiveWorkoutAction
+    data class OnStartTimeChange(val time: LocalTime) : ActiveWorkoutAction
+    data object OnStartTimePickerDismiss : ActiveWorkoutAction
+
+    // Dialogs
+
+    data object OnConfirmFinish : ActiveWorkoutAction
+    data object OnDiscardWorkoutClick : ActiveWorkoutAction
+    data object OnConfirmDiscard : ActiveWorkoutAction
+    data object OnConfirmRemoveExercise : ActiveWorkoutAction
+    data object OnDismissDialog : ActiveWorkoutAction
+
+    // Exercises
+
+    /** Tap on a card's header: expand it, or collapse it if it's the open one. */
+    data class OnExerciseHeaderClick(val workoutExerciseId: Long) : ActiveWorkoutAction
+
+    /** Result from the exercise picker. */
+    data class OnExercisesPicked(val exerciseIds: List<Long>) : ActiveWorkoutAction
+
+    data class OnRemoveExerciseClick(val workoutExerciseId: Long) : ActiveWorkoutAction
+
+    // Sets
+
+    data class OnAddSetClick(val workoutExerciseId: Long) : ActiveWorkoutAction
+
+    /** Typing in a set row; both fields' text, saved as typed. */
+    data class OnSetValuesChange(val setId: Long, val weight: String, val reps: String) : ActiveWorkoutAction
+
+    /**
+     * ✓ tapped. Carries what's in the fields right now (the last keystroke may not be saved yet);
+     * empty fields fall back to the hints.
+     */
+    data class OnSetDoneToggle(val setId: Long, val weight: String, val reps: String) : ActiveWorkoutAction
+
+    data class OnDeleteSet(val setId: Long) : ActiveWorkoutAction
+
+    // Navigation (handled in ActiveWorkoutScreenRoot)
+
+    data object OnMinimizeClick : ActiveWorkoutAction
+    data object OnAddExerciseClick : ActiveWorkoutAction
+    data class OnLogCardioClick(val workoutExerciseId: Long) : ActiveWorkoutAction
+}
