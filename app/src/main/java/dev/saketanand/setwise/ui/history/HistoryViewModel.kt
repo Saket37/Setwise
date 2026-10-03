@@ -64,6 +64,7 @@ class HistoryViewModel(
                 val day = action.date.toEpochDay()
                 savedStateHandle[KEY_SELECTED_DAY] = if (selectedEpochDay.value == day) null else day
             }
+            is HistoryAction.OnCalendarDayClick -> savedStateHandle[KEY_SELECTED_DAY] = action.date.toEpochDay()
             is HistoryAction.OnLogWorkoutClick -> logWorkout(action.date)
             is HistoryAction.OnMarkDay -> markDay(action.date, action.status)
             // Navigation: HistoryScreenRoot handles it.

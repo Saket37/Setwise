@@ -110,6 +110,21 @@ class HistoryUiMappersTest {
         assertEquals(false, historyUi(history, today, zone, selectedDate = LocalDate.of(2026, 9, 30)).canCheckInSelectedDay)
     }
 
+    @Test
+    fun `month summary counts workouts and marked days, and the calendar spans the strip`() {
+        val ui = historyUi(
+            history = listOf(workout(1, 2026, 10, 1), workout(2, 2026, 9, 30), workout(3, 2026, 9, 28)),
+            today = today,
+            zone = zone,
+            marks = mapOf(LocalDate.of(2026, 10, 2) to DayStatus.Missed, LocalDate.of(2026, 9, 29) to DayStatus.Rest),
+        )
+
+        assertEquals(MonthSummaryUi(workouts = 1, restDays = 0, missedDays = 1), monthSummary(YearMonth.of(2026, 10), ui))
+        assertEquals(MonthSummaryUi(workouts = 2, restDays = 1, missedDays = 0), monthSummary(YearMonth.of(2026, 9), ui))
+        assertEquals(YearMonth.of(2026, 9), ui.firstMonth) // 28 days back from 3 Oct
+        assertEquals(YearMonth.of(2026, 10), ui.lastMonth)
+    }
+
     private fun workout(id: Long, y: Int, m: Int, d: Int, hour: Int = 18, minute: Int = 0): WorkoutHistoryItem {
         val start: Instant = LocalDateTime.of(y, m, d, hour, minute).atZone(zone).toInstant()
         return WorkoutHistoryItem(

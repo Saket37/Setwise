@@ -279,6 +279,19 @@
     <string name="clear_selected_day">Clear selected day</string>
     <string name="previous_month">Previous month</string>
     <string name="next_month">Next month</string>
+    <string name="show_calendar">Show calendar</string>
+    <plurals name="month_workouts">
+        <item quantity="one">%d workout</item>
+        <item quantity="other">%d workouts</item>
+    </plurals>
+    <plurals name="month_rest_days">
+        <item quantity="one">%d rest day</item>
+        <item quantity="other">%d rest days</item>
+    </plurals>
+    <plurals name="month_missed_days">
+        <item quantity="one">%d missed</item>
+        <item quantity="other">%d missed</item>
+    </plurals>
     <string name="a11y_day_rest">%1$s, rest day</string>
     <string name="a11y_day_missed">%1$s, missed</string>
     <string name="log_workout">Log workout</string>

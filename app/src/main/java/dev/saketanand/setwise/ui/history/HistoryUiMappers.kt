@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.history
 
 import dev.saketanand.setwise.domain.model.DayCheckIn
+import dev.saketanand.setwise.domain.model.DayState
 import dev.saketanand.setwise.domain.model.DayStatus
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import java.time.DayOfWeek
@@ -42,6 +43,16 @@ fun historyUi(
         months = workouts.groupBy { YearMonth.from(it.date) }.map { (month, inMonth) -> HistoryMonthUi(month, inMonth) },
         selectedDate = selectedDate,
         today = today,
+    )
+}
+
+/** Workouts in [month], and its days marked (or counted as) rest or missed. */
+fun monthSummary(month: YearMonth, state: HistoryUiState): MonthSummaryUi {
+    val days = state.days.filter { YearMonth.from(it.date) == month }
+    return MonthSummaryUi(
+        workouts = state.months.firstOrNull { it.month == month }?.workouts?.size ?: 0,
+        restDays = days.count { it.state == DayState.Rest },
+        missedDays = days.count { it.state == DayState.Missed },
     )
 }
 
