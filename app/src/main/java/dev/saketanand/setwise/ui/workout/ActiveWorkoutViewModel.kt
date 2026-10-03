@@ -30,6 +30,11 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dev.saketanand.setwise.domain.ai.QuickLogInterpreter
+import dev.saketanand.setwise.domain.ai.QuickLogResult
+import dev.saketanand.setwise.domain.ai.SuggestionSource
+import dev.saketanand.setwise.domain.repository.ExerciseRepository
+import kotlinx.coroutines.flow.first
 
 /**
  * Screen: [ActiveWorkoutScreenRoot].
@@ -51,7 +56,12 @@ class ActiveWorkoutViewModel(
     private val writeScope: CoroutineScope,
     private val restTimer: RestTimer,
     private val restNotifications: RestNotificationRefresher,
+    private val quickLogInterpreter: QuickLogInterpreter,
+    private val exerciseRepository: ExerciseRepository,
 ) : ViewModel() {
+
+    /** What the "Understood as" card shows, kept to add on confirm. */
+    private var pendingQuickLog: QuickLogResult? = null
 
     /** Exercise the user opened or closed; null = automatic (first one with sets left). */
     private val expandedChoice = savedStateHandle.getStateFlow<Long?>(KEY_EXPANDED, null)
@@ -95,6 +105,7 @@ class ActiveWorkoutViewModel(
             isStartTimePickerVisible = overlays.isStartTimePickerVisible,
             isFinishing = overlays.isFinishing,
             rest = rest?.toUi(),
+            quickLog = overlays.quickLog,
         )
     }
         .catch { e ->
@@ -142,6 +153,15 @@ class ActiveWorkoutViewModel(
                 write { workoutRepository.removeExercise(dialog.workoutExerciseId) }
             }
             ActiveWorkoutAction.OnDismissDialog -> showDialog(null)
+
+            is ActiveWorkoutAction.OnQuickLogSubmit -> readQuickLog(action.text)
+            ActiveWorkoutAction.OnQuickLogConfirm -> confirmQuickLog()
+            ActiveWorkoutAction.OnQuickLogEdit -> {
+                pendingQuickLog = null
+                overlays.update { it.copy(quickLog = QuickLogUi()) }
+            }
+            ActiveWorkoutAction.OnQuickLogEdited ->
+                if (overlays.value.quickLog.problem != null) overlays.update { it.copy(quickLog = QuickLogUi()) }
 
             ActiveWorkoutAction.OnRenameClick -> showDialog(ActiveWorkoutDialog.Rename(state.value.name))
             is ActiveWorkoutAction.OnRenameConfirm -> {
@@ -295,6 +315,72 @@ class ActiveWorkoutViewModel(
 
     private fun showDialog(dialog: ActiveWorkoutDialog?) = overlays.update { it.copy(dialog = dialog) }
 
+    // Quick log
+
+    private fun readQuickLog(text: String) {
+        val current = session ?: return
+        if (text.isBlank() || overlays.value.quickLog.isReading) return
+        overlays.update { it.copy(quickLog = QuickLogUi(isReading = true)) }
+        viewModelScope.launch {
+            val result = runCatching {
+                val library = exerciseRepository.observeExercises("", null).first()
+                quickLogInterpreter.interpret(text.trim(), current, state.value.expandedExerciseId, library)
+            }.getOrElse { e ->
+                Log.e(TAG, "Reading quick log '$text' failed", e)
+                QuickLogResult.NotUnderstood(QuickLogResult.Reason.NothingToLog)
+            }
+            pendingQuickLog = result
+            overlays.update { it.copy(quickLog = result.toUi()) }
+        }
+    }
+
+    private fun QuickLogResult.toUi(): QuickLogUi = when (this) {
+        is QuickLogResult.NotUnderstood -> QuickLogUi(problem = reason)
+        is QuickLogResult.Sets -> QuickLogUi(
+            preview = QuickLogPreview(
+                exerciseName = target.exercise.name,
+                matchedFrom = target.matchedFrom,
+                isInWorkout = target.workoutExerciseId != null,
+                kind = target.exercise.setKind,
+                sets = sets,
+                byModel = source == SuggestionSource.Model,
+            ),
+        )
+        is QuickLogResult.Cardio -> QuickLogUi(
+            preview = QuickLogPreview(
+                exerciseName = target.exercise.name,
+                matchedFrom = target.matchedFrom,
+                isInWorkout = target.workoutExerciseId != null,
+                kind = SetKind.Cardio,
+                cardio = values,
+            ),
+        )
+    }
+
+    /** Adds what the card shows, through the write queue (after any edit typed just before). */
+    private fun confirmQuickLog() {
+        val result = pendingQuickLog ?: return
+        pendingQuickLog = null
+        overlays.update { it.copy(quickLog = QuickLogUi()) }
+        eventChannel.trySend(ActiveWorkoutEvent.QuickLogAdded)
+        write {
+            val now = dateProvider.now()
+            val itemId = when (result) {
+                is QuickLogResult.Sets ->
+                    workoutRepository.logSets(workoutId, result.target.workoutExerciseId, result.target.exercise.id, result.sets, now)
+                is QuickLogResult.Cardio -> {
+                    val id = result.target.workoutExerciseId
+                        ?: workoutRepository.addExercises(workoutId, listOf(result.target.exercise.id)).single()
+                    workoutRepository.logCardio(id, result.values, now)
+                    id
+                }
+                is QuickLogResult.NotUnderstood -> return@write
+            }
+            // Open what was just logged, so it can be checked or changed.
+            savedStateHandle[KEY_EXPANDED] = itemId
+        }
+    }
+
     private fun write(block: suspend () -> Unit) {
         writes.trySend(block)
     }
@@ -311,6 +397,7 @@ class ActiveWorkoutViewModel(
         val dialog: ActiveWorkoutDialog? = null,
         val isStartTimePickerVisible: Boolean = false,
         val isFinishing: Boolean = false,
+        val quickLog: QuickLogUi = QuickLogUi(),
     )
 
     private companion object {

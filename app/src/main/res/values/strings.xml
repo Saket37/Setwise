@@ -349,6 +349,27 @@
     <string name="ai_download_no_space">Not enough storage for Gemini Nano. Free some space and tap to try again.</string>
     <string name="ai_download_needs_update">Gemini Nano needs newer system software. Update Android AICore and your phone, then tap to try again.</string>
     <string name="ai_download_failed">The download didn\'t finish. Tap to try again.</string>
+    <!-- Quick log (workout screen) -->
+    <string name="quick_log_placeholder">Quick log: bench 3x8 at 60</string>
+    <string name="quick_log_send">Read it</string>
+    <string name="quick_log_speak">Speak</string>
+    <string name="quick_log_reading">Reading…</string>
+    <string name="quick_log_understood">Understood as</string>
+    <string name="quick_log_check">Check before adding</string>
+    <string name="quick_log_matched">Matched from “%1$s”</string>
+    <string name="quick_log_open_exercise">The open exercise</string>
+    <string name="quick_log_in_workout">in today\'s workout</string>
+    <string name="quick_log_adds_exercise">adds it to this workout</string>
+    <string name="quick_log_by_model">read on-device by Gemini Nano</string>
+    <string name="quick_log_edit">Edit</string>
+    <plurals name="quick_log_add_sets">
+        <item quantity="one">Add %d set</item>
+        <item quantity="other">Add %d sets</item>
+    </plurals>
+    <string name="quick_log_try_saying">Try saying</string>
+    <string name="quick_log_no_exercise">Which exercise? Start with its name, like “bench 3x8 at 60”.</string>
+    <string name="quick_log_nothing">No sets found in that. Try “3x8 at 60” or “60 for 8”.</string>
+    <string name="quick_log_no_last_time">That exercise hasn\'t been done before, so there\'s no last time.</string>
     <!-- Create exercise -->
     <string name="new_exercise">New exercise</string>
     <string name="exercise_name">Name</string>

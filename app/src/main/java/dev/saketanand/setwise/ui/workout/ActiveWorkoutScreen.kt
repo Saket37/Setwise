@@ -69,6 +69,13 @@ import dev.saketanand.setwise.util.toShortTimeLabel
 import java.time.LocalDate
 import java.time.LocalTime
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import kotlinx.coroutines.flow.drop
 
 /**
  * Destination: [Route.ActiveWorkout].
@@ -122,6 +129,13 @@ fun ActiveWorkoutScreenRoot(
     val minimize = dropUnlessResumed(block = onMinimize)
     val addExercises = dropUnlessResumed(block = onAddExercises)
 
+    // The quick-log line lives here (typing stays in sync); an edit clears an old "couldn't understand".
+    val quickLogField = rememberTextFieldState()
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(quickLogField) {
+        snapshotFlow { quickLogField.text.toString() }.drop(1).collect { viewModel.onAction(ActiveWorkoutAction.OnQuickLogEdited) }
+    }
+
     // Events navigate directly (not through dropUnlessResumed): they're delivered from STARTED,
     // where dropUnlessResumed would silently ignore them, and the ViewModel sends each only once.
     ObserveAsEvents(viewModel.events) { event ->
@@ -130,11 +144,16 @@ fun ActiveWorkoutScreenRoot(
             ActiveWorkoutEvent.Closed -> onMinimize()
             // TODO: replace with a snackbar once the screen has a SnackbarHost.
             ActiveWorkoutEvent.SaveFailed -> Toast.makeText(context, R.string.save_failed, Toast.LENGTH_SHORT).show()
+            ActiveWorkoutEvent.QuickLogAdded -> {
+                quickLogField.clearText()
+                focusManager.clearFocus()
+            }
         }
     }
 
     ActiveWorkoutScreen(
         uiState = uiState,
+        quickLogField = quickLogField,
         onAction = { action ->
             when (action) {
                 ActiveWorkoutAction.OnMinimizeClick -> minimize()
@@ -156,7 +175,12 @@ fun ActiveWorkoutScreen(
     uiState: ActiveWorkoutUiState,
     onAction: (ActiveWorkoutAction) -> Unit,
     modifier: Modifier = Modifier,
+    quickLogField: TextFieldState = rememberTextFieldState(),
+    /** The quick-log mic; null hides it. */
+    onSpeak: (() -> Unit)? = null,
 ) {
+    var isQuickLogFocused by remember { mutableStateOf(false) }
+    val quickLogFocus = remember { FocusRequester() }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -205,6 +229,22 @@ fun ActiveWorkoutScreen(
             exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
         ) {
             lastRest?.let { RestTimerBar(rest = it, onAction = onAction) }
+        }
+
+        if (!uiState.isLoading) {
+            QuickLogSection(
+                field = quickLogField,
+                quickLog = uiState.quickLog,
+                isFieldFocused = isQuickLogFocused,
+                onFieldFocusChange = { isQuickLogFocused = it },
+                focusRequester = quickLogFocus,
+                onAction = { action ->
+                    // "Edit": back into the line.
+                    if (action == ActiveWorkoutAction.OnQuickLogEdit) quickLogFocus.requestFocus()
+                    onAction(action)
+                },
+                onSpeak = onSpeak,
+            )
         }
     }
 

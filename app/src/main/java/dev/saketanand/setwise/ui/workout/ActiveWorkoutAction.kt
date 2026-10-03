@@ -66,4 +66,18 @@ sealed interface ActiveWorkoutAction {
     data object OnMinimizeClick : ActiveWorkoutAction
     data object OnAddExerciseClick : ActiveWorkoutAction
     data class OnLogCardioClick(val workoutExerciseId: Long) : ActiveWorkoutAction
+
+    // Quick log
+
+    /** Send (or the keyboard's Done) on the quick-log bar. */
+    data class OnQuickLogSubmit(val text: String) : ActiveWorkoutAction
+
+    /** "Add 3 sets" / "Log cardio" on the "Understood as" card. */
+    data object OnQuickLogConfirm : ActiveWorkoutAction
+
+    /** "Edit" on the card: back to the line to change it. */
+    data object OnQuickLogEdit : ActiveWorkoutAction
+
+    /** The line was changed: an old "couldn't understand" goes away. */
+    data object OnQuickLogEdited : ActiveWorkoutAction
 }

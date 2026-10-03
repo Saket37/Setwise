@@ -9,4 +9,7 @@ sealed interface ActiveWorkoutEvent {
     data object Closed : ActiveWorkoutEvent
 
     data object SaveFailed : ActiveWorkoutEvent
+
+    /** A quick-logged line was added: clear the bar. */
+    data object QuickLogAdded : ActiveWorkoutEvent
 }
