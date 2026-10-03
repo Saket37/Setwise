@@ -39,6 +39,7 @@ import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
 import dev.saketanand.setwise.ui.designsystem.theme.pr
 import dev.saketanand.setwise.ui.workout.label
+import dev.saketanand.setwise.ui.workout.summary
 import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toShortTimeLabel
 import java.text.NumberFormat
@@ -178,7 +179,9 @@ fun ExercisesSection(exercises: List<SummaryExerciseUi>, onExerciseClick: (exerc
                 )
                 val sets = pluralStringResource(R.plurals.set_count, exercise.setCount, exercise.setCount)
                 Text(
-                    text = exercise.best?.let { stringResource(R.string.exercise_sets_and_best, sets, it) } ?: sets,
+                    text = exercise.cardio?.summary()
+                        ?: exercise.best?.let { stringResource(R.string.exercise_sets_and_best, sets, it) }
+                        ?: sets,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

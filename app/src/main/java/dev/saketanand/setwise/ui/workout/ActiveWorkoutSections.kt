@@ -90,13 +90,25 @@ fun ExpandedExerciseCard(
         ExerciseCardHeader(exercise = exercise, onAction = onAction)
 
         if (exercise.kind == SetKind.Cardio) {
-            exercise.lastTime?.let { LastTimeText(it, Modifier.padding(horizontal = 4.dp)) }
+            // Logged: what was done, and Edit. Not yet: Log cardio.
+            val logged = exercise.cardio
+            if (logged != null) {
+                Text(
+                    text = logged.summary(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
+            } else {
+                exercise.lastTime?.let { LastTimeText(it, Modifier.padding(horizontal = 4.dp)) }
+            }
             SetwiseButton(
-                text = stringResource(R.string.log_cardio),
+                text = stringResource(if (logged != null) R.string.edit_cardio else R.string.log_cardio),
                 onClick = { onAction(ActiveWorkoutAction.OnLogCardioClick(exercise.id)) },
                 style = SetwiseButtonStyle.Tonal,
                 size = SetwiseButtonSize.Medium,
                 shape = MaterialTheme.shapes.medium,
+                startIcon = if (logged != null) R.drawable.ic_edit else null,
                 textStyle = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -141,7 +153,15 @@ fun CollapsedExerciseCard(
         headlineContent = {
             Text(exercise.name, color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
-        supportingContent = exercise.lastTime?.let { { LastTimeText(it) } },
+        supportingContent = when {
+            exercise.kind != SetKind.Cardio -> exercise.lastTime?.let { { LastTimeText(it) } }
+            exercise.cardio != null -> {
+                { Text(exercise.cardio.summary()) }
+            }
+            else -> {
+                { Text(stringResource(R.string.cardio_not_logged)) }
+            }
+        },
         trailingContent = {
             if (exercise.kind != SetKind.Cardio) {
                 Text(

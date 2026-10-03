@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "14fa77476a3b876eb9a5b2f2ea542994",
+    "identityHash": "2088fbe3299a3b43d85b568de76bed89",
     "entities": [
       {
         "tableName": "exercises",
@@ -92,7 +92,7 @@
       },
       {
         "tableName": "sets",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `workoutExerciseId` INTEGER NOT NULL, `setNumber` INTEGER NOT NULL, `weightKg` REAL, `reps` INTEGER, `durationSec` INTEGER, `inclinePct` REAL, `speedMinKmh` REAL, `speedMaxKmh` REAL, `distanceKm` REAL, `isCompleted` INTEGER NOT NULL, `completedAt` INTEGER, `isPr` INTEGER NOT NULL, FOREIGN KEY(`workoutExerciseId`) REFERENCES `workout_exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `workoutExerciseId` INTEGER NOT NULL, `setNumber` INTEGER NOT NULL, `weightKg` REAL, `reps` INTEGER, `durationSec` INTEGER, `inclinePct` REAL, `speedMinKmh` REAL, `speedMaxKmh` REAL, `distanceKm` REAL, `level` INTEGER, `isCompleted` INTEGER NOT NULL, `completedAt` INTEGER, `isPr` INTEGER NOT NULL, FOREIGN KEY(`workoutExerciseId`) REFERENCES `workout_exercises`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -146,6 +146,11 @@
             "fieldPath": "distanceKm",
             "columnName": "distanceKm",
             "affinity": "REAL"
+          },
+          {
+            "fieldPath": "level",
+            "columnName": "level",
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "isCompleted",
@@ -501,7 +506,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '14fa77476a3b876eb9a5b2f2ea542994')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2088fbe3299a3b43d85b568de76bed89')"
     ]
   }
 }

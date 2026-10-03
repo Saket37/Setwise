@@ -23,6 +23,7 @@ import dev.saketanand.setwise.domain.model.WorkoutSet
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
+import dev.saketanand.setwise.domain.model.CardioValues
 
 /** Only call for finished workouts (endedAt != null). */
 fun WorkoutEntity.toFinishedWorkout(): FinishedWorkout = FinishedWorkout(
@@ -97,7 +98,8 @@ fun WorkoutWithExercises.toSession(
                 SessionExercise(
                     id = row.item.id,
                     exercise = row.exercise.toDomain(),
-                    sets = row.sets.sortedWith(compareBy({ it.setNumber }, { it.id })).map { it.toDomain() },
+                    sets = row.sets.sortedWith(compareBy({ it.setNumber }, { it.id }))
+                        .map { it.toDomain(isCardio = row.exercise.type == ExerciseType.CARDIO) },
                     previousSets = previousByItem[row.item.id].orEmpty()
                         .sortedBy { it.setNumber }
                         .map { PreviousSet(weightKg = it.weightKg, reps = it.reps, durationSec = it.durationSec) },
@@ -107,7 +109,7 @@ fun WorkoutWithExercises.toSession(
     )
 }
 
-fun SetEntity.toDomain(): WorkoutSet = WorkoutSet(
+fun SetEntity.toDomain(isCardio: Boolean = false): WorkoutSet = WorkoutSet(
     id = id,
     setNumber = setNumber,
     weightKg = weightKg,
@@ -115,4 +117,14 @@ fun SetEntity.toDomain(): WorkoutSet = WorkoutSet(
     durationSec = durationSec,
     isCompleted = isCompleted,
     isPr = isPr,
+    cardio = if (isCardio) toCardioValues().takeUnless { it.isEmpty } else null,
+)
+
+fun SetEntity.toCardioValues() = CardioValues(
+    durationSec = durationSec,
+    inclinePct = inclinePct,
+    speedMinKmh = speedMinKmh,
+    speedMaxKmh = speedMaxKmh,
+    distanceKm = distanceKm,
+    level = level,
 )

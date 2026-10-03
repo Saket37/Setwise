@@ -7,9 +7,12 @@ import dev.saketanand.setwise.data.local.dao.WorkoutDao
 import dev.saketanand.setwise.data.local.entity.SetEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
+import dev.saketanand.setwise.data.mapper.toCardioValues
 import dev.saketanand.setwise.data.mapper.toDomain
 import dev.saketanand.setwise.data.mapper.toFinishedWorkout
 import dev.saketanand.setwise.data.mapper.toSession
+import dev.saketanand.setwise.domain.model.CardioEntry
+import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.LoggedSet
@@ -19,8 +22,11 @@ import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
@@ -107,8 +113,13 @@ class WorkoutRepositoryImpl(
                 val workoutExerciseId = workoutDao.insertWorkoutExercise(
                     WorkoutExerciseEntity(workoutId = workoutId, exerciseId = exerciseId, position = firstPosition + index)
                 )
-                val setCount = workoutDao.lastSessionSetCount(exerciseId)
-                    .takeIf { it > 0 } ?: WorkoutRepository.DEFAULT_SET_COUNT
+                // Cardio is one entry (logged on its own screen); others repeat last time's set count.
+                val isCardio = database.exerciseDao().getById(exerciseId)?.type == ExerciseType.CARDIO
+                val setCount = if (isCardio) {
+                    1
+                } else {
+                    workoutDao.lastSessionSetCount(exerciseId).takeIf { it > 0 } ?: WorkoutRepository.DEFAULT_SET_COUNT
+                }
                 workoutDao.insertSets(
                     (1..setCount).map { number -> SetEntity(workoutExerciseId = workoutExerciseId, setNumber = number) }
                 )
@@ -190,6 +201,44 @@ class WorkoutRepositoryImpl(
     override suspend fun discardWorkout(workoutId: Long) {
         workoutDao.deleteRunningWorkout(workoutId)
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class) // flatMapLatest
+    override fun observeCardioEntry(workoutExerciseId: Long): Flow<CardioEntry?> =
+        workoutDao.observeWorkoutExercise(workoutExerciseId).flatMapLatest { item ->
+            if (item == null) return@flatMapLatest flowOf(null)
+            combine(
+                database.exerciseDao().observeById(item.exerciseId),
+                workoutDao.observeSetsOf(workoutExerciseId),
+                workoutDao.observeLastLoggedSet(item.exerciseId, item.workoutId),
+            ) { exercise, sets, last ->
+                exercise ?: return@combine null
+                CardioEntry(
+                    workoutId = item.workoutId,
+                    exercise = exercise.toDomain(),
+                    logged = sets.firstOrNull { it.isCompleted }?.toCardioValues(),
+                    lastTime = last?.toCardioValues(),
+                )
+            }
+        }
+
+    override suspend fun logCardio(workoutExerciseId: Long, values: CardioValues, completedAt: Instant) =
+        database.withTransaction {
+            // One entry per cardio exercise: keep the first row, drop any others.
+            val sets = workoutDao.getSetsOf(workoutExerciseId)
+            sets.drop(1).forEach { workoutDao.deleteSet(it.id) }
+            val setId = sets.firstOrNull()?.id
+                ?: workoutDao.insertSet(SetEntity(workoutExerciseId = workoutExerciseId, setNumber = 1))
+            workoutDao.logCardio(
+                setId = setId,
+                durationSec = values.durationSec,
+                inclinePct = values.inclinePct,
+                speedMinKmh = values.speedMinKmh,
+                speedMaxKmh = values.speedMaxKmh,
+                distanceKm = values.distanceKm,
+                level = values.level,
+                completedAt = completedAt.toEpochMilli(),
+            )
+        }
 
     /** 1, 2, 3… in the current order. Call inside a transaction. */
     private suspend fun renumberSets(workoutExerciseId: Long) {

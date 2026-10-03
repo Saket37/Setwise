@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.workout
 
 import androidx.compose.runtime.Immutable
+import dev.saketanand.setwise.domain.model.CardioValues
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -93,6 +94,8 @@ data class WorkoutExerciseUi(
     val sets: List<SetUi>,
     /** Last session in one line: "40 × 6 · 40 × 6 · 37.5 × 8"; null if never done. */
     val lastTime: String?,
+    /** Cardio only: what was logged in this workout; null until then. */
+    val cardio: CardioValues? = null,
 ) {
     val completedSets: Int get() = sets.count { it.isCompleted }
 }

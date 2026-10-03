@@ -34,6 +34,8 @@ data class SetEntity(
     val speedMinKmh: Double? = null,
     val speedMaxKmh: Double? = null,
     val distanceKm: Double? = null,
+    /** Machine resistance level (bike, elliptical, rower, stairs). */
+    val level: Int? = null,
     val isCompleted: Boolean = false,
     /** Epoch millis when the set was ticked off. */
     val completedAt: Long? = null,

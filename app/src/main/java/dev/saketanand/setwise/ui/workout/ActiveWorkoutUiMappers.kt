@@ -58,6 +58,7 @@ fun SessionExercise.toUi(): WorkoutExerciseUi {
         restSec = exercise.defaultRestSec,
         sets = rows,
         lastTime = previousSets.mapNotNull { it.label(kind) }.takeIf { it.isNotEmpty() }?.joinToString(" · "),
+        cardio = sets.firstOrNull { it.isCompleted }?.cardio,
     )
 }
 

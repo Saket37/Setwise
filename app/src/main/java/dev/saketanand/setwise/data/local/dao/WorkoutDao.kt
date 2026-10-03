@@ -30,6 +30,9 @@ interface WorkoutDao {
     @Insert
     suspend fun insertSets(sets: List<SetEntity>)
 
+    @Insert
+    suspend fun insertSet(set: SetEntity): Long
+
     // Reads for the Workout tab
 
     /** Most recently finished workout ("Last session: Pull Day · 2 days ago"). */
@@ -234,6 +237,49 @@ interface WorkoutDao {
 
     @Query("DELETE FROM sets WHERE id = :setId")
     suspend fun deleteSet(setId: Long)
+
+    // Cardio entry
+
+    @Query("SELECT * FROM workout_exercises WHERE id = :workoutExerciseId")
+    fun observeWorkoutExercise(workoutExerciseId: Long): Flow<WorkoutExerciseEntity?>
+
+    @Query("SELECT * FROM sets WHERE workoutExerciseId = :workoutExerciseId ORDER BY setNumber, id")
+    fun observeSetsOf(workoutExerciseId: Long): Flow<List<SetEntity>>
+
+    @Query("SELECT * FROM sets WHERE workoutExerciseId = :workoutExerciseId ORDER BY setNumber, id")
+    suspend fun getSetsOf(workoutExerciseId: Long): List<SetEntity>
+
+    /** The latest logged entry of [exerciseId] in a finished workout other than [workoutId]. */
+    @Query(
+        """
+        SELECT s.* FROM sets s
+        JOIN workout_exercises we ON we.id = s.workoutExerciseId
+        JOIN workouts w ON w.id = we.workoutId
+        WHERE we.exerciseId = :exerciseId AND s.isCompleted = 1 AND w.endedAt IS NOT NULL AND w.id != :workoutId
+        ORDER BY w.startedAt DESC, s.id DESC
+        LIMIT 1
+        """
+    )
+    fun observeLastLoggedSet(exerciseId: Long, workoutId: Long): Flow<SetEntity?>
+
+    @Query(
+        """
+        UPDATE sets SET durationSec = :durationSec, inclinePct = :inclinePct, speedMinKmh = :speedMinKmh,
+            speedMaxKmh = :speedMaxKmh, distanceKm = :distanceKm, level = :level,
+            isCompleted = 1, completedAt = :completedAt
+        WHERE id = :setId
+        """
+    )
+    suspend fun logCardio(
+        setId: Long,
+        durationSec: Int?,
+        inclinePct: Double?,
+        speedMinKmh: Double?,
+        speedMaxKmh: Double?,
+        distanceKm: Double?,
+        level: Int?,
+        completedAt: Long,
+    )
 
     /** Removes an exercise from a workout; its sets go with it (CASCADE). */
     @Query("DELETE FROM workout_exercises WHERE id = :workoutExerciseId")

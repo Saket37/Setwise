@@ -10,6 +10,7 @@ import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
 import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
 import dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl
+import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.TemplateDraft
@@ -205,6 +206,31 @@ class WorkoutRepositoryTest {
 
         val exercises = repository.observeSession(workoutId).first()!!.exercises
         assertEquals(listOf(3, 1), exercises.map { it.sets.size })
+    }
+
+    @Test
+    fun cardioIsOneEntryLoggedOnceAndRemembersLastTime() = runTest {
+        val treadmill = db.exerciseDao().insert(exercise("Treadmill").copy(type = ExerciseType.CARDIO, muscleGroup = "Cardio"))
+        // Last time: a finished workout with a logged treadmill entry.
+        val earlier = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(1_000))
+        val earlierItem = repository.addExercises(earlier, listOf(treadmill)).single()
+        repository.logCardio(earlierItem, CardioValues(1_800, inclinePct = 5.0, distanceKm = 3.9), Instant.ofEpochMilli(2_000))
+        repository.finishWorkout(earlier, Instant.ofEpochMilli(3_000))
+
+        val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(10_000))
+        val item = repository.addExercises(current, listOf(treadmill)).single()
+        assertEquals(1, repository.observeSession(current).first()!!.exercises.single().sets.size)
+
+        val before = repository.observeCardioEntry(item).first()!!
+        assertNull(before.logged)
+        assertEquals(CardioValues(1_800, inclinePct = 5.0, distanceKm = 3.9), before.lastTime)
+
+        repository.logCardio(item, CardioValues(1_500, level = 8), Instant.ofEpochMilli(11_000))
+        repository.logCardio(item, CardioValues(1_620, level = 9), Instant.ofEpochMilli(12_000)) // corrected
+
+        val set = repository.observeSession(current).first()!!.exercises.single().sets.single()
+        assertTrue(set.isCompleted)
+        assertEquals(CardioValues(1_620, level = 9), set.cardio)
     }
 
     @Test

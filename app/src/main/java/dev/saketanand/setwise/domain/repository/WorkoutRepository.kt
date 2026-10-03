@@ -8,6 +8,8 @@ import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
+import dev.saketanand.setwise.domain.model.CardioEntry
+import dev.saketanand.setwise.domain.model.CardioValues
 
 interface WorkoutRepository {
 
@@ -89,6 +91,14 @@ interface WorkoutRepository {
 
     /** Deletes a running workout and everything in it. */
     suspend fun discardWorkout(workoutId: Long)
+
+    // Cardio
+
+    /** The cardio screen's data for one workout exercise; null once it's removed. */
+    fun observeCardioEntry(workoutExerciseId: Long): Flow<CardioEntry?>
+
+    /** Logs (or corrects) the cardio entry: one completed entry per cardio exercise. */
+    suspend fun logCardio(workoutExerciseId: Long, values: CardioValues, completedAt: Instant)
 
     companion object {
         /** Sets added for an exercise the user has never done. */

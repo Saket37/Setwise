@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.summary
 
 import androidx.compose.runtime.Immutable
+import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.PrKind
 import dev.saketanand.setwise.ui.workout.SetKind
@@ -52,6 +53,8 @@ data class SummaryExerciseUi(
     val setCount: Int,
     /** "62.5 × 8", "12", "90s"; null for cardio (logged on its own screen). */
     val best: String?,
+    /** Cardio: what was logged ("30:00 · 3.9 km"), shown instead of sets. */
+    val cardio: CardioValues? = null,
 )
 
 /** The "edit start and end time" dialog, with the times picked so far. */
