@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseEmptyState
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCard
@@ -107,7 +108,7 @@ fun HistoryScreen(
             ) {
                 uiState.months.forEach { month ->
                     item(key = "month-${month.month}", contentType = "month") {
-                        val label = month.month.format(DateTimeFormatter.ofPattern("LLLL yyyy", Locale.getDefault()))
+                        val label = month.month.format(DateTimeFormatter.ofPattern("LLLL yyyy", currentLocale()))
                         SectionLabel(label, Modifier.padding(top = 8.dp, bottom = 2.dp))
                     }
                     items(month.workouts, key = { "workout-${it.id}" }, contentType = { "workout" }) { workout ->
@@ -124,7 +125,7 @@ fun HistoryScreen(
 private fun WeekStrip(week: List<WeekDayUi>) {
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         week.forEach { day ->
-            val locale = Locale.getDefault()
+            val locale = currentLocale()
             val dayName = day.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale))
             val description = if (day.trained) stringResource(R.string.a11y_week_day_trained, dayName) else dayName
             Column(
@@ -159,7 +160,7 @@ private fun WeekStrip(week: List<WeekDayUi>) {
 /** "FRI | 2  Push Day [2 PRs] · 1h 9m · 8,420 kg". */
 @Composable
 private fun HistoryWorkoutRow(workout: HistoryWorkoutUi, onClick: () -> Unit) {
-    val locale = Locale.getDefault()
+    val locale = currentLocale()
     SetwiseListCard(
         onClick = onClick,
         leadingContent = {
