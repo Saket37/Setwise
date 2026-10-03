@@ -2,17 +2,19 @@ package dev.saketanand.setwise.domain.ai
 
 import android.util.Log
 import dev.saketanand.setwise.domain.model.WorkoutFacts
+import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
+import java.time.Instant
 import kotlinx.coroutines.flow.first
 
 /**
  * Debug-only check of the on-device model on a real phone: runs the calorie estimate and the
  * summary insight on the last few finished workouts and logs, per workout, the formula's
  * number, the model's answer, whether it was used and how long it took, the insight's facts
- * and text, then "New exercise" help on sample names (tags SetwiseAiCheck, CalorieEstimator,
- * WorkoutInsightWriter, ExerciseAssistant, GeminiNanoModel).
+ * and text, "New exercise" help on sample names, then quick-log lines (tags SetwiseAiCheck,
+ * CalorieEstimator, WorkoutInsightWriter, ExerciseAssistant, QuickLogInterpreter, GeminiNanoModel).
  * Saves nothing. Started by MainActivity from a debug launch extra:
  *
  *     adb shell am start -n dev.saketanand.setwise/.MainActivity --ez ai_check true
@@ -22,6 +24,7 @@ class AiCheck(
     private val estimator: CalorieEstimator,
     private val insightWriter: WorkoutInsightWriter,
     private val exerciseAssistant: ExerciseAssistant,
+    private val quickLogInterpreter: QuickLogInterpreter,
     private val exerciseRepository: ExerciseRepository,
     private val workoutRepository: WorkoutRepository,
     private val userSettingsRepository: UserSettingsRepository,
@@ -36,6 +39,7 @@ class AiCheck(
             checkWorkouts(workouts, weight)
         }
         checkExerciseNames()
+        checkQuickLog()
         Log.i(TAG, "Done")
     }
 
@@ -68,8 +72,35 @@ class AiCheck(
         }
     }
 
+    /** Quick-log lines, against the library (an empty workout): what each is understood as, and by what. */
+    private suspend fun checkQuickLog() {
+        val library = exerciseRepository.observeExercises("", null).first()
+        val empty = WorkoutSession(0, "", null, Instant.EPOCH, null, emptyList())
+        SAMPLE_LINES.forEach { line ->
+            val understood = when (val result = quickLogInterpreter.interpret(line, empty, null, library)) {
+                is QuickLogResult.Sets -> "${result.target.exercise.name}: " +
+                    result.sets.joinToString { listOfNotNull(it.weightKg?.let { kg -> "$kg kg" }, it.reps?.let { r -> "$r" }, it.seconds?.let { s -> "${s}s" }).joinToString(" × ") } +
+                    " (${result.source})"
+                is QuickLogResult.Cardio -> "${result.target.exercise.name}: ${result.values}"
+                is QuickLogResult.NotUnderstood -> "not understood: ${result.reason}"
+            }
+            Log.i(TAG, "'$line' → $understood")
+        }
+    }
+
     companion object {
         const val TAG = "SetwiseAiCheck"
+
+        /** The first two the parser reads alone; the rest have words only the model can place. */
+        private val SAMPLE_LINES = listOf(
+            "bench three sets of eight at sixty",
+            "plank 3x45s",
+            "ohp 3 sets of 6 at 40, last one 37.5 for 8",
+            "barbell curl 30 for 10 twice then 25 for 12",
+            "lat pulldown 3x12 at 50 but the last set only 9 reps",
+            "squat 100 for 5 then 2 more sets of 5 at 105",
+            "bench 60 for 8, 8, 7",
+        )
 
         private val SAMPLE_NAMES = listOf(
             "flat db press", "bb rdl", "lat pull down", "incline db fly", "ohp", "skull crushers",
