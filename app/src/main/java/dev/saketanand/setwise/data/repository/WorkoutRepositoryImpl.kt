@@ -232,6 +232,8 @@ class WorkoutRepositoryImpl(
     override suspend fun setCalories(workoutId: Long, estimate: CalorieEstimate, source: String) =
         workoutDao.setCalories(workoutId, estimate.kcal, estimate.intensity.storedName, source)
 
+    override suspend fun setInsight(workoutId: Long, insight: String) = workoutDao.setInsight(workoutId, insight)
+
     override suspend fun renameWorkout(workoutId: Long, name: String) {
         val trimmed = name.trim()
         if (trimmed.isNotEmpty()) workoutDao.renameWorkout(workoutId, trimmed)

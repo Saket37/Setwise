@@ -34,6 +34,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import dev.saketanand.setwise.testing.FakeUserSettingsRepository
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.WorkoutInsightWriter
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WorkoutSummaryViewModelTest {
@@ -46,8 +49,9 @@ class WorkoutSummaryViewModelTest {
     @After fun tearDown() = Dispatchers.resetMain()
 
     private val settings = FakeUserSettingsRepository()
+    private val model = FakeOnDeviceModel()
 
-    private fun TestScope.viewModel() = WorkoutSummaryViewModel(WORKOUT_ID, workouts, templates, settings, FixedDateProvider).also { vm ->
+    private fun TestScope.viewModel() = WorkoutSummaryViewModel(WORKOUT_ID, workouts, templates, settings, WorkoutInsightWriter(model), FixedDateProvider).also { vm ->
         backgroundScope.launch { vm.state.collect {} }
     }
 
@@ -75,6 +79,18 @@ class WorkoutSummaryViewModelTest {
         assertEquals(null, vm.state.value.bodyWeightDialog)
         assertEquals(72.5, settings.settings.value.bodyWeightKg)
         assertEquals(false, vm.state.value.needsBodyWeight)
+    }
+
+    @Test
+    fun `without the model the insight card uses the template, with the model its text is saved`() = runTest(dispatcher) {
+        assertEquals(null, viewModel().state.value.insight?.modelText) // no model: template
+
+        model.availability = ModelAvailability.Ready
+        model.answer = { "A steady session." }
+        viewModel()
+
+        assertEquals(listOf(WORKOUT_ID to "A steady session."), workouts.insights)
+        assertEquals(1, model.requests.size) // asked once
     }
 
     @Test
@@ -130,6 +146,11 @@ class WorkoutSummaryViewModelTest {
         val session = MutableStateFlow<WorkoutSession?>(session())
         val timeUpdates = mutableListOf<Pair<Instant, Instant>>()
         override fun observeSession(workoutId: Long): Flow<WorkoutSession?> = session
+        val insights = mutableListOf<Pair<Long, String>>()
+        override suspend fun setInsight(workoutId: Long, insight: String) {
+            insights += workoutId to insight
+            session.value = session.value?.copy(insight = insight)
+        }
         override suspend fun deleteFinishedWorkout(workoutId: Long): Boolean {
             session.value = null // like Room: the observed workout is gone
             return true

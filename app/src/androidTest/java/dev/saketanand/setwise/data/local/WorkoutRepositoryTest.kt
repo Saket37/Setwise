@@ -306,6 +306,17 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun aSavedInsightIsClearedWhenTheTimesChange() = runTest {
+        val id = finishWithBench(startedAt = 1_000, kg = 60.0)
+        repository.setInsight(id, "A steady session.")
+        assertEquals("A steady session.", repository.observeSession(id).first()!!.insight)
+
+        repository.updateFinishedTimes(id, Instant.ofEpochMilli(1_000), Instant.ofEpochMilli(9_000))
+
+        assertNull(repository.observeSession(id).first()!!.insight)
+    }
+
+    @Test
     fun historyListsFinishedWorkoutsNewestFirstWithTotals() = runTest {
         finishedWorkout(startedAt = 1_000, bench to listOf(60.0 to 8, 60.0 to 6))
         finishedWorkout(startedAt = 5_000, squat to listOf(100.0 to 5))
