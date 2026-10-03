@@ -60,6 +60,17 @@ class HistoryViewModelTest {
     }
 
     @Test
+    fun `a day picked in the calendar stays selected when picked again`() = runTest(dispatcher) {
+        val vm = viewModel()
+        val day = LocalDate.of(2026, 9, 12)
+
+        vm.onAction(HistoryAction.OnCalendarDayClick(day))
+        vm.onAction(HistoryAction.OnCalendarDayClick(day))
+
+        assertEquals(day, vm.state.value.selectedDate)
+    }
+
+    @Test
     fun `the selected day survives the app being killed`() = runTest(dispatcher) {
         val handle = SavedStateHandle()
         viewModel(handle).onAction(HistoryAction.OnDayClick(LocalDate.of(2026, 9, 30)))

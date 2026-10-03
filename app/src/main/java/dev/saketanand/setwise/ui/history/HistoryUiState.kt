@@ -30,7 +30,15 @@ data class HistoryUiState(
 
     val selectedDayState: DayState
         get() = days.firstOrNull { it.date == selectedDate }?.state ?: DayState.None
+
+    /** The calendar's range: the strip's oldest day's month up to this month. */
+    val firstMonth: YearMonth? get() = days.lastOrNull()?.date?.let(YearMonth::from)
+    val lastMonth: YearMonth? get() = days.firstOrNull()?.date?.let(YearMonth::from)
 }
+
+/** Under the calendar: "8 workouts · 6 rest days · 1 missed". */
+@Immutable
+data class MonthSummaryUi(val workouts: Int, val restDays: Int, val missedDays: Int)
 
 /** One chip of the day strip: "S 3" and its mark: • trained, ✕ missed, moon = rest, blank = unanswered. */
 @Immutable

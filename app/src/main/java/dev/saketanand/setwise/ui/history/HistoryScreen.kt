@@ -14,6 +14,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
@@ -115,6 +118,14 @@ fun HistoryScreen(
     onAction: (HistoryAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showCalendar by rememberSaveable { mutableStateOf(false) }
+    if (showCalendar) {
+        HistoryCalendarSheet(
+            uiState = uiState,
+            onDayClick = { onAction(HistoryAction.OnCalendarDayClick(it)) },
+            onDismiss = { showCalendar = false },
+        )
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -124,16 +135,35 @@ fun HistoryScreen(
             modifier = Modifier.padding(top = 20.dp, bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(
-                text = stringResource(R.string.history),
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier
-                    .padding(horizontal = 20.dp)
-                    .semantics { heading() },
-            )
+            Row(
+                modifier = Modifier.padding(start = 20.dp, end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.history),
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { heading() },
+                )
+                if (uiState.days.isNotEmpty()) {
+                    SetwiseIconButton(
+                        icon = R.drawable.ic_calendar,
+                        contentDescription = stringResource(R.string.show_calendar),
+                        onClick = { showCalendar = true },
+                        size = 44.dp,
+                        iconSize = 22.dp,
+                        colors = SetwiseIconButtonDefaults.plainColors(),
+                    )
+                }
+            }
             if (uiState.days.isNotEmpty()) {
-                DayStrip(days = uiState.days, onDayClick = { onAction(HistoryAction.OnDayClick(it)) })
+                DayStrip(
+                    days = uiState.days,
+                    selectedDate = uiState.selectedDate,
+                    onDayClick = { onAction(HistoryAction.OnDayClick(it)) },
+                )
             }
             val selected = uiState.selectedDate
             if (selected != null && uiState.isSelectedDayEmpty) {
@@ -195,8 +225,16 @@ private fun WorkoutList(uiState: HistoryUiState, onAction: (HistoryAction) -> Un
  * month ("OCT") instead of the weekday, for orientation while scrolling.
  */
 @Composable
-private fun DayStrip(days: List<DayUi>, onDayClick: (LocalDate) -> Unit) {
+private fun DayStrip(days: List<DayUi>, selectedDate: LocalDate?, onDayClick: (LocalDate) -> Unit) {
+    val stripState = rememberLazyListState()
+    // A day picked in the calendar may be scrolled out of the strip: bring it into view.
+    LaunchedEffect(selectedDate) {
+        val index = days.indexOfFirst { it.date == selectedDate }.takeIf { it >= 0 } ?: return@LaunchedEffect
+        val visible = stripState.layoutInfo.visibleItemsInfo.map { it.index }
+        if (index !in visible.drop(1).dropLast(1)) stripState.animateScrollToItem((index - 3).coerceAtLeast(0))
+    }
     LazyRow(
+        state = stripState,
         // Newest first + reverse layout: opens at today, on the right.
         reverseLayout = true,
         contentPadding = PaddingValues(horizontal = 20.dp),
@@ -211,13 +249,7 @@ private fun DayStrip(days: List<DayUi>, onDayClick: (LocalDate) -> Unit) {
 @Composable
 private fun DayChip(day: DayUi, onClick: () -> Unit) {
     val locale = currentLocale()
-    val dayName = day.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale))
-    val description = when (day.state) {
-        DayState.Trained -> stringResource(R.string.a11y_week_day_trained, dayName)
-        DayState.Rest -> stringResource(R.string.a11y_day_rest, dayName)
-        DayState.Missed -> stringResource(R.string.a11y_day_missed, dayName)
-        DayState.Unanswered, DayState.None -> dayName
-    }
+    val description = dayDescription(day.date, day.state)
     val shape = MaterialTheme.shapes.large
     val textColor = if (day.isToday) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
     Column(
@@ -252,15 +284,31 @@ private fun DayChip(day: DayUi, onClick: () -> Unit) {
     }
 }
 
+/** "Friday, October 2, 2026, missed": one announcement per day (strip and calendar). */
+@Composable
+internal fun dayDescription(date: LocalDate, state: DayState): String {
+    val dayName = date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(currentLocale()))
+    return when (state) {
+        DayState.Trained -> stringResource(R.string.a11y_week_day_trained, dayName)
+        DayState.Rest -> stringResource(R.string.a11y_day_rest, dayName)
+        DayState.Missed -> stringResource(R.string.a11y_day_missed, dayName)
+        DayState.Unanswered, DayState.None -> dayName
+    }
+}
+
 /** Under the date: • trained, ✕ missed, moon = rest; nothing otherwise (same height either way). */
 @Composable
-private fun DayMark(state: DayState) {
-    val size = Modifier.size(10.dp)
-    when (state) {
-        DayState.Trained -> Box(Modifier.size(6.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
-        DayState.Missed -> Icon(painterResource(R.drawable.ic_close), null, size, tint = MaterialTheme.colorScheme.error)
-        DayState.Rest -> Icon(painterResource(R.drawable.ic_moon), null, size, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        DayState.Unanswered, DayState.None -> Box(size)
+internal fun DayMark(state: DayState) {
+    // Every mark in the same 10dp box, so the dates above line up whatever the mark.
+    Box(Modifier.size(10.dp), contentAlignment = Alignment.Center) {
+        when (state) {
+            DayState.Trained -> Box(Modifier.size(6.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
+            DayState.Missed ->
+                Icon(painterResource(R.drawable.ic_close), null, Modifier.fillMaxSize(), tint = MaterialTheme.colorScheme.error)
+            DayState.Rest ->
+                Icon(painterResource(R.drawable.ic_moon), null, Modifier.fillMaxSize(), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            DayState.Unanswered, DayState.None -> Unit
+        }
     }
 }
 
