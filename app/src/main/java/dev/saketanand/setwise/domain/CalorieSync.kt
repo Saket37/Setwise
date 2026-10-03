@@ -1,7 +1,7 @@
 package dev.saketanand.setwise.domain
 
 import android.util.Log
-import dev.saketanand.setwise.domain.model.CalorieFormula
+import dev.saketanand.setwise.domain.ai.CalorieEstimator
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import kotlinx.coroutines.CoroutineScope
@@ -17,12 +17,13 @@ import kotlinx.coroutines.launch
 /**
  * Keeps calorie estimates filled in, app-wide: whenever a finished workout has none (just
  * finished, its times corrected, or a body weight was only now entered) and the body weight is
- * known, works it out by [CalorieFormula] and saves it. Started once, in SetwiseApp.
- * (Milestone 10 adds the on-device model's estimate on top, with this as the fallback.)
+ * known, works it out ([CalorieEstimator]: the on-device model when it's there, else the
+ * formula) and saves it. Started once, in SetwiseApp.
  */
 class CalorieSync(
     private val workoutRepository: WorkoutRepository,
     private val userSettingsRepository: UserSettingsRepository,
+    private val estimator: CalorieEstimator,
 ) {
     fun start(scope: CoroutineScope) {
         scope.launch { run() }
@@ -42,8 +43,8 @@ class CalorieSync(
     private suspend fun estimate(workoutId: Long, weightKg: Double) {
         runCatching {
             val session = workoutRepository.observeSession(workoutId).first() ?: return
-            val estimate = CalorieFormula.estimate(session, weightKg) ?: return
-            workoutRepository.setCalories(workoutId, estimate, CalorieFormula.SOURCE)
+            val result = estimator.estimate(session, weightKg) ?: return
+            workoutRepository.setCalories(workoutId, result.estimate, result.source)
         }.onFailure { e -> Log.e(TAG, "Estimating calories of workout $workoutId failed", e) }
     }
 

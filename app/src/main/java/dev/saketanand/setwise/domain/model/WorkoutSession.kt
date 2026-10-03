@@ -44,4 +44,6 @@ data class WorkoutSet(
     val isPr: Boolean,
     /** Cardio exercises only: the logged time, distance, etc. Null for other exercises. */
     val cardio: CardioValues? = null,
+    /** When it was ticked off (rest times are the gaps between these). */
+    val completedAt: Instant? = null,
 )

@@ -8,6 +8,8 @@ import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.UserSettings
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutSet
+import dev.saketanand.setwise.domain.ai.CalorieEstimator
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 import dev.saketanand.setwise.testing.StubWorkoutRepository
 import java.time.Instant
@@ -31,7 +33,7 @@ class CalorieSyncTest {
     @Test
     fun `fills in workouts without calories once the body weight is known`() = runTest(UnconfinedTestDispatcher()) {
         val settings = FakeUserSettingsRepository()
-        backgroundScope.launch { CalorieSync(workouts, settings).run() }
+        backgroundScope.launch { CalorieSync(workouts, settings, CalorieEstimator(FakeOnDeviceModel())).run() }
 
         assertTrue(workouts.saved.isEmpty()) // no weight yet
 
@@ -45,7 +47,7 @@ class CalorieSyncTest {
     @Test
     fun `a workout whose times were edited is estimated again`() = runTest(UnconfinedTestDispatcher()) {
         val settings = FakeUserSettingsRepository(UserSettings(bodyWeightKg = 70.0))
-        backgroundScope.launch { CalorieSync(workouts, settings).run() }
+        backgroundScope.launch { CalorieSync(workouts, settings, CalorieEstimator(FakeOnDeviceModel())).run() }
         assertEquals(1, workouts.saved.size)
 
         workouts.saved.clear()
