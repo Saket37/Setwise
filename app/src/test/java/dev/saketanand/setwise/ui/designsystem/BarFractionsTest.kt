@@ -18,6 +18,15 @@ class BarFractionsTest {
     }
 
     @Test
+    fun `a tiny difference stays level, so a plateau doesn't look like a sawtooth`() {
+        val fractions = barFractions(listOf(48.0, 48.17, 48.0))
+
+        // Axis starts at 80% of 48.17 (not 47.83): 48 → 0.98, not 0.5.
+        assertEquals(0.98f, fractions[0]!!, 0.01f)
+        assertEquals(1f, fractions[1]!!, 0.001f)
+    }
+
+    @Test
     fun `equal values are full height, nothing logged is all empty`() {
         assertEquals(listOf(1f, 1f), barFractions(listOf(5.0, 5.0)))
         assertEquals(listOf(null, null), barFractions(listOf(null, null)))

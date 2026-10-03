@@ -130,17 +130,20 @@ interface WorkoutDao {
 
     /**
      * Every completed set, from workouts finished and started before [workoutId], of the
-     * exercises in [workoutId]: what its personal records are measured against.
+     * exercises in [workoutId]: what its personal records are measured against, and its
+     * progression worked out from. Newest workout first, then in the order done.
      */
     @Query(
         """
-        SELECT we.exerciseId AS exerciseId, s.weightKg AS weightKg, s.reps AS reps, s.durationSec AS durationSec
+        SELECT we.exerciseId AS exerciseId, w.id AS workoutId, w.startedAt AS startedAt,
+               s.weightKg AS weightKg, s.reps AS reps, s.durationSec AS durationSec
         FROM sets s
         JOIN workout_exercises we ON we.id = s.workoutExerciseId
         JOIN workouts w ON w.id = we.workoutId
         WHERE s.isCompleted = 1 AND w.endedAt IS NOT NULL AND w.id != :workoutId
           AND w.startedAt < (SELECT startedAt FROM workouts WHERE id = :workoutId)
           AND we.exerciseId IN (SELECT exerciseId FROM workout_exercises WHERE workoutId = :workoutId)
+        ORDER BY w.startedAt DESC, w.id DESC, we.position, s.setNumber
         """
     )
     fun observeHistorySets(workoutId: Long): Flow<List<ExerciseHistorySetRow>>
@@ -165,13 +168,15 @@ interface WorkoutDao {
     /** One-off read of [observeHistorySets], e.g. while finishing a workout. */
     @Query(
         """
-        SELECT we.exerciseId AS exerciseId, s.weightKg AS weightKg, s.reps AS reps, s.durationSec AS durationSec
+        SELECT we.exerciseId AS exerciseId, w.id AS workoutId, w.startedAt AS startedAt,
+               s.weightKg AS weightKg, s.reps AS reps, s.durationSec AS durationSec
         FROM sets s
         JOIN workout_exercises we ON we.id = s.workoutExerciseId
         JOIN workouts w ON w.id = we.workoutId
         WHERE s.isCompleted = 1 AND w.endedAt IS NOT NULL AND w.id != :workoutId
           AND w.startedAt < (SELECT startedAt FROM workouts WHERE id = :workoutId)
           AND we.exerciseId IN (SELECT exerciseId FROM workout_exercises WHERE workoutId = :workoutId)
+        ORDER BY w.startedAt DESC, w.id DESC, we.position, s.setNumber
         """
     )
     suspend fun getHistorySets(workoutId: Long): List<ExerciseHistorySetRow>

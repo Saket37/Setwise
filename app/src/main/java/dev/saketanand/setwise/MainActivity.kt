@@ -74,9 +74,9 @@ class MainActivity : ComponentActivity() {
      */
     private fun startAiCheck(intent: Intent) {
         if (!BuildConfig.DEBUG || !intent.getBooleanExtra(AiCheck.EXTRA, false)) return
-        val quickLogOnly = intent.getBooleanExtra(AiCheck.EXTRA_QUICK_LOG_ONLY, false)
+        val only = intent.getStringExtra(AiCheck.EXTRA_ONLY)
         intent.removeExtra(AiCheck.EXTRA)
-        get<CoroutineScope>(ApplicationScope).launch { get<AiCheck>().run(quickLogOnly) }
+        get<CoroutineScope>(ApplicationScope).launch { get<AiCheck>().run(only) }
     }
 }
 

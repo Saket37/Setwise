@@ -9,15 +9,21 @@ import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.flow.first
+import dev.saketanand.setwise.domain.model.ExerciseSession
+import dev.saketanand.setwise.domain.model.LoggedSet
+import dev.saketanand.setwise.domain.model.Measure
+import dev.saketanand.setwise.domain.model.Plateau
+import dev.saketanand.setwise.domain.model.Progression
 
 /**
  * Debug-only check of the on-device model on a real phone: runs the calorie estimate and the
  * summary insight on the last few finished workouts and logs, per workout, the formula's
  * number, the model's answer, whether it was used and how long it took, the insight's facts
- * and text, "New exercise" help on sample names, then quick-log lines (tags SetwiseAiCheck,
- * CalorieEstimator, WorkoutInsightWriter, ExerciseAssistant, QuickLogInterpreter, GeminiNanoModel).
- * Saves nothing. One run at a time. Started by MainActivity from a debug launch extra (add
- * `--ez ai_check_quick_log true` for the quick-log lines alone):
+ * and text, "New exercise" help on sample names, quick-log lines, then plateau notes (tags
+ * SetwiseAiCheck, CalorieEstimator, WorkoutInsightWriter, ExerciseAssistant, QuickLogInterpreter,
+ * PlateauNoteWriter, GeminiNanoModel). Saves nothing. One run at a time. Started by
+ * MainActivity from a debug launch extra (add `--es ai_check_only quick_log` or `plateau` for
+ * one part alone, which finishes before the screen times out):
  *
  *     adb shell am start -n dev.saketanand.setwise/.MainActivity --ez ai_check true
  */
@@ -27,17 +33,23 @@ class AiCheck(
     private val insightWriter: WorkoutInsightWriter,
     private val exerciseAssistant: ExerciseAssistant,
     private val quickLogInterpreter: QuickLogInterpreter,
+    private val plateauNotes: PlateauNoteWriter,
     private val exerciseRepository: ExerciseRepository,
     private val workoutRepository: WorkoutRepository,
     private val userSettingsRepository: UserSettingsRepository,
 ) {
-    suspend fun run(quickLogOnly: Boolean = false, workouts: Int = DEFAULT_WORKOUTS) {
+    /** @param only [ONLY_QUICK_LOG] or [ONLY_PLATEAU] for that part alone; null: everything. */
+    suspend fun run(only: String? = null, workouts: Int = DEFAULT_WORKOUTS) {
         if (!running.compareAndSet(false, true)) {
             Log.i(TAG, "Already running")
             return
         }
         try {
-            if (quickLogOnly) checkQuickLog() else checkAll(workouts)
+            when (only) {
+                ONLY_QUICK_LOG -> checkQuickLog()
+                ONLY_PLATEAU -> checkPlateauNotes()
+                else -> checkAll(workouts)
+            }
             Log.i(TAG, "Done")
         } finally {
             running.set(false)
@@ -55,6 +67,24 @@ class AiCheck(
         }
         checkExerciseNames()
         checkQuickLog()
+        checkPlateauNotes()
+    }
+
+    /**
+     * Plateau notes: for each recent exercise that has stalled, then for sample plateaus (a
+     * lift, bodyweight reps, a hold), the facts and the note, or why there's none.
+     */
+    private suspend fun checkPlateauNotes() {
+        val now = Instant.now()
+        val real = exerciseRepository.observeRecentExercises(50).first().mapNotNull { recent ->
+            val sessions = workoutRepository.observeExerciseSessions(recent.exercise.id).first()
+            Progression.plateau(recent.exercise, sessions, now)?.let { Triple(recent.exercise.name, it, sessions.first()) }
+        }
+        Log.i(TAG, "Plateaus in your logs: ${real.size}")
+        (real + SAMPLE_PLATEAUS).forEach { (name, plateau, last) ->
+            Log.i(TAG, "Plateau facts:\n${PlateauNoteWriter.factLines(name, plateau, last)}")
+            Log.i(TAG, "Plateau note: ${plateauNotes.write(name, plateau, last) ?: "(none: the template is shown)"}")
+        }
     }
 
     private suspend fun checkWorkouts(workouts: Int, weight: Double) {
@@ -125,7 +155,37 @@ class AiCheck(
             "landmine press", "bulgarian split squat", "hip thrust machine", "copenhagen plank",
         )
         const val EXTRA = "ai_check"
-        const val EXTRA_QUICK_LOG_ONLY = "ai_check_quick_log"
+        const val EXTRA_ONLY = "ai_check_only"
+        const val ONLY_QUICK_LOG = "quick_log"
+        const val ONLY_PLATEAU = "plateau"
+
+        private val SAMPLE_PLATEAUS: List<Triple<String, Plateau, ExerciseSession>> = run {
+            val since = Instant.parse("2026-09-07T12:00:00Z")
+            val last = Instant.parse("2026-10-02T12:00:00Z")
+            fun sets(vararg sets: LoggedSet) = sets.toList()
+            listOf(
+                Triple(
+                    "Overhead Press (Barbell)",
+                    Plateau(since, weeks = 4, sessions = 8, best = 48.2, measure = Measure.Weight),
+                    ExerciseSession(0, last, sets(LoggedSet(40.0, 6, null, null), LoggedSet(40.0, 6, null, null), LoggedSet(40.0, 5, null, null))),
+                ),
+                Triple(
+                    "Back Squat (Barbell)",
+                    Plateau(since, weeks = 6, sessions = 7, best = 122.0, measure = Measure.Weight),
+                    ExerciseSession(0, last, sets(LoggedSet(105.0, 5, null, null), LoggedSet(105.0, 5, null, null), LoggedSet(105.0, 4, null, null))),
+                ),
+                Triple(
+                    "Pull-up",
+                    Plateau(since, weeks = 3, sessions = 6, best = 10.0, measure = Measure.Reps),
+                    ExerciseSession(0, last, sets(LoggedSet(null, 10, null, null), LoggedSet(null, 8, null, null), LoggedSet(null, 7, null, null))),
+                ),
+                Triple(
+                    "Plank",
+                    Plateau(since, weeks = 5, sessions = 10, best = 60.0, measure = Measure.Seconds),
+                    ExerciseSession(0, last, sets(LoggedSet(null, null, 60, null), LoggedSet(null, null, 50, null))),
+                ),
+            )
+        }
         private val running = AtomicBoolean(false)
         private const val DEFAULT_WORKOUTS = 5
     }

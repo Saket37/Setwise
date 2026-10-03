@@ -133,6 +133,19 @@ class DevDataSeeder(
             )
             exercise.isTimed -> base.copy(durationSec = 45 + 5 * (2 - sessionsLeft).coerceAtLeast(0))
             planned.weightKg == null -> base.copy(reps = 10 - (number / 3))
+            planned.trend == Trend.Ready -> base.copy(
+                // The last two sessions at the planned weight, every rep: ready to add weight.
+                weightKg = planned.weightKg - (sessionsLeft - 1).coerceAtLeast(0) * 2.5,
+                reps = if (number == planned.sets && sessionsLeft > 1) 7 else 8,
+            )
+            planned.trend == Trend.Plateau -> {
+                // Stuck at an estimated 1RM of about 48 kg: 40 × 6 and 42.5 × 4 in turn.
+                val heavy = sessionsLeft % 2 == 1
+                base.copy(
+                    weightKg = if (heavy) planned.weightKg + 2.5 else planned.weightKg,
+                    reps = (if (heavy) 4 else 6) - (if (number == planned.sets) 1 else 0),
+                )
+            }
             else -> base.copy(
                 // 2.5 kg lighter for every session before the most recent one.
                 weightKg = max(planned.weightKg * 0.8, planned.weightKg - sessionsLeft * 2.5),
@@ -141,7 +154,10 @@ class DevDataSeeder(
         }
     }
 
-    private data class PlannedExercise(val name: String, val sets: Int, val weightKg: Double?)
+    /** How an exercise's sessions go, so the progression hints have something to show. */
+    private enum class Trend { Progressing, Ready, Plateau }
+
+    private data class PlannedExercise(val name: String, val sets: Int, val weightKg: Double?, val trend: Trend = Trend.Progressing)
     private data class Plan(val name: String, val category: String, val exercises: List<PlannedExercise>)
     private data class Session(val planName: String, val daysAgo: Int, val minutes: Int)
 
@@ -154,9 +170,9 @@ class DevDataSeeder(
         private val PLANS = listOf(
             Plan(
                 "Push Day", "Push", listOf(
-                    PlannedExercise("Bench Press (Barbell)", 4, 62.5),
+                    PlannedExercise("Bench Press (Barbell)", 4, 62.5, Trend.Ready),
                     PlannedExercise("Incline Dumbbell Press", 3, 24.0),
-                    PlannedExercise("Overhead Press (Barbell)", 3, 40.0),
+                    PlannedExercise("Overhead Press (Barbell)", 3, 40.0, Trend.Plateau),
                     PlannedExercise("Lateral Raise (Dumbbell)", 3, 10.0),
                     PlannedExercise("Triceps Pushdown (Rope)", 3, 25.0),
                     PlannedExercise("Chest Dip", 3, null),
@@ -201,6 +217,8 @@ class DevDataSeeder(
             Session("Pull Day", daysAgo = 16, minutes = 60),
             Session("Push Day", daysAgo = 18, minutes = 66),
             Session("Leg Day", daysAgo = 20, minutes = 70),
+            Session("Push Day", daysAgo = 25, minutes = 64),
+            Session("Push Day", daysAgo = 32, minutes = 63),
         )
 
         /** Exercises whose latest session gets a PR (top set). */

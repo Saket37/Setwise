@@ -44,6 +44,7 @@ import dev.saketanand.setwise.llm.GeminiNanoModel
 import dev.saketanand.setwise.domain.ai.CalorieEstimator
 import dev.saketanand.setwise.domain.ai.WorkoutInsightWriter
 import dev.saketanand.setwise.domain.ai.ExerciseAssistant
+import dev.saketanand.setwise.domain.ai.PlateauNoteWriter
 import dev.saketanand.setwise.domain.ai.QuickLogInterpreter
 import dev.saketanand.setwise.domain.ai.ModelDownloader
 import dev.saketanand.setwise.domain.ai.AiCheck
@@ -67,6 +68,7 @@ val appModule = module {
     singleOf(::WorkoutInsightWriter)
     singleOf(::ExerciseAssistant)
     singleOf(::QuickLogInterpreter)
+    singleOf(::PlateauNoteWriter)
     single { ModelDownloader(get(), get(ApplicationScope)) }
     factoryOf(::AiCheck) // debug launch extra only (MainActivity)
     singleOf(::CalorieSync)

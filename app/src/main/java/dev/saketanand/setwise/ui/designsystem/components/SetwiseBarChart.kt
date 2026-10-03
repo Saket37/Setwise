@@ -62,14 +62,19 @@ private const val MIN_FRACTION = 0.08f
 
 /**
  * Each value's bar height (0–1). The axis doesn't start at zero: it starts below the lowest value
- * by the spread of the values, so 44 → 48 kg reads as a climb rather than four equal bars.
+ * by the spread of the values, so 44 → 48 kg reads as a climb rather than four equal bars. But
+ * never above [MAX_FLOOR] of the highest, so 48 → 48.2 kg (a plateau) stays level instead of
+ * doubling.
  */
+/** The axis starts at most this far up the highest value: smaller differences don't look big. */
+private const val MAX_FLOOR = 0.8
+
 fun barFractions(values: List<Double?>): List<Float?> {
     val present = values.filterNotNull()
     if (present.isEmpty()) return values.map { null }
     val max = present.max()
     val min = present.min()
-    val floor = if (max == min) max / 2 else (min - (max - min)).coerceAtLeast(0.0)
+    val floor = if (max == min) max / 2 else (min - (max - min)).coerceIn(0.0, max * MAX_FLOOR)
     return values.map { value ->
         value?.let { (((it - floor) / (max - floor)).toFloat()).coerceIn(MIN_FRACTION, 1f) }
     }

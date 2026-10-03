@@ -4,6 +4,7 @@ import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.LoggedSet
+import dev.saketanand.setwise.domain.model.ProgressionRule
 import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
@@ -14,6 +15,7 @@ class ExerciseDetailUiMappersTest {
 
     private val zone = ZoneId.of("Asia/Kolkata")
     private val today = LocalDate.of(2026, 10, 3) // a Saturday; this week starts Mon 28 Sep
+    private val now = today.atTime(18, 0).atZone(zone).toInstant()
 
     @Test
     fun `strength shows the best estimated 1RM per week, last 8 weeks, oldest first`() {
@@ -27,6 +29,7 @@ class ExerciseDetailUiMappersTest {
             ),
             today,
             zone,
+            now,
         )
         val progress = ui.progress!!
 
@@ -45,7 +48,7 @@ class ExerciseDetailUiMappersTest {
     fun `bodyweight charts reps, timed charts the longest hold, cardio totals distance or minutes`() {
         val day = LocalDate.of(2026, 10, 1)
         fun metricOf(type: ExerciseType, isTimed: Boolean = false, vararg sets: LoggedSet) =
-            exerciseDetailUi(exercise(type, isTimed), listOf(session(1, day, *sets)), today, zone).progress!!
+            exerciseDetailUi(exercise(type, isTimed), listOf(session(1, day, *sets)), today, zone, now).progress!!
 
         metricOf(ExerciseType.BODYWEIGHT, sets = arrayOf(LoggedSet(null, 10, null, null), LoggedSet(5.0, 12, null, null))).let {
             assertEquals(ProgressMetric.Reps, it.metric)
@@ -66,14 +69,30 @@ class ExerciseDetailUiMappersTest {
     }
 
     @Test
+    fun `a stalled lift shows its plateau and a lighter next session`() {
+        // Twice a week since 9 Sep, never above an estimated 1RM of about 48 kg.
+        val days = listOf(30, 26, 23, 19, 16, 12, 9).map { LocalDate.of(2026, 9, it) }
+        val sessions = days.mapIndexed { index, day ->
+            if (index % 2 == 0) session(index + 1L, day, *kg(40.0, 6, 6, 5)) else session(index + 1L, day, *kg(42.5, 4, 4, 3))
+        }
+
+        val ui = exerciseDetailUi(exercise(ExerciseType.STRENGTH), sessions, today, zone, now)
+
+        assertEquals(PlateauUi(weeks = 3, sessions = 7, since = LocalDate.of(2026, 9, 9), best = 48, metric = ProgressMetric.EstimatedOneRepMax), ui.plateau)
+        assertEquals(ProgressionRule.Lighter, ui.nextSession!!.rule)
+        assertEquals(37.5 to 8, ui.nextSession!!.weightKg to ui.nextSession!!.reps)
+    }
+
+    @Test
     fun `never done has no chart, and done only long ago has an empty one`() {
-        assertNull(exerciseDetailUi(exercise(ExerciseType.STRENGTH), emptyList(), today, zone).progress)
+        assertNull(exerciseDetailUi(exercise(ExerciseType.STRENGTH), emptyList(), today, zone, now).progress)
 
         val old = exerciseDetailUi(
             exercise(ExerciseType.STRENGTH),
             listOf(session(1, LocalDate.of(2026, 5, 1), LoggedSet(60.0, 5, null, null))),
             today,
             zone,
+            now,
         )
         assertNull(old.progress!!.latest)
         assertEquals(List(8) { null }, old.progress!!.weeks)
@@ -81,6 +100,8 @@ class ExerciseDetailUiMappersTest {
 
     private fun exercise(type: ExerciseType, isTimed: Boolean = false) =
         Exercise(7, "Overhead Press", type, "Shoulders", "Barbell", 90, isTimed, isCustom = false, metrics = null, calorieMethod = null, met = null)
+
+    private fun kg(weight: Double, vararg reps: Int) = reps.map { LoggedSet(weight, it, null, null) }.toTypedArray()
 
     private fun session(workoutId: Long, day: LocalDate, vararg sets: LoggedSet) =
         ExerciseSession(workoutId, day.atTime(18, 0).atZone(zone).toInstant(), sets.toList())

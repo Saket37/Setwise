@@ -6,6 +6,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import dev.saketanand.setwise.domain.ai.QuickLogResult
 import dev.saketanand.setwise.domain.model.SetFact
+import dev.saketanand.setwise.domain.model.NextSession
 
 /** Everything [ActiveWorkoutScreen] draws. */
 @Immutable
@@ -103,6 +104,8 @@ data class WorkoutExerciseUi(
     val lastTime: String?,
     /** Cardio only: what was logged in this workout; null until then. */
     val cardio: CardioValues? = null,
+    /** "Try 62.5 kg × 8 today": a change the progression rules suggest; null if none. */
+    val nextSession: NextSession? = null,
 ) {
     val completedSets: Int get() = sets.count { it.isCompleted }
 }

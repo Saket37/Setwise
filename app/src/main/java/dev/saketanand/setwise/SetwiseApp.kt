@@ -16,6 +16,10 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import dev.saketanand.setwise.domain.CalorieSync
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
+import dev.saketanand.setwise.domain.ai.OnDeviceModel
 
 class SetwiseApp : Application() {
 
@@ -33,6 +37,15 @@ class SetwiseApp : Application() {
         // Rest timer: notification channels, and the link to its foreground service and alerts.
         RestNotifications.createChannels(this)
         get<RestTimerCoordinator>().start()
+
+        // The on-device model frees its client while the app is in the background.
+        val model: OnDeviceModel = get()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(
+            object : DefaultLifecycleObserver {
+                override fun onStart(owner: LifecycleOwner) = model.onAppInBackground(false)
+                override fun onStop(owner: LifecycleOwner) = model.onAppInBackground(true)
+            },
+        )
 
         // Calorie estimates for finished workouts, as soon as a body weight is known.
         get<CalorieSync>().start(appScope)

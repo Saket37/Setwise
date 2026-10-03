@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.ui.workout.SetKind
 import java.time.LocalDate
+import dev.saketanand.setwise.domain.model.NextSession
 
 /** Everything [ExerciseDetailScreen] draws. */
 @Immutable
@@ -17,6 +18,10 @@ data class ExerciseDetailUiState(
     val kind: SetKind = SetKind.WeightReps,
     /** Null until it has been done at least once. */
     val progress: ProgressUi? = null,
+    /** Stalled for weeks (design "Plateau · 4 weeks"); null if not. */
+    val plateau: PlateauUi? = null,
+    /** "Next session: 62.5 kg × 8 · 3 sets" and the rule behind it; null for cardio or before the first session. */
+    val nextSession: NextSession? = null,
     /** Newest first. */
     val sessions: List<ExerciseSessionUi> = emptyList(),
 )
@@ -57,4 +62,20 @@ data class ExerciseSessionUi(
     val workoutId: Long,
     val date: LocalDate,
     val sets: List<LoggedSet>,
+)
+
+/** "Plateau · 4 weeks": the note, and where it came from. */
+@Immutable
+data class PlateauUi(
+    val weeks: Int,
+    val sessions: Int,
+    /** The first session about as good as the best: "flat since 7 Sep". */
+    val since: LocalDate,
+    /** What it's held at, in [metric]'s unit: whole kg (estimated 1RM), reps or seconds. */
+    val best: Int,
+    val metric: ProgressMetric,
+    /** Written on-device; null: the template from the same facts. */
+    val note: String? = null,
+    /** The on-device model is writing [note]. */
+    val isWriting: Boolean = false,
 )

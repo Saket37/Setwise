@@ -26,6 +26,12 @@ interface OnDeviceModel {
      * and reads it with [ModelJson]. Null if neither gives a valid [T]; throws if the model fails.
      */
     suspend fun <T : Any> generate(request: ModelRequest, output: ModelOutput<T>): T?
+
+    /**
+     * The app went to the background ([inBackground] true) or came back. A model can free its
+     * resources while hidden (AICore doesn't run inference for background apps anyway).
+     */
+    fun onAppInBackground(inBackground: Boolean) = Unit
 }
 
 /**

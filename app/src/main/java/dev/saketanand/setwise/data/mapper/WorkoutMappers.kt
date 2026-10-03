@@ -25,6 +25,8 @@ import dev.saketanand.setwise.domain.model.WorkoutStats
 import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 import dev.saketanand.setwise.domain.model.CardioValues
+import dev.saketanand.setwise.domain.model.ExerciseSession
+import dev.saketanand.setwise.domain.model.LoggedSet
 
 /** Only call for finished workouts (endedAt != null). */
 fun WorkoutEntity.toFinishedWorkout(): FinishedWorkout = FinishedWorkout(
@@ -84,8 +86,19 @@ fun WorkoutWithExercises.toSession(
     history: List<ExerciseHistorySetRow> = emptyList(),
 ): WorkoutSession {
     val previousByItem = previous.groupBy { it.workoutExerciseId }
-    val bestsByExercise = history.groupBy { it.exerciseId }.mapValues { (_, rows) ->
+    val historyByExercise = history.groupBy { it.exerciseId }
+    val bestsByExercise = historyByExercise.mapValues { (_, rows) ->
         PersonalBests.from(rows.map { PreviousSet(weightKg = it.weightKg, reps = it.reps, durationSec = it.durationSec) })
+    }
+    // Rows come newest workout first, sets in order; groupBy keeps both orders.
+    val sessionsByExercise = historyByExercise.mapValues { (_, rows) ->
+        rows.groupBy { it.workoutId }.map { (workoutId, sets) ->
+            ExerciseSession(
+                workoutId = workoutId,
+                startedAt = Instant.ofEpochMilli(sets.first().startedAt),
+                sets = sets.map { LoggedSet(it.weightKg, it.reps, it.durationSec, distanceKm = null) },
+            )
+        }
     }
     return WorkoutSession(
         id = workout.id,
@@ -108,6 +121,7 @@ fun WorkoutWithExercises.toSession(
                         .sortedBy { it.setNumber }
                         .map { PreviousSet(weightKg = it.weightKg, reps = it.reps, durationSec = it.durationSec) },
                     bestsBefore = bestsByExercise[row.exercise.id] ?: PersonalBests.None,
+                    history = sessionsByExercise[row.exercise.id].orEmpty(),
                 )
             },
     )
