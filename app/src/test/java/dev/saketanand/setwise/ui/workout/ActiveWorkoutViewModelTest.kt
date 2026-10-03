@@ -8,7 +8,10 @@ import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutSet
+import dev.saketanand.setwise.testing.FakeRestTimer
 import dev.saketanand.setwise.testing.StubWorkoutRepository
+import dev.saketanand.setwise.timer.NextUp
+import dev.saketanand.setwise.timer.RestTimerState
 import dev.saketanand.setwise.util.DateProvider
 import java.time.Instant
 import java.time.LocalDate
@@ -40,12 +43,13 @@ class ActiveWorkoutViewModelTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeWorkoutRepository()
+    private val restTimer = FakeRestTimer()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
     @After fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel() =
-        ActiveWorkoutViewModel(WORKOUT_ID, repository, FixedDateProvider, SavedStateHandle(), writeScope = backgroundScope).also { vm ->
+        ActiveWorkoutViewModel(WORKOUT_ID, repository, FixedDateProvider, SavedStateHandle(), writeScope = backgroundScope, restTimer = restTimer).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
         }
 
@@ -122,6 +126,66 @@ class ActiveWorkoutViewModelTest {
         vm.onAction(ActiveWorkoutAction.OnSetValuesChange(setId = 1, weight = "65", reps = "8"))
 
         assertEquals(listOf(Values(1, 65.0, 8, null)), repository.valueUpdates)
+    }
+
+    // Rest timer
+
+    @Test
+    fun `ticking off a set starts a rest for the exercise, naming the next set`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "", reps = ""))
+
+        assertEquals(FakeRestTimer.Start(WORKOUT_ID, 120, NextUp.Set(2)), restTimer.starts.single())
+    }
+
+    @Test
+    fun `after an exercise's last set, the rest names the next exercise`() = runTest(dispatcher) {
+        repository.session.value = session(bench(sets = listOf(set(1, 60.0, 8, done = true), set(2))), press())
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 2, weight = "", reps = ""))
+
+        assertEquals(NextUp.Exercise("Overhead Press"), restTimer.starts.single().next)
+    }
+
+    @Test
+    fun `un-ticking doesn't start a rest`() = runTest(dispatcher) {
+        repository.session.value = session(bench(sets = listOf(set(1, 60.0, 8, done = true), set(2))))
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "", reps = ""))
+
+        assertTrue(restTimer.starts.isEmpty())
+    }
+
+    @Test
+    fun `the bar shows this workout's rest only, and its buttons reach the timer`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        restTimer.state.value = RestTimerState(workoutId = 99, endsAtElapsed = 5_000, totalMillis = 60_000, next = NextUp.Nothing)
+        assertNull(vm.state.value.rest)
+
+        restTimer.state.value = RestTimerState(WORKOUT_ID, endsAtElapsed = 5_000, totalMillis = 60_000, next = NextUp.Set(3))
+        assertEquals(RestUi(5_000, 60_000, nextSetNumber = 3, nextExerciseName = null), vm.state.value.rest)
+
+        vm.onAction(ActiveWorkoutAction.OnRestAdjust(15))
+        vm.onAction(ActiveWorkoutAction.OnRestSkip)
+        assertEquals(listOf(15), restTimer.adjustments)
+        assertEquals(1, restTimer.skips)
+    }
+
+    @Test
+    fun `finishing or discarding stops the rest`() = runTest(dispatcher) {
+        repository.session.value = session(bench(sets = listOf(set(1, 60.0, 8, done = true))))
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnFinishClick)
+        assertEquals(listOf(WORKOUT_ID), restTimer.cancels)
+
+        val other = viewModel()
+        other.onAction(ActiveWorkoutAction.OnConfirmDiscard)
+        assertEquals(listOf(WORKOUT_ID, WORKOUT_ID), restTimer.cancels)
     }
 
     // Which exercise is open

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
+import dev.saketanand.setwise.timer.RestTimer
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.DateProvider
 import java.time.Instant
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -44,6 +46,7 @@ class ActiveWorkoutViewModel(
     private val dateProvider: DateProvider,
     private val savedStateHandle: SavedStateHandle,
     private val writeScope: CoroutineScope,
+    private val restTimer: RestTimer,
 ) : ViewModel() {
 
     /** Exercise the user opened or closed; null = automatic (first one with sets left). */
@@ -69,7 +72,9 @@ class ActiveWorkoutViewModel(
         },
         expandedChoice,
         overlays,
-    ) { session, expandedChoice, overlays ->
+        // Only this workout's rest (a stale one from another workout is ignored).
+        restTimer.state.map { rest -> rest?.takeIf { it.workoutId == workoutId } },
+    ) { session, expandedChoice, overlays, rest ->
         if (session == null) return@combine ActiveWorkoutUiState(isLoading = false)
         val exercises = session.exercises.map { it.toUi() }
         val startedAt = session.startedAt.atZone(dateProvider.zone)
@@ -83,6 +88,7 @@ class ActiveWorkoutViewModel(
             dialog = overlays.dialog,
             isStartTimePickerVisible = overlays.isStartTimePickerVisible,
             isFinishing = overlays.isFinishing,
+            rest = rest?.toUi(),
         )
     }
         .catch { e ->
@@ -143,6 +149,9 @@ class ActiveWorkoutViewModel(
             is ActiveWorkoutAction.OnSetDoneToggle -> toggleDone(action.setId, action.weight, action.reps)
             is ActiveWorkoutAction.OnDeleteSet -> write { workoutRepository.deleteSet(action.setId) }
 
+            is ActiveWorkoutAction.OnRestAdjust -> restTimer.adjust(action.deltaSec)
+            ActiveWorkoutAction.OnRestSkip -> restTimer.skip()
+
             // Navigation: ActiveWorkoutScreenRoot handles these.
             ActiveWorkoutAction.OnMinimizeClick,
             ActiveWorkoutAction.OnAddExerciseClick,
@@ -177,7 +186,8 @@ class ActiveWorkoutViewModel(
         if (wasLastOpenSet && state.value.expandedExerciseId == exercise.id) {
             savedStateHandle[KEY_EXPANDED] = null
         }
-        // TODO (milestone 6): start the rest timer here.
+        // Rest before the next set (a new rest replaces a running one).
+        restTimer.start(workoutId, exercise.restSec, nextUpAfter(setId, exercise, state.value.exercises))
     }
 
     private fun findSet(setId: Long): Pair<WorkoutExerciseUi, SetUi>? =
@@ -228,6 +238,7 @@ class ActiveWorkoutViewModel(
                 .onFailure { e -> Log.e(TAG, "Finishing workout $workoutId failed", e) }
                 .getOrDefault(false)
             if (finished) {
+                restTimer.cancel(workoutId)
                 // Stays "finishing" (Finish disabled) until the summary opens.
                 eventChannel.trySend(ActiveWorkoutEvent.Finished(workoutId))
             } else {
@@ -242,6 +253,7 @@ class ActiveWorkoutViewModel(
         showDialog(null)
         write {
             workoutRepository.discardWorkout(workoutId)
+            restTimer.cancel(workoutId)
             close()
         }
     }

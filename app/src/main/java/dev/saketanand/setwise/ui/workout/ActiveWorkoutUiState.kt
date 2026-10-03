@@ -20,6 +20,8 @@ data class ActiveWorkoutUiState(
     val isStartTimePickerVisible: Boolean = false,
     /** Finish was confirmed and is being saved; ignore further taps. */
     val isFinishing: Boolean = false,
+    /** The rest countdown after a set; null when not resting. */
+    val rest: RestUi? = null,
 ) {
     val completedSets: Int get() = exercises.sumOf { it.completedSets }
 
@@ -61,6 +63,20 @@ enum class SetKind {
     Cardio,
 }
 
+/**
+ * The rest bar: "REST · NEXT SET 3  0:56". Times are on the boot clock (SystemClock.elapsedRealtime),
+ * so the bar can count down by itself without the ViewModel ticking.
+ */
+@Immutable
+data class RestUi(
+    val endsAtElapsed: Long,
+    val totalMillis: Long,
+    /** "next set 3"; null when the next thing is another exercise or nothing. */
+    val nextSetNumber: Int?,
+    /** "next: Overhead Press"; null otherwise. */
+    val nextExerciseName: String?,
+)
+
 /** One exercise card. */
 @Immutable
 data class WorkoutExerciseUi(
@@ -69,6 +85,8 @@ data class WorkoutExerciseUi(
     val exerciseId: Long,
     val name: String,
     val kind: SetKind,
+    /** Rest after each set; 0 = no rest timer (cardio). */
+    val restSec: Int,
     val sets: List<SetUi>,
     /** Last session in one line: "40 × 6 · 40 × 6 · 37.5 × 8"; null if never done. */
     val lastTime: String?,

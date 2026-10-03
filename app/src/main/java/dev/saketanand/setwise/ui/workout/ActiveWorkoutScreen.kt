@@ -1,6 +1,16 @@
 package dev.saketanand.setwise.ui.workout
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +35,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
@@ -80,6 +95,20 @@ fun ActiveWorkoutScreenRoot(
         if (pickedExerciseIds != null) {
             viewModel.onAction(ActiveWorkoutAction.OnExercisesPicked(pickedExerciseIds))
             onPickedExercisesConsumed()
+        }
+    }
+
+    // Ask for notifications the first time a rest starts (Android 13+), when it's clear why:
+    // the countdown and "rest over" alert show there. Without it the timer still works in the app.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    var askedForNotifications by rememberSaveable { mutableStateOf(false) }
+    val isResting = uiState.rest != null
+    LaunchedEffect(isResting) {
+        if (isResting && !askedForNotifications && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            askedForNotifications = true
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -153,6 +182,17 @@ fun ActiveWorkoutScreen(
 
         if (!uiState.isLoading) {
             ExerciseCards(uiState = uiState, onAction = onAction, modifier = Modifier.weight(1f))
+        }
+
+        // Keeps showing the last rest while the bar slides away.
+        var lastRest by remember { mutableStateOf(uiState.rest) }
+        if (uiState.rest != null) lastRest = uiState.rest
+        AnimatedVisibility(
+            visible = uiState.rest != null,
+            enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+            exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+        ) {
+            lastRest?.let { RestTimerBar(rest = it, onAction = onAction) }
         }
     }
 
@@ -290,7 +330,7 @@ private val previewState = ActiveWorkoutUiState(
     expandedExerciseId = 1,
     exercises = listOf(
         WorkoutExerciseUi(
-            id = 1, exerciseId = 10, name = "Bench Press (Barbell)", kind = SetKind.WeightReps,
+            id = 1, exerciseId = 10, name = "Bench Press (Barbell)", kind = SetKind.WeightReps, restSec = 120,
             lastTime = "60 × 8 · 60 × 8 · 60 × 7 · 57.5 × 9",
             sets = listOf(
                 SetUi(1, 1, "60 × 8", "60", "8", "60", "8", isCompleted = true, isPr = false),
@@ -300,12 +340,12 @@ private val previewState = ActiveWorkoutUiState(
             ),
         ),
         WorkoutExerciseUi(
-            id = 2, exerciseId = 11, name = "Overhead Press", kind = SetKind.WeightReps,
+            id = 2, exerciseId = 11, name = "Overhead Press", kind = SetKind.WeightReps, restSec = 90,
             lastTime = "40 × 6 · 40 × 6 · 37.5 × 8",
             sets = List(3) { SetUi(10L + it, it + 1, null, "", "", "40", "6", isCompleted = false, isPr = false) },
         ),
         WorkoutExerciseUi(
-            id = 3, exerciseId = 12, name = "Treadmill", kind = SetKind.Cardio, lastTime = null,
+            id = 3, exerciseId = 12, name = "Treadmill", kind = SetKind.Cardio, restSec = 0, lastTime = null,
             sets = listOf(SetUi(20, 1, null, "", "", "", "", isCompleted = false, isPr = false)),
         ),
     ),

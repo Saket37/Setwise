@@ -156,4 +156,16 @@
         <item quantity="other">Its %d logged sets will be deleted.</item>
     </plurals>
     <string name="remove">Remove</string>
+
+    <!-- Rest timer (uppercased on the bar) -->
+    <string name="rest">Rest</string>
+    <!-- %1$d = next set number -->
+    <string name="rest_next_set">Rest · next set %1$d</string>
+    <!-- %1$s = next exercise name -->
+    <string name="rest_next_exercise">Rest · next: %1$s</string>
+    <string name="rest_minus_15">−15</string>
+    <string name="rest_plus_15">+15</string>
+    <string name="a11y_rest_minus_15">Subtract 15 seconds</string>
+    <string name="a11y_rest_plus_15">Add 15 seconds</string>
+    <string name="skip">Skip</string>
 </resources>

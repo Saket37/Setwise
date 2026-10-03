@@ -5,6 +5,8 @@ import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSet
+import dev.saketanand.setwise.timer.NextUp
+import dev.saketanand.setwise.timer.RestTimerState
 import dev.saketanand.setwise.util.toWeightInput
 import dev.saketanand.setwise.util.toWeightLabel
 import java.time.Instant
@@ -50,9 +52,29 @@ fun SessionExercise.toUi(): WorkoutExerciseUi {
         exerciseId = exercise.id,
         name = exercise.name,
         kind = kind,
+        restSec = exercise.defaultRestSec,
         sets = rows,
         lastTime = previousSets.mapNotNull { it.label(kind) }.takeIf { it.isNotEmpty() }?.joinToString(" · "),
     )
+}
+
+fun RestTimerState.toUi(): RestUi = RestUi(
+    endsAtElapsed = endsAtElapsed,
+    totalMillis = totalMillis,
+    nextSetNumber = (next as? NextUp.Set)?.number,
+    nextExerciseName = (next as? NextUp.Exercise)?.name,
+)
+
+/**
+ * What comes after ticking off [setId] in [exercise]: its next open set, else the next exercise
+ * (after this one, then from the top) that still has sets to do, else nothing.
+ */
+fun nextUpAfter(setId: Long, exercise: WorkoutExerciseUi, exercises: List<WorkoutExerciseUi>): NextUp {
+    exercise.sets.firstOrNull { !it.isCompleted && it.id != setId }?.let { return NextUp.Set(it.number) }
+    val index = exercises.indexOfFirst { it.id == exercise.id }
+    val others = exercises.drop(index + 1) + exercises.take(index.coerceAtLeast(0))
+    others.firstOrNull { it.sets.any { set -> !set.isCompleted } }?.let { return NextUp.Exercise(it.name) }
+    return NextUp.Nothing
 }
 
 /** "60 × 8", bodyweight "10" or "+5 × 10", timed "45s"; null if there's nothing to show. */

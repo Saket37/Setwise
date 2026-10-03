@@ -45,6 +45,12 @@ sealed interface ActiveWorkoutAction {
 
     data class OnDeleteSet(val setId: Long) : ActiveWorkoutAction
 
+    // Rest timer
+
+    /** −15 / +15 seconds. */
+    data class OnRestAdjust(val deltaSec: Int) : ActiveWorkoutAction
+    data object OnRestSkip : ActiveWorkoutAction
+
     // Navigation (handled in ActiveWorkoutScreenRoot)
 
     data object OnMinimizeClick : ActiveWorkoutAction

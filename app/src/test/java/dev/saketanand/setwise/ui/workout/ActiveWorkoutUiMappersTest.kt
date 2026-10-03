@@ -9,6 +9,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Locale
+import dev.saketanand.setwise.timer.NextUp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -125,6 +126,24 @@ class ActiveWorkoutUiMappersTest {
 
         assertEquals("00:10 is tonight, not the night before", at(2026, 10, 3, 0, 10, zone), pickedStartTime(LocalTime.of(0, 10), start, now, zone))
         assertEquals("23:15 is yesterday evening", at(2026, 10, 2, 23, 15, zone), pickedStartTime(LocalTime.of(23, 15), start, now, zone))
+    }
+
+    @Test
+    fun `next up is the next open set, then the next exercise with sets left, wrapping around`() {
+        fun row(id: Long, done: Boolean) = SetUi(id, id.toInt(), null, "", "", "", "", isCompleted = done, isPr = false)
+        fun card(id: Long, name: String, vararg sets: SetUi) =
+            WorkoutExerciseUi(id, id, name, SetKind.WeightReps, restSec = 90, sets = sets.toList(), lastTime = null)
+
+        val squat = card(1, "Squat", row(1, done = false))
+        val bench = card(2, "Bench", row(2, done = true), row(3, done = false), row(4, done = false))
+        val curl = card(3, "Curl", row(5, done = true))
+        val all = listOf(squat, bench, curl)
+
+        assertEquals(NextUp.Set(4), nextUpAfter(setId = 3, exercise = bench, exercises = all))
+        val benchAlmostDone = card(2, "Bench", row(2, done = true), row(3, done = true), row(4, done = false))
+        // Curl (after Bench) is done, so it wraps to Squat.
+        assertEquals(NextUp.Exercise("Squat"), nextUpAfter(4, benchAlmostDone, listOf(squat, benchAlmostDone, curl)))
+        assertEquals(NextUp.Nothing, nextUpAfter(5, card(3, "Curl", row(5, done = false)), listOf(card(3, "Curl", row(5, done = false)))))
     }
 
     private fun at(y: Int, m: Int, d: Int, h: Int, min: Int, zone: ZoneId) = LocalDateTime.of(y, m, d, h, min).atZone(zone).toInstant()
