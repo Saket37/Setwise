@@ -5,12 +5,15 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.saketanand.setwise.data.local.entity.ExerciseEntity
 import dev.saketanand.setwise.data.local.entity.SetEntity
+import dev.saketanand.setwise.data.local.entity.TemplateExerciseEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
 import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
 import dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
+import dev.saketanand.setwise.domain.model.TemplateDraft
+import dev.saketanand.setwise.domain.model.TemplateDraftExercise
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import java.time.Instant
 import kotlinx.coroutines.flow.first
@@ -180,6 +183,28 @@ class WorkoutRepositoryTest {
         val template = templates.observeTemplates().first().single { it.id == templateId }
         assertEquals("Workout", template.name)
         assertEquals(listOf("Back Squat" to 2, "Bench Press" to 1), template.exercises.map { it.name to it.targetSets })
+    }
+
+    @Test
+    fun startingFromATemplateGivesCardioOneEntry() = runTest {
+        val elliptical = db.exerciseDao().insert(exercise("Elliptical").copy(type = ExerciseType.CARDIO, muscleGroup = "Cardio"))
+        // Saved with 3 "sets" for cardio, as older templates could be.
+        val templateId = TemplateRepositoryImpl(db, db.templateDao(), db.workoutDao()).saveTemplate(
+            TemplateDraft(0, "Mixed", null, listOf(TemplateDraftExercise(bench, 3), TemplateDraftExercise(elliptical, 3))),
+            Instant.EPOCH,
+        )
+        db.templateDao().deleteTemplateExercises(templateId)
+        db.templateDao().insertTemplateExercises(
+            listOf(
+                TemplateExerciseEntity(templateId = templateId, exerciseId = bench, position = 0, targetSets = 3),
+                TemplateExerciseEntity(templateId = templateId, exerciseId = elliptical, position = 1, targetSets = 3),
+            )
+        )
+
+        val workoutId = repository.startWorkout(templateId, Instant.ofEpochMilli(1_000))
+
+        val exercises = repository.observeSession(workoutId).first()!!.exercises
+        assertEquals(listOf(3, 1), exercises.map { it.sets.size })
     }
 
     @Test

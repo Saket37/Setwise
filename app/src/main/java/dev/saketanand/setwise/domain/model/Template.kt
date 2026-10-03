@@ -20,6 +20,8 @@ data class TemplateExercise(
     val restSec: Int,
     /** E.g. "Chest", shown in the template editor. */
     val muscleGroup: String = "",
+    /** Logged as time / distance on the cardio screen, not in sets: [targetSets] is always 1. */
+    val isCardio: Boolean = false,
 )
 
 /**

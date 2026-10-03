@@ -47,4 +47,21 @@ class HomeUiMappersTest {
         assertEquals(35, ui.estimatedMinutes)
         assertEquals(null, ui.lastUsedDaysAgo)
     }
+
+    @Test
+    fun `cardio adds no sets and counts once as 10 minutes`() {
+        val template = Template(
+            id = 2, name = "Cardio", category = null, lastUsedAt = null,
+            exercises = listOf(
+                // An older template stored 3 "sets" for cardio: still one block.
+                TemplateExercise(1, "Elliptical", targetSets = 3, restSec = 0, isCardio = true),
+                TemplateExercise(2, "Plank", targetSets = 2, restSec = 60),
+            ),
+        )
+        val ui = template.toUi(saturday, zone)
+
+        assertEquals(2, ui.setCount)
+        // 600 s cardio + 2 × 100 s = 800 s ≈ 13 min
+        assertEquals(13, ui.estimatedMinutes)
+    }
 }

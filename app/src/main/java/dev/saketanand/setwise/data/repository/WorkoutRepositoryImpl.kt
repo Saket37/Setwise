@@ -10,6 +10,7 @@ import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
 import dev.saketanand.setwise.data.mapper.toDomain
 import dev.saketanand.setwise.data.mapper.toFinishedWorkout
 import dev.saketanand.setwise.data.mapper.toSession
+import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.domain.model.ActiveWorkout
@@ -80,9 +81,11 @@ class WorkoutRepositoryImpl(
                             position = index,
                         )
                     )
-                    // Empty sets to fill in during the workout, one per planned set.
+                    // Empty sets to fill in during the workout, one per planned set. Cardio is one
+                    // block (logged on its own screen), whatever an older template says.
+                    val setCount = if (row.exercise.type == ExerciseType.CARDIO) 1 else row.item.targetSets
                     workoutDao.insertSets(
-                        (1..row.item.targetSets).map { number ->
+                        (1..setCount).map { number ->
                             SetEntity(workoutExerciseId = workoutExerciseId, setNumber = number)
                         }
                     )

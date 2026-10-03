@@ -9,6 +9,7 @@ import dev.saketanand.setwise.data.local.relation.TemplateWithExercises
 import dev.saketanand.setwise.data.local.relation.WorkoutHistoryRow
 import dev.saketanand.setwise.data.local.relation.WorkoutStatsRow
 import dev.saketanand.setwise.data.local.relation.WorkoutWithExercises
+import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.PersonalBests
@@ -69,6 +70,7 @@ fun TemplateWithExercises.toDomain(lastUsedAtMillis: Long?): Template = Template
                 targetSets = it.item.targetSets,
                 restSec = it.exercise.defaultRestSec,
                 muscleGroup = it.exercise.muscleGroup,
+                isCardio = it.exercise.type == ExerciseType.CARDIO,
             )
         },
     lastUsedAt = lastUsedAtMillis?.let(Instant::ofEpochMilli),

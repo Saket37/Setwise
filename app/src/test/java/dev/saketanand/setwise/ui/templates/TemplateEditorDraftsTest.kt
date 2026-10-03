@@ -53,8 +53,21 @@ class TemplateEditorDraftsTest {
         assertEquals(listOf(1L to 3, 3L to 10), saved.exercises.map { it.exerciseId to it.targetSets })
     }
 
+    @Test
+    fun `cardio is one block with no set count`() {
+        val withCardio = draft.withAdded(listOf(exercise(8, ExerciseType.CARDIO)))
+        val cardio = withCardio.exercises.last()
+
+        assertEquals(true, cardio.isCardio)
+        assertEquals(1, cardio.targetSets)
+        assertEquals(1, withCardio.withSetsChanged(8, +1).exercises.last().targetSets)
+        // An older template that stored 3 for cardio still saves 1.
+        val old = TemplateEditorDraft("Old", exercises = listOf(cardio.copy(targetSets = 3)))
+        assertEquals(1, old.toDraft(templateId = 1).exercises.single().targetSets)
+    }
+
     private fun row(id: Long, sets: Int) = TemplateEditorExercise(id, "Exercise $id", "Chest", sets)
 
-    private fun exercise(id: Long) =
-        Exercise(id, "Exercise $id", ExerciseType.STRENGTH, "Chest", "Barbell", 90, isTimed = false, isCustom = false, metrics = null, calorieMethod = null, met = null)
+    private fun exercise(id: Long, type: ExerciseType = ExerciseType.STRENGTH) =
+        Exercise(id, "Exercise $id", type, "Chest", "Barbell", 90, isTimed = false, isCustom = false, metrics = null, calorieMethod = null, met = null)
 }

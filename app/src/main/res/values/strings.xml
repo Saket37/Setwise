@@ -291,6 +291,7 @@
     <string name="template_category">Category (optional)</string>
     <string name="template_no_exercises">Add the exercises you do in this routine. You can reorder them and set how many sets each gets.</string>
     <string name="add_exercises_button">Add exercises</string>
+    <string name="template_cardio_no_sets">Time &amp; distance</string>
     <string name="move_up">Move up</string>
     <string name="move_down">Move down</string>
     <string name="fewer_sets">Fewer sets for %1$s</string>
