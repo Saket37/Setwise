@@ -20,8 +20,8 @@ private const val PREVIEW_EXERCISES = 3
 /** Rough working time per set, on top of the rest, for the "~65 min" estimate. */
 private const val WORK_SECONDS_PER_SET = 40
 
-/** Cardio exercises have no rest; count each one as a 10-minute block. */
-private const val CARDIO_SECONDS_PER_SET = 10 * 60
+/** Cardio exercises aren't done in sets; count each one as a 10-minute block. */
+private const val CARDIO_SECONDS = 10 * 60
 
 /** Calendar days between [instant] and [today] (0 = today, 1 = yesterday). */
 fun daysAgo(instant: Instant, today: LocalDate, zone: ZoneId): Int =
@@ -47,8 +47,7 @@ fun WorkoutStats.toUi() = WeekStatsUi(workouts = workouts, timeTrained = timeTra
 
 fun Template.toUi(today: LocalDate, zone: ZoneId): TemplateUi {
     val estimatedSeconds = exercises.sumOf { exercise ->
-        val perSet = if (exercise.restSec == 0) CARDIO_SECONDS_PER_SET else exercise.restSec + WORK_SECONDS_PER_SET
-        exercise.targetSets * perSet
+        if (exercise.isCardio) CARDIO_SECONDS else exercise.targetSets * (exercise.restSec + WORK_SECONDS_PER_SET)
     }
     return TemplateUi(
         id = id,
@@ -57,7 +56,8 @@ fun Template.toUi(today: LocalDate, zone: ZoneId): TemplateUi {
         exercisePreview = exercises.take(PREVIEW_EXERCISES).map { shortExerciseName(it.name) },
         moreExerciseCount = (exercises.size - PREVIEW_EXERCISES).coerceAtLeast(0),
         exerciseCount = exercises.size,
-        setCount = exercises.sumOf { it.targetSets },
+        // Cardio isn't done in sets.
+        setCount = exercises.filterNot { it.isCardio }.sumOf { it.targetSets },
         estimatedMinutes = if (estimatedSeconds > 0) (estimatedSeconds / 60.0).roundToInt() else null,
         lastUsedDaysAgo = lastUsedAt?.let { daysAgo(it, today, zone) },
     )

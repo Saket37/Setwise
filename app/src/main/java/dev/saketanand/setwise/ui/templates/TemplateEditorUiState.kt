@@ -48,6 +48,8 @@ data class TemplateEditorExercise(
     val name: String,
     val muscleGroup: String,
     val targetSets: Int,
+    /** Logged as time / distance, not in sets: no set count (always 1 block). */
+    val isCardio: Boolean = false,
 )
 
 enum class TemplateEditorDialog {

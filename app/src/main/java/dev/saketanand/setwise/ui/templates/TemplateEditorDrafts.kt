@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.templates
 
 import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.Template
 import dev.saketanand.setwise.domain.model.TemplateDraft
 import dev.saketanand.setwise.domain.model.TemplateDraftExercise
@@ -10,21 +11,23 @@ import dev.saketanand.setwise.domain.model.TemplateDraftExercise
 fun Template.toEditorDraft() = TemplateEditorDraft(
     name = name,
     category = category,
-    exercises = exercises.map { TemplateEditorExercise(it.exerciseId, it.name, it.muscleGroup, it.targetSets) },
+    exercises = exercises.map {
+        TemplateEditorExercise(it.exerciseId, it.name, it.muscleGroup, if (it.isCardio) 1 else it.targetSets, it.isCardio)
+    },
 )
 
 fun TemplateEditorDraft.toDraft(templateId: Long) = TemplateDraft(
     id = templateId,
     name = name,
     category = category,
-    exercises = exercises.map { TemplateDraftExercise(it.exerciseId, it.targetSets) },
+    exercises = exercises.map { TemplateDraftExercise(it.exerciseId, if (it.isCardio) 1 else it.targetSets) },
 )
 
 fun TemplateEditorDraft.withCategoryToggled(option: String) = copy(category = if (category == option) null else option)
 
 fun TemplateEditorDraft.withSetsChanged(exerciseId: Long, delta: Int) = copy(
     exercises = exercises.map {
-        if (it.exerciseId == exerciseId) {
+        if (it.exerciseId == exerciseId && !it.isCardio) {
             it.copy(targetSets = (it.targetSets + delta).coerceIn(TemplateEditorUiState.SET_RANGE))
         } else {
             it
@@ -42,10 +45,13 @@ fun TemplateEditorDraft.withMoved(exerciseId: Long, by: Int): TemplateEditorDraf
 
 fun TemplateEditorDraft.withRemoved(exerciseId: Long) = copy(exercises = exercises.filterNot { it.exerciseId == exerciseId })
 
-/** Appends [picked] (in order) that aren't in the template yet, with the default set count. */
+/** Appends [picked] (in order) that aren't in the template yet, with the default set count (cardio: 1 block). */
 fun TemplateEditorDraft.withAdded(picked: List<Exercise>): TemplateEditorDraft {
     val present = exercises.mapTo(HashSet()) { it.exerciseId }
     val added = picked.distinctBy { it.id }.filter { it.id !in present }
-        .map { TemplateEditorExercise(it.id, it.name, it.muscleGroup, TemplateEditorUiState.DEFAULT_SETS) }
+        .map {
+            val isCardio = it.type == ExerciseType.CARDIO
+            TemplateEditorExercise(it.id, it.name, it.muscleGroup, if (isCardio) 1 else TemplateEditorUiState.DEFAULT_SETS, isCardio)
+        }
     return copy(exercises = exercises + added)
 }
