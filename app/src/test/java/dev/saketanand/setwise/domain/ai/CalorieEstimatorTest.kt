@@ -77,12 +77,22 @@ class CalorieEstimatorTest {
 
     @Test
     fun `the prompt gives the model the sets, rest times and the formula's number`() {
-        val prompt = CalorieEstimator.prompt(session, 70.0, formula.estimate).prompt
+        val request = CalorieEstimator.prompt(session, 70.0, formula.estimate)
+        val log = request.prompt.substringAfter("## Workout\n<workout>\n").substringBefore("\n</workout>")
 
-        assertTrue(prompt, "Body weight: 70 kg" in prompt)
-        assertTrue(prompt, "Workout length: 60 min" in prompt)
-        assertTrue(prompt, "Bench Press: 60kg x8, 60kg x8" in prompt)
-        assertTrue(prompt, "Rest between sets: median 1:30 (17 rests)" in prompt)
-        assertTrue(prompt, "Formula estimate: 350 kcal, moderate" in prompt)
+        assertTrue(request.prompt, request.prompt.startsWith("## Examples\n<workout>"))
+        assertEquals(
+            listOf(
+                "Body weight: 70 kg",
+                "Length: 60 min",
+                "Bench Press: " + List(10) { "60kg x8" }.joinToString(", "), // capped at 10 sets
+                "Rest between sets: median 1:30 (17 rests)",
+                "Formula estimate: 350 kcal, moderate",
+            ),
+            log.lines(),
+        )
+        // Short enough for a system instruction (the guide: under ~150 words), at low temperature.
+        assertTrue(request.system.split(" ").size < 150)
+        assertEquals(0.2f, request.temperature)
     }
 }

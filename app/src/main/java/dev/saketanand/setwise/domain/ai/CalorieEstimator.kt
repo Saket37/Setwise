@@ -9,7 +9,6 @@ import dev.saketanand.setwise.domain.model.WorkoutSession
 import java.time.Duration
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
-import kotlinx.serialization.Serializable
 
 /** An estimate and where it came from ([CalorieFormula.SOURCE] or [MODEL_SOURCE]). */
 data class SourcedCalorieEstimate(val estimate: CalorieEstimate, val source: String)
@@ -27,24 +26,21 @@ class CalorieEstimator(private val model: OnDeviceModel) {
         val fallback = SourcedCalorieEstimate(formula, CalorieFormula.SOURCE)
         if (model.availability() != ModelAvailability.Ready) return fallback
 
-        val answer = try {
-            model.generate(prompt(session, bodyWeightKg!!, formula))
+        val parsed = try {
+            model.generate(prompt(session, bodyWeightKg!!, formula), ModelCalorieAnswer.OUTPUT)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            // Busy, over quota, blocked in the background…: the formula's number, so there's always one.
             Log.w(TAG, "The model couldn't estimate workout ${session.id}", e)
             return fallback
-        }
-        val parsed = ModelJson.decode(answer, ModelAnswer.serializer()) ?: return fallback
+        } ?: return fallback
         val intensity = Intensity.fromStored(parsed.intensity.lowercase(Locale.ROOT)) ?: return fallback
         val low = formula.kcal * PLAUSIBLE_RANGE.start
         val high = formula.kcal * PLAUSIBLE_RANGE.endInclusive
         if (parsed.kcal < low || parsed.kcal > high) return fallback
         return SourcedCalorieEstimate(CalorieEstimate(parsed.kcal, intensity), MODEL_SOURCE)
     }
-
-    @Serializable
-    private data class ModelAnswer(val kcal: Int, val intensity: String)
 
     companion object {
         const val MODEL_SOURCE = "on_device_model"
@@ -54,12 +50,26 @@ class CalorieEstimator(private val model: OnDeviceModel) {
 
         private const val TAG = "CalorieEstimator"
 
+        /**
+         * Shaped for Gemini Nano (ML Kit prompt guide): a short system instruction, two worked
+         * examples, then this workout's log in `<workout>` tags, one fact per line. The fixed
+         * part stays under 200 words, so it needs no prefix caching. The answer's shape comes
+         * from [ModelCalorieAnswer] (structured output), not from the prompt.
+         */
+        fun prompt(session: WorkoutSession, bodyWeightKg: Double, formula: CalorieEstimate): ModelRequest =
+            ModelRequest(
+                system = SYSTEM,
+                prompt = "## Examples\n$EXAMPLES\n\n## Workout\n<workout>\n${workoutLog(session, bodyWeightKg, formula)}\n</workout>",
+                temperature = 0.2f,
+                maxOutputTokens = 80,
+            )
+
         /** Facts, one per line, kept short for a small model's context. */
-        fun prompt(session: WorkoutSession, bodyWeightKg: Double, formula: CalorieEstimate): ModelRequest {
+        fun workoutLog(session: WorkoutSession, bodyWeightKg: Double, formula: CalorieEstimate): String {
             val minutes = session.endedAt?.let { Duration.between(session.startedAt, it).toMinutes() } ?: 0
             val lines = buildList {
                 add("Body weight: ${bodyWeightKg.format()} kg")
-                add("Workout length: $minutes min")
+                add("Length: $minutes min")
                 session.exercises.forEach { exercise ->
                     val done = exercise.sets.filter { it.isCompleted }
                     if (done.isEmpty()) return@forEach
@@ -89,20 +99,36 @@ class CalorieEstimator(private val model: OnDeviceModel) {
                 restSummary(session)?.let { add(it) }
                 add("Formula estimate: ${formula.kcal} kcal, ${formula.intensity.storedName}")
             }
-            return ModelRequest(
-                system = SYSTEM,
-                prompt = lines.joinToString("\n"),
-                temperature = 0.1f,
-                maxOutputTokens = 64,
-            )
+            return lines.joinToString("\n")
         }
 
         private const val SYSTEM =
-            "You estimate the calories a person burned in one gym workout. " +
-                "Use the sets, weights, rest between sets and cardio given. Count gross calories (resting included). " +
-                "Short rests and heavy compound lifts mean more; long rests mean less. " +
-                "Stay close to the formula estimate unless the details clearly say otherwise. " +
-                "Answer with JSON only: {\"kcal\": <whole number>, \"intensity\": \"light\" | \"moderate\" | \"vigorous\"}"
+            "You estimate the gross calories burned in one gym workout from its log. " +
+                "Short rests, many sets and heavy compound lifts raise the estimate; long rests and few sets lower it. " +
+                "Stay within 30% of the formula estimate unless the log clearly justifies more."
+
+        /** In-context examples, worked with the same formula (4 sets / 45 min = light; 18 / 40 = vigorous). */
+        private val EXAMPLES = """
+            <workout>
+            Body weight: 80 kg
+            Length: 45 min
+            Back Squat: 100kg x5, 100kg x5, 100kg x5, 100kg x5
+            Rest between sets: median 3:30 (3 rests)
+            Formula estimate: 210 kcal, light
+            </workout>
+            {"kcal": 200, "intensity": "light"}
+
+            <workout>
+            Body weight: 65 kg
+            Length: 40 min
+            Walking Lunge: 20kg x12, 20kg x12, 20kg x12, 20kg x12, 20kg x12, 20kg x12
+            Kettlebell Swing: 16kg x20, 16kg x20, 16kg x20, 16kg x20, 16kg x20, 16kg x20
+            Burpee: x15, x15, x15, x15, x15, x15
+            Rest between sets: median 0:40 (17 rests)
+            Formula estimate: 260 kcal, vigorous
+            </workout>
+            {"kcal": 290, "intensity": "vigorous"}
+        """.trimIndent()
 
         private const val MAX_SETS_PER_EXERCISE = 10
 

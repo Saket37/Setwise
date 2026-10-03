@@ -2,6 +2,8 @@ package dev.saketanand.setwise.testing
 
 import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.domain.ai.ModelDownload
+import dev.saketanand.setwise.domain.ai.ModelJson
+import dev.saketanand.setwise.domain.ai.ModelOutput
 import dev.saketanand.setwise.domain.ai.ModelRequest
 import dev.saketanand.setwise.domain.ai.OnDeviceModel
 import kotlinx.coroutines.delay
@@ -26,4 +28,8 @@ class FakeOnDeviceModel(
         if (thinkingMs > 0) delay(thinkingMs)
         return answer()
     }
+
+    /** Like a phone without structured output: [answer] is read as the JSON asked for. */
+    override suspend fun <T : Any> generate(request: ModelRequest, output: ModelOutput<T>): T? =
+        ModelJson.decode(generate(request), output.json)
 }
