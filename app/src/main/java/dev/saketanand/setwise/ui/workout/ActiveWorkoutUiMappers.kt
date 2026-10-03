@@ -111,15 +111,35 @@ fun loggedAmount(typed: String, hint: String): Int? =
 fun canCompleteSet(typedReps: String, repsHint: String): Boolean = loggedAmount(typedReps, repsHint) != null
 
 /**
- * The start instant for a time picked on the clock. Today at that time, except:
- * - the workout began yesterday (it's running past midnight) and the time is still ahead
- *   today → yesterday at that time;
- * - otherwise a time still ahead → now (a workout can't start in the future).
+ * The start instant for a time picked on the clock: that time on whichever day (the workout's
+ * own day, the day before or after) is closest to the current start. That keeps a workout
+ * logged for a past day on its day, and handles midnight (started 23:30, pick 00:10 → the next
+ * day). A start in the future becomes now.
  */
 fun pickedStartTime(time: LocalTime, currentStart: Instant, now: Instant, zone: ZoneId): Instant {
-    val today = now.atZone(zone).toLocalDate()
-    val picked = today.atTime(time).atZone(zone).toInstant()
-    if (!picked.isAfter(now)) return picked
-    val startedBeforeToday = currentStart.atZone(zone).toLocalDate().isBefore(today)
-    return if (startedBeforeToday) today.minusDays(1).atTime(time).atZone(zone).toInstant() else now
+    val startDay = currentStart.atZone(zone).toLocalDate()
+    val picked = (-1L..1L)
+        .map { startDay.plusDays(it).atTime(time).atZone(zone).toInstant() }
+        .minBy { java.time.Duration.between(it, currentStart).abs() }
+    return if (picked.isAfter(now)) now else picked
 }
+
+/** How long a workout logged afterwards is assumed to last; editable on the summary. */
+val BACKFILL_DURATION: java.time.Duration = java.time.Duration.ofHours(1)
+
+/** Longer ago than any real session: a workout started this long ago is being logged afterwards. */
+private val LOGGED_AFTERWARDS_AFTER: java.time.Duration = java.time.Duration.ofHours(6)
+
+/**
+ * Whether the workout is being logged afterwards (e.g. a past day from the day check-in) rather
+ * than live. Not "started on an earlier day": a live session can run past midnight.
+ */
+fun isLoggedAfterwards(startedAt: Instant, now: Instant): Boolean =
+    java.time.Duration.between(startedAt, now) > LOGGED_AFTERWARDS_AFTER
+
+/**
+ * When Finish ends a workout: now, except for one logged afterwards: then start +
+ * [BACKFILL_DURATION], so it isn't days long.
+ */
+fun finishTime(startedAt: Instant, now: Instant): Instant =
+    if (isLoggedAfterwards(startedAt, now)) startedAt.plus(BACKFILL_DURATION) else now
