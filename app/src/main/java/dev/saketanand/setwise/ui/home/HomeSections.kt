@@ -23,11 +23,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -37,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.ui.rememberElapsedTime
 import dev.saketanand.setwise.ui.designsystem.components.HorizontalGap
 import dev.saketanand.setwise.ui.designsystem.components.IconTile
 import dev.saketanand.setwise.ui.designsystem.components.RoutineCard
@@ -56,8 +52,6 @@ import dev.saketanand.setwise.ui.designsystem.theme.pr
 import dev.saketanand.setwise.ui.designsystem.theme.spacing
 import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toShortDurationLabel
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.delay
 
 /*
  * Sections of the Workout tab. The layout logic (which section shows when) is done;
@@ -338,14 +332,7 @@ fun ResumeWorkoutCard(
  */
 @Composable
 private fun RunningForText(startedAtMillis: Long, completedSets: Int) {
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(startedAtMillis) {
-        while (true) {
-            now = System.currentTimeMillis()
-            delay(1_000.milliseconds)
-        }
-    }
-    val running = (now - startedAtMillis).coerceAtLeast(0).milliseconds
+    val running = rememberElapsedTime(startedAtMillis)
     Text(
         text = stringResource(
             R.string.running_for,
