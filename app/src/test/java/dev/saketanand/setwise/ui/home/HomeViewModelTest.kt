@@ -85,6 +85,17 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `saving the last workout as a template creates it and reports it`() = runTest {
+        FakeTemplateRepository.created.clear()
+        val vm = viewModel()
+
+        vm.onAction(HomeAction.OnSaveLastWorkoutAsTemplate(workoutId = 5))
+
+        assertEquals(listOf(5L), FakeTemplateRepository.created)
+        assertEquals(HomeEvent.TemplateCreated(40), vm.events.first())
+    }
+
+    @Test
     fun `confirm discards exactly the running workout and starts the new one`() = runTest {
         workouts.active.value = ActiveWorkout(id = 7, name = "Pull Day", startedAt = Instant.EPOCH, completedSets = 4)
         val vm = viewModel()
@@ -149,8 +160,12 @@ class HomeViewModelTest {
     }
 
     private object FakeTemplateRepository : TemplateRepository {
+        val created = mutableListOf<Long>()
         override fun observeTemplates(): Flow<List<Template>> = flowOf(emptyList())
-        override suspend fun createFromWorkout(workoutId: Long, createdAt: Instant): Long = 1
+        override suspend fun createFromWorkout(workoutId: Long, createdAt: Instant): Long {
+            created += workoutId
+            return 40
+        }
     }
 
     /** Always Saturday 3 Oct 2026; today() emits once (no midnight loop in tests). */
