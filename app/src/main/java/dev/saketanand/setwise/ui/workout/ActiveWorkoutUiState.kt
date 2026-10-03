@@ -44,6 +44,9 @@ sealed interface ActiveWorkoutDialog {
     /** "Discard workout" at the bottom of the list. */
     data object ConfirmDiscard : ActiveWorkoutDialog
 
+    /** Tap on the title. */
+    data class Rename(val currentName: String) : ActiveWorkoutDialog
+
     /** Removing an exercise that already has ticked-off sets. */
     data class RemoveExercise(
         val workoutExerciseId: Long,

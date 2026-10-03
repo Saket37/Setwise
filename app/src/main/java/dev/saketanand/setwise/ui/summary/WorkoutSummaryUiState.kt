@@ -30,6 +30,8 @@ data class WorkoutSummaryUiState(
     val canSaveAsTemplate: Boolean = false,
     val isTemplateSaved: Boolean = false,
     val editTimes: EditTimesUi? = null,
+    /** The rename dialog (tap on the name). */
+    val isRenaming: Boolean = false,
 )
 
 /** "Bench Press (Barbell) · Previous best 60 × 8 · 62.5 × 8 WEIGHT". */

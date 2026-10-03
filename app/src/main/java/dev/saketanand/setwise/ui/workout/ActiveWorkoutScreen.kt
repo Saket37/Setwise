@@ -168,6 +168,8 @@ fun ActiveWorkoutScreen(
         SetwiseTopAppBar(
             title = uiState.name,
             onBack = { onAction(ActiveWorkoutAction.OnMinimizeClick) },
+            onTitleClick = { onAction(ActiveWorkoutAction.OnRenameClick) },
+            titleClickLabel = stringResource(R.string.rename_workout),
             navigationIcon = R.drawable.ic_chevron_down,
             navigationContentDescription = stringResource(R.string.minimise_workout),
             subtitle = {

@@ -59,6 +59,7 @@ import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 import dev.saketanand.setwise.ui.designsystem.theme.pr
 import kotlinx.coroutines.flow.drop
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
 
 /*
  * Pieces of the active workout screen: exercise cards, the set table and its rows, dialogs.
@@ -454,6 +455,13 @@ fun ActiveWorkoutDialogs(
             onConfirm = { onAction(ActiveWorkoutAction.OnConfirmRemoveExercise) },
             onDismiss = dismiss,
             isDestructive = true,
+        )
+        is ActiveWorkoutDialog.Rename -> SetwiseTextInputDialog(
+            title = stringResource(R.string.rename_workout),
+            label = stringResource(R.string.template_name),
+            initialText = dialog.currentName,
+            onConfirm = { onAction(ActiveWorkoutAction.OnRenameConfirm(it)) },
+            onDismiss = dismiss,
         )
     }
 }

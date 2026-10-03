@@ -92,6 +92,9 @@ interface WorkoutRepository {
     /** Deletes a running workout and everything in it. */
     suspend fun discardWorkout(workoutId: Long)
 
+    /** Renames a workout (running or finished); a blank name is ignored. */
+    suspend fun renameWorkout(workoutId: Long, name: String)
+
     // Cardio
 
     /** The cardio screen's data for one workout exercise; null once it's removed. */

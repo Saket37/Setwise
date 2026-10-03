@@ -143,6 +143,12 @@ class ActiveWorkoutViewModel(
             }
             ActiveWorkoutAction.OnDismissDialog -> showDialog(null)
 
+            ActiveWorkoutAction.OnRenameClick -> showDialog(ActiveWorkoutDialog.Rename(state.value.name))
+            is ActiveWorkoutAction.OnRenameConfirm -> {
+                showDialog(null)
+                write { workoutRepository.renameWorkout(workoutId, action.name) }
+            }
+
             is ActiveWorkoutAction.OnExerciseHeaderClick -> {
                 val isOpen = state.value.expandedExerciseId == action.workoutExerciseId
                 savedStateHandle[KEY_EXPANDED] = if (isOpen) ALL_COLLAPSED else action.workoutExerciseId

@@ -202,6 +202,11 @@ class WorkoutRepositoryImpl(
         workoutDao.deleteRunningWorkout(workoutId)
     }
 
+    override suspend fun renameWorkout(workoutId: Long, name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isNotEmpty()) workoutDao.renameWorkout(workoutId, trimmed)
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class) // flatMapLatest
     override fun observeCardioEntry(workoutExerciseId: Long): Flow<CardioEntry?> =
         workoutDao.observeWorkoutExercise(workoutExerciseId).flatMapLatest { item ->
@@ -248,7 +253,7 @@ class WorkoutRepositoryImpl(
     }
 
     private companion object {
-        // TODO: let the user rename it on the active workout screen.
+        /** For empty workouts; tap the title to rename. */
         const val DEFAULT_WORKOUT_NAME = "Workout"
     }
 }

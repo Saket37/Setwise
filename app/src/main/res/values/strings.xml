@@ -308,6 +308,7 @@
     <string name="a11y_progress_chart">%1$s. %2$d of %3$d weeks trained, latest %4$s.</string>
     <string name="recent_sessions">Recent sessions</string>
     <string name="exercise_history_and_progress">History &amp; progress</string>
+    <string name="rename_workout">Rename workout</string>
     <!-- Create exercise -->
     <string name="new_exercise">New exercise</string>
     <string name="exercise_name">Name</string>

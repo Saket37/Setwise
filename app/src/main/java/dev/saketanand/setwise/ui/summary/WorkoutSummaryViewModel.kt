@@ -51,6 +51,7 @@ class WorkoutSummaryViewModel(
         session.toSummaryUi(dateProvider.zone).copy(
             isTemplateSaved = overlays.isTemplateSaved,
             editTimes = overlays.editTimes,
+            isRenaming = overlays.isRenaming,
         )
     }
         .catch { e ->
@@ -74,6 +75,19 @@ class WorkoutSummaryViewModel(
             WorkoutSummaryAction.OnTimePickerDismiss -> updateEditTimes { it.copy(picking = null) }
             WorkoutSummaryAction.OnSaveTimes -> saveTimes()
             WorkoutSummaryAction.OnEditTimesDismiss -> overlays.update { it.copy(editTimes = null) }
+
+            WorkoutSummaryAction.OnRenameClick -> overlays.update { it.copy(isRenaming = true) }
+            WorkoutSummaryAction.OnRenameDismiss -> overlays.update { it.copy(isRenaming = false) }
+            is WorkoutSummaryAction.OnRenameConfirm -> {
+                overlays.update { it.copy(isRenaming = false) }
+                viewModelScope.launch {
+                    runCatching { workoutRepository.renameWorkout(workoutId, action.name) }
+                        .onFailure { e ->
+                            Log.e(TAG, "Renaming workout $workoutId failed", e)
+                            eventChannel.send(WorkoutSummaryEvent.SaveFailed)
+                        }
+                }
+            }
 
             // Navigation: WorkoutSummaryScreenRoot handles these.
             WorkoutSummaryAction.OnDoneClick, is WorkoutSummaryAction.OnExerciseClick -> Unit
@@ -133,6 +147,7 @@ class WorkoutSummaryViewModel(
 
     private data class Overlays(
         val editTimes: EditTimesUi? = null,
+        val isRenaming: Boolean = false,
         val isSavingTemplate: Boolean = false,
         val isTemplateSaved: Boolean = false,
     )

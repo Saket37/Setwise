@@ -46,6 +46,8 @@ import java.time.LocalTime
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.foundation.clickable
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
 
 /**
  * Destination: [Route.WorkoutSummary].
@@ -126,6 +128,16 @@ fun WorkoutSummaryScreen(
         }
     }
 
+    if (uiState.isRenaming) {
+        SetwiseTextInputDialog(
+            title = stringResource(R.string.rename_workout),
+            label = stringResource(R.string.template_name),
+            initialText = uiState.name,
+            onConfirm = { onAction(WorkoutSummaryAction.OnRenameConfirm(it)) },
+            onDismiss = { onAction(WorkoutSummaryAction.OnRenameDismiss) },
+        )
+    }
+
     uiState.editTimes?.let { edit ->
         EditTimesDialog(edit = edit, onAction = onAction)
         edit.picking?.let { field ->
@@ -162,7 +174,9 @@ private fun SummaryHeader(uiState: WorkoutSummaryUiState, onAction: (WorkoutSumm
             text = uiState.name,
             style = MaterialTheme.typography.displayMedium,
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.semantics { heading() },
+            modifier = Modifier
+                .clickable(onClickLabel = stringResource(R.string.rename_workout)) { onAction(WorkoutSummaryAction.OnRenameClick) }
+                .semantics { heading() },
         )
         if (uiState.date != null && uiState.startTime != null && uiState.endTime != null) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {

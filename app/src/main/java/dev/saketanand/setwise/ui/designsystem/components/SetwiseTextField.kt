@@ -13,6 +13,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -38,15 +46,46 @@ fun SetwiseTextField(
     placeholder: String = "",
     maxLength: Int = 60,
 ) {
+    // Keep the selection between edits; the caller only deals in text.
+    var field by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    if (field.text != value) field = field.copy(text = value, selection = TextRange(value.length))
+    SetwiseTextField(
+        value = field,
+        onValueChange = {
+            field = it
+            if (it.text != value) onValueChange(it.text)
+        },
+        label = label,
+        modifier = modifier,
+        placeholder = placeholder,
+        maxLength = maxLength,
+    )
+}
+
+/**
+ * Same, with the selection in the caller's hands (e.g. a rename dialog that opens with the old
+ * name selected), and [focusRequester] to focus it.
+ */
+@Composable
+fun SetwiseTextField(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    placeholder: String = "",
+    maxLength: Int = 60,
+    focusRequester: FocusRequester? = null,
+) {
     val focus = LocalFocusManager.current
     val textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         BasicTextField(
             value = value,
-            onValueChange = { onValueChange(it.take(maxLength)) },
+            onValueChange = { if (it.text.length <= maxLength) onValueChange(it) },
             modifier = Modifier
                 .fillMaxWidth()
+                .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                 .semantics { contentDescription = label },
             textStyle = textStyle,
             singleLine = true,
@@ -61,7 +100,7 @@ fun SetwiseTextField(
                         .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.CenterStart,
                 ) {
-                    if (value.isEmpty()) {
+                    if (value.text.isEmpty()) {
                         Text(placeholder, style = textStyle, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     }
                     innerTextField()

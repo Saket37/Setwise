@@ -322,6 +322,9 @@ interface WorkoutDao {
     @Query("UPDATE workouts SET startedAt = :startedAt, endedAt = :endedAt WHERE id = :workoutId AND endedAt IS NOT NULL")
     suspend fun updateFinishedTimes(workoutId: Long, startedAt: Long, endedAt: Long): Int
 
+    @Query("UPDATE workouts SET name = :name WHERE id = :workoutId")
+    suspend fun renameWorkout(workoutId: Long, name: String)
+
     /** Returns 1 if the workout was running and is now finished, 0 otherwise. */
     @Query("UPDATE workouts SET endedAt = :endedAt WHERE id = :workoutId AND endedAt IS NULL")
     suspend fun markFinished(workoutId: Long, endedAt: Long): Int
