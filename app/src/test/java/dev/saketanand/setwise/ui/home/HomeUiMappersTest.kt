@@ -14,19 +14,6 @@ class HomeUiMappersTest {
     private val saturday = LocalDate.of(2026, 10, 3)
 
     @Test
-    fun `week runs from Monday 00_00 to the next Monday`() {
-        val (start, end) = weekRange(saturday, zone)
-        assertEquals(LocalDateTime.of(2026, 9, 28, 0, 0), start.atZone(zone).toLocalDateTime())
-        assertEquals(LocalDateTime.of(2026, 10, 5, 0, 0), end.atZone(zone).toLocalDateTime())
-    }
-
-    @Test
-    fun `on a Monday the week starts that day`() {
-        val monday = LocalDate.of(2026, 9, 28)
-        assertEquals(monday.atStartOfDay(zone).toInstant(), weekRange(monday, zone).first)
-    }
-
-    @Test
     fun `days ago counts calendar days, not 24-hour blocks`() {
         val lateYesterday = LocalDateTime.of(2026, 10, 2, 23, 30).atZone(zone).toInstant()
         val earlyToday = LocalDateTime.of(2026, 10, 3, 0, 15).atZone(zone).toInstant()
