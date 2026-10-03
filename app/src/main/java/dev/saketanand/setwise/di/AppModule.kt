@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
 import dev.saketanand.setwise.data.local.SetwiseDatabase
 import dev.saketanand.setwise.data.dev.DevDataSeeder
+import dev.saketanand.setwise.data.prefs.DataStoreUserSettingsRepository
 import dev.saketanand.setwise.data.repository.ExerciseRepositoryImpl
 import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
 import dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl
@@ -14,6 +15,7 @@ import dev.saketanand.setwise.data.seed.ExerciseSeeder
 import dev.saketanand.setwise.data.seed.SeedPreferences
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.TemplateRepository
+import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import dev.saketanand.setwise.timer.DefaultRestTimer
 import dev.saketanand.setwise.timer.RestAlert
@@ -65,6 +67,8 @@ val appModule = module {
         PreferenceDataStoreFactory.create { androidContext().preferencesDataStoreFile("setwise_prefs") }
     }
     singleOf(::SeedPreferences)
+    // Body weight, training days, check-in switch, onboarding done (Settings / onboarding).
+    singleOf(::DataStoreUserSettingsRepository) bind UserSettingsRepository::class
 
     singleOf(::ExerciseSeeder)
 
