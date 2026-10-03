@@ -103,4 +103,57 @@
     <string name="no_exercises_match_message">Check the spelling, or add it as your own exercise.</string>
     <string name="create_exercise_named">Create “%1$s”</string>
     <string name="no_exercises">No exercises here yet</string>
+
+    <!-- Active workout -->
+    <string name="minimise_workout">Minimise workout</string>
+    <!-- %1$s = start time, e.g. "6:42 PM" -->
+    <string name="started_at">Started %1$s</string>
+    <string name="change_start_time">Change start time</string>
+    <string name="finish">Finish</string>
+    <string name="exercise_options">Exercise options</string>
+    <string name="remove_exercise">Remove exercise</string>
+    <!-- Set table column headers (uppercased in code) -->
+    <string name="column_set">Set</string>
+    <string name="column_previous">Previous</string>
+    <string name="column_kg">kg</string>
+    <!-- Bodyweight exercises: optional added weight -->
+    <string name="column_added_kg">+kg</string>
+    <string name="column_reps">Reps</string>
+    <string name="column_seconds">Sec</string>
+    <!-- Screen-reader labels for a set row. %1$d = set number. -->
+    <string name="a11y_set_weight">Weight in kg, set %1$d</string>
+    <string name="a11y_set_reps">Reps, set %1$d</string>
+    <string name="a11y_set_seconds">Seconds, set %1$d</string>
+    <string name="a11y_set_done">Set %1$d done</string>
+    <string name="add_set">Add set</string>
+    <string name="delete_set">Delete set</string>
+    <!-- Collapsed exercise card: "2 / 3 sets" -->
+    <string name="sets_progress">%1$d / %2$d sets</string>
+    <!-- %1$s = last session's sets, e.g. "40 × 6 · 40 × 6 · 37.5 × 8" -->
+    <string name="last_time">Last time: %1$s</string>
+    <string name="log_cardio">Log cardio</string>
+    <string name="discard_workout">Discard workout</string>
+    <string name="no_exercises_yet">No exercises yet</string>
+    <string name="no_exercises_yet_message">Add your first exercise to start logging sets.</string>
+    <string name="save_failed">Couldn\'t save that change. Please try again.</string>
+    <!-- Finish with sets that aren't ticked off -->
+    <string name="finish_workout_title">Finish workout?</string>
+    <plurals name="finish_incomplete_message">
+        <item quantity="one">%d set isn\'t ticked off and won\'t be saved.</item>
+        <item quantity="other">%d sets aren\'t ticked off and won\'t be saved.</item>
+    </plurals>
+    <!-- Finish with nothing logged -->
+    <string name="nothing_logged_title">Nothing logged yet</string>
+    <string name="nothing_logged_message">Tick off at least one set to finish, or discard this workout.</string>
+    <string name="discard">Discard</string>
+    <!-- "Discard workout" button. %1$s = workout name -->
+    <string name="discard_workout_confirm_title">Discard %1$s?</string>
+    <string name="discard_workout_confirm_message">Everything logged in this workout will be deleted. This can\'t be undone.</string>
+    <!-- Remove an exercise that has ticked-off sets. %1$s = exercise name -->
+    <string name="remove_exercise_title">Remove %1$s?</string>
+    <plurals name="remove_exercise_message">
+        <item quantity="one">Its %d logged set will be deleted.</item>
+        <item quantity="other">Its %d logged sets will be deleted.</item>
+    </plurals>
+    <string name="remove">Remove</string>
 </resources>

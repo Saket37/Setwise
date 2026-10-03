@@ -42,6 +42,11 @@ android {
         // BuildConfig.DEBUG gates debug-only code such as the fake-data seeder.
         buildConfig = true
     }
+    testOptions {
+        // JVM unit tests run against stub Android classes: make calls like Log.e() no-ops
+        // instead of throwing "not mocked", so error paths can be tested.
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 composeCompiler {

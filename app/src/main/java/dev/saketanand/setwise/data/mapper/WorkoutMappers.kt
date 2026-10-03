@@ -1,13 +1,20 @@
 package dev.saketanand.setwise.data.mapper
 
+import dev.saketanand.setwise.data.local.entity.SetEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.relation.ActiveWorkoutRow
+import dev.saketanand.setwise.data.local.relation.PreviousSetRow
 import dev.saketanand.setwise.data.local.relation.TemplateWithExercises
 import dev.saketanand.setwise.data.local.relation.WorkoutStatsRow
+import dev.saketanand.setwise.data.local.relation.WorkoutWithExercises
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.PreviousSet
+import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.Template
 import dev.saketanand.setwise.domain.model.TemplateExercise
+import dev.saketanand.setwise.domain.model.WorkoutSession
+import dev.saketanand.setwise.domain.model.WorkoutSet
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
@@ -48,4 +55,37 @@ fun TemplateWithExercises.toDomain(lastUsedAtMillis: Long?): Template = Template
             )
         },
     lastUsedAt = lastUsedAtMillis?.let(Instant::ofEpochMilli),
+)
+
+/** Joins the workout tree with the "previous" rows; sorts what Room returns unordered. */
+fun WorkoutWithExercises.toSession(previous: List<PreviousSetRow>): WorkoutSession {
+    val previousByItem = previous.groupBy { it.workoutExerciseId }
+    return WorkoutSession(
+        id = workout.id,
+        name = workout.name,
+        startedAt = Instant.ofEpochMilli(workout.startedAt),
+        endedAt = workout.endedAt?.let(Instant::ofEpochMilli),
+        exercises = items
+            .sortedWith(compareBy({ it.item.position }, { it.item.id }))
+            .map { row ->
+                SessionExercise(
+                    id = row.item.id,
+                    exercise = row.exercise.toDomain(),
+                    sets = row.sets.sortedWith(compareBy({ it.setNumber }, { it.id })).map { it.toDomain() },
+                    previousSets = previousByItem[row.item.id].orEmpty()
+                        .sortedBy { it.setNumber }
+                        .map { PreviousSet(weightKg = it.weightKg, reps = it.reps, durationSec = it.durationSec) },
+                )
+            },
+    )
+}
+
+fun SetEntity.toDomain(): WorkoutSet = WorkoutSet(
+    id = id,
+    setNumber = setNumber,
+    weightKg = weightKg,
+    reps = reps,
+    durationSec = durationSec,
+    isCompleted = isCompleted,
+    isPr = isPr,
 )

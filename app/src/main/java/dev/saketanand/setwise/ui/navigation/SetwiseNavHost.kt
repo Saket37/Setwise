@@ -1,5 +1,9 @@
 package dev.saketanand.setwise.ui.navigation
 
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -8,6 +12,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import dev.saketanand.setwise.ui.exercises.CreateExerciseScreenRoot
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailScreenRoot
 import dev.saketanand.setwise.ui.exercises.ExercisePickerScreenRoot
@@ -19,6 +24,10 @@ import dev.saketanand.setwise.ui.templates.TemplateEditorScreenRoot
 import dev.saketanand.setwise.ui.templates.TemplateFromGoalScreenRoot
 import dev.saketanand.setwise.ui.workout.ActiveWorkoutScreenRoot
 import dev.saketanand.setwise.ui.workout.CardioEntryScreenRoot
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
+
+private const val TransitionMillis = 200
 
 /** Key under which the exercise picker hands its selection back to the screen that opened it. */
 private const val PICKED_EXERCISE_IDS = "picked_exercise_ids"
@@ -36,6 +45,13 @@ fun SetwiseNavHost(
         navController = navController,
         startDestination = Route.Home,
         modifier = modifier,
+        // Short fades (Material's ~200ms instead of Navigation's default 700ms). On back, the
+        // screen being left disappears at once: during a cross-fade it's drawn on top and still
+        // gets touches, so a quick tap on the screen underneath (e.g. "Resume workout") was lost.
+        enterTransition = { fadeIn(tween(TransitionMillis)) },
+        exitTransition = { fadeOut(tween(TransitionMillis)) },
+        popEnterTransition = { fadeIn(tween(TransitionMillis)) },
+        popExitTransition = { ExitTransition.None },
     ) {
         // Tabs
 
@@ -61,8 +77,10 @@ fun SetwiseNavHost(
         // Workout flow
 
         composable<Route.ActiveWorkout> { entry ->
+            val route = entry.toRoute<Route.ActiveWorkout>()
             val pickedExerciseIds = entry.pickedExerciseIds()
             ActiveWorkoutScreenRoot(
+                viewModel = koinViewModel { parametersOf(route.workoutId) },
                 pickedExerciseIds = pickedExerciseIds,
                 onPickedExercisesConsumed = { entry.clearPickedExerciseIds() },
                 onAddExercises = { navController.navigate(Route.ExercisePicker) },

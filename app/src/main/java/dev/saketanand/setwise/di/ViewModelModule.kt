@@ -11,6 +11,7 @@ import dev.saketanand.setwise.ui.templates.TemplateEditorViewModel
 import dev.saketanand.setwise.ui.templates.TemplateFromGoalViewModel
 import dev.saketanand.setwise.ui.workout.ActiveWorkoutViewModel
 import dev.saketanand.setwise.ui.workout.CardioEntryViewModel
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -23,7 +24,16 @@ val viewModelModule = module {
     viewModelOf(::HistoryViewModel)
     viewModelOf(::SettingsViewModel)
 
-    viewModelOf(::ActiveWorkoutViewModel)
+    // Route argument passed by SetwiseNavHost: koinViewModel { parametersOf(route.workoutId) }.
+    viewModel { params ->
+        ActiveWorkoutViewModel(
+            workoutId = params.get(),
+            workoutRepository = get(),
+            dateProvider = get(),
+            savedStateHandle = get(),
+            writeScope = get(ApplicationScope),
+        )
+    }
     viewModelOf(::CardioEntryViewModel)
     viewModelOf(::WorkoutSummaryViewModel)
 

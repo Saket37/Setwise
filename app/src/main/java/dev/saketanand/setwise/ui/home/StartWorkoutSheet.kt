@@ -1,6 +1,5 @@
 package dev.saketanand.setwise.ui.home
 
-import android.text.format.DateFormat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,25 +9,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -44,9 +40,11 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCard
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardOutline
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseTimePickerDialog
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
 import dev.saketanand.setwise.util.toShortTimeLabel
 import java.time.LocalTime
+import kotlinx.coroutines.launch
 
 /**
  * Artboard 2: "Start a workout" bottom sheet. Empty workout, one row per template, and the
@@ -60,11 +58,23 @@ fun StartWorkoutSheet(
     onAction: (HomeAction) -> Unit,
 ) {
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
-    val enabled = !uiState.isStartingWorkout
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    var isClosing by remember { mutableStateOf(false) }
+    val enabled = !uiState.isStartingWorkout && !isClosing
+
+    // Slide the sheet away first, then start: otherwise the next screen opens while the sheet
+    // is still up, and it's seen closing when you come back.
+    val closeThen: (HomeAction) -> Unit = { action ->
+        if (!isClosing) {
+            isClosing = true
+            scope.launch { sheetState.hide() }.invokeOnCompletion { onAction(action) }
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = { onAction(HomeAction.OnStartSheetDismiss) },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column(
@@ -85,7 +95,7 @@ fun StartWorkoutSheet(
                 )
             }
 
-            EmptyWorkoutRow(enabled = enabled, onClick = { onAction(HomeAction.OnStartEmptyWorkout) })
+            EmptyWorkoutRow(enabled = enabled, onClick = { closeThen(HomeAction.OnStartEmptyWorkout) })
 
             if (uiState.templates.isNotEmpty()) {
                 SectionLabel(stringResource(R.string.from_a_template))
@@ -94,7 +104,7 @@ fun StartWorkoutSheet(
                         SheetTemplateRow(
                             template = template,
                             enabled = enabled,
-                            onClick = { onAction(HomeAction.OnStartFromTemplate(template.id)) },
+                            onClick = { closeThen(HomeAction.OnStartFromTemplate(template.id)) },
                         )
                     }
                 }
@@ -108,7 +118,8 @@ fun StartWorkoutSheet(
     }
 
     if (showTimePicker) {
-        StartTimePickerDialog(
+        SetwiseTimePickerDialog(
+            title = stringResource(R.string.pick_start_time),
             initial = uiState.customStartTime ?: LocalTime.now(),
             onConfirm = { time ->
                 // A start time in the future makes no sense; treat it as "now".
@@ -211,39 +222,4 @@ private fun StartTimeRow(customStartTime: LocalTime?, onChangeClick: () -> Unit)
             )
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun StartTimePickerDialog(
-    initial: LocalTime,
-    onConfirm: (LocalTime) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val state = rememberTimePickerState(
-        initialHour = initial.hour,
-        initialMinute = initial.minute,
-        is24Hour = DateFormat.is24HourFormat(LocalContext.current),
-    )
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.pick_start_time)) },
-        text = { TimePicker(state = state) },
-        confirmButton = {
-            SetwiseButton(
-                text = stringResource(R.string.ok),
-                onClick = { onConfirm(LocalTime.of(state.hour, state.minute)) },
-                style = SetwiseButtonStyle.Text,
-                size = SetwiseButtonSize.Medium,
-            )
-        },
-        dismissButton = {
-            SetwiseButton(
-                text = stringResource(R.string.cancel),
-                onClick = onDismiss,
-                style = SetwiseButtonStyle.Text,
-                size = SetwiseButtonSize.Medium,
-            )
-        },
-    )
 }

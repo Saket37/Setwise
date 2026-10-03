@@ -17,6 +17,9 @@ import dev.saketanand.setwise.domain.repository.TemplateRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import dev.saketanand.setwise.util.DateProvider
 import dev.saketanand.setwise.util.SystemDateProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
@@ -26,6 +29,9 @@ import org.koin.dsl.module
 val appModule = module {
     // The app's clock ("now", today + midnight rollover); swapped for a fixed date in tests.
     singleOf(::SystemDateProvider) bind DateProvider::class
+
+    // Outlives screens; SupervisorJob so one failing job doesn't cancel the others.
+    single(ApplicationScope) { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 
     // Shared JSON parser. ignoreUnknownKeys: new fields in exercises.json won't crash older builds.
     single { Json { ignoreUnknownKeys = true } }

@@ -26,9 +26,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import dev.saketanand.setwise.testing.StubWorkoutRepository
 import dev.saketanand.setwise.util.DateProvider
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import kotlin.time.Duration
 
@@ -65,6 +67,21 @@ class HomeViewModelTest {
         assertEquals("Pull Day", dialog.runningWorkoutName)
         assertEquals(3L, dialog.templateIdToStart)
         assertTrue("nothing may start before confirming", workouts.startCalls.isEmpty())
+    }
+
+    @Test
+    fun `starting takes the sheet out of the state, and cancelling the discard forgets the picked time`() {
+        workouts.active.value = ActiveWorkout(id = 7, name = "Pull Day", startedAt = Instant.EPOCH, completedSets = 4)
+        val vm = viewModel()
+        vm.onAction(HomeAction.OnStartWorkoutClick)
+        vm.onAction(HomeAction.OnStartTimeChange(LocalTime.of(17, 0)))
+
+        vm.onAction(HomeAction.OnStartFromTemplate(templateId = 3))
+        assertEquals(false, vm.state.value.isStartSheetVisible)
+        assertEquals("kept for the start after confirming", LocalTime.of(17, 0), vm.state.value.customStartTime)
+
+        vm.onAction(HomeAction.OnDismissDiscardDialog)
+        assertNull(vm.state.value.customStartTime)
     }
 
     @Test
@@ -114,7 +131,7 @@ class HomeViewModelTest {
 
     private data class StartCall(val templateId: Long?, val discard: Long?)
 
-    private class FakeWorkoutRepository : WorkoutRepository {
+    private class FakeWorkoutRepository : StubWorkoutRepository() {
         val active = MutableStateFlow<ActiveWorkout?>(null)
         val startCalls = mutableListOf<StartCall>()
         var failStart = false
