@@ -54,8 +54,11 @@ enum class ModelAvailability {
 sealed interface ModelDownload {
     data class Progress(val bytesDownloaded: Long, val totalBytes: Long?) : ModelDownload
     data object Done : ModelDownload
-    data class Failed(val reason: String?) : ModelDownload
+    data class Failed(val reason: String?, val kind: DownloadFailure = DownloadFailure.Other) : ModelDownload
 }
+
+/** Why a download failed, where it's something the user can fix. */
+enum class DownloadFailure { NotEnoughSpace, NeedsSystemUpdate, Other }
 
 /**
  * A prompt, shaped for Gemini Nano: [system] is a short instruction (under ~150 words) on how

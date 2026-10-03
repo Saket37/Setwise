@@ -8,7 +8,8 @@ import dev.saketanand.setwise.domain.ai.ModelRequest
 import dev.saketanand.setwise.domain.ai.OnDeviceModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.onEach
 
 /** A model that answers with [answer] (or throws it), and records what it was asked. */
 class FakeOnDeviceModel(
@@ -21,7 +22,13 @@ class FakeOnDeviceModel(
 
     override suspend fun availability(): ModelAvailability = availability
 
-    override fun download(): Flow<ModelDownload> = flowOf(ModelDownload.Progress(0, 100), ModelDownload.Done)
+    /** What download() reports, in order. */
+    var downloadSteps: List<ModelDownload> = listOf(ModelDownload.Progress(0, 100), ModelDownload.Progress(100, 100), ModelDownload.Done)
+
+    /** Time between download steps (virtual time in tests), like AICore's spaced-out events. */
+    var downloadStepMs: Long = 0
+
+    override fun download(): Flow<ModelDownload> = downloadSteps.asFlow().onEach { if (downloadStepMs > 0) delay(downloadStepMs) }
 
     override suspend fun generate(request: ModelRequest): String {
         requests += request

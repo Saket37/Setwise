@@ -20,6 +20,7 @@ import dev.saketanand.setwise.domain.ai.OnDeviceModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import dev.saketanand.setwise.domain.ai.DownloadFailure
 
 /**
  * [OnDeviceModel] on Gemini Nano via the ML Kit GenAI Prompt API (AICore). On phones without
@@ -61,14 +62,14 @@ class GeminiNanoModel : OnDeviceModel {
                         ModelDownload.Progress(0, totalBytes)
                     }
                     is DownloadStatus.DownloadProgress -> ModelDownload.Progress(status.totalBytesDownloaded, totalBytes)
-                    is DownloadStatus.DownloadFailed -> ModelDownload.Failed(status.e.message)
+                    is DownloadStatus.DownloadFailed -> ModelDownload.Failed(status.e.message, status.e.toDownloadFailure())
                     DownloadStatus.DownloadCompleted -> ModelDownload.Done
                     else -> ModelDownload.Progress(0, totalBytes)
                 }
             }
             .catch { e ->
                 Log.w(TAG, "Downloading Gemini Nano failed", e)
-                emit(ModelDownload.Failed(e.message))
+                emit(ModelDownload.Failed(e.message, (e as? GenAiException)?.toDownloadFailure() ?: DownloadFailure.Other))
             }
 
     override suspend fun generate(request: ModelRequest): String {
@@ -107,6 +108,12 @@ class GeminiNanoModel : OnDeviceModel {
         } else {
             generateContentRequest(TextPart("## Instructions\n$system\n\n$prompt"), configure)
         }
+    }
+
+    private fun GenAiException.toDownloadFailure() = when (errorCode) {
+        GenAiException.ErrorCode.NOT_ENOUGH_DISK_SPACE -> DownloadFailure.NotEnoughSpace
+        GenAiException.ErrorCode.NEEDS_SYSTEM_UPDATE, GenAiException.ErrorCode.AICORE_INCOMPATIBLE -> DownloadFailure.NeedsSystemUpdate
+        else -> DownloadFailure.Other
     }
 
     private suspend fun supportsSystemInstruction(): Boolean =

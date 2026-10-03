@@ -45,6 +45,9 @@ import java.time.format.TextStyle
 import org.koin.androidx.compose.koinViewModel
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseBodyWeightDialog
 import dev.saketanand.setwise.domain.ai.ModelAvailability
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import dev.saketanand.setwise.domain.ai.DownloadFailure
+import dev.saketanand.setwise.domain.ai.DownloadState
 
 /** Destination: [Route.Settings]. */
 @Composable
@@ -52,6 +55,11 @@ fun SettingsScreenRoot(
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    // Back from elsewhere (or the app): the model's state may have changed.
+    LifecycleResumeEffect(Unit) {
+        viewModel.onAction(SettingsAction.OnScreenResumed)
+        onPauseOrDispose { }
+    }
     SettingsScreen(uiState = uiState, onAction = viewModel::onAction)
 }
 
@@ -129,16 +137,24 @@ fun SettingsScreen(
 /** "On-device AI   Ready / Download / Downloading 42% / Not on this phone", and what it means. */
 @Composable
 private fun AiRow(ai: AiStatusUi, onDownload: () -> Unit) {
+    val download = ai.download
     val (value, supporting) = when {
-        ai.downloadFailed -> R.string.ai_try_again to R.string.ai_download_failed
         ai.availability == ModelAvailability.Ready -> R.string.ai_ready to R.string.ai_ready_detail
+        download is DownloadState.Failed -> R.string.ai_try_again to when (download.kind) {
+            DownloadFailure.NotEnoughSpace -> R.string.ai_download_no_space
+            DownloadFailure.NeedsSystemUpdate -> R.string.ai_download_needs_update
+            DownloadFailure.Other -> R.string.ai_download_failed
+        }
+        download is DownloadState.WaitingToStart -> R.string.ai_waiting to R.string.ai_waiting_detail
+        download is DownloadState.Downloading || ai.availability == ModelAvailability.Downloading ->
+            R.string.ai_downloading to R.string.ai_downloading_detail
         ai.availability == ModelAvailability.Downloadable -> R.string.ai_download to R.string.ai_downloadable_detail
-        ai.availability == ModelAvailability.Downloading -> R.string.ai_downloading to R.string.ai_downloading_detail
         ai.availability == ModelAvailability.Unavailable -> R.string.ai_unavailable to R.string.ai_unavailable_detail
         else -> R.string.ai_checking to null
     }
-    val valueText = if (ai.availability == ModelAvailability.Downloading && ai.downloadPercent != null) {
-        stringResource(R.string.ai_downloading_percent, ai.downloadPercent)
+    val percent = (download as? DownloadState.Downloading)?.percent
+    val valueText = if (ai.availability != ModelAvailability.Ready && percent != null) {
+        stringResource(R.string.ai_downloading_percent, percent)
     } else {
         stringResource(value)
     }

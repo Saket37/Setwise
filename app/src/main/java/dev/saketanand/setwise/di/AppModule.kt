@@ -42,6 +42,7 @@ import dev.saketanand.setwise.domain.CalorieSync
 import dev.saketanand.setwise.domain.ai.OnDeviceModel
 import dev.saketanand.setwise.llm.GeminiNanoModel
 import dev.saketanand.setwise.domain.ai.CalorieEstimator
+import dev.saketanand.setwise.domain.ai.ModelDownloader
 
 val appModule = module {
     // The app's clock ("now", today + midnight rollover); swapped for a fixed date in tests.
@@ -58,6 +59,7 @@ val appModule = module {
     // On-device model (Gemini Nano). Features take OnDeviceModel, so tests use a fake.
     single<OnDeviceModel> { GeminiNanoModel() }
     singleOf(::CalorieEstimator)
+    single { ModelDownloader(get(), get(ApplicationScope)) }
     singleOf(::CalorieSync)
     single<NotificationPermission> { AndroidNotificationPermission(androidContext()) }
     single { RestTimerCoordinator(androidContext(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)) } bind

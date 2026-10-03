@@ -17,6 +17,9 @@ sealed interface SettingsAction {
     /** The "On-device AI" row when the model can be downloaded (or the last try failed). */
     data object OnDownloadModelClick : SettingsAction
 
+    /** Back on screen: the model may have finished downloading meanwhile. */
+    data object OnScreenResumed : SettingsAction
+
     /** Cancel, back or outside the dialog. */
     data object OnDismissEditor : SettingsAction
 }

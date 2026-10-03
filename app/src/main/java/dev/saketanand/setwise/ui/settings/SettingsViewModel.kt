@@ -14,19 +14,20 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import dev.saketanand.setwise.domain.ai.ModelAvailability
-import dev.saketanand.setwise.domain.ai.ModelDownload
 import dev.saketanand.setwise.domain.ai.OnDeviceModel
-import kotlinx.coroutines.Job
+import dev.saketanand.setwise.domain.ai.DownloadState
+import dev.saketanand.setwise.domain.ai.ModelDownloader
 
 /** Screen: [SettingsScreenRoot]. Shows and edits what onboarding asked (all optional). */
 class SettingsViewModel(
     private val userSettings: UserSettingsRepository,
     private val model: OnDeviceModel,
+    private val downloader: ModelDownloader,
 ) : ViewModel() {
 
     private val editor = MutableStateFlow<SettingsEditor?>(null)
-    private val ai = MutableStateFlow(AiStatusUi())
-    private var download: Job? = null
+    private val availability = MutableStateFlow<ModelAvailability?>(null)
+    private val ai = combine(availability, downloader.state) { availability, download -> AiStatusUi(availability, download) }
 
     val state: StateFlow<SettingsUiState> = combine(userSettings.settings, editor, ai) { settings, editor, ai ->
         SettingsUiState(
@@ -67,7 +68,8 @@ class SettingsViewModel(
 
             is SettingsAction.OnAskAboutUnloggedDaysChange -> save { userSettings.setAskAboutUnloggedDays(action.ask) }
 
-            SettingsAction.OnDownloadModelClick -> downloadModel()
+            SettingsAction.OnDownloadModelClick -> if (state.value.ai.canDownload) downloader.start()
+            SettingsAction.OnScreenResumed -> refreshModel()
 
             SettingsAction.OnDismissEditor -> editor.value = null
         }
@@ -75,33 +77,15 @@ class SettingsViewModel(
 
     init {
         refreshModel()
+        // When the download ends, AICore's answer changes (Ready, or still Downloadable).
+        viewModelScope.launch {
+            downloader.state.collect { if (it is DownloadState.Done || it is DownloadState.Failed) refreshModel() }
+        }
     }
 
     private fun refreshModel() {
         viewModelScope.launch {
-            val availability = runCatching { model.availability() }.getOrDefault(ModelAvailability.Unavailable)
-            ai.update { it.copy(availability = availability) }
-        }
-    }
-
-    /** Follows the download here (AICore keeps going if the screen closes); then checks again. */
-    private fun downloadModel() {
-        if (download?.isActive == true || !ai.value.canDownload) return
-        ai.update { it.copy(availability = ModelAvailability.Downloading, downloadPercent = 0, downloadFailed = false) }
-        download = viewModelScope.launch {
-            model.download().collect { step ->
-                when (step) {
-                    is ModelDownload.Progress -> ai.update {
-                        it.copy(downloadPercent = step.totalBytes?.let { total -> (step.bytesDownloaded * 100 / total).toInt().coerceIn(0, 100) })
-                    }
-                    ModelDownload.Done -> ai.update { it.copy(downloadPercent = null) }
-                    is ModelDownload.Failed -> {
-                        Log.w(TAG, "Model download failed: ${step.reason}")
-                        ai.update { it.copy(downloadPercent = null, downloadFailed = true) }
-                    }
-                }
-            }
-            refreshModel()
+            availability.value = runCatching { model.availability() }.getOrDefault(ModelAvailability.Unavailable)
         }
     }
 

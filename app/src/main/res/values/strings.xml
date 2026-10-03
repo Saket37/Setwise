@@ -329,6 +329,10 @@
     <string name="ai_unavailable">Not on this phone</string>
     <string name="ai_unavailable_detail">This phone can\'t run Gemini Nano, so Setwise uses its built-in formulas.</string>
     <string name="ai_try_again">Try again</string>
+    <string name="ai_waiting">Waiting to start…</string>
+    <string name="ai_waiting_detail">Android downloads it in the background when it can. It\'s a large download, so this can take a while, especially off Wi-Fi.</string>
+    <string name="ai_download_no_space">Not enough storage for Gemini Nano. Free some space and tap to try again.</string>
+    <string name="ai_download_needs_update">Gemini Nano needs newer system software. Update Android AICore and your phone, then tap to try again.</string>
     <string name="ai_download_failed">The download didn\'t finish. Tap to try again.</string>
     <!-- Create exercise -->
     <string name="new_exercise">New exercise</string>
