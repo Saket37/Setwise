@@ -75,4 +75,32 @@
     <string name="pick_start_time">Start time</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+
+    <!-- Shared -->
+    <string name="back">Back</string>
+    <string name="clear_search">Clear search</string>
+
+    <!-- Exercise picker -->
+    <string name="add_exercise">Add exercise</string>
+    <string name="create_new">Create new</string>
+    <string name="search_exercises">Search exercises</string>
+    <string name="filter_all">All</string>
+    <string name="recent">Recent</string>
+    <string name="all_exercises">All exercises</string>
+    <plurals name="add_exercises">
+        <item quantity="one">Add %d exercise</item>
+        <item quantity="other">Add %d exercises</item>
+    </plurals>
+    <!-- Row detail, last session's top set. %1$s = weight like "62.5", %2$d = reps. -->
+    <string name="last_weight_reps">last %1$s kg × %2$d</string>
+    <string name="last_weight">last %1$s kg</string>
+    <plurals name="last_reps">
+        <item quantity="one">last %d rep</item>
+        <item quantity="other">last %d reps</item>
+    </plurals>
+    <!-- No search results. %1$s = what the user typed. -->
+    <string name="no_exercises_match">No matches for “%1$s”</string>
+    <string name="no_exercises_match_message">Check the spelling, or add it as your own exercise.</string>
+    <string name="create_exercise_named">Create “%1$s”</string>
+    <string name="no_exercises">No exercises here yet</string>
 </resources>

@@ -1,11 +1,14 @@
 package dev.saketanand.setwise.data.mapper
 
 import dev.saketanand.setwise.data.local.entity.ExerciseEntity
+import dev.saketanand.setwise.data.local.relation.RecentExerciseRow
 import dev.saketanand.setwise.data.seed.ExerciseSeedDto
 import dev.saketanand.setwise.domain.model.CalorieMethod
 import dev.saketanand.setwise.domain.model.CardioMetric
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.PreviousSet
+import dev.saketanand.setwise.domain.model.RecentExercise
 
 /**
  * Built-in exercise from the seed file. valueOf() throws on an unknown value, so a typo in
@@ -52,4 +55,9 @@ fun Exercise.toEntity(): ExerciseEntity = ExerciseEntity(
     metrics = metrics,
     calorieMethod = calorieMethod,
     met = met,
+)
+
+fun RecentExerciseRow.toDomain(): RecentExercise = RecentExercise(
+    exercise = exercise.toDomain(),
+    lastSet = if (lastWeightKg == null && lastReps == null) null else PreviousSet(lastWeightKg, lastReps),
 )

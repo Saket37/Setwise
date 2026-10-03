@@ -20,6 +20,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -37,6 +38,8 @@ import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
  *
  * @param onClick null = not clickable (e.g. a static info row).
  * @param outline none, solid or dashed border (dashed = "add something" placeholders).
+ * @param shape cards use shapes.large; denser list rows (exercise picker) use shapes.medium.
+ *   The dashed outline is drawn for shapes.large's 16dp corners.
  */
 @Composable
 fun SetwiseListCard(
@@ -50,11 +53,11 @@ fun SetwiseListCard(
     trailingContent: (@Composable () -> Unit)? = null,
     colors: SetwiseListCardColors = SetwiseListCardDefaults.colors(),
     outline: SetwiseListCardOutline = SetwiseListCardOutline.None,
+    shape: Shape = MaterialTheme.shapes.large,
     contentPadding: PaddingValues = SetwiseListCardDefaults.ContentPadding,
     horizontalSpacing: Dp = 12.dp,
     textSpacing: Dp = 2.dp,
 ) {
-    val shape = MaterialTheme.shapes.large
     val cardModifier = modifier
         .fillMaxWidth()
         .then(if (outline is SetwiseListCardOutline.Dashed) Modifier.dashedBorder(outline.color, cornerRadius = 16.dp) else Modifier)

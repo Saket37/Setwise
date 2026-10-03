@@ -3,6 +3,7 @@ package dev.saketanand.setwise.ui.home
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.model.Template
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
@@ -144,6 +145,7 @@ class HomeViewModelTest {
     private object FakeExerciseRepository : ExerciseRepository {
         override fun observeExercises(query: String, muscleGroup: String?): Flow<List<Exercise>> = flowOf(emptyList())
         override fun observeMuscleGroups(): Flow<List<String>> = flowOf(emptyList())
+        override fun observeRecentExercises(limit: Int): Flow<List<RecentExercise>> = flowOf(emptyList())
         override fun observeExerciseCount(): Flow<Int> = flowOf(128)
     }
 }

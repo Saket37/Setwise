@@ -80,4 +80,7 @@ dependencies {
 
     // Unit tests
     testImplementation(libs.bundles.test)
+
+    // Instrumented tests (./gradlew connectedDebugAndroidTest)
+    androidTestImplementation(libs.bundles.android.test)
 }

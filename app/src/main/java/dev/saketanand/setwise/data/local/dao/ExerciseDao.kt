@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import dev.saketanand.setwise.data.local.entity.ExerciseEntity
+import dev.saketanand.setwise.data.local.relation.RecentExerciseRow
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -34,9 +35,45 @@ interface ExerciseDao {
     )
     fun observeExercises(query: String, muscleGroup: String?): Flow<List<ExerciseEntity>>
 
-    /** Distinct muscle groups for the filter chips . */
-    @Query("SELECT DISTINCT muscleGroup FROM exercises ORDER BY muscleGroup")
+    /**
+     * Muscle groups for the filter chips, biggest first (Back, Chest, Shoulders… before Calves),
+     * so the most useful chips are the ones visible without scrolling.
+     */
+    @Query("SELECT muscleGroup FROM exercises GROUP BY muscleGroup ORDER BY COUNT(*) DESC, muscleGroup")
     fun observeMuscleGroups(): Flow<List<String>>
+
+    /**
+     * Exercises from finished workouts, most recently done first, with the top set of the
+     * latest session (for "last 60 kg × 8").
+     *
+     * - Inner query: one row per exercise. With MAX() in a GROUP BY, SQLite takes the other
+     *   columns (here the workout_exercises id) from the row that has the max, i.e. the most
+     *   recent session.
+     * - The two sub-selects pick the same set from that session: heaviest, then most reps.
+     *   NULL weights (bodyweight) sort last under DESC, so they're ranked by reps.
+     */
+    @Query(
+        """
+        SELECT e.*, r.lastUsedAt AS lastUsedAt,
+            (SELECT s.weightKg FROM sets s
+             WHERE s.workoutExerciseId = r.workoutExerciseId AND s.isCompleted = 1
+             ORDER BY s.weightKg DESC, s.reps DESC, s.id LIMIT 1) AS lastWeightKg,
+            (SELECT s.reps FROM sets s
+             WHERE s.workoutExerciseId = r.workoutExerciseId AND s.isCompleted = 1
+             ORDER BY s.weightKg DESC, s.reps DESC, s.id LIMIT 1) AS lastReps
+        FROM (
+            SELECT we.id AS workoutExerciseId, we.exerciseId AS exerciseId, MAX(w.startedAt) AS lastUsedAt
+            FROM workout_exercises we
+            JOIN workouts w ON w.id = we.workoutId
+            WHERE w.endedAt IS NOT NULL
+            GROUP BY we.exerciseId
+        ) r
+        JOIN exercises e ON e.id = r.exerciseId
+        ORDER BY r.lastUsedAt DESC
+        LIMIT :limit
+        """
+    )
+    fun observeRecentExercises(limit: Int): Flow<List<RecentExerciseRow>>
 
     /**
      * Seeding. IGNORE + the unique index on `name` makes this safe to re-run:
