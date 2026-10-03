@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.domain.model
 
 import java.time.DayOfWeek
+import java.time.LocalDate
 
 /** What the user told the app about themselves (onboarding, editable in Settings). All optional. */
 data class UserSettings(
@@ -12,6 +13,8 @@ data class UserSettings(
     val askAboutUnloggedDays: Boolean = true,
     /** Onboarding was finished or skipped: it isn't shown again. */
     val onboardingDone: Boolean = false,
+    /** The day the check-in was last shown (it's shown at most once a day). */
+    val checkInLastAskedOn: LocalDate? = null,
 ) {
     companion object {
         /** A plausible body weight; anything outside is a typo. */
