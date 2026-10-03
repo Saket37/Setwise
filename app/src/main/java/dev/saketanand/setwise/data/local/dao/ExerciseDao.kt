@@ -99,6 +99,10 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercises WHERE id = :id")
     suspend fun getById(id: Long): ExerciseEntity?
 
+    /** The exercises with these ids, in no particular order (missing ids are skipped). */
+    @Query("SELECT * FROM exercises WHERE id IN (:ids)")
+    suspend fun getByIds(ids: List<Long>): List<ExerciseEntity>
+
     /** Live [getById]: e.g. a custom exercise renamed while its detail screen is open. */
     @Query("SELECT * FROM exercises WHERE id = :id")
     fun observeById(id: Long): Flow<ExerciseEntity?>
