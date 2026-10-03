@@ -30,9 +30,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
@@ -57,11 +59,14 @@ fun SetwiseNumberField(
     imeAction: ImeAction = ImeAction.Next,
     onKeyboardAction: KeyboardActionHandler? = null,
     maxLength: Int = 6,
+    /** numberMedium for set values; larger (e.g. displayLarge) for a single big input. */
+    textStyle: TextStyle = MaterialTheme.typography.numberMedium,
+    minHeight: Dp = 36.dp,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val shape = RoundedCornerShape(10.dp)
-    val textStyle = MaterialTheme.typography.numberMedium.copy(
+    val fieldTextStyle = textStyle.copy(
         color = MaterialTheme.colorScheme.onSurface,
         textAlign = TextAlign.Center,
     )
@@ -69,9 +74,9 @@ fun SetwiseNumberField(
     BasicTextField(
         state = state,
         modifier = modifier
-            .heightIn(min = 36.dp)
+            .heightIn(min = minHeight)
             .semantics { this.contentDescription = contentDescription },
-        textStyle = textStyle,
+        textStyle = fieldTextStyle,
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         lineLimits = TextFieldLineLimits.SingleLine,
         inputTransformation = remember(kind, maxLength) { numberInput(kind, maxLength) },
@@ -85,7 +90,7 @@ fun SetwiseNumberField(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 36.dp)
+                    .heightIn(min = minHeight)
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest, shape)
                     .border(2.dp, if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent, shape),
                 contentAlignment = Alignment.Center,
@@ -93,7 +98,7 @@ fun SetwiseNumberField(
                 if (state.text.isEmpty() && placeholder.isNotEmpty()) {
                     Text(
                         text = placeholder,
-                        style = textStyle,
+                        style = fieldTextStyle,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         maxLines = 1,
                     )

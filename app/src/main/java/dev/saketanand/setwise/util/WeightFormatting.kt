@@ -21,3 +21,6 @@ fun Double.toWeightLabel(locale: Locale = Locale.getDefault()): String =
  * For read-only labels use [toWeightLabel].
  */
 fun Double.toWeightInput(): String = toWeightLabel(Locale.ROOT)
+
+/** "62.5" and "62,5" both mean 62.5 (keyboards in many locales type a comma); empty or "." = none. */
+fun parseWeight(text: String): Double? = text.trim().replace(',', '.').toDoubleOrNull()

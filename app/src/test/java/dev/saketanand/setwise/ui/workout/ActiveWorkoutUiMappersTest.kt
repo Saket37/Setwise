@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.ui.workout
 
+import dev.saketanand.setwise.util.parseWeight
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PersonalBests

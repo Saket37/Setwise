@@ -1,0 +1,47 @@
+package dev.saketanand.setwise.ui.designsystem.components
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.dp
+import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
+import java.time.DayOfWeek
+import java.time.format.TextStyle
+
+/**
+ * Pick days of the week (Mon … Sun), any number: training days in onboarding and Settings.
+ * Chips wrap onto a second line on narrow screens or large text.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun SetwiseDayPicker(
+    selected: Set<DayOfWeek>,
+    onToggle: (DayOfWeek) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val locale = LocalConfiguration.current.locales[0]
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        // The app's week runs Monday to Sunday (util/Weeks.kt).
+        DayOfWeek.entries.forEach { day ->
+            SetwiseFilterChip(
+                label = day.getDisplayName(TextStyle.SHORT, locale),
+                selected = day in selected,
+                onClick = { onToggle(day) },
+            )
+        }
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun SetwiseDayPickerPreview() = SetwisePreview {
+    SetwiseDayPicker(selected = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY), onToggle = {})
+}

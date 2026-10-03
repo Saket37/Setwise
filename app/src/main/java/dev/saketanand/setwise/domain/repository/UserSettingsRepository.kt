@@ -1,0 +1,21 @@
+package dev.saketanand.setwise.domain.repository
+
+import dev.saketanand.setwise.domain.model.UserSettings
+import java.time.DayOfWeek
+import kotlinx.coroutines.flow.Flow
+
+/** The user's settings, stored on the phone. */
+interface UserSettingsRepository {
+
+    /** Emits again whenever a setting changes. */
+    val settings: Flow<UserSettings>
+
+    /** Null clears it. Values outside [UserSettings.BODY_WEIGHT_RANGE_KG] are rejected (false). */
+    suspend fun setBodyWeightKg(kg: Double?): Boolean
+
+    suspend fun setTrainingDays(days: Set<DayOfWeek>)
+
+    suspend fun setAskAboutUnloggedDays(ask: Boolean)
+
+    suspend fun setOnboardingDone()
+}

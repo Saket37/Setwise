@@ -222,6 +222,37 @@
     <string name="save">Save</string>
     <string name="workout_times_invalid">The end has to be after the start.</string>
 
+    <!-- Onboarding (first launch; every step skippable, all editable in Settings) -->
+    <string name="skip_setup">Skip setup</string>
+    <string name="get_started">Get started</string>
+    <string name="continue_action">Continue</string>
+    <string name="finish_setup">Finish</string>
+    <!-- %1$d = current step, %2$d = number of steps -->
+    <string name="a11y_onboarding_step">Step %1$d of %2$d</string>
+    <string name="onboarding_welcome_title">Welcome to Setwise</string>
+    <string name="onboarding_welcome_message">Log sets fast, see last time\'s numbers, and keep your rests on time. Three quick questions to set it up. All optional.</string>
+    <string name="onboarding_days_title">Which days do you usually train?</string>
+    <string name="onboarding_days_message">If one of these days passes without a workout, Setwise can ask what happened. Pick none if it changes week to week.</string>
+    <string name="onboarding_weight_title">What do you weigh?</string>
+    <string name="onboarding_weight_message">Used to estimate the calories you burn. It stays on this phone.</string>
+    <string name="onboarding_weight_invalid">Enter a weight between 20 and 400 kg.</string>
+    <string name="a11y_body_weight_kg">Body weight in kg</string>
+    <string name="onboarding_checkins_title">Ask about days you didn\'t log?</string>
+    <string name="onboarding_checkins_message">When you open the app after a day without a workout, Setwise asks once whether you trained, rested or missed it. Never during a workout, at most once a day.</string>
+    <string name="ask_about_unlogged_days">Ask about days I didn\'t log</string>
+    <string name="settings_change_later">You can change all of this in Settings.</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="settings_profile">Profile · used for calories</string>
+    <string name="settings_training">Training</string>
+    <string name="body_weight">Body weight</string>
+    <!-- %1$s = weight like "72.5" -->
+    <string name="weight_kg">%1$s kg</string>
+    <string name="training_days">Training days</string>
+    <string name="not_set">Not set</string>
+    <string name="every_day">Every day</string>
+    <string name="ask_about_unlogged_days_detail">Once a day at most, never during a workout</string>
     <!-- History -->
     <string name="history">History</string>
     <string name="no_workouts_yet">No workouts yet</string>

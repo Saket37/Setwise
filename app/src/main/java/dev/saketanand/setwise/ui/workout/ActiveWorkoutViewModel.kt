@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.ui.workout
 
+import dev.saketanand.setwise.util.parseWeight
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
