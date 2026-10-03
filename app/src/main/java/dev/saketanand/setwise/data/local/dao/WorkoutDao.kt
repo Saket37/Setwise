@@ -106,7 +106,8 @@ interface WorkoutDao {
 
     /**
      * "Previous" column: for each exercise in this workout, the completed sets of the last
-     * *finished* session of that exercise (never this workout itself), in set order.
+     * *finished* session of that exercise *before* this workout (never this workout itself, nor
+     * a later one when an older workout or a past day is shown), in set order.
      */
     @Query(
         """
@@ -117,6 +118,7 @@ interface WorkoutDao {
             SELECT we.id FROM workout_exercises we
             JOIN workouts w ON w.id = we.workoutId
             WHERE we.exerciseId = cur.exerciseId AND w.endedAt IS NOT NULL AND w.id != cur.workoutId
+              AND w.startedAt < (SELECT startedAt FROM workouts WHERE id = cur.workoutId)
             ORDER BY w.startedAt DESC, we.id DESC
             LIMIT 1
         )
