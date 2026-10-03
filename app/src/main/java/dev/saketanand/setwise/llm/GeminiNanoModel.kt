@@ -29,14 +29,54 @@ import kotlinx.coroutines.flow.flow
  * [OnDeviceModel] on Gemini Nano via the ML Kit GenAI Prompt API (AICore). On phones without
  * AICore every call reports [ModelAvailability.Unavailable] instead of throwing.
  *
- * One client for the app's lifetime (a Koin single), so it isn't closed per screen; it's
- * released with the process. What the phone's Gemini Nano supports (system instructions,
- * structured output) is checked on first use and remembered once AICore answers; callers check
- * [availability] first.
+ * One app-wide object (a Koin single), shared by every feature, so its ML Kit client isn't
+ * closed per screen. Instead the client is created on first use and closed when the app goes
+ * to the background, where AICore won't run inference anyway: right away, or once the calls
+ * (or download) in progress finish ([withClient]). What the phone's Gemini Nano supports
+ * (system instructions, structured output) is checked on first use and remembered once AICore
+ * answers; callers check [availability] first.
  */
 class GeminiNanoModel : OnDeviceModel {
 
-    private val model: GenerativeModel by lazy { Generation.getClient() }
+    private val lock = Any()
+    private var client: GenerativeModel? = null
+
+    /** Calls and downloads using [client] right now. */
+    private var users = 0
+
+    /** Starts as background: a process started for a notification or service holds no client. */
+    private var inBackground = true
+
+    override fun onAppInBackground(inBackground: Boolean) = synchronized(lock) {
+        this.inBackground = inBackground
+        closeIfUnused()
+    }
+
+    /** Runs [block] with the client, created if needed and kept open until [block] ends. */
+    private suspend fun <T> withClient(block: suspend (GenerativeModel) -> T): T {
+        val client = synchronized(lock) {
+            users++
+            client ?: Generation.getClient().also { client = it }
+        }
+        try {
+            return block(client)
+        } finally {
+            synchronized(lock) {
+                users--
+                closeIfUnused()
+            }
+        }
+    }
+
+    /** Frees the ML Kit client while the app is hidden and nothing uses it (call with [lock] held). */
+    private fun closeIfUnused() {
+        if (!inBackground || users > 0) return
+        client?.let {
+            it.close()
+            Log.d(TAG, "Closed the client (app in the background)")
+        }
+        client = null
+    }
 
     /** Download size, from DownloadStarted, for progress. */
     private var totalBytes: Long? = null
@@ -47,7 +87,7 @@ class GeminiNanoModel : OnDeviceModel {
 
     override suspend fun availability(): ModelAvailability =
         runCatching {
-            when (model.checkStatus()) {
+            when (withClient { it.checkStatus() }) {
                 FeatureStatus.AVAILABLE -> ModelAvailability.Ready
                 FeatureStatus.DOWNLOADABLE -> ModelAvailability.Downloadable
                 FeatureStatus.DOWNLOADING -> ModelAvailability.Downloading
@@ -60,7 +100,7 @@ class GeminiNanoModel : OnDeviceModel {
     override fun download(): Flow<ModelDownload> =
         // Inside flow {}: if AICore throws while starting (or getting the client), it reaches
         // catch below instead of escaping to the caller.
-        flow { emitAll(model.download()) }
+        flow { withClient { emitAll(it.download()) } }
             .map { status ->
                 when (status) {
                     is DownloadStatus.DownloadStarted -> {
@@ -79,14 +119,14 @@ class GeminiNanoModel : OnDeviceModel {
             }
 
     override suspend fun generate(request: ModelRequest): String {
-        val response = model.generateContent(request.toMlKit())
+        val response = withClient { it.generateContent(request.toMlKit()) }
         return checkNotNull(response.candidates.firstOrNull()?.text) { "Gemini Nano gave no answer" }
     }
 
     override suspend fun <T : Any> generate(request: ModelRequest, output: ModelOutput<T>): T? {
         if (supportsStructuredOutput()) {
             return try {
-                val typed = model.generateContent(generateTypedContentRequest(request.toMlKit(), output.type))
+                val typed = withClient { it.generateContent(generateTypedContentRequest(request.toMlKit(), output.type)) }
                 typed.candidates.firstOrNull()?.response.also { answer ->
                     if (answer == null) Log.w(TAG, "No structured answer (finish reason ${typed.candidates.firstOrNull()?.finishReason})")
                     else Log.d(TAG, "Structured answer: $answer")
@@ -126,11 +166,11 @@ class GeminiNanoModel : OnDeviceModel {
     }
 
     private suspend fun supportsSystemInstruction(): Boolean =
-        supportsSystemInstruction ?: askOnce("system instructions") { model.isSystemPromptAvailable() }
+        supportsSystemInstruction ?: askOnce("system instructions") { withClient { it.isSystemPromptAvailable() } }
             ?.also { supportsSystemInstruction = it } ?: false
 
     private suspend fun supportsStructuredOutput(): Boolean =
-        supportsStructuredOutput ?: askOnce("structured output") { model.isStructuredOutputFeatureAvailable() }
+        supportsStructuredOutput ?: askOnce("structured output") { withClient { it.isStructuredOutputFeatureAvailable() } }
             ?.also { supportsStructuredOutput = it } ?: false
 
     /** AICore's answer, or null if asking failed: then it's asked again next time, not remembered as "no". */
