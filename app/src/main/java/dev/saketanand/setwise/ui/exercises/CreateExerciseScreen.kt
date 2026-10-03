@@ -44,6 +44,10 @@ import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.toClockLabel
 import kotlin.time.Duration.Companion.seconds
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
+import dev.saketanand.setwise.domain.ai.SuggestionSource
 
 /**
  * Destination: [Route.CreateExercise].
@@ -116,6 +120,24 @@ fun CreateExerciseScreen(
             )
             uiState.match?.let { match ->
                 MatchCard(match = match, isNameTaken = uiState.isNameTaken, onUse = { onAction(CreateExerciseAction.OnUseMatchClick) })
+            }
+            // Right under the name: the fields below are pre-filled from it.
+            uiState.suggestionSource?.let { source ->
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (source == SuggestionSource.Model) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_ai_sparkle),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp),
+                        )
+                    }
+                    Text(
+                        text = stringResource(if (source == SuggestionSource.Model) R.string.suggested_by_model else R.string.suggested_from_name),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
             ChipGroup(stringResource(R.string.logged_as)) {
                 ExerciseKindOption.entries.forEach { kind ->

@@ -25,36 +25,74 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import dev.saketanand.setwise.domain.ai.ExerciseAssistant
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.SuggestionSource
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CreateExerciseViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val repository = FakeExerciseRepository()
+    private val model = FakeOnDeviceModel()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
     @After fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel(name: String = "", handle: SavedStateHandle = SavedStateHandle()) =
-        CreateExerciseViewModel(name, repository, handle).also { vm ->
+        CreateExerciseViewModel(name, repository, ExerciseAssistant(model), handle).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
             advanceUntilIdle()
         }
 
     @Test
-    fun `starts with the picker's search, and needs a muscle group`() = runTest(dispatcher) {
+    fun `starts with the picker's search and its suggested details`() = runTest(dispatcher) {
         val vm = viewModel(name = "zercher squat")
         assertEquals("zercher squat", vm.state.value.name)
-        assertFalse(vm.state.value.canCreate)
-
-        vm.onAction(CreateExerciseAction.OnMuscleGroupClick("Quads"))
-        advanceUntilIdle()
+        // No model here: the keywords suggest Quads, so it can be created as is.
+        assertEquals("Quads", vm.state.value.muscleGroup)
+        assertEquals(SuggestionSource.Keywords, vm.state.value.suggestionSource)
         assertTrue(vm.state.value.canCreate)
 
         vm.onAction(CreateExerciseAction.OnCreateClick)
         advanceUntilIdle()
         assertEquals(CreateExerciseEvent.Done(99), vm.events.first())
         assertEquals(NewExercise("zercher squat", ExerciseType.STRENGTH, false, "Quads", "Barbell", 120), repository.created.single())
+    }
+
+    @Test
+    fun `a name nothing is known about needs a muscle group`() = runTest(dispatcher) {
+        val vm = viewModel(name = "jefferson thing")
+        assertEquals(null, vm.state.value.suggestionSource)
+        assertFalse(vm.state.value.canCreate)
+
+        vm.onAction(CreateExerciseAction.OnMuscleGroupClick("Back"))
+        advanceUntilIdle()
+        assertTrue(vm.state.value.canCreate)
+    }
+
+    @Test
+    fun `suggestions never change a field the user picked`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAction(CreateExerciseAction.OnEquipmentClick("Dumbbell"))
+        vm.onAction(CreateExerciseAction.OnNameChange("cable curl"))
+        advanceUntilIdle()
+
+        assertEquals("Dumbbell", vm.state.value.equipment) // kept
+        assertEquals("Biceps", vm.state.value.muscleGroup) // suggested
+    }
+
+    @Test
+    fun `with the model, its details are suggested`() = runTest(dispatcher) {
+        model.availability = ModelAvailability.Ready
+        model.answer = { """{"muscleGroup": "Shoulders", "logging": "timed hold", "equipment": "Bodyweight"}""" }
+
+        val vm = viewModel(name = "landmine thing") // nothing the keywords know
+
+        assertEquals(ExerciseKindOption.Timed, vm.state.value.kind)
+        assertEquals("Shoulders", vm.state.value.muscleGroup)
+        assertEquals(SuggestionSource.Model, vm.state.value.suggestionSource)
     }
 
     @Test
