@@ -10,7 +10,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.selected
+import dev.saketanand.setwise.ui.designsystem.components.IconTile
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButton
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButtonDefaults
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardOutline
+import dev.saketanand.setwise.util.toShortDayLabel
 import java.time.LocalDate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -110,6 +115,10 @@ fun HistoryScreen(
             if (uiState.days.isNotEmpty()) {
                 DayStrip(days = uiState.days, onDayClick = { onAction(HistoryAction.OnDayClick(it)) })
             }
+            val selected = uiState.selectedDate
+            if (selected != null && uiState.isSelectedDayEmpty) {
+                EmptyDayCard(date = selected, onClear = { onAction(HistoryAction.OnDayClick(selected)) })
+            }
         }
         when {
             uiState.isLoading -> Unit
@@ -130,7 +139,7 @@ private fun WorkoutList(uiState: HistoryUiState, onAction: (HistoryAction) -> Un
     // A day tapped in the strip → its workouts (or the nearest earlier ones) at the top.
     LaunchedEffect(uiState.selectedDate) {
         val date = uiState.selectedDate ?: return@LaunchedEffect
-        val index = listIndexFor(date, uiState.months) ?: (listState.layoutInfo.totalItemsCount - 1).coerceAtLeast(0)
+        val index = listIndexOf(date, uiState.months) ?: return@LaunchedEffect // empty day: card instead
         // One item back: keep the month header (or the row above) in view for context.
         listState.animateScrollToItem((index - 1).coerceAtLeast(0))
     }
@@ -215,6 +224,33 @@ private fun DayChip(day: DayUi, onClick: () -> Unit) {
                 .background(if (day.trained) MaterialTheme.colorScheme.primary else Color.Transparent, CircleShape),
         )
     }
+}
+
+/** "Wed, 23 Sep · No workout logged  ✕": the selected day has nothing to jump to. */
+@Composable
+private fun EmptyDayCard(date: LocalDate, onClear: () -> Unit) {
+    SetwiseListCard(
+        headlineContent = { Text(date.toShortDayLabel(currentLocale())) },
+        supportingContent = { Text(stringResource(R.string.no_workout_logged)) },
+        leadingContent = {
+            IconTile(
+                icon = R.drawable.ic_nav_history,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        trailingContent = {
+            SetwiseIconButton(
+                icon = R.drawable.ic_close,
+                contentDescription = stringResource(R.string.clear_selected_day),
+                onClick = onClear,
+                size = 40.dp,
+                colors = SetwiseIconButtonDefaults.plainColors(MaterialTheme.colorScheme.onSurfaceVariant),
+            )
+        },
+        colors = SetwiseListCardDefaults.raisedColors(),
+        contentPadding = PaddingValues(start = 14.dp, top = 10.dp, end = 6.dp, bottom = 10.dp),
+        modifier = Modifier.padding(horizontal = 20.dp),
+    )
 }
 
 /** 7 chips fill a phone's width (like the design's week); more scroll in. */

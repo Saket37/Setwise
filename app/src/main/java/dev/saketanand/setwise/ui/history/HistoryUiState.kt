@@ -17,6 +17,10 @@ data class HistoryUiState(
     val selectedDate: LocalDate? = null,
 ) {
     val isEmpty: Boolean get() = !isLoading && months.isEmpty()
+
+    /** A day is selected but nothing was logged on it: shown as a card, the list doesn't move. */
+    val isSelectedDayEmpty: Boolean
+        get() = selectedDate != null && months.none { month -> month.workouts.any { it.date == selectedDate } }
 }
 
 /** One chip of the day strip: "S 3 •" (dot = trained that day). */

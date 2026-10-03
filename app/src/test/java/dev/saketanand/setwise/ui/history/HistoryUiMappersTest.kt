@@ -39,14 +39,21 @@ class HistoryUiMappersTest {
     }
 
     @Test
-    fun `jumping to a day finds its workout, or the nearest earlier one`() {
+    fun `jumping to a day finds its workout, a day without one doesn't move the list`() {
         // Items: [Oct header, W1 (2 Oct), Sep header, W2 (30 Sep), W3 (24 Sep)]
         val months = historyUi(listOf(workout(1, 2026, 10, 2), workout(2, 2026, 9, 30), workout(3, 2026, 9, 24)), today, zone).months
 
-        assertEquals(1, listIndexFor(LocalDate.of(2026, 10, 2), months))
-        assertEquals(3, listIndexFor(LocalDate.of(2026, 9, 30), months))
-        assertEquals("rest day → the nearest earlier workout", 4, listIndexFor(LocalDate.of(2026, 9, 27), months))
-        assertEquals("before the first workout → nothing", null, listIndexFor(LocalDate.of(2026, 9, 1), months))
+        assertEquals(1, listIndexOf(LocalDate.of(2026, 10, 2), months))
+        assertEquals(4, listIndexOf(LocalDate.of(2026, 9, 24), months))
+        assertEquals(null, listIndexOf(LocalDate.of(2026, 9, 27), months))
+    }
+
+    @Test
+    fun `selecting a day without workouts is flagged for the card`() {
+        val history = listOf(workout(1, 2026, 9, 30))
+        assertTrue(historyUi(history, today, zone, selectedDate = LocalDate.of(2026, 9, 29)).isSelectedDayEmpty)
+        assertEquals(false, historyUi(history, today, zone, selectedDate = LocalDate.of(2026, 9, 30)).isSelectedDayEmpty)
+        assertEquals(false, historyUi(history, today, zone).isSelectedDayEmpty)
     }
 
     @Test

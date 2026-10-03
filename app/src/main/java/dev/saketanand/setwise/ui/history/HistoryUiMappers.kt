@@ -32,15 +32,15 @@ fun historyUi(
 }
 
 /**
- * Where the list should jump for [date]: the index (month headers included) of its first workout,
- * or, on a rest day, of the nearest earlier workout. Null if there's none on or before [date].
+ * Where the list should jump for [date]: the index (month headers included) of its first workout.
+ * Null for a day without workouts: the list stays put and a card explains instead.
  */
-fun listIndexFor(date: LocalDate, months: List<HistoryMonthUi>): Int? {
+fun listIndexOf(date: LocalDate, months: List<HistoryMonthUi>): Int? {
     var index = 0
     months.forEach { month ->
         index++ // the month header
         month.workouts.forEach { workout ->
-            if (!workout.date.isAfter(date)) return index
+            if (workout.date == date) return index
             index++
         }
     }
