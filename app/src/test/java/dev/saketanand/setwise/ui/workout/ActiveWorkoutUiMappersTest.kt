@@ -2,6 +2,7 @@ package dev.saketanand.setwise.ui.workout
 
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.PersonalBests
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSet
@@ -40,6 +41,17 @@ class ActiveWorkoutUiMappersTest {
         assertEquals("65" to "6", third.weightHint to third.repsHint)
         assertNull(third.previous)
         assertEquals("60 × 8 · 62.5 × 7", ui.lastTime)
+    }
+
+    @Test
+    fun `a ticked-off set that beats the earlier best gets the trophy right away`() {
+        val bests = PersonalBests.from(listOf(PreviousSet(60.0, 8)))
+        val sets = listOf(set(1, 60.0, 8).copy(isCompleted = true), set(2, 62.5, 6).copy(isCompleted = true), set(3, 65.0, 5))
+
+        val rows = SessionExercise(1, exercise(ExerciseType.STRENGTH), sets, emptyList(), bestsBefore = bests).toUi().sets
+
+        // Set 3 is heavier but not ticked off yet.
+        assertEquals(listOf(false, true, false), rows.map { it.isPr })
     }
 
     @Test
