@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.testing
 
+import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
@@ -19,6 +20,7 @@ open class StubWorkoutRepository : WorkoutRepository {
     override fun observeLastFinishedWorkout(): Flow<FinishedWorkout?> = flowOf(null)
     override fun observeActiveWorkout(): Flow<ActiveWorkout?> = flowOf(null)
     override fun observeHistory(): Flow<List<WorkoutHistoryItem>> = flowOf(emptyList())
+    override fun observeExerciseSessions(exerciseId: Long): Flow<List<ExerciseSession>> = flowOf(emptyList())
     override fun observeStats(from: Instant, to: Instant): Flow<WorkoutStats> =
         flowOf(WorkoutStats(workouts = 0, timeTrained = Duration.ZERO, prs = 0))
     override suspend fun startWorkout(templateId: Long?, startedAt: Instant, discardRunningWorkoutId: Long?): Long = 0

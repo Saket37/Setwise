@@ -53,7 +53,14 @@ val viewModelModule = module {
 
     viewModelOf(::ExercisePickerViewModel)
     viewModelOf(::CreateExerciseViewModel)
-    viewModelOf(::ExerciseDetailViewModel)
+    viewModel { params ->
+        ExerciseDetailViewModel(
+            exerciseId = params.get(),
+            exerciseRepository = get(),
+            workoutRepository = get(),
+            dateProvider = get(),
+        )
+    }
 
     viewModelOf(::TemplateEditorViewModel)
     viewModelOf(::TemplateFromGoalViewModel)

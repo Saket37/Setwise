@@ -75,8 +75,8 @@ class WorkoutSummaryViewModel(
             WorkoutSummaryAction.OnSaveTimes -> saveTimes()
             WorkoutSummaryAction.OnEditTimesDismiss -> overlays.update { it.copy(editTimes = null) }
 
-            // Navigation: WorkoutSummaryScreenRoot handles it.
-            WorkoutSummaryAction.OnDoneClick -> Unit
+            // Navigation: WorkoutSummaryScreenRoot handles these.
+            WorkoutSummaryAction.OnDoneClick, is WorkoutSummaryAction.OnExerciseClick -> Unit
         }
     }
 

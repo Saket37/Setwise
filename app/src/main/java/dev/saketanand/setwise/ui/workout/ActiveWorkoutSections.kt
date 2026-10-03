@@ -176,6 +176,10 @@ private fun ExerciseCardHeader(exercise: WorkoutExerciseUi, onAction: (ActiveWor
             contentDescription = stringResource(R.string.exercise_options),
             items = listOf(
                 SetwiseMenuItem(
+                    label = stringResource(R.string.exercise_history_and_progress),
+                    onClick = { onAction(ActiveWorkoutAction.OnExerciseHistoryClick(exercise.exerciseId)) },
+                ),
+                SetwiseMenuItem(
                     label = stringResource(R.string.remove_exercise),
                     onClick = { onAction(ActiveWorkoutAction.OnRemoveExerciseClick(exercise.id)) },
                     isDestructive = true,

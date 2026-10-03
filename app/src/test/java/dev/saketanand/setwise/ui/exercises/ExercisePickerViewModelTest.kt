@@ -164,6 +164,7 @@ class ExercisePickerViewModelTest {
                 exercise(3, "Pull-up", "Back"),
             )
         )
+        override fun observeExercise(id: Long): Flow<Exercise?> = library.map { list -> list.firstOrNull { it.id == id } }
         val searches = mutableListOf<String>()
 
         override fun observeExercises(query: String, muscleGroup: String?): Flow<List<Exercise>> {

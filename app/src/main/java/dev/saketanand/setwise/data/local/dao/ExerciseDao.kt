@@ -99,6 +99,10 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercises WHERE id = :id")
     suspend fun getById(id: Long): ExerciseEntity?
 
+    /** Live [getById]: e.g. a custom exercise renamed while its detail screen is open. */
+    @Query("SELECT * FROM exercises WHERE id = :id")
+    fun observeById(id: Long): Flow<ExerciseEntity?>
+
     /**
      * Custom exercise created by the user. Returns the new row id.
      * Uses the default ABORT strategy on purpose: a duplicate name throws

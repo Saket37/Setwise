@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.domain.repository
 
+import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
@@ -16,6 +17,9 @@ interface WorkoutRepository {
 
     /** Finished workouts, newest first (History tab). */
     fun observeHistory(): Flow<List<WorkoutHistoryItem>>
+
+    /** Finished sessions of one exercise, newest first (only those with a completed set). */
+    fun observeExerciseSessions(exerciseId: Long): Flow<List<ExerciseSession>>
 
     /** Finished workouts that started in [from, to). */
     fun observeStats(from: Instant, to: Instant): Flow<WorkoutStats>

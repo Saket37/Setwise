@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.ui.summary
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -149,9 +150,9 @@ private fun PrKind.labelRes(): Int = when (this) {
     PrKind.Duration -> R.string.pr_kind_duration
 }
 
-/** "Exercises", then "Bench Press (Barbell)   4 sets · best 62.5 × 8" per row. */
+/** "Exercises", then "Bench Press (Barbell)   4 sets · best 62.5 × 8" per row; a row opens its detail. */
 @Composable
-fun ExercisesSection(exercises: List<SummaryExerciseUi>, modifier: Modifier = Modifier) {
+fun ExercisesSection(exercises: List<SummaryExerciseUi>, onExerciseClick: (exerciseId: Long) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Text(
             text = stringResource(R.string.exercises),
@@ -165,7 +166,8 @@ fun ExercisesSection(exercises: List<SummaryExerciseUi>, modifier: Modifier = Mo
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 6.dp),
+                    .clickable { onExerciseClick(exercise.exerciseId) }
+                    .padding(vertical = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(

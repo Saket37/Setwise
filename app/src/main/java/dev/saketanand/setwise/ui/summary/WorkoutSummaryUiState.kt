@@ -44,7 +44,10 @@ data class RecordUi(
 /** "Bench Press (Barbell) · 4 sets · best 62.5 × 8". */
 @Immutable
 data class SummaryExerciseUi(
+    /** The workout-exercise row id. */
     val id: Long,
+    /** For opening Exercise detail. */
+    val exerciseId: Long,
     val name: String,
     val setCount: Int,
     /** "62.5 × 8", "12", "90s"; null for cardio (logged on its own screen). */

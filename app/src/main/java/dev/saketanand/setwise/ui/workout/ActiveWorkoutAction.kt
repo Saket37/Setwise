@@ -30,6 +30,9 @@ sealed interface ActiveWorkoutAction {
 
     data class OnRemoveExerciseClick(val workoutExerciseId: Long) : ActiveWorkoutAction
 
+    /** "History & progress" in an exercise's ⋮ menu: Exercise detail. → nav */
+    data class OnExerciseHistoryClick(val exerciseId: Long) : ActiveWorkoutAction
+
     // Sets
 
     data class OnAddSetClick(val workoutExerciseId: Long) : ActiveWorkoutAction

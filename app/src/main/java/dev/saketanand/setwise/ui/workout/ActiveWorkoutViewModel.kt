@@ -163,7 +163,8 @@ class ActiveWorkoutViewModel(
             // Navigation: ActiveWorkoutScreenRoot handles these.
             ActiveWorkoutAction.OnMinimizeClick,
             ActiveWorkoutAction.OnAddExerciseClick,
-            is ActiveWorkoutAction.OnLogCardioClick -> Unit
+            is ActiveWorkoutAction.OnLogCardioClick,
+            is ActiveWorkoutAction.OnExerciseHistoryClick -> Unit
         }
     }
 

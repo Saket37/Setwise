@@ -12,6 +12,9 @@ class ExerciseRepositoryImpl(
     private val exerciseDao: ExerciseDao,
 ) : ExerciseRepository {
 
+    override fun observeExercise(id: Long): Flow<Exercise?> =
+        exerciseDao.observeById(id).map { it?.toDomain() }
+
     override fun observeExercises(query: String, muscleGroup: String?): Flow<List<Exercise>> =
         exerciseDao.observeExercises(query.trim(), muscleGroup)
             // Outer map: Flow operator (each emission). Inner map: List (each row).

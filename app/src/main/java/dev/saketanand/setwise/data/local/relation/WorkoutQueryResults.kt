@@ -58,3 +58,13 @@ data class WorkoutHistoryRow(
     val distanceKm: Double,
     val personalRecords: Int,
 )
+
+/** A completed set of one exercise in a finished workout (Exercise detail: progress, sessions). */
+data class ExerciseLogRow(
+    val workoutId: Long,
+    val startedAt: Long,
+    val weightKg: Double?,
+    val reps: Int?,
+    val durationSec: Int?,
+    val distanceKm: Double?,
+)

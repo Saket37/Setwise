@@ -9,6 +9,7 @@ import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
 import dev.saketanand.setwise.data.local.relation.ActiveWorkoutRow
 import dev.saketanand.setwise.data.local.relation.ExerciseHistorySetRow
+import dev.saketanand.setwise.data.local.relation.ExerciseLogRow
 import dev.saketanand.setwise.data.local.relation.PreviousSetRow
 import dev.saketanand.setwise.data.local.relation.WorkoutHistoryRow
 import dev.saketanand.setwise.data.local.relation.WorkoutStatsRow
@@ -138,6 +139,23 @@ interface WorkoutDao {
         """
     )
     fun observeHistorySets(workoutId: Long): Flow<List<ExerciseHistorySetRow>>
+
+    /**
+     * Every completed set of [exerciseId] in finished workouts: newest workout first, then in the
+     * order done (exercise position, set number).
+     */
+    @Query(
+        """
+        SELECT w.id AS workoutId, w.startedAt AS startedAt, s.weightKg AS weightKg, s.reps AS reps,
+               s.durationSec AS durationSec, s.distanceKm AS distanceKm
+        FROM sets s
+        JOIN workout_exercises we ON we.id = s.workoutExerciseId
+        JOIN workouts w ON w.id = we.workoutId
+        WHERE we.exerciseId = :exerciseId AND s.isCompleted = 1 AND w.endedAt IS NOT NULL
+        ORDER BY w.startedAt DESC, w.id DESC, we.position, s.setNumber
+        """
+    )
+    fun observeExerciseLog(exerciseId: Long): Flow<List<ExerciseLogRow>>
 
     /** One-off read of [observeHistorySets], e.g. while finishing a workout. */
     @Query(

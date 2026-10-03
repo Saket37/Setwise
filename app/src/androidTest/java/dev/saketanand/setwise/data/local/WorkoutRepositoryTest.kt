@@ -198,6 +198,21 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun exerciseSessionsListFinishedWorkoutsNewestFirstWithSetsInOrder() = runTest {
+        finishedWorkout(startedAt = 1_000, bench to listOf(60.0 to 8, 62.5 to 6))
+        finishedWorkout(startedAt = 5_000, squat to listOf(100.0 to 5), bench to listOf(65.0 to 5))
+        finishedWorkout(startedAt = 7_000, squat to listOf(105.0 to 5)) // no bench: not listed
+        val running = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(9_000))
+        repository.addExercises(running, listOf(bench)) // running: not listed
+
+        val sessions = repository.observeExerciseSessions(bench).first()
+
+        assertEquals(listOf(5_000L, 1_000L), sessions.map { it.startedAt.toEpochMilli() })
+        assertEquals(listOf(65.0), sessions[0].sets.map { it.weightKg })
+        assertEquals(listOf(8, 6), sessions[1].sets.map { it.reps })
+    }
+
+    @Test
     fun startTimeCanOnlyChangeWhileRunning() = runTest {
         val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(1_000))
         repository.updateStartTime(current, Instant.ofEpochMilli(500))

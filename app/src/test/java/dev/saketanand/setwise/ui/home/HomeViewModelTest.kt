@@ -257,5 +257,6 @@ class HomeViewModelTest {
         override fun observeMuscleGroups(): Flow<List<String>> = flowOf(emptyList())
         override fun observeRecentExercises(limit: Int): Flow<List<RecentExercise>> = flowOf(emptyList())
         override fun observeExerciseCount(): Flow<Int> = flowOf(128)
+        override fun observeExercise(id: Long): Flow<Exercise?> = flowOf(null)
     }
 }
