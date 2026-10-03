@@ -22,8 +22,12 @@ data class WorkoutSummaryUiState(
     val volumeKg: Double = 0.0,
     val completedSets: Int = 0,
     val exerciseCount: Int = 0,
-    /** Estimated by a later milestone; until then the 4th tile shows the exercise count. */
+    /** Estimated once a body weight is known (CalorieSync); null until then. */
     val caloriesKcal: Int? = null,
+    /** No estimate because no body weight is set: the calories tile asks for it. */
+    val needsBodyWeight: Boolean = false,
+    /** The body weight dialog from that tile; null when closed. */
+    val bodyWeightDialog: BodyWeightDialogUi? = null,
     val records: List<RecordUi> = emptyList(),
     val exercises: List<SummaryExerciseUi> = emptyList(),
     /** False for workouts started from a template (saving would just duplicate it). */
@@ -73,3 +77,6 @@ data class EditTimesUi(
 )
 
 enum class TimeField { Start, End }
+
+@Immutable
+data class BodyWeightDialogUi(val isInvalid: Boolean = false)

@@ -44,10 +44,14 @@ import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toShortTimeLabel
 import java.text.NumberFormat
 import kotlin.math.roundToLong
+import androidx.compose.ui.draw.clip
 
-/** 2 × 2 tiles: Duration, Volume, Sets, Calories (once estimated) or Exercises. */
+/**
+ * 2 × 2 tiles: Duration, Volume, Sets, and Calories: the estimate, "Add your weight" (tap)
+ * when there's no body weight, else the exercise count.
+ */
 @Composable
-fun SummaryStats(uiState: WorkoutSummaryUiState, modifier: Modifier = Modifier) {
+fun SummaryStats(uiState: WorkoutSummaryUiState, onAddBodyWeight: () -> Unit, modifier: Modifier = Modifier) {
     val tile = Modifier.fillMaxHeight()
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // IntrinsicSize.Min + fillMaxHeight: both tiles in a row get the taller one's height.
@@ -68,6 +72,18 @@ fun SummaryStats(uiState: WorkoutSummaryUiState, modifier: Modifier = Modifier) 
                     value = uiState.caloriesKcal.toString(),
                     unit = stringResource(R.string.unit_kcal),
                     modifier = tile.weight(1f),
+                )
+            } else if (uiState.needsBodyWeight) {
+                StatTile(
+                    value = stringResource(R.string.add_your_weight),
+                    label = stringResource(R.string.stat_calories),
+                    labelFirst = true,
+                    valueStyle = MaterialTheme.typography.titleMedium,
+                    valueColor = MaterialTheme.colorScheme.primary,
+                    modifier = tile
+                        .weight(1f)
+                        .clip(MaterialTheme.shapes.large)
+                        .clickable(onClickLabel = stringResource(R.string.add_your_weight), onClick = onAddBodyWeight),
                 )
             } else {
                 SummaryTile(stringResource(R.string.stat_exercises), uiState.exerciseCount.toString(), modifier = tile.weight(1f))

@@ -309,6 +309,8 @@
     <string name="recent_sessions">Recent sessions</string>
     <string name="exercise_history_and_progress">History &amp; progress</string>
     <string name="rename_workout">Rename workout</string>
+    <string name="add_your_weight">Add your weight</string>
+    <string name="body_weight_for_calories">Used to estimate the calories you burn. It stays on this phone, and you can change it in Settings.</string>
     <string name="workout_options">Workout options</string>
     <string name="delete_workout">Delete workout</string>
     <string name="delete_workout_title">Delete %1$s?</string>

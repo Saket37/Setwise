@@ -51,6 +51,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseConfirmDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseMenuItem
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseOverflowMenu
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseBodyWeightDialog
 
 /**
  * Destination: [Route.WorkoutSummary].
@@ -118,7 +119,7 @@ fun WorkoutSummaryScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 SummaryHeader(uiState = uiState, onAction = onAction)
-                SummaryStats(uiState = uiState)
+                SummaryStats(uiState = uiState, onAddBodyWeight = { onAction(WorkoutSummaryAction.OnAddBodyWeightClick) })
                 if (uiState.records.isNotEmpty()) PersonalRecordsSection(records = uiState.records)
                 if (uiState.exercises.isNotEmpty()) {
                     ExercisesSection(
@@ -129,6 +130,16 @@ fun WorkoutSummaryScreen(
             }
             SummaryButtons(uiState = uiState, onAction = onAction)
         }
+    }
+
+    uiState.bodyWeightDialog?.let { dialog ->
+        SetwiseBodyWeightDialog(
+            current = null,
+            isInvalid = dialog.isInvalid,
+            message = stringResource(R.string.body_weight_for_calories),
+            onSave = { onAction(WorkoutSummaryAction.OnSaveBodyWeight(it)) },
+            onDismiss = { onAction(WorkoutSummaryAction.OnBodyWeightDismiss) },
+        )
     }
 
     if (uiState.isConfirmingDelete) {

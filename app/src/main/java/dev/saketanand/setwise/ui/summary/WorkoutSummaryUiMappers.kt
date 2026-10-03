@@ -32,6 +32,7 @@ fun WorkoutSession.toSummaryUi(zone: ZoneId): WorkoutSummaryUiState {
         // Cardio is one entry, not sets.
         completedSets = done.filter { (exercise, _) -> exercise.exercise.type != ExerciseType.CARDIO }.sumOf { (_, sets) -> sets.size },
         exerciseCount = done.size,
+        caloriesKcal = calories,
         records = exercises.mapNotNull { exercise ->
             exercise.personalRecord?.let { record ->
                 RecordUi(

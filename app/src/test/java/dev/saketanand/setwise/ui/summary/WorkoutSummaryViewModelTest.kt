@@ -33,6 +33,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WorkoutSummaryViewModelTest {
@@ -44,7 +45,9 @@ class WorkoutSummaryViewModelTest {
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
     @After fun tearDown() = Dispatchers.resetMain()
 
-    private fun TestScope.viewModel() = WorkoutSummaryViewModel(WORKOUT_ID, workouts, templates, FixedDateProvider).also { vm ->
+    private val settings = FakeUserSettingsRepository()
+
+    private fun TestScope.viewModel() = WorkoutSummaryViewModel(WORKOUT_ID, workouts, templates, settings, FixedDateProvider).also { vm ->
         backgroundScope.launch { vm.state.collect {} }
     }
 
@@ -57,6 +60,21 @@ class WorkoutSummaryViewModelTest {
         vm.onAction(WorkoutSummaryAction.OnConfirmDelete)
 
         assertEquals(WorkoutSummaryEvent.Closed, vm.events.first())
+    }
+
+    @Test
+    fun `without a body weight the calories tile asks for it, and saving it goes to settings`() = runTest(dispatcher) {
+        val vm = viewModel()
+        assertEquals(true, vm.state.value.needsBodyWeight)
+
+        vm.onAction(WorkoutSummaryAction.OnAddBodyWeightClick)
+        vm.onAction(WorkoutSummaryAction.OnSaveBodyWeight("abc"))
+        assertEquals(true, vm.state.value.bodyWeightDialog?.isInvalid)
+
+        vm.onAction(WorkoutSummaryAction.OnSaveBodyWeight("72,5"))
+        assertEquals(null, vm.state.value.bodyWeightDialog)
+        assertEquals(72.5, settings.settings.value.bodyWeightKg)
+        assertEquals(false, vm.state.value.needsBodyWeight)
     }
 
     @Test
