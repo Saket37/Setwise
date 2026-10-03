@@ -95,6 +95,7 @@ fun WorkoutWithExercises.toSession(
         endedAt = workout.endedAt?.let(Instant::ofEpochMilli),
         calories = workout.calories,
         intensity = Intensity.fromStored(workout.intensity),
+        insight = workout.summary,
         exercises = items
             .sortedWith(compareBy({ it.item.position }, { it.item.id }))
             .map { row ->

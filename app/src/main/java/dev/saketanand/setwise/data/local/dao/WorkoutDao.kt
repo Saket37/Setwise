@@ -106,7 +106,8 @@ interface WorkoutDao {
 
     /**
      * "Previous" column: for each exercise in this workout, the completed sets of the last
-     * *finished* session of that exercise (never this workout itself), in set order.
+     * *finished* session of that exercise *before* this workout (never this workout itself, nor
+     * a later one when an older workout or a past day is shown), in set order.
      */
     @Query(
         """
@@ -117,6 +118,7 @@ interface WorkoutDao {
             SELECT we.id FROM workout_exercises we
             JOIN workouts w ON w.id = we.workoutId
             WHERE we.exerciseId = cur.exerciseId AND w.endedAt IS NOT NULL AND w.id != cur.workoutId
+              AND w.startedAt < (SELECT startedAt FROM workouts WHERE id = cur.workoutId)
             ORDER BY w.startedAt DESC, we.id DESC
             LIMIT 1
         )
@@ -320,14 +322,16 @@ interface WorkoutDao {
 
     /**
      * Corrects the times of a finished workout (Summary → edit times). A formula calorie
-     * estimate depends on them, so it's cleared to be worked out again (CalorieSync).
+     * estimate depends on them, so it's cleared to be worked out again (CalorieSync); so is the
+     * written insight (it mentions length and rests).
      */
     @Query(
         """
         UPDATE workouts SET startedAt = :startedAt, endedAt = :endedAt,
             calories = CASE WHEN caloriesSource = 'formula' THEN NULL ELSE calories END,
             intensity = CASE WHEN caloriesSource = 'formula' THEN NULL ELSE intensity END,
-            caloriesSource = CASE WHEN caloriesSource = 'formula' THEN NULL ELSE caloriesSource END
+            caloriesSource = CASE WHEN caloriesSource = 'formula' THEN NULL ELSE caloriesSource END,
+            summary = NULL
         WHERE id = :workoutId AND endedAt IS NOT NULL
         """
     )
@@ -336,6 +340,9 @@ interface WorkoutDao {
     /** Finished workouts with no calorie estimate yet, newest first. */
     @Query("SELECT id FROM workouts WHERE endedAt IS NOT NULL AND calories IS NULL ORDER BY startedAt DESC")
     fun observeWorkoutsWithoutCalories(): Flow<List<Long>>
+
+    @Query("UPDATE workouts SET summary = :insight WHERE id = :workoutId")
+    suspend fun setInsight(workoutId: Long, insight: String)
 
     @Query("UPDATE workouts SET calories = :calories, intensity = :intensity, caloriesSource = :source WHERE id = :workoutId")
     suspend fun setCalories(workoutId: Long, calories: Int, intensity: String, source: String)

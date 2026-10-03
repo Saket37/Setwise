@@ -42,6 +42,7 @@ import dev.saketanand.setwise.domain.CalorieSync
 import dev.saketanand.setwise.domain.ai.OnDeviceModel
 import dev.saketanand.setwise.llm.GeminiNanoModel
 import dev.saketanand.setwise.domain.ai.CalorieEstimator
+import dev.saketanand.setwise.domain.ai.WorkoutInsightWriter
 import dev.saketanand.setwise.domain.ai.ModelDownloader
 import dev.saketanand.setwise.domain.ai.AiCheck
 import org.koin.core.module.dsl.factoryOf
@@ -61,6 +62,7 @@ val appModule = module {
     // On-device model (Gemini Nano). Features take OnDeviceModel, so tests use a fake.
     single<OnDeviceModel> { GeminiNanoModel() }
     singleOf(::CalorieEstimator)
+    singleOf(::WorkoutInsightWriter)
     single { ModelDownloader(get(), get(ApplicationScope)) }
     factoryOf(::AiCheck) // debug launch extra only (MainActivity)
     singleOf(::CalorieSync)

@@ -23,6 +23,6 @@ data class WorkoutEntity(
     val caloriesSource: String? = null,
     /** "light", "moderate" or "vigorous" (from the LLM or the heuristic). */
     val intensity: String? = null,
-    /** LLM-written workout summary. */
+    /** The on-device model's insight on the summary screen; null until written (or after a time edit). */
     val summary: String? = null,
 )

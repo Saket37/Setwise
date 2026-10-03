@@ -4,6 +4,7 @@ import android.util.Log
 import dev.saketanand.setwise.domain.model.CalorieEstimate
 import dev.saketanand.setwise.domain.model.CalorieFormula
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.WorkoutFacts
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import java.time.Duration
 import java.util.Locale
@@ -176,18 +177,9 @@ class CalorieEstimator(private val model: OnDeviceModel) {
 
         /** "Rest between sets: median 1:30 (8 rests)" from when sets were ticked off. */
         private fun restSummary(session: WorkoutSession): String? {
-            val times = session.exercises
-                .filter { it.exercise.type != ExerciseType.CARDIO }
-                .flatMap { exercise -> exercise.sets.mapNotNull { if (it.isCompleted) it.completedAt else null } }
-                .sorted()
-            val rests = times.zipWithNext { a, b -> Duration.between(a, b).seconds }.filter { it in 1..MAX_REST_SEC }
-            if (rests.isEmpty()) return null
-            val median = rests.sorted()[rests.size / 2]
-            return "Rest between sets: median %d:%02d (%d rests)".format(Locale.ROOT, median / 60, median % 60, rests.size)
+            val median = WorkoutFacts.medianRestSec(session) ?: return null
+            return "Rest between sets: median %d:%02d (%d rests)".format(Locale.ROOT, median / 60, median % 60, WorkoutFacts.restCount(session))
         }
-
-        /** Gaps longer than this are breaks (or a past day logged afterwards), not rests. */
-        private const val MAX_REST_SEC = 15 * 60L
 
         private fun Double.format(): String =
             if (this % 1.0 == 0.0) toLong().toString() else "%.1f".format(Locale.ROOT, this)

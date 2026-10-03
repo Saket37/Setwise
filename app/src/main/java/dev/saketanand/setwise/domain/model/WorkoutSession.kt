@@ -16,6 +16,8 @@ data class WorkoutSession(
     /** Estimated once finished (and a body weight is known); null until then. */
     val calories: Int? = null,
     val intensity: Intensity? = null,
+    /** The on-device model's insight (summary screen); null until written. */
+    val insight: String? = null,
 )
 
 /** One exercise in a workout, with its sets and what was done last time. */

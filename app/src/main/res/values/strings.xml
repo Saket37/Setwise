@@ -309,6 +309,21 @@
     <string name="recent_sessions">Recent sessions</string>
     <string name="exercise_history_and_progress">History &amp; progress</string>
     <string name="rename_workout">Rename workout</string>
+    <!-- Summary insight card -->
+    <string name="insight_by_model">On-device insight · Gemini Nano</string>
+    <string name="insight_highlights">Highlights</string>
+    <string name="insight_weight_up">%1$s up %2$s kg on last time, to %3$s.</string>
+    <string name="insight_reps_up">%1$s up %2$d reps on last time, to %3$s.</string>
+    <string name="insight_seconds_up">%1$s held %2$d s longer than last time.</string>
+    <string name="insight_matched">Matched last time on %1$s.</string>
+    <string name="insight_volume_up">Volume was %1$d%% higher than your last %2$s.</string>
+    <string name="insight_volume_down">Volume was %1$d%% lower than your last %2$s.</string>
+    <string name="insight_volume_same">About the same volume as your last %1$s.</string>
+    <string name="insight_intensity_rest">A %1$s session, with about %2$s rest between sets.</string>
+    <string name="insight_intensity">A %1$s session.</string>
+    <string name="intensity_light">light</string>
+    <string name="intensity_moderate">moderate</string>
+    <string name="intensity_vigorous">vigorous</string>
     <string name="add_your_weight">Add your weight</string>
     <string name="body_weight_for_calories">Used to estimate the calories you burn. It stays on this phone, and you can change it in Settings.</string>
     <string name="workout_options">Workout options</string>

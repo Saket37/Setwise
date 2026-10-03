@@ -104,6 +104,9 @@ interface WorkoutRepository {
 
     suspend fun setCalories(workoutId: Long, estimate: CalorieEstimate, source: String)
 
+    /** Saves the on-device model's insight for the summary screen. */
+    suspend fun setInsight(workoutId: Long, insight: String)
+
     /** Renames a workout (running or finished); a blank name is ignored. */
     suspend fun renameWorkout(workoutId: Long, name: String)
 

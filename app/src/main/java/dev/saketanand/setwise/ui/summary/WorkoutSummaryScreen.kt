@@ -120,6 +120,7 @@ fun WorkoutSummaryScreen(
             ) {
                 SummaryHeader(uiState = uiState, onAction = onAction)
                 SummaryStats(uiState = uiState, onAddBodyWeight = { onAction(WorkoutSummaryAction.OnAddBodyWeightClick) })
+                uiState.insight?.let { InsightCard(it) }
                 if (uiState.records.isNotEmpty()) PersonalRecordsSection(records = uiState.records)
                 if (uiState.exercises.isNotEmpty()) {
                     ExercisesSection(

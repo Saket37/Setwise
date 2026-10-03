@@ -23,6 +23,8 @@ import kotlinx.coroutines.launch
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.util.parseWeight
 import kotlinx.coroutines.flow.map
+import dev.saketanand.setwise.domain.ai.WorkoutInsightWriter
+import dev.saketanand.setwise.domain.model.WorkoutFacts
 
 /**
  * Screen: [WorkoutSummaryScreenRoot]. Shown after Finish and when opening a workout from History.
@@ -34,8 +36,12 @@ class WorkoutSummaryViewModel(
     private val workoutRepository: WorkoutRepository,
     private val templateRepository: TemplateRepository,
     private val userSettingsRepository: UserSettingsRepository,
+    private val insightWriter: WorkoutInsightWriter,
     private val dateProvider: DateProvider,
 ) : ViewModel() {
+
+    /** The model is asked once per screen; its text is saved, so reopening shows it straight away. */
+    private var insightRequested = false
 
     /** Screen-only state on top of the workout: the edit-times dialog, the saved template. */
     private val overlays = MutableStateFlow(Overlays())
@@ -51,9 +57,13 @@ class WorkoutSummaryViewModel(
         },
         overlays,
         userSettingsRepository.settings.map { it.bodyWeightKg },
-    ) { session, overlays, bodyWeightKg ->
+        workoutRepository.observeHistory(),
+    ) { session, overlays, bodyWeightKg, history ->
         if (session == null || session.endedAt == null) return@combine WorkoutSummaryUiState(isLoading = false)
+        val facts = WorkoutFacts.of(session, history)
+        if (session.insight == null) requestInsight(facts)
         session.toSummaryUi(dateProvider.zone).copy(
+            insight = InsightUi(facts, session.insight).takeIf { session.insight != null || facts.hasSomethingToSay },
             needsBodyWeight = bodyWeightKg == null && session.calories == null,
             bodyWeightDialog = overlays.bodyWeightDialog,
             isTemplateSaved = overlays.isTemplateSaved,
@@ -147,6 +157,8 @@ class WorkoutSummaryViewModel(
             return
         }
         overlays.update { it.copy(editTimes = null) }
+        // New times clear the saved insight (it mentions length and rests): ask the model again.
+        insightRequested = false
         viewModelScope.launch {
             val (startedAt, endedAt) = times
             val saved = runCatching { workoutRepository.updateFinishedTimes(workoutId, startedAt, endedAt) }
@@ -168,6 +180,19 @@ class WorkoutSummaryViewModel(
                 .onFailure { e -> Log.e(TAG, "Saving the body weight failed", e) }
                 .getOrDefault(false)
             overlays.update { it.copy(bodyWeightDialog = if (saved) null else BodyWeightDialogUi(isInvalid = true)) }
+        }
+    }
+
+    /** Has the model write the insight (if it's there), and saves it: the session then re-emits with it. */
+    private fun requestInsight(facts: WorkoutFacts) {
+        if (insightRequested) return
+        insightRequested = true
+        viewModelScope.launch {
+            val text = runCatching { insightWriter.write(facts) }
+                .onFailure { e -> Log.w(TAG, "Writing the insight of workout $workoutId failed", e) }
+                .getOrNull() ?: return@launch
+            runCatching { workoutRepository.setInsight(workoutId, text) }
+                .onFailure { e -> Log.e(TAG, "Saving the insight of workout $workoutId failed", e) }
         }
     }
 

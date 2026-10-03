@@ -27,6 +27,7 @@ open class StubWorkoutRepository : WorkoutRepository {
     override suspend fun renameWorkout(workoutId: Long, name: String) = Unit
     override fun observeWorkoutsWithoutCalories(): Flow<List<Long>> = flowOf(emptyList())
     override suspend fun setCalories(workoutId: Long, estimate: CalorieEstimate, source: String) = Unit
+    override suspend fun setInsight(workoutId: Long, insight: String) = Unit
     override suspend fun deleteFinishedWorkout(workoutId: Long): Boolean = false
     override fun observeCardioEntry(workoutExerciseId: Long): Flow<CardioEntry?> = flowOf(null)
     override suspend fun logCardio(workoutExerciseId: Long, values: CardioValues, completedAt: Instant) = Unit

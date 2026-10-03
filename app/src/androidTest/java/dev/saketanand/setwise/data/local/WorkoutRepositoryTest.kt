@@ -295,6 +295,28 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun anOlderWorkoutComparesWithTheSessionBeforeItNotALaterOne() = runTest {
+        finishedWorkout(startedAt = 1_000, bench to listOf(50.0 to 10))
+        val older = finishWithBench(startedAt = 3_000, kg = 55.0)
+        finishWithBench(startedAt = 5_000, kg = 60.0) // later: not "last time" for the older one
+
+        val previous = repository.observeSession(older).first()!!.exercises.single().previousSets
+
+        assertEquals(listOf(PreviousSet(50.0, 10)), previous)
+    }
+
+    @Test
+    fun aSavedInsightIsClearedWhenTheTimesChange() = runTest {
+        val id = finishWithBench(startedAt = 1_000, kg = 60.0)
+        repository.setInsight(id, "A steady session.")
+        assertEquals("A steady session.", repository.observeSession(id).first()!!.insight)
+
+        repository.updateFinishedTimes(id, Instant.ofEpochMilli(1_000), Instant.ofEpochMilli(9_000))
+
+        assertNull(repository.observeSession(id).first()!!.insight)
+    }
+
+    @Test
     fun historyListsFinishedWorkoutsNewestFirstWithTotals() = runTest {
         finishedWorkout(startedAt = 1_000, bench to listOf(60.0 to 8, 60.0 to 6))
         finishedWorkout(startedAt = 5_000, squat to listOf(100.0 to 5))

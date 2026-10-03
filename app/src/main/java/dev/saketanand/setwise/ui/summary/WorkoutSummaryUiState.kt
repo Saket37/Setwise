@@ -8,6 +8,7 @@ import dev.saketanand.setwise.ui.workout.SetKind
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.time.Duration
+import dev.saketanand.setwise.domain.model.WorkoutFacts
 
 /** Everything [WorkoutSummaryScreen] draws. */
 @Immutable
@@ -24,6 +25,8 @@ data class WorkoutSummaryUiState(
     val exerciseCount: Int = 0,
     /** Estimated once a body weight is known (CalorieSync); null until then. */
     val caloriesKcal: Int? = null,
+    /** The insight card: null when there's nothing to say (e.g. no lifting). */
+    val insight: InsightUi? = null,
     /** No estimate because no body weight is set: the calories tile asks for it. */
     val needsBodyWeight: Boolean = false,
     /** The body weight dialog from that tile; null when closed. */
@@ -80,3 +83,14 @@ enum class TimeField { Start, End }
 
 @Immutable
 data class BodyWeightDialogUi(val isInvalid: Boolean = false)
+
+/**
+ * "On-device insight · Gemini Nano" with the model's text, or (no model, or not written yet)
+ * "Highlights" written from [facts] by the screen's template.
+ */
+@Immutable
+data class InsightUi(
+    val facts: WorkoutFacts,
+    /** The on-device model's text; null: use the template. */
+    val modelText: String?,
+)
