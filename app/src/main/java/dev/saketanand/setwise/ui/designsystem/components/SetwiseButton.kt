@@ -20,6 +20,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
@@ -36,6 +37,7 @@ import dev.saketanand.setwise.ui.designsystem.theme.buttonLarge
  * - Filled + Large: primary full-width action ("Start workout") → pass Modifier.fillMaxWidth().
  * - Outlined + Medium: secondary actions ("Add exercise", "Save as template").
  * - Outlined + Small: compact header actions ("+ New").
+ * - Tonal: quiet in-card actions on a grey fill ("Add set"); often with shape = shapes.medium.
  * - Text: low-emphasis actions ("Change", dialog buttons).
  */
 @Composable
@@ -51,13 +53,14 @@ fun SetwiseButton(
     /** Overrides the size's text style (rarely needed). */
     textStyle: TextStyle? = null,
     contentPadding: PaddingValues = SetwiseButtonDefaults.contentPadding(style, size),
+    shape: Shape = CircleShape,
 ) {
     Button(
         onClick = onClick,
         // heightIn(min) instead of a fixed height: the design size is the minimum.
         modifier = modifier.heightIn(min = size.minHeight),
         enabled = enabled,
-        shape = CircleShape,
+        shape = shape,
         colors = ButtonDefaults.buttonColors(
             containerColor = colors.containerColor,
             contentColor = colors.contentColor,
@@ -75,7 +78,7 @@ fun SetwiseButton(
     }
 }
 
-enum class SetwiseButtonStyle { Filled, Outlined, Text }
+enum class SetwiseButtonStyle { Filled, Outlined, Tonal, Text }
 
 /** Size presets from the design. Heights are minimums. */
 enum class SetwiseButtonSize(
@@ -132,6 +135,11 @@ object SetwiseButtonDefaults {
             contentColor = MaterialTheme.colorScheme.onSurface,
             borderColor = MaterialTheme.colorScheme.outline,
         )
+        SetwiseButtonStyle.Tonal -> SetwiseButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            borderColor = null,
+        )
         SetwiseButtonStyle.Text -> SetwiseButtonColors(
             containerColor = Color.Transparent,
             contentColor = MaterialTheme.colorScheme.primary,
@@ -152,6 +160,11 @@ object SetwiseButtonDefaults {
             contentColor = MaterialTheme.colorScheme.error,
             borderColor = MaterialTheme.colorScheme.error,
         )
+        SetwiseButtonStyle.Tonal -> SetwiseButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.error,
+            borderColor = null,
+        )
         SetwiseButtonStyle.Text -> SetwiseButtonColors(
             containerColor = Color.Transparent,
             contentColor = MaterialTheme.colorScheme.error,
@@ -169,6 +182,10 @@ private fun SetwiseButtonPreview() = SetwisePreview {
         SetwiseButton(
             "Add exercise", onClick = {}, startIcon = R.drawable.ic_add,
             style = SetwiseButtonStyle.Outlined, size = SetwiseButtonSize.Medium, modifier = Modifier.fillMaxWidth(),
+        )
+        SetwiseButton(
+            "Add set", onClick = {}, startIcon = R.drawable.ic_add, style = SetwiseButtonStyle.Tonal,
+            size = SetwiseButtonSize.Medium, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth(),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             SetwiseButton("New", onClick = {}, startIcon = R.drawable.ic_add, style = SetwiseButtonStyle.Outlined, size = SetwiseButtonSize.Small)
