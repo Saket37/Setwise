@@ -121,8 +121,10 @@ fun SetwiseNavHost(
             CardioEntryScreenRoot(onBack = { navController.popBackStack() })
         }
 
-        composable<Route.WorkoutSummary> {
+        composable<Route.WorkoutSummary> { entry ->
+            val route = entry.toRoute<Route.WorkoutSummary>()
             WorkoutSummaryScreenRoot(
+                viewModel = koinViewModel { parametersOf(route.workoutId) },
                 onOpenExercise = { exerciseId -> navController.navigate(Route.ExerciseDetail(exerciseId)) },
                 onDone = { navController.popBackStack() },
             )
