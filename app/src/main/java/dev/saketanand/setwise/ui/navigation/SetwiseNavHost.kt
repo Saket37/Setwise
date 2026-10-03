@@ -177,8 +177,10 @@ fun SetwiseNavHost(
         // Templates
 
         composable<Route.TemplateEditor> { entry ->
+            val route = entry.toRoute<Route.TemplateEditor>()
             val pickedExerciseIds = entry.pickedExerciseIds()
             TemplateEditorScreenRoot(
+                viewModel = koinViewModel { parametersOf(route.templateId) },
                 pickedExerciseIds = pickedExerciseIds,
                 onPickedExercisesConsumed = { entry.clearPickedExerciseIds() },
                 onAddExercises = { navController.navigate(Route.ExercisePicker) },

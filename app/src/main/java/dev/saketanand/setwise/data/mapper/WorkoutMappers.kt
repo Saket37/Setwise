@@ -68,6 +68,7 @@ fun TemplateWithExercises.toDomain(lastUsedAtMillis: Long?): Template = Template
                 name = it.exercise.name,
                 targetSets = it.item.targetSets,
                 restSec = it.exercise.defaultRestSec,
+                muscleGroup = it.exercise.muscleGroup,
             )
         },
     lastUsedAt = lastUsedAtMillis?.let(Instant::ofEpochMilli),

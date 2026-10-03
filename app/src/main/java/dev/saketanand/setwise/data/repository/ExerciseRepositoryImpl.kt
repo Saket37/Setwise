@@ -12,6 +12,11 @@ class ExerciseRepositoryImpl(
     private val exerciseDao: ExerciseDao,
 ) : ExerciseRepository {
 
+    override suspend fun getExercises(ids: List<Long>): List<Exercise> {
+        val byId = exerciseDao.getByIds(ids).associateBy { it.id }
+        return ids.mapNotNull { byId[it]?.toDomain() }
+    }
+
     override fun observeExercise(id: Long): Flow<Exercise?> =
         exerciseDao.observeById(id).map { it?.toDomain() }
 

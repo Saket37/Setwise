@@ -18,4 +18,19 @@ data class TemplateExercise(
     val name: String,
     val targetSets: Int,
     val restSec: Int,
+    /** E.g. "Chest", shown in the template editor. */
+    val muscleGroup: String = "",
 )
+
+/**
+ * A template as the editor saves it: [id] = 0 for a new one. Exercises in order; the same
+ * exercise can't appear twice.
+ */
+data class TemplateDraft(
+    val id: Long,
+    val name: String,
+    val category: String?,
+    val exercises: List<TemplateDraftExercise>,
+)
+
+data class TemplateDraftExercise(val exerciseId: Long, val targetSets: Int)

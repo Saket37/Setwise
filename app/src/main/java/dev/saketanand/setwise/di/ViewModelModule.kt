@@ -62,6 +62,14 @@ val viewModelModule = module {
         )
     }
 
-    viewModelOf(::TemplateEditorViewModel)
+    viewModel { params ->
+        TemplateEditorViewModel(
+            templateId = params.get(),
+            templateRepository = get(),
+            exerciseRepository = get(),
+            dateProvider = get(),
+            savedStateHandle = get(),
+        )
+    }
     viewModelOf(::TemplateFromGoalViewModel)
 }

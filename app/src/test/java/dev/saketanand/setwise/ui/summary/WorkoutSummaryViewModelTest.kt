@@ -4,6 +4,7 @@ import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.Template
+import dev.saketanand.setwise.domain.model.TemplateDraft
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutSet
 import dev.saketanand.setwise.domain.repository.TemplateRepository
@@ -109,6 +110,9 @@ class WorkoutSummaryViewModelTest {
     private class FakeTemplateRepository : TemplateRepository {
         val created = mutableListOf<Long>()
         override fun observeTemplates(): Flow<List<Template>> = flowOf(emptyList())
+        override suspend fun getTemplate(templateId: Long): Template? = null
+        override suspend fun saveTemplate(draft: TemplateDraft, now: Instant): Long = 0
+        override suspend fun deleteTemplate(templateId: Long) = Unit
         override suspend fun createFromWorkout(workoutId: Long, createdAt: Instant): Long {
             created += workoutId
             return 1

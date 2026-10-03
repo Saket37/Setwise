@@ -32,6 +32,19 @@ interface TemplateDao {
     @Query("SELECT * FROM templates WHERE id = :templateId")
     suspend fun getTemplateWithExercises(templateId: Long): TemplateWithExercises?
 
+    @Query("UPDATE templates SET name = :name, category = :category WHERE id = :templateId")
+    suspend fun updateTemplate(templateId: Long, name: String, category: String?): Int
+
+    @Query("DELETE FROM template_exercises WHERE templateId = :templateId")
+    suspend fun deleteTemplateExercises(templateId: Long)
+
+    @Query("DELETE FROM templates WHERE id = :templateId")
+    suspend fun deleteTemplate(templateId: Long)
+
+    /** Workouts started from a deleted template become plain workouts (e.g. can be saved as a template). */
+    @Query("UPDATE workouts SET templateId = NULL WHERE templateId = :templateId")
+    suspend fun detachWorkouts(templateId: Long)
+
     /** Last time each template was used for a finished workout ("4 days ago"). */
     @Query(
         """

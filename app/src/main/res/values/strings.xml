@@ -283,6 +283,26 @@
     <string name="a11y_progress_chart">%1$s. %2$d of %3$d weeks trained, latest %4$s.</string>
     <string name="recent_sessions">Recent sessions</string>
     <string name="exercise_history_and_progress">History &amp; progress</string>
+    <!-- Template editor -->
+    <string name="new_template_title">New template</string>
+    <string name="edit_template">Edit template</string>
+    <string name="template_name">Name</string>
+    <string name="template_name_placeholder">e.g. Push Day</string>
+    <string name="template_category">Category (optional)</string>
+    <string name="template_no_exercises">Add the exercises you do in this routine. You can reorder them and set how many sets each gets.</string>
+    <string name="add_exercises_button">Add exercises</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+    <string name="fewer_sets">Fewer sets for %1$s</string>
+    <string name="more_sets">More sets for %1$s</string>
+    <string name="template_options">Template options</string>
+    <string name="delete_template">Delete template</string>
+    <string name="delete_template_title">Delete %1$s?</string>
+    <string name="delete_template_message">The template is removed. Workouts you did with it stay in your history.</string>
+    <string name="delete">Delete</string>
+    <string name="discard_changes_title">Discard changes?</string>
+    <string name="discard_changes_message">Your changes to this template won\'t be saved.</string>
+    <string name="keep_editing">Keep editing</string>
     <string name="exercise_no_sessions">Not done yet</string>
     <string name="exercise_no_sessions_message">Finish a workout with this exercise to see its progress and sessions here.</string>
     <!-- Personal-record pill on a History row -->

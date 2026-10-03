@@ -22,6 +22,9 @@ interface ExerciseRepository {
     /** Live size of the exercise library ("128 exercises ready"). */
     fun observeExerciseCount(): Flow<Int>
 
+    /** The exercises with these ids, in the same order; unknown ids are left out. */
+    suspend fun getExercises(ids: List<Long>): List<Exercise>
+
     /** Null if there's no exercise with this id (e.g. deleted). */
     fun observeExercise(id: Long): Flow<Exercise?>
 }

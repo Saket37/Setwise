@@ -6,6 +6,7 @@ import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.model.Template
+import dev.saketanand.setwise.domain.model.TemplateDraft
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
@@ -239,6 +240,9 @@ class HomeViewModelTest {
     private object FakeTemplateRepository : TemplateRepository {
         val created = mutableListOf<Long>()
         override fun observeTemplates(): Flow<List<Template>> = flowOf(emptyList())
+        override suspend fun getTemplate(templateId: Long): Template? = null
+        override suspend fun saveTemplate(draft: TemplateDraft, now: Instant): Long = 0
+        override suspend fun deleteTemplate(templateId: Long) = Unit
         override suspend fun createFromWorkout(workoutId: Long, createdAt: Instant): Long {
             created += workoutId
             return 40
@@ -258,5 +262,6 @@ class HomeViewModelTest {
         override fun observeRecentExercises(limit: Int): Flow<List<RecentExercise>> = flowOf(emptyList())
         override fun observeExerciseCount(): Flow<Int> = flowOf(128)
         override fun observeExercise(id: Long): Flow<Exercise?> = flowOf(null)
+        override suspend fun getExercises(ids: List<Long>): List<Exercise> = emptyList()
     }
 }
