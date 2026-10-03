@@ -41,6 +41,8 @@ data class PreviousSetRow(
 /** A completed set of [exerciseId] from an earlier finished workout (for personal bests). */
 data class ExerciseHistorySetRow(
     val exerciseId: Long,
+    val workoutId: Long,
+    val startedAt: Long,
     val weightKg: Double?,
     val reps: Int?,
     val durationSec: Int?,

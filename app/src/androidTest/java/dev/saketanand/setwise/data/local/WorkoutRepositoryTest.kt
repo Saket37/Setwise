@@ -334,6 +334,21 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun aWorkoutsExercisesCarryTheirEarlierSessionsNewestFirst() = runTest {
+        finishedWorkout(startedAt = 1_000, bench to listOf(57.5 to 8, 60.0 to 6))
+        finishedWorkout(startedAt = 100_000, bench to listOf(60.0 to 8, 60.0 to 8), squat to listOf(100.0 to 5))
+        val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(200_000))
+        repository.addExercises(current, listOf(bench))
+        // Started after this workout: not its history.
+        finishedWorkout(startedAt = 300_000, bench to listOf(70.0 to 3))
+
+        val history = repository.observeSession(current).first()!!.exercises.single().history
+
+        assertEquals(listOf(100_000L, 1_000L), history.map { it.startedAt.toEpochMilli() })
+        assertEquals(listOf(57.5 to 8, 60.0 to 6), history.last().sets.map { it.weightKg to it.reps })
+    }
+
+    @Test
     fun historyListsFinishedWorkoutsNewestFirstWithTotals() = runTest {
         finishedWorkout(startedAt = 1_000, bench to listOf(60.0 to 8, 60.0 to 6))
         finishedWorkout(startedAt = 5_000, squat to listOf(100.0 to 5))

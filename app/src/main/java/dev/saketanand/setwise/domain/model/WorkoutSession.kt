@@ -31,6 +31,8 @@ data class SessionExercise(
     val previousSets: List<PreviousSet>,
     /** Best sets of this exercise in workouts before this one: what records are measured against. */
     val bestsBefore: PersonalBests = PersonalBests.None,
+    /** Finished sessions of this exercise before this workout, newest first: its progression. */
+    val history: List<ExerciseSession> = emptyList(),
 ) {
     /** This workout's record in this exercise, if any. */
     val personalRecord: PersonalRecord? get() = PersonalRecords.find(exercise, sets, bestsBefore)
