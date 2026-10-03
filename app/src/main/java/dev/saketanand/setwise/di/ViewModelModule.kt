@@ -40,7 +40,14 @@ val viewModelModule = module {
             restNotifications = get(),
         )
     }
-    viewModelOf(::CardioEntryViewModel)
+    viewModel { params ->
+        CardioEntryViewModel(
+            workoutExerciseId = params.get(),
+            workoutRepository = get(),
+            dateProvider = get(),
+            savedStateHandle = get(),
+        )
+    }
     // Route argument passed by SetwiseNavHost.
     viewModel { params ->
         WorkoutSummaryViewModel(

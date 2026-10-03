@@ -54,7 +54,14 @@ private fun SessionExercise.toSummaryUi(done: List<WorkoutSet>): SummaryExercise
         SetKind.Duration -> done.maxByOrNull { it.durationSec ?: 0 }
         SetKind.Cardio -> null
     }
-    return SummaryExerciseUi(id = id, exerciseId = exercise.id, name = exercise.name, setCount = done.size, best = best?.toPreviousSet()?.label(kind))
+    return SummaryExerciseUi(
+        id = id,
+        exerciseId = exercise.id,
+        name = exercise.name,
+        setCount = done.size,
+        best = best?.toPreviousSet()?.label(kind),
+        cardio = done.firstOrNull()?.cardio,
+    )
 }
 
 private fun WorkoutSet.toPreviousSet() = PreviousSet(weightKg = weightKg, reps = reps, durationSec = durationSec)
