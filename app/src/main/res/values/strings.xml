@@ -241,4 +241,16 @@
     <string name="onboarding_checkins_message">When you open the app after a day without a workout, Setwise asks once whether you trained, rested or missed it. Never during a workout, at most once a day.</string>
     <string name="ask_about_unlogged_days">Ask about days I didn\'t log</string>
     <string name="settings_change_later">You can change all of this in Settings.</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="settings_profile">Profile · used for calories</string>
+    <string name="settings_training">Training</string>
+    <string name="body_weight">Body weight</string>
+    <!-- %1$s = weight like "72.5" -->
+    <string name="weight_kg">%1$s kg</string>
+    <string name="training_days">Training days</string>
+    <string name="not_set">Not set</string>
+    <string name="every_day">Every day</string>
+    <string name="ask_about_unlogged_days_detail">Once a day at most, never during a workout</string>
 </resources>
