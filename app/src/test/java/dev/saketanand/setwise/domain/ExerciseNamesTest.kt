@@ -38,6 +38,14 @@ class ExerciseNamesTest {
     }
 
     @Test
+    fun `a name that only adds its equipment is the same exercise`() {
+        assertEquals("Deadlift (Barbell)", ExerciseNames.onlyOneBesidesEquipment("deadlift", library)?.name)
+        assertEquals(null, ExerciseNames.onlyOneBesidesEquipment("bench press", library)) // barbell or dumbbell?
+        assertEquals(null, ExerciseNames.onlyOneBesidesEquipment("dumbbell deadlift", library))
+        assertTrue(ExerciseNames.sameName("pull ups", "Pull-up"))
+    }
+
+    @Test
     fun `the only name with every typed word is a match`() {
         assertEquals("Romanian Deadlift (Barbell)", ExerciseNames.onlyOneCovering("barbell romanian", library)?.name)
         assertEquals(null, ExerciseNames.onlyOneCovering("bench", library)) // two bench presses

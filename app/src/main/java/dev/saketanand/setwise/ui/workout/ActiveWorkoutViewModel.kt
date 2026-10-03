@@ -332,8 +332,9 @@ class ActiveWorkoutViewModel(
         overlays.update { it.copy(quickLog = QuickLogUi(isReading = true)) }
         viewModelScope.launch {
             val result = runCatching {
+                val recent = exerciseRepository.observeRecentExercises(RECENT_EXERCISES).first().map { it.exercise }
                 val library = exerciseRepository.observeExercises("", null).first()
-                quickLogInterpreter.interpret(text.trim(), current, state.value.expandedExerciseId, library)
+                quickLogInterpreter.interpret(text.trim(), current, state.value.expandedExerciseId, recent, library)
             }.getOrElse { e ->
                 Log.e(TAG, "Reading quick log '$text' failed", e)
                 QuickLogResult.NotUnderstood(QuickLogResult.Reason.NothingToLog)
@@ -413,6 +414,9 @@ class ActiveWorkoutViewModel(
         const val TAG = "ActiveWorkoutViewModel"
         const val KEY_EXPANDED = "expanded_exercise"
         const val ALL_COLLAPSED = -1L
+
+        /** Exercises done before that a quick-logged name is matched against before the library. */
+        const val RECENT_EXERCISES = 50
     }
 }
 

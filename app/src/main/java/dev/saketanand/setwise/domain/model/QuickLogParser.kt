@@ -20,8 +20,8 @@ data class QuickLogParse(
 
 /**
  * The quick-log bar's own reader for the usual ways of writing sets: "3x8 at 60", "60x8x3",
- * "3 sets of 6 at 40", "100 for 5, 105 for 3", "8 reps at 20", "x12 x12 x10", "3x45s",
- * "same as last time", and cardio ("30 min 6% incline", "5 km", "level 8", "7 km/h"), also as
+ * "3 sets of 6 at 40", "100 for 5, 105 for 3", "30 for 10 twice", "8 reps at 20", "x12 x12 x10",
+ * "3x45s", "3x12 at 50, last one 45 for 8", "same as last time", and cardio ("30 min 6% incline", "5 km", "level 8", "7 km/h"), also as
  * speech-to-text writes them ("three sets of eight at sixty", "3 by 8", "37 and a half"). Anything
  * else is left over, for the on-device model. Plain functions, unit-tested.
  */
@@ -32,6 +32,7 @@ object QuickLogParser {
         val found = mutableListOf<Pair<Int, List<SetFact>>>() // position → sets, to keep their order
         var cardio = CardioValues(durationSec = null)
         var same = false
+        var lastSetAt: Int? = null // "last one": what follows changes the final set
 
         fun take(regex: Regex, handle: (MatchResult) -> Boolean) {
             regex.findAll(rest).toList().forEach { match ->
@@ -50,6 +51,7 @@ object QuickLogParser {
         fun int(match: MatchResult, group: Int) = match.groups[group]?.value?.toIntOrNull()
 
         take(SAME) { same = true; true }
+        take(LAST_SET) { lastSetAt = lastSetAt ?: it.range.first; true }
         // Cardio first: "km/h" before "km", "min" before plain numbers.
         take(SPEED) { cardio = cardio.copy(speedMinKmh = num(it, 1), speedMaxKmh = num(it, 1)); true }
         take(DISTANCE) { cardio = cardio.copy(distanceKm = num(it, 1)); true }
@@ -63,7 +65,10 @@ object QuickLogParser {
             sets(m, int(m, 1) ?: 0, num(m, 4), if (seconds != null) null else reps, seconds)
         }
         // "40 for 6 x 3" before the plain "a x b" forms read "6 x 3" as sets × reps.
-        take(WEIGHT_FOR_REPS) { sets(it, int(it, 3) ?: int(it, 4) ?: int(it, 5) ?: 1, num(it, 1), int(it, 2), null) }
+        take(WEIGHT_FOR_REPS) { m ->
+            val count = int(m, 3) ?: int(m, 4) ?: int(m, 5) ?: if (m.groups[6] != null) 2 else 1
+            sets(m, count, num(m, 1), int(m, 2), null)
+        }
         take(WEIGHT_X_REPS_X_SETS) { sets(it, int(it, 3) ?: 0, num(it, 1), int(it, 2), null) }
         take(SETS_X_REPS_AT_WEIGHT) { sets(it, int(it, 1) ?: 0, num(it, 3), int(it, 2), null) }
         take(SETS_X_SECONDS) { sets(it, int(it, 1) ?: 0, null, null, int(it, 2)) }
@@ -78,20 +83,41 @@ object QuickLogParser {
         take(X_REPS) { sets(it, 1, null, int(it, 1), null) }
         take(SECONDS) { sets(it, 1, null, null, int(it, 1)) }
         take(REPS) { sets(it, 1, null, int(it, 1), null) }
+        // "last one at 37.5": a weight alone only changes the final set.
+        take(WEIGHT_ONLY) { m -> lastSetAt?.let { m.range.first > it } == true && sets(m, 1, num(m, 1), null, null) }
 
         val words = rest.trim().split(Regex("\\s+")).filter { it.isNotEmpty() && it !in FILLER }
         // The exercise: the words before the first thing read (or all words if nothing was).
         val firstRead = (found.map { it.first } + listOfNotNull(firstIndexOf(text, cardio, same))).minOrNull()
         val leading = if (firstRead == null) words else rest.substring(0, firstRead).trim().split(Regex("\\s+")).filter { it.isNotEmpty() && it !in FILLER }
         val phrase = leading.filter { word -> word.any { it.isLetter() } }.joinToString(" ").ifEmpty { null }
-        val leftover = words.drop(leading.size).filter { it !in FILLER }
+        val leftover = words.drop(leading.size).filter { it !in FILLER }.toMutableList()
+        val ordered = found.sortedBy { it.first }
+        val changed = lastSetAt?.let { at ->
+            changeLastSet(ordered.filter { it.first < at }.flatMap { it.second }, ordered.filter { it.first > at }.flatMap { it.second })
+        }
+        val sets = changed ?: ordered.flatMap { it.second }.filter { it.reps != null || it.seconds != null }
+        // A "last one" that couldn't be applied stays for the model.
+        if (lastSetAt != null && changed == null) leftover += "last"
         return QuickLogParse(
             exercisePhrase = phrase,
-            sets = found.sortedBy { it.first }.flatMap { it.second },
+            sets = sets,
             cardio = cardio.takeUnless { it.isEmpty },
             sameAsLastTime = same,
             leftover = leftover,
         )
+    }
+
+    /**
+     * [before] with its final set changed by [change] ("3x12 at 50, last one only 9" → the third
+     * is 50 × 9: what the change doesn't say stays). Null unless there are sets to change and
+     * exactly one change.
+     */
+    private fun changeLastSet(before: List<SetFact>, change: List<SetFact>): List<SetFact>? {
+        if (before.size < 2 || change.size != 1) return null
+        val last = before.last()
+        val new = change.single()
+        return before.dropLast(1) + SetFact(new.weightKg ?: last.weightKg, new.reps ?: last.reps, new.seconds ?: last.seconds)
     }
 
     /** Where cardio or "same" was read, for finding the exercise words before it. */
@@ -191,6 +217,7 @@ object QuickLogParser {
             .replace(Regex("\\b(seconds?|secs?)\\b"), "s")
             .replace(Regex("\\b(minutes?|mins?)\\b"), "min")
             .replace(Regex("\\breps?\\b"), "rep")
+            .replace(Regex("\\b(?:last|final) (?:one|set)\\b"), "lastset")
             .replace(Regex("\\s+"), " ")
             .trim()
     }
@@ -201,24 +228,29 @@ object QuickLogParser {
     private const val N = "(\\d+(?:\\.\\d+)?)"
     private const val I = "(\\d+)"
     private val SAME = r("(?:same as last(?: time)?|repeat last(?: time)?|same again)")
+    private val LAST_SET = r("lastset")
     private val SPEED = r("$N ?(?:km/h|kmh|kph)")
     private val DISTANCE = r("$N ?km")
     private val MINUTES = r("$N ?min")
     private val INCLINE = r("$N ?%(?: incline)?")
     private val LEVEL = r("(?:level|lvl) $I")
-    private val SETS_OF = r("$I sets? of $I( s)?(?: rep)?(?: (?:at|with) $N(?: kg)?)?")
+    private val SETS_OF = r("$I (?:more )?sets? of $I( s)?(?: rep)?(?: (?:at|with) $N(?: kg)?)?")
     private val WEIGHT_X_REPS_X_SETS = r("$N(?: kg)? x $I x $I")
     private val SETS_X_REPS_AT_WEIGHT = r("$I x $I(?: rep)? (?:at|with) $N(?: kg)?")
     private val SETS_X_SECONDS = r("$I x $I s")
     private val WEIGHT_X_REPS = r("$N( kg)? x $I(?: rep)?")
-    private val WEIGHT_FOR_REPS = r("$N(?: kg)? for $I(?: rep)?(?: (?:x $I|for $I sets?|$I times))?")
+    private val WEIGHT_FOR_REPS = r("$N(?: kg)? for $I(?: rep)?(?: (?:x $I|for $I sets?|$I times|(twice)))?")
     private val REPS_AT_WEIGHT = r("$I rep (?:at|with) $N(?: kg)?")
     private val WEIGHT_KG_REPS = r("$N kg $I rep")
     private val X_REPS = r("xr $I")
     private val SECONDS = r("$I s")
     private val REPS = r("$I rep")
+    private val WEIGHT_ONLY = r("(?:at|with) $N(?: kg)?")
 
-    private val FILLER = setOf("and", "then", "set", "sets", "rep", "kg", "x", "at", "for", "of", "with", "the", "a", "in", "did", "i", "my")
+    private val FILLER = setOf(
+        "and", "then", "set", "sets", "rep", "kg", "x", "at", "for", "of", "with", "the", "a", "in", "did", "i", "my",
+        "but", "only", "just", "was", "to",
+    )
 
     private val UNITS = listOf(
         "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",

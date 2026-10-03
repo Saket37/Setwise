@@ -41,6 +41,16 @@ object ExerciseNames {
     }
 
     /**
+     * The one exercise whose name is what's typed plus its equipment ("deadlift" → Deadlift
+     * (Barbell), not Romanian Deadlift); null if none or several are, or equipment was typed.
+     */
+    fun onlyOneBesidesEquipment(typed: String, library: List<Exercise>): Exercise? {
+        val typedWords = words(typed).sorted()
+        if (typedWords.isEmpty() || typedWords.any { it in EQUIPMENT_WORDS }) return null
+        return library.filter { exercise -> words(exercise.name).filter { it !in EQUIPMENT_WORDS }.sorted() == typedWords }.singleOrNull()
+    }
+
+    /**
      * The one exercise whose name has every typed word ("barbell row" → Bent-over Row
      * (Barbell)); null if none or several do ("bench": both bench presses).
      */
@@ -68,8 +78,10 @@ object ExerciseNames {
         "military" to "overhead",
         "presses" to "press", "curls" to "curl", "raises" to "raise", "rows" to "row",
         "squats" to "squat", "lunges" to "lunge", "flyes" to "fly", "flys" to "fly",
-        "extensions" to "extension", "deadlifts" to "deadlift",
+        "extensions" to "extension", "deadlifts" to "deadlift", "ups" to "up",
     )
 
     private val FILLER = setOf("the", "a", "with", "on", "and")
+
+    private val EQUIPMENT_WORDS = setOf("barbell", "dumbbell", "machine", "cable", "kettlebell", "smith", "ez", "bar", "bodyweight")
 }

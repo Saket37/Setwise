@@ -72,12 +72,13 @@ class AiCheck(
         }
     }
 
-    /** Quick-log lines, against the library (an empty workout): what each is understood as, and by what. */
+    /** Quick-log lines, outside a workout (exercises done before, then the library): what each is understood as, and by what. */
     private suspend fun checkQuickLog() {
+        val recent = exerciseRepository.observeRecentExercises(50).first().map { it.exercise }
         val library = exerciseRepository.observeExercises("", null).first()
         val empty = WorkoutSession(0, "", null, Instant.EPOCH, null, emptyList())
         SAMPLE_LINES.forEach { line ->
-            val understood = when (val result = quickLogInterpreter.interpret(line, empty, null, library)) {
+            val understood = when (val result = quickLogInterpreter.interpret(line, empty, null, recent, library)) {
                 is QuickLogResult.Sets -> "${result.target.exercise.name}: " +
                     result.sets.joinToString { listOfNotNull(it.weightKg?.let { kg -> "$kg kg" }, it.reps?.let { r -> "$r" }, it.seconds?.let { s -> "${s}s" }).joinToString(" × ") } +
                     " (${result.source})"
@@ -91,15 +92,17 @@ class AiCheck(
     companion object {
         const val TAG = "SetwiseAiCheck"
 
-        /** The first two the parser reads alone; the rest have words only the model can place. */
+        /** The first five the parser reads alone; the rest have words only the model can place. */
         private val SAMPLE_LINES = listOf(
             "bench three sets of eight at sixty",
             "plank 3x45s",
             "ohp 3 sets of 6 at 40, last one 37.5 for 8",
-            "barbell curl 30 for 10 twice then 25 for 12",
             "lat pulldown 3x12 at 50 but the last set only 9 reps",
             "squat 100 for 5 then 2 more sets of 5 at 105",
             "bench 60 for 8, 8, 7",
+            "deadlift 3x5 at 120 then dropped to 100 for 8",
+            "incline db press 22 for 10, 9 and 8",
+            "pull ups 10, 8, 6",
         )
 
         private val SAMPLE_NAMES = listOf(

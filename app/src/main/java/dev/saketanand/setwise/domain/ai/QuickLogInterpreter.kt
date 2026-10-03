@@ -41,9 +41,9 @@ sealed interface QuickLogResult {
 /**
  * Reads a quick-log line ("ohp 3 sets of 6 at 40, last one 37.5 for 8"). Code first:
  * [QuickLogParser] reads the usual forms, [ExerciseAssistant] finds the exercise (today's workout
- * first, then the library). Only a line the parser can't fully read goes to the on-device model,
- * which lists the sets; every weight, rep count and time it gives must be one of the line's
- * numbers ([acceptSets]).
+ * first, then ones done before, then the library). Only a line the parser can't fully read goes
+ * to the on-device model, which lists the sets; every weight, rep count and time it gives must
+ * be one of the line's numbers, and it must keep what the parser did read ([acceptSets]).
  */
 class QuickLogInterpreter(
     private val model: OnDeviceModel,
@@ -53,12 +53,20 @@ class QuickLogInterpreter(
     /**
      * @param openWorkoutExerciseId the exercise card that's open: the target when no exercise is
      *   named ("60 for 8").
+     * @param recent exercises from finished workouts: "bench" is the bench press they do, before
+     *   any other in the [library].
      */
-    suspend fun interpret(text: String, session: WorkoutSession, openWorkoutExerciseId: Long?, library: List<Exercise>): QuickLogResult {
+    suspend fun interpret(
+        text: String,
+        session: WorkoutSession,
+        openWorkoutExerciseId: Long?,
+        recent: List<Exercise>,
+        library: List<Exercise>,
+    ): QuickLogResult {
         // Spoken numbers as digits, so the model's numbers can be checked against the line's.
         val line = QuickLogParser.withDigits(text)
         val parse = QuickLogParser.parse(line)
-        val target = target(parse.exercisePhrase, session, openWorkoutExerciseId, library)
+        val target = target(parse.exercisePhrase, session, openWorkoutExerciseId, recent, library)
             ?: return QuickLogResult.NotUnderstood(QuickLogResult.Reason.NoExercise)
         val exercise = target.exercise
 
@@ -74,30 +82,37 @@ class QuickLogInterpreter(
         if (parse.isComplete) return QuickLogResult.Sets(target, parse.sets.fitTo(exercise), SuggestionSource.Keywords)
 
         // Words the parser couldn't place ("last one", "twice"): the model, if it's there.
-        modelSets(line, exercise)?.let { return QuickLogResult.Sets(target, it.fitTo(exercise), SuggestionSource.Model) }
+        modelSets(line, exercise, parse.sets)?.let { return QuickLogResult.Sets(target, it.fitTo(exercise), SuggestionSource.Model) }
         if (parse.sets.isNotEmpty()) return QuickLogResult.Sets(target, parse.sets.fitTo(exercise), SuggestionSource.Keywords)
         return QuickLogResult.NotUnderstood(QuickLogResult.Reason.NothingToLog)
     }
 
-    private suspend fun target(phrase: String?, session: WorkoutSession, openId: Long?, library: List<Exercise>): QuickLogTarget? {
+    private suspend fun target(
+        phrase: String?,
+        session: WorkoutSession,
+        openId: Long?,
+        recent: List<Exercise>,
+        library: List<Exercise>,
+    ): QuickLogTarget? {
         if (phrase == null) {
             val open = session.exercises.firstOrNull { it.id == openId }
                 ?: session.exercises.firstOrNull { exercise -> exercise.sets.any { !it.isCompleted } }
                 ?: return null
             return QuickLogTarget(open.exercise, open.id, matchedFrom = null)
         }
-        // Today's workout first ("in today's template"), then the whole library.
-        val inWorkout = assistant.findMatch(phrase, session.exercises.map { it.exercise })
-        if (inWorkout != null) {
-            val item = session.exercises.filter { it.exercise.id == inWorkout.id }
-                .let { same -> same.firstOrNull { exercise -> exercise.sets.any { !it.isCompleted } } ?: same.first() }
-            return QuickLogTarget(inWorkout, item.id, matchedFrom = phrase)
-        }
-        val fromLibrary = assistant.findMatch(phrase, library) ?: return null
-        return QuickLogTarget(fromLibrary, workoutExerciseId = null, matchedFrom = phrase)
+        // Clear matches in today's workout, then in what they've done; the model only judges the
+        // whole library (one call at most).
+        val exercise = assistant.clearMatch(phrase, session.exercises.map { it.exercise })
+            ?: assistant.clearMatch(phrase, recent)
+            ?: assistant.findMatch(phrase, library)
+            ?: return null
+        // In today's workout (however it was found): its open card, not a second one.
+        val items = session.exercises.filter { it.exercise.id == exercise.id }
+        val item = items.firstOrNull { item -> item.sets.any { !it.isCompleted } } ?: items.firstOrNull()
+        return QuickLogTarget(exercise, item?.id, matchedFrom = phrase)
     }
 
-    private suspend fun modelSets(text: String, exercise: Exercise): List<SetFact>? {
+    private suspend fun modelSets(text: String, exercise: Exercise, parsed: List<SetFact>): List<SetFact>? {
         if (model.availability() != ModelAvailability.Ready) return null
         val startedAt = System.nanoTime()
         val answer = try {
@@ -108,7 +123,7 @@ class QuickLogInterpreter(
             Log.w(TAG, "The model couldn't read '$text'", e)
             null
         }
-        val sets = answer?.let { acceptSets(it, text) }
+        val sets = answer?.let { acceptSets(it, text, parsed) }
         Log.d(TAG, "'$text': ${if (sets != null) "used" else "rejected"} $answer (${(System.nanoTime() - startedAt) / 1_000_000} ms)")
         return sets
     }
@@ -118,9 +133,10 @@ class QuickLogInterpreter(
 
         /**
          * The model's sets, or null if any number in them isn't in [text] (no invented weights or
-         * reps), there are none, or a set has neither reps nor seconds.
+         * reps), one the parser read is missing ([parsed]: nothing dropped), there are none, or a
+         * set has neither reps nor seconds.
          */
-        fun acceptSets(answer: ModelQuickLog, text: String): List<SetFact>? {
+        fun acceptSets(answer: ModelQuickLog, text: String, parsed: List<SetFact>): List<SetFact>? {
             val numbers = Regex("\\d+(?:[.,]\\d+)?").findAll(text).map { it.value.replace(',', '.').toDouble() }.toSet()
             val sets = answer.sets.map { set ->
                 SetFact(
@@ -131,11 +147,13 @@ class QuickLogInterpreter(
             }
             if (sets.isEmpty()) return null
             val ok = sets.all { set ->
-                (set.reps != null || set.seconds != null) &&
-                    listOfNotNull(set.weightKg, set.reps?.toDouble(), set.seconds?.toDouble()).all { it in numbers }
+                (set.reps != null || set.seconds != null) && set.values().all { it in numbers }
             }
-            return sets.takeIf { ok }
+            val kept = sets.flatMap { it.values() }.toSet().containsAll(parsed.flatMap { it.values() })
+            return sets.takeIf { ok && kept }
         }
+
+        private fun SetFact.values() = listOfNotNull(weightKg, reps?.toDouble(), seconds?.toDouble())
 
         fun prompt(text: String, exercise: Exercise): ModelRequest = ModelRequest(
             system = SYSTEM,
@@ -151,17 +169,18 @@ class QuickLogInterpreter(
         }
 
         private const val SYSTEM =
-            "You turn one gym log line into the list of sets done, in order. Use only numbers from the line. " +
-                "\"Last one\" or \"last set\" changes the final set; \"twice\" means two sets. Use 0 for what a set doesn't have."
+            "You turn one gym log line into the list of sets done, in order. Use every number from the line and no others. " +
+                "Reps listed after a weight are sets at that weight. Use 0 for what a set doesn't have."
 
+        // What still reaches the model: the parser reads "last one", "twice" and "3x8 at 60" itself.
         private val EXAMPLES = """
-            <exercise>Barbell Row, weight and reps</exercise>
-            <line>row 4 sets of 10 at 50, last one 45 for 12</line>
-            {"sets": [{"weightKg": 50, "reps": 10, "seconds": 0}, {"weightKg": 50, "reps": 10, "seconds": 0}, {"weightKg": 50, "reps": 10, "seconds": 0}, {"weightKg": 45, "reps": 12, "seconds": 0}]}
-
             <exercise>Barbell Curl, weight and reps</exercise>
-            <line>curl 30 for 10 twice then 25 for 12</line>
-            {"sets": [{"weightKg": 30, "reps": 10, "seconds": 0}, {"weightKg": 30, "reps": 10, "seconds": 0}, {"weightKg": 25, "reps": 12, "seconds": 0}]}
+            <line>curl 30 for 10, 10, 9</line>
+            {"sets": [{"weightKg": 30, "reps": 10, "seconds": 0}, {"weightKg": 30, "reps": 10, "seconds": 0}, {"weightKg": 30, "reps": 9, "seconds": 0}]}
+
+            <exercise>Barbell Row, weight and reps</exercise>
+            <line>row 2x10 at 50 then dropped to 40 for 12</line>
+            {"sets": [{"weightKg": 50, "reps": 10, "seconds": 0}, {"weightKg": 50, "reps": 10, "seconds": 0}, {"weightKg": 40, "reps": 12, "seconds": 0}]}
         """.trimIndent()
     }
 }

@@ -72,13 +72,27 @@ class QuickLogParserTest {
     }
 
     @Test
+    fun `last one changes the final set, twice is two, more sets add`() {
+        check("ohp 3 sets of 6 at 40, last one 37.5 for 8", "ohp", kg(40.0, 6, 2) + kg(37.5, 8))
+        check("lat pulldown 3x12 at 50 but the last set only 9 reps", "lat pulldown", kg(50.0, 12, 2) + kg(50.0, 9))
+        check("bench 3x8 at 60, last one at 55", "bench", kg(60.0, 8, 2) + kg(55.0, 8))
+        check("row 4 sets of 10 at 50, final set 45 for 12", "row", kg(50.0, 10, 3) + kg(45.0, 12))
+        check("ohp 40 for 6 twice", "ohp", kg(40.0, 6, 2))
+        check("barbell curl 30 for 10 twice then 25 for 12", "barbell curl", kg(30.0, 10, 2) + kg(25.0, 12))
+        check("squat 100 for 5 then 2 more sets of 5 at 105", "squat", kg(100.0, 5) + kg(105.0, 5, 2))
+    }
+
+    @Test
     fun `anything it can't place is left over for the model`() {
-        val parse = QuickLogParser.parse("ohp 3 sets of 6 at 40, last one 37.5 for 8")
-        assertEquals("ohp", parse.exercisePhrase)
-        assertEquals(listOf("last", "one"), parse.leftover)
+        val parse = QuickLogParser.parse("bench 60 for 8, 8, 7")
+        assertEquals("bench", parse.exercisePhrase)
+        assertEquals(kg(60.0, 8), parse.sets)
+        assertEquals(listOf("8", "7"), parse.leftover)
         assertFalse(parse.isComplete)
 
-        assertFalse(QuickLogParser.parse("ohp 40 for 6 twice").isComplete)
+        // One set before "last one": nothing to change, so it's the model's.
+        assertEquals(listOf("last"), QuickLogParser.parse("bench 60 for 8, last one 55 for 10").leftover)
+        assertEquals(listOf("dropped"), QuickLogParser.parse("row 3x10 at 50 then dropped to 40 for 8").leftover)
         assertFalse(QuickLogParser.parse("bench").isComplete) // nothing to log
         assertFalse(QuickLogParser.parse("bench 3x8 at 900").isComplete) // 900 kg: not believed
     }

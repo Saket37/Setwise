@@ -23,18 +23,26 @@ data class ExerciseSuggestion(val guess: ExerciseGuess, val source: SuggestionSo
  */
 class ExerciseAssistant(private val model: OnDeviceModel) {
 
+    /** [findMatch]'s clear cases alone: no model, no guess. */
+    fun clearMatch(typed: String, library: List<Exercise>): Exercise? {
+        library.firstOrNull { ExerciseNames.sameName(it.name, typed) }?.let { return it }
+        ExerciseNames.onlyOneBesidesEquipment(typed, library)?.let { return it }
+        ExerciseNames.candidates(typed, library, 1).firstOrNull()
+            ?.takeIf { (_, score) -> score >= ExerciseNames.CLOSE_MATCH }
+            ?.let { return it.first }
+        return ExerciseNames.onlyOneCovering(typed, library)
+    }
+
     /**
      * The library exercise that is the same as [typed], or null. Clear cases are code's: the
-     * same words in any order, a close candidate ([ExerciseNames.CLOSE_MATCH]), or the only
+     * same words in any order (or with just its equipment added), a close candidate ([ExerciseNames.CLOSE_MATCH]), or the only
      * name with every typed word. In the
      * uncertain middle the model picks from the code's shortlist (or says none); without the
      * model, a library name containing what's typed counts ("bench" → Bench Press), as before.
      */
     suspend fun findMatch(typed: String, library: List<Exercise>): Exercise? {
-        library.firstOrNull { ExerciseNames.sameName(it.name, typed) }?.let { return it }
+        clearMatch(typed, library)?.let { return it }
         val candidates = ExerciseNames.candidates(typed, library, MAX_CANDIDATES)
-        candidates.firstOrNull()?.takeIf { (_, score) -> score >= ExerciseNames.CLOSE_MATCH }?.let { return it.first }
-        ExerciseNames.onlyOneCovering(typed, library)?.let { return it }
         val contained = library.firstOrNull { it.name.contains(typed.trim(), ignoreCase = true) }
         if (candidates.isEmpty() || model.availability() != ModelAvailability.Ready) return contained
 
