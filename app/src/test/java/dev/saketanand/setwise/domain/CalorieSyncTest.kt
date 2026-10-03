@@ -9,6 +9,7 @@ import dev.saketanand.setwise.domain.model.UserSettings
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutSet
 import dev.saketanand.setwise.domain.ai.CalorieEstimator
+import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 import dev.saketanand.setwise.testing.StubWorkoutRepository
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -56,6 +58,20 @@ class CalorieSyncTest {
         assertEquals(1, workouts.saved.size)
     }
 
+    @Test
+    fun `a slow model answer isn't thrown away when another estimate is saved meanwhile`() = runTest {
+        workouts.missing.value = listOf(1L, 2L)
+        val model = FakeOnDeviceModel(ModelAvailability.Ready, thinkingMs = 3_000, answer = { """{"kcal": 360, "intensity": "moderate"}""" })
+        val settings = FakeUserSettingsRepository(UserSettings(bodyWeightKg = 70.0))
+        val sync = backgroundScope.launch { CalorieSync(workouts, settings, CalorieEstimator(model)).run() }
+
+        advanceTimeBy(10_000)
+
+        assertEquals(setOf(1L, 2L), workouts.saved.keys)
+        assertEquals(2, model.requests.size) // one question per workout, none restarted
+        sync.cancel()
+    }
+
     private class FakeWorkoutRepository : StubWorkoutRepository() {
         val missing = MutableStateFlow(listOf(1L))
         val saved = mutableMapOf<Long, CalorieEstimate>()
@@ -69,7 +85,9 @@ class CalorieSyncTest {
                 sets = List(18) { WorkoutSet(it.toLong(), it + 1, 60.0, 8, null, isCompleted = true, isPr = false) },
                 previousSets = emptyList(),
             )
-            return flowOf(WorkoutSession(workoutId, "W", null, start, start.plusSeconds(3_600), listOf(bench)))
+            return flowOf(
+                WorkoutSession(workoutId, "W", null, start, start.plusSeconds(3_600), listOf(bench), calories = saved[workoutId]?.kcal),
+            )
         }
         override suspend fun setCalories(workoutId: Long, estimate: CalorieEstimate, source: String) {
             saved[workoutId] = estimate

@@ -8,6 +8,7 @@ import dev.saketanand.setwise.domain.model.Intensity
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import java.time.Duration
 import java.util.Locale
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 
 /** An estimate and where it came from ([CalorieFormula.SOURCE] or [MODEL_SOURCE]). */
@@ -26,9 +27,14 @@ class CalorieEstimator(private val model: OnDeviceModel) {
         val fallback = SourcedCalorieEstimate(formula, CalorieFormula.SOURCE)
         if (model.availability() != ModelAvailability.Ready) return fallback
 
-        val answer = runCatching { model.generate(prompt(session, bodyWeightKg!!, formula)) }
-            .onFailure { e -> Log.w(TAG, "The model couldn't estimate workout ${session.id}", e) }
-            .getOrNull() ?: return fallback
+        val answer = try {
+            model.generate(prompt(session, bodyWeightKg!!, formula))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "The model couldn't estimate workout ${session.id}", e)
+            return fallback
+        }
         val parsed = ModelJson.decode(answer, ModelAnswer.serializer()) ?: return fallback
         val intensity = Intensity.fromStored(parsed.intensity.lowercase(Locale.ROOT)) ?: return fallback
         val low = formula.kcal * PLAUSIBLE_RANGE.start

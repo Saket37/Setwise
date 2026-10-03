@@ -45,7 +45,7 @@ class CalorieEstimatorTest {
 
     @Test
     fun `a plausible answer from the model is used`() = runTest {
-        val model = FakeOnDeviceModel(ModelAvailability.Ready) { "```json\n{\"kcal\": 410, \"intensity\": \"Vigorous\"}\n```" }
+        val model = FakeOnDeviceModel(ModelAvailability.Ready, answer = { "```json\n{\"kcal\": 410, \"intensity\": \"Vigorous\"}\n```" })
 
         assertEquals(
             SourcedCalorieEstimate(CalorieEstimate(410, Intensity.Vigorous), CalorieEstimator.MODEL_SOURCE),
@@ -72,7 +72,7 @@ class CalorieEstimatorTest {
 
     @Test
     fun `no body weight, no estimate`() = runTest {
-        assertNull(CalorieEstimator(FakeOnDeviceModel(ModelAvailability.Ready) { "{}" }).estimate(session, null))
+        assertNull(CalorieEstimator(FakeOnDeviceModel(ModelAvailability.Ready, answer = { "{}" })).estimate(session, null))
     }
 
     @Test
