@@ -115,6 +115,8 @@ class QuickLogParserTest {
         check("Squad 100 for 5, then two more sets of five at 105.", "squad", kg(100.0, 5) + kg(105.0, 5, 2))
         check("Flank 45 seconds, three times.", "flank", secs(45, 3))
         check("push ups 20 reps twice", "push ups", reps(20, 20))
+        check("3 sets of bench at 15 reps 16 kg.", "bench", kg(16.0, 15, 3))
+        check("two sets of curls 12 reps at 10 kg", "curls", kg(10.0, 12, 2))
         assertEquals(
             CardioValues(1_200, inclinePct = 6.0, distanceKm = 2.0),
             QuickLogParser.parse("treadmill twenty minutes six percent incline two kilometers").cardio,

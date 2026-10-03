@@ -134,7 +134,7 @@ class QuickLogInterpreter(
             Log.w(TAG, "The model couldn't read '$text'", e)
             null
         }
-        val sets = answer?.let { acceptSets(it, text, parsed) }
+        val sets = answer?.let { acceptSets(it, text, parsed, statedSets(text)) }
         Log.d(TAG, "'$text': ${if (sets != null) "used" else "rejected"} $answer (${(System.nanoTime() - startedAt) / 1_000_000} ms)")
         return sets
     }
@@ -150,7 +150,8 @@ class QuickLogInterpreter(
          * reps), one the parser read is missing ([parsed]: nothing dropped), there are none, or a
          * set has neither reps nor seconds.
          */
-        fun acceptSets(answer: ModelQuickLog, text: String, parsed: List<SetFact>): List<SetFact>? {
+        fun acceptSets(answer: ModelQuickLog, text: String, parsed: List<SetFact>, statedSets: Int? = null): List<SetFact>? {
+            if (statedSets != null && answer.sets.size != statedSets) return null
             val numbers = Regex("\\d+(?:[.,]\\d+)?").findAll(text).map { it.value.replace(',', '.').toDouble() }.toSet()
             val sets = answer.sets.map { set ->
                 SetFact(
@@ -165,6 +166,13 @@ class QuickLogInterpreter(
             }
             val kept = sets.flatMap { it.values() }.toSet().containsAll(parsed.flatMap { it.values() })
             return sets.takeIf { ok && kept }
+        }
+
+        /** "3 sets": the one set count the line states, if it states exactly one (no "more", no "last one"). */
+        fun statedSets(text: String): Int? {
+            val lower = text.lowercase()
+            if (Regex("\\b(more|last|final|then|and)\\b").containsMatchIn(lower)) return null
+            return Regex("(\\d+) sets?\\b").findAll(lower).map { it.groupValues[1].toInt() }.toList().singleOrNull()
         }
 
         private fun SetFact.values() = listOfNotNull(weightKg, reps?.toDouble(), seconds?.toDouble())

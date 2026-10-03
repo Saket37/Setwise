@@ -135,6 +135,10 @@ class QuickLogInterpreterTest {
         assertNull(QuickLogInterpreter.acceptSets(ModelQuickLog(listOf(ModelLoggedSet(41.0, 6, 0))), "ohp 40 for 6", emptyList()))
         assertNull(QuickLogInterpreter.acceptSets(ModelQuickLog(listOf(ModelLoggedSet(40.0, 0, 0))), "ohp 40 for 6", emptyList())) // no reps or time
         assertEquals(listOf(SetFact(40.0, 6, null)), QuickLogInterpreter.acceptSets(ModelQuickLog(listOf(ModelLoggedSet(40.0, 6, 0))), "ohp 40 for 6", emptyList()))
+        // "3 sets" stated, one set answered: rejected.
+        assertNull(QuickLogInterpreter.acceptSets(ModelQuickLog(listOf(ModelLoggedSet(16.0, 15, 0))), "3 sets of bench 15 16", emptyList(), statedSets = 3))
+        assertEquals(3, QuickLogInterpreter.statedSets("3 sets of bench at 15 reps 16 kg."))
+        assertNull(QuickLogInterpreter.statedSets("3 sets of 6 at 40, last one 37.5 for 8"))
         // Dropping the 40 × 8 the parser read: rejected.
         val parsed = listOf(SetFact(50.0, 10, null), SetFact(40.0, 8, null))
         assertNull(QuickLogInterpreter.acceptSets(ModelQuickLog(listOf(ModelLoggedSet(50.0, 10, 0))), "row 3x10 at 50 then dropped to 40 for 8", parsed))
