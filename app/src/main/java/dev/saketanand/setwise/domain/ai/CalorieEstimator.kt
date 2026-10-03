@@ -10,8 +10,11 @@ import java.time.Duration
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
 
-/** An estimate and where it came from ([CalorieFormula.SOURCE] or [MODEL_SOURCE]). */
-data class SourcedCalorieEstimate(val estimate: CalorieEstimate, val source: String)
+/**
+ * An estimate and where it came from ([CalorieFormula.SOURCE] or [MODEL_SOURCE]).
+ * [modelFailed]: the model was asked and threw (busy, over quota…): the caller may stop asking.
+ */
+data class SourcedCalorieEstimate(val estimate: CalorieEstimate, val source: String, val modelFailed: Boolean = false)
 
 /**
  * Calories for a finished workout: the on-device model's judgement when it's there, from the
@@ -21,10 +24,11 @@ data class SourcedCalorieEstimate(val estimate: CalorieEstimate, val source: Str
  */
 class CalorieEstimator(private val model: OnDeviceModel) {
 
-    suspend fun estimate(session: WorkoutSession, bodyWeightKg: Double?): SourcedCalorieEstimate? {
+    /** @param useModel false: the formula only (e.g. an old workout, or the model just failed). */
+    suspend fun estimate(session: WorkoutSession, bodyWeightKg: Double?, useModel: Boolean = true): SourcedCalorieEstimate? {
         val formula = CalorieFormula.estimate(session, bodyWeightKg) ?: return null
         val fallback = SourcedCalorieEstimate(formula, CalorieFormula.SOURCE)
-        if (model.availability() != ModelAvailability.Ready) return fallback
+        if (!useModel || model.availability() != ModelAvailability.Ready) return fallback
 
         val parsed = try {
             model.generate(prompt(session, bodyWeightKg!!, formula), ModelCalorieAnswer.OUTPUT)
@@ -33,7 +37,7 @@ class CalorieEstimator(private val model: OnDeviceModel) {
         } catch (e: Exception) {
             // Busy, over quota, blocked in the background…: the formula's number, so there's always one.
             Log.w(TAG, "The model couldn't estimate workout ${session.id}", e)
-            return fallback
+            return fallback.copy(modelFailed = true)
         } ?: return fallback
         val intensity = Intensity.fromStored(parsed.intensity.lowercase(Locale.ROOT)) ?: return fallback
         val low = formula.kcal * PLAUSIBLE_RANGE.start

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 
 /**
  * Follows the model download app-wide, not per screen: AICore keeps downloading when Settings
@@ -28,19 +29,31 @@ class ModelDownloader(
         // AICore may wait (network, storage…) before the first byte: not "0%" yet.
         _state.value = DownloadState.WaitingToStart
         job = scope.launch {
-            model.download().collect { step ->
-                _state.value = when (step) {
-                    is ModelDownload.Progress -> when {
-                        step.bytesDownloaded <= 0 -> DownloadState.WaitingToStart
-                        else -> DownloadState.Downloading(
-                            percent = step.totalBytes?.let { total -> (step.bytesDownloaded * 100 / total).toInt().coerceIn(0, 100) },
-                        )
-                    }
-                    ModelDownload.Done -> DownloadState.Done
-                    is ModelDownload.Failed -> {
-                        Log.w(TAG, "Model download failed (${step.kind}): ${step.reason}")
-                        DownloadState.Failed(step.kind)
-                    }
+            try {
+                follow()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Never let a download problem take the app down: show it as failed.
+                Log.w(TAG, "Following the model download failed", e)
+                _state.value = DownloadState.Failed(DownloadFailure.Other)
+            }
+        }
+    }
+
+    private suspend fun follow() {
+        model.download().collect { step ->
+            _state.value = when (step) {
+                is ModelDownload.Progress -> when {
+                    step.bytesDownloaded <= 0 -> DownloadState.WaitingToStart
+                    else -> DownloadState.Downloading(
+                        percent = step.totalBytes?.let { total -> (step.bytesDownloaded * 100 / total).toInt().coerceIn(0, 100) },
+                    )
+                }
+                ModelDownload.Done -> DownloadState.Done
+                is ModelDownload.Failed -> {
+                    Log.w(TAG, "Model download failed (${step.kind}): ${step.reason}")
+                    DownloadState.Failed(step.kind)
                 }
             }
         }

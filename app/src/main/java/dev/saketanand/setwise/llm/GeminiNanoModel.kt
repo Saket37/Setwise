@@ -21,6 +21,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import dev.saketanand.setwise.domain.ai.DownloadFailure
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 
 /**
  * [OnDeviceModel] on Gemini Nano via the ML Kit GenAI Prompt API (AICore). On phones without
@@ -28,7 +31,8 @@ import dev.saketanand.setwise.domain.ai.DownloadFailure
  *
  * One client for the app's lifetime (a Koin single), so it isn't closed per screen; it's
  * released with the process. What the phone's Gemini Nano supports (system instructions,
- * structured output) is checked once, on first use; callers check [availability] first.
+ * structured output) is checked on first use and remembered once AICore answers; callers check
+ * [availability] first.
  */
 class GeminiNanoModel : OnDeviceModel {
 
@@ -54,7 +58,9 @@ class GeminiNanoModel : OnDeviceModel {
             .getOrDefault(ModelAvailability.Unavailable)
 
     override fun download(): Flow<ModelDownload> =
-        model.download()
+        // Inside flow {}: if AICore throws while starting (or getting the client), it reaches
+        // catch below instead of escaping to the caller.
+        flow { emitAll(model.download()) }
             .map { status ->
                 when (status) {
                     is DownloadStatus.DownloadStarted -> {
@@ -117,12 +123,23 @@ class GeminiNanoModel : OnDeviceModel {
     }
 
     private suspend fun supportsSystemInstruction(): Boolean =
-        supportsSystemInstruction ?: runCatching { model.isSystemPromptAvailable() }.getOrDefault(false)
-            .also { supportsSystemInstruction = it }
+        supportsSystemInstruction ?: askOnce("system instructions") { model.isSystemPromptAvailable() }
+            ?.also { supportsSystemInstruction = it } ?: false
 
     private suspend fun supportsStructuredOutput(): Boolean =
-        supportsStructuredOutput ?: runCatching { model.isStructuredOutputFeatureAvailable() }.getOrDefault(false)
-            .also { supportsStructuredOutput = it }
+        supportsStructuredOutput ?: askOnce("structured output") { model.isStructuredOutputFeatureAvailable() }
+            ?.also { supportsStructuredOutput = it } ?: false
+
+    /** AICore's answer, or null if asking failed: then it's asked again next time, not remembered as "no". */
+    private suspend fun askOnce(feature: String, check: suspend () -> Boolean): Boolean? =
+        try {
+            check()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Couldn't check $feature support", e)
+            null
+        }
 
     private companion object {
         const val TAG = "GeminiNanoModel"

@@ -67,7 +67,7 @@ class CalorieEstimatorTest {
         model.answer = { "About 330 calories!" }
         assertEquals(formula, estimator.estimate(session, 70.0))
         model.answer = { error("AICore busy") }
-        assertEquals(formula, estimator.estimate(session, 70.0))
+        assertEquals(formula.copy(modelFailed = true), estimator.estimate(session, 70.0)) // so the caller can stop asking
     }
 
     @Test

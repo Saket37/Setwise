@@ -2,6 +2,7 @@ package dev.saketanand.setwise.domain.ai
 
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -53,5 +54,17 @@ class ModelDownloaderTest {
         downloader.start()
 
         assertEquals(DownloadState.Downloading(null), downloader.state.value)
+    }
+
+    @Test
+    fun `a download that throws shows as failed instead of crashing`() = runTest(UnconfinedTestDispatcher()) {
+        val model = object : OnDeviceModel by FakeOnDeviceModel() {
+            override fun download(): Flow<ModelDownload> = throw IllegalStateException("AICore not ready")
+        }
+        val downloader = ModelDownloader(model, backgroundScope)
+
+        downloader.start()
+
+        assertEquals(DownloadState.Failed(DownloadFailure.Other), downloader.state.value)
     }
 }
