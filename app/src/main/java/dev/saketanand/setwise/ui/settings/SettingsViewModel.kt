@@ -13,21 +13,29 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.ModelDownload
+import dev.saketanand.setwise.domain.ai.OnDeviceModel
+import kotlinx.coroutines.Job
 
 /** Screen: [SettingsScreenRoot]. Shows and edits what onboarding asked (all optional). */
 class SettingsViewModel(
     private val userSettings: UserSettingsRepository,
+    private val model: OnDeviceModel,
 ) : ViewModel() {
 
     private val editor = MutableStateFlow<SettingsEditor?>(null)
+    private val ai = MutableStateFlow(AiStatusUi())
+    private var download: Job? = null
 
-    val state: StateFlow<SettingsUiState> = combine(userSettings.settings, editor) { settings, editor ->
+    val state: StateFlow<SettingsUiState> = combine(userSettings.settings, editor, ai) { settings, editor, ai ->
         SettingsUiState(
             isLoading = false,
             bodyWeightKg = settings.bodyWeightKg,
             trainingDays = settings.trainingDays,
             askAboutUnloggedDays = settings.askAboutUnloggedDays,
             editor = editor,
+            ai = ai,
         )
     }
         .catch { e ->
@@ -59,7 +67,41 @@ class SettingsViewModel(
 
             is SettingsAction.OnAskAboutUnloggedDaysChange -> save { userSettings.setAskAboutUnloggedDays(action.ask) }
 
+            SettingsAction.OnDownloadModelClick -> downloadModel()
+
             SettingsAction.OnDismissEditor -> editor.value = null
+        }
+    }
+
+    init {
+        refreshModel()
+    }
+
+    private fun refreshModel() {
+        viewModelScope.launch {
+            val availability = runCatching { model.availability() }.getOrDefault(ModelAvailability.Unavailable)
+            ai.update { it.copy(availability = availability) }
+        }
+    }
+
+    /** Follows the download here (AICore keeps going if the screen closes); then checks again. */
+    private fun downloadModel() {
+        if (download?.isActive == true || !ai.value.canDownload) return
+        ai.update { it.copy(availability = ModelAvailability.Downloading, downloadPercent = 0, downloadFailed = false) }
+        download = viewModelScope.launch {
+            model.download().collect { step ->
+                when (step) {
+                    is ModelDownload.Progress -> ai.update {
+                        it.copy(downloadPercent = step.totalBytes?.let { total -> (step.bytesDownloaded * 100 / total).toInt().coerceIn(0, 100) })
+                    }
+                    ModelDownload.Done -> ai.update { it.copy(downloadPercent = null) }
+                    is ModelDownload.Failed -> {
+                        Log.w(TAG, "Model download failed: ${step.reason}")
+                        ai.update { it.copy(downloadPercent = null, downloadFailed = true) }
+                    }
+                }
+            }
+            refreshModel()
         }
     }
 

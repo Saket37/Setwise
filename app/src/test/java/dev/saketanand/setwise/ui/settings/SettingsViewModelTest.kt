@@ -17,6 +17,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
@@ -27,7 +29,9 @@ class SettingsViewModelTest {
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
     @After fun tearDown() = Dispatchers.resetMain()
 
-    private fun TestScope.viewModel() = SettingsViewModel(settings).also { vm ->
+    private val model = FakeOnDeviceModel(ModelAvailability.Downloadable)
+
+    private fun TestScope.viewModel() = SettingsViewModel(settings, model).also { vm ->
         backgroundScope.launch { vm.state.collect {} }
     }
 
@@ -43,6 +47,29 @@ class SettingsViewModelTest {
         vm.onAction(SettingsAction.OnSaveBodyWeight("72,5"))
         assertNull(vm.state.value.editor)
         assertEquals(72.5, vm.state.value.bodyWeightKg)
+    }
+
+    @Test
+    fun `the AI row shows the model's state, and downloading it ends with Ready`() = runTest(dispatcher) {
+        val vm = viewModel()
+        assertEquals(ModelAvailability.Downloadable, vm.state.value.ai.availability)
+        assertEquals(true, vm.state.value.ai.canDownload)
+
+        model.availability = ModelAvailability.Ready // what AICore reports once it's done
+        vm.onAction(SettingsAction.OnDownloadModelClick)
+
+        assertEquals(ModelAvailability.Ready, vm.state.value.ai.availability)
+        assertEquals(false, vm.state.value.ai.canDownload)
+    }
+
+    @Test
+    fun `a phone without the model can't download it`() = runTest(dispatcher) {
+        model.availability = ModelAvailability.Unavailable
+        val vm = viewModel()
+
+        vm.onAction(SettingsAction.OnDownloadModelClick)
+
+        assertEquals(ModelAvailability.Unavailable, vm.state.value.ai.availability)
     }
 
     @Test
