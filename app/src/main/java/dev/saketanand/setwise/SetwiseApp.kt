@@ -15,6 +15,7 @@ import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
+import dev.saketanand.setwise.domain.CalorieSync
 
 class SetwiseApp : Application() {
 
@@ -32,6 +33,9 @@ class SetwiseApp : Application() {
         // Rest timer: notification channels, and the link to its foreground service and alerts.
         RestNotifications.createChannels(this)
         get<RestTimerCoordinator>().start()
+
+        // Calorie estimates for finished workouts, as soon as a body weight is known.
+        get<CalorieSync>().start(appScope)
 
         // Load the built-in exercise library on first launch (no-op afterwards).
         val exerciseSeeder: ExerciseSeeder = get()

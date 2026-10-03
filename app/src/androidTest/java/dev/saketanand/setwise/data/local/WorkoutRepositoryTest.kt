@@ -10,7 +10,9 @@ import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
 import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
 import dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl
+import dev.saketanand.setwise.domain.model.CalorieEstimate
 import dev.saketanand.setwise.domain.model.CardioValues
+import dev.saketanand.setwise.domain.model.Intensity
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.TemplateDraft
@@ -272,6 +274,24 @@ class WorkoutRepositoryTest {
 
         assertEquals(true, isRecord(second))
         assertEquals(false, isRecord(first))
+    }
+
+    @Test
+    fun editingTimesClearsAFormulaEstimateButKeepsOtherSources() = runTest {
+        val formula = finishWithBench(startedAt = 1_000, kg = 60.0)
+        val measured = finishWithBench(startedAt = 5_000, kg = 60.0)
+        assertEquals(listOf(measured, formula), repository.observeWorkoutsWithoutCalories().first())
+
+        repository.setCalories(formula, CalorieEstimate(300, Intensity.Moderate), "formula")
+        repository.setCalories(measured, CalorieEstimate(410, Intensity.Vigorous), "heart_rate")
+        assertEquals(emptyList<Long>(), repository.observeWorkoutsWithoutCalories().first())
+        assertEquals(300, repository.observeSession(formula).first()!!.calories)
+
+        repository.updateFinishedTimes(formula, Instant.ofEpochMilli(1_000), Instant.ofEpochMilli(4_000))
+        repository.updateFinishedTimes(measured, Instant.ofEpochMilli(5_000), Instant.ofEpochMilli(9_000))
+
+        assertEquals(listOf(formula), repository.observeWorkoutsWithoutCalories().first())
+        assertEquals(410, repository.observeSession(measured).first()!!.calories)
     }
 
     @Test

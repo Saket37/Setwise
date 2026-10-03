@@ -43,6 +43,7 @@ import dev.saketanand.setwise.util.toWeightLabel
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import org.koin.androidx.compose.koinViewModel
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseBodyWeightDialog
 
 /** Destination: [Route.Settings]. */
 @Composable
@@ -105,7 +106,17 @@ fun SettingsScreen(
     }
 
     when (val editor = uiState.editor) {
-        is SettingsEditor.BodyWeight -> BodyWeightDialog(current = uiState.bodyWeightKg, isInvalid = editor.isInvalid, onAction = onAction)
+        is SettingsEditor.BodyWeight -> SetwiseBodyWeightDialog(
+            current = uiState.bodyWeightKg,
+            isInvalid = editor.isInvalid,
+            onSave = { onAction(SettingsAction.OnSaveBodyWeight(it)) },
+            onDismiss = { onAction(SettingsAction.OnDismissEditor) },
+            onRemove = if (uiState.bodyWeightKg != null) {
+                { onAction(SettingsAction.OnRemoveBodyWeight) }
+            } else {
+                null
+            },
+        )
         is SettingsEditor.TrainingDays -> TrainingDaysDialog(selected = editor.selected, onAction = onAction)
         null -> Unit
     }
@@ -120,55 +131,6 @@ private fun trainingDaysLabel(days: Set<DayOfWeek>): String {
         7 -> stringResource(R.string.every_day)
         else -> days.sorted().joinToString(", ") { it.getDisplayName(TextStyle.SHORT, locale) }
     }
-}
-
-@Composable
-private fun BodyWeightDialog(current: Double?, isInvalid: Boolean, onAction: (SettingsAction) -> Unit) {
-    val text = rememberTextFieldState(current?.toWeightInput().orEmpty())
-    AlertDialog(
-        onDismissRequest = { onAction(SettingsAction.OnDismissEditor) },
-        title = { Text(stringResource(R.string.body_weight)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SetwiseNumberField(
-                        state = text,
-                        contentDescription = stringResource(R.string.a11y_body_weight_kg),
-                        placeholder = "70",
-                        kind = NumberKind.Decimal,
-                        imeAction = ImeAction.Done,
-                        onKeyboardAction = { onAction(SettingsAction.OnSaveBodyWeight(text.text.toString())) },
-                        maxLength = 5,
-                        textStyle = MaterialTheme.typography.headlineMedium,
-                        minHeight = 56.dp,
-                        modifier = Modifier.width(120.dp),
-                    )
-                    Text(stringResource(R.string.unit_kg), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                if (isInvalid) {
-                    Text(stringResource(R.string.onboarding_weight_invalid), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
-                }
-            }
-        },
-        confirmButton = {
-            DialogButton(R.string.save) { onAction(SettingsAction.OnSaveBodyWeight(text.text.toString())) }
-        },
-        dismissButton = {
-            Row {
-                if (current != null) {
-                    SetwiseButton(
-                        text = stringResource(R.string.remove),
-                        onClick = { onAction(SettingsAction.OnRemoveBodyWeight) },
-                        style = SetwiseButtonStyle.Text,
-                        size = SetwiseButtonSize.Medium,
-                        colors = SetwiseButtonDefaults.destructiveColors(SetwiseButtonStyle.Text),
-                    )
-                }
-                DialogButton(R.string.cancel) { onAction(SettingsAction.OnDismissEditor) }
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-    )
 }
 
 @Composable

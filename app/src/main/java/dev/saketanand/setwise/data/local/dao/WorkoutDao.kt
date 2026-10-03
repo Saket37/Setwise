@@ -318,9 +318,27 @@ interface WorkoutDao {
     @Query("UPDATE sets SET isPr = 1 WHERE id IN (:setIds)")
     suspend fun markPersonalRecords(setIds: List<Long>)
 
-    /** Corrects the times of a finished workout (Summary → edit times). */
-    @Query("UPDATE workouts SET startedAt = :startedAt, endedAt = :endedAt WHERE id = :workoutId AND endedAt IS NOT NULL")
+    /**
+     * Corrects the times of a finished workout (Summary → edit times). A formula calorie
+     * estimate depends on them, so it's cleared to be worked out again (CalorieSync).
+     */
+    @Query(
+        """
+        UPDATE workouts SET startedAt = :startedAt, endedAt = :endedAt,
+            calories = CASE WHEN caloriesSource = 'formula' THEN NULL ELSE calories END,
+            intensity = CASE WHEN caloriesSource = 'formula' THEN NULL ELSE intensity END,
+            caloriesSource = CASE WHEN caloriesSource = 'formula' THEN NULL ELSE caloriesSource END
+        WHERE id = :workoutId AND endedAt IS NOT NULL
+        """
+    )
     suspend fun updateFinishedTimes(workoutId: Long, startedAt: Long, endedAt: Long): Int
+
+    /** Finished workouts with no calorie estimate yet, newest first. */
+    @Query("SELECT id FROM workouts WHERE endedAt IS NOT NULL AND calories IS NULL ORDER BY startedAt DESC")
+    fun observeWorkoutsWithoutCalories(): Flow<List<Long>>
+
+    @Query("UPDATE workouts SET calories = :calories, intensity = :intensity, caloriesSource = :source WHERE id = :workoutId")
+    suspend fun setCalories(workoutId: Long, calories: Int, intensity: String, source: String)
 
     @Query("UPDATE workouts SET name = :name WHERE id = :workoutId")
     suspend fun renameWorkout(workoutId: Long, name: String)

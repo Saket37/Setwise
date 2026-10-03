@@ -54,6 +54,7 @@ val viewModelModule = module {
             workoutId = params.get(),
             workoutRepository = get(),
             templateRepository = get(),
+            userSettingsRepository = get(),
             dateProvider = get(),
         )
     }

@@ -20,6 +20,11 @@ sealed interface WorkoutSummaryAction {
     /** "Done" or ✕. */
     data object OnDoneClick : WorkoutSummaryAction
 
+    /** The calories tile without a body weight: asks for it (saved in Settings). */
+    data object OnAddBodyWeightClick : WorkoutSummaryAction
+    data class OnSaveBodyWeight(val text: String) : WorkoutSummaryAction
+    data object OnBodyWeightDismiss : WorkoutSummaryAction
+
     /** Tap on the workout's name: the rename dialog. */
     data object OnRenameClick : WorkoutSummaryAction
     data class OnRenameConfirm(val name: String) : WorkoutSummaryAction

@@ -20,6 +20,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dev.saketanand.setwise.domain.repository.UserSettingsRepository
+import dev.saketanand.setwise.util.parseWeight
+import kotlinx.coroutines.flow.map
 
 /**
  * Screen: [WorkoutSummaryScreenRoot]. Shown after Finish and when opening a workout from History.
@@ -30,6 +33,7 @@ class WorkoutSummaryViewModel(
     private val workoutId: Long,
     private val workoutRepository: WorkoutRepository,
     private val templateRepository: TemplateRepository,
+    private val userSettingsRepository: UserSettingsRepository,
     private val dateProvider: DateProvider,
 ) : ViewModel() {
 
@@ -46,9 +50,12 @@ class WorkoutSummaryViewModel(
             if (session == null || session.endedAt == null) close()
         },
         overlays,
-    ) { session, overlays ->
+        userSettingsRepository.settings.map { it.bodyWeightKg },
+    ) { session, overlays, bodyWeightKg ->
         if (session == null || session.endedAt == null) return@combine WorkoutSummaryUiState(isLoading = false)
         session.toSummaryUi(dateProvider.zone).copy(
+            needsBodyWeight = bodyWeightKg == null && session.calories == null,
+            bodyWeightDialog = overlays.bodyWeightDialog,
             isTemplateSaved = overlays.isTemplateSaved,
             editTimes = overlays.editTimes,
             isRenaming = overlays.isRenaming,
@@ -76,6 +83,10 @@ class WorkoutSummaryViewModel(
             WorkoutSummaryAction.OnTimePickerDismiss -> updateEditTimes { it.copy(picking = null) }
             WorkoutSummaryAction.OnSaveTimes -> saveTimes()
             WorkoutSummaryAction.OnEditTimesDismiss -> overlays.update { it.copy(editTimes = null) }
+
+            WorkoutSummaryAction.OnAddBodyWeightClick -> overlays.update { it.copy(bodyWeightDialog = BodyWeightDialogUi()) }
+            WorkoutSummaryAction.OnBodyWeightDismiss -> overlays.update { it.copy(bodyWeightDialog = null) }
+            is WorkoutSummaryAction.OnSaveBodyWeight -> saveBodyWeight(action.text)
 
             WorkoutSummaryAction.OnDeleteClick -> overlays.update { it.copy(isConfirmingDelete = true) }
             WorkoutSummaryAction.OnDeleteDismiss -> overlays.update { it.copy(isConfirmingDelete = false) }
@@ -145,6 +156,21 @@ class WorkoutSummaryViewModel(
         }
     }
 
+    /** Saved in Settings; CalorieSync then estimates this workout (and others missing one). */
+    private fun saveBodyWeight(text: String) {
+        val kg = parseWeight(text)
+        if (kg == null) {
+            overlays.update { it.copy(bodyWeightDialog = BodyWeightDialogUi(isInvalid = true)) }
+            return
+        }
+        viewModelScope.launch {
+            val saved = runCatching { userSettingsRepository.setBodyWeightKg(kg) }
+                .onFailure { e -> Log.e(TAG, "Saving the body weight failed", e) }
+                .getOrDefault(false)
+            overlays.update { it.copy(bodyWeightDialog = if (saved) null else BodyWeightDialogUi(isInvalid = true)) }
+        }
+    }
+
     private fun updateEditTimes(change: (EditTimesUi) -> EditTimesUi) =
         overlays.update { overlays -> overlays.copy(editTimes = overlays.editTimes?.let(change)) }
 
@@ -164,6 +190,7 @@ class WorkoutSummaryViewModel(
         val editTimes: EditTimesUi? = null,
         val isRenaming: Boolean = false,
         val isConfirmingDelete: Boolean = false,
+        val bodyWeightDialog: BodyWeightDialogUi? = null,
         val isSavingTemplate: Boolean = false,
         val isTemplateSaved: Boolean = false,
     )

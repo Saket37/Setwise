@@ -13,6 +13,9 @@ data class WorkoutSession(
     val endedAt: Instant?,
     /** In display order. */
     val exercises: List<SessionExercise>,
+    /** Estimated once finished (and a body weight is known); null until then. */
+    val calories: Int? = null,
+    val intensity: Intensity? = null,
 )
 
 /** One exercise in a workout, with its sets and what was done last time. */
