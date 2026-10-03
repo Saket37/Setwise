@@ -121,6 +121,7 @@ fun SetEntity.toDomain(isCardio: Boolean = false): WorkoutSet = WorkoutSet(
     isCompleted = isCompleted,
     isPr = isPr,
     cardio = if (isCardio) toCardioValues().takeUnless { it.isEmpty } else null,
+    completedAt = completedAt?.let(Instant::ofEpochMilli),
 )
 
 fun SetEntity.toCardioValues() = CardioValues(

@@ -13,21 +13,30 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.OnDeviceModel
+import dev.saketanand.setwise.domain.ai.DownloadState
+import dev.saketanand.setwise.domain.ai.ModelDownloader
 
 /** Screen: [SettingsScreenRoot]. Shows and edits what onboarding asked (all optional). */
 class SettingsViewModel(
     private val userSettings: UserSettingsRepository,
+    private val model: OnDeviceModel,
+    private val downloader: ModelDownloader,
 ) : ViewModel() {
 
     private val editor = MutableStateFlow<SettingsEditor?>(null)
+    private val availability = MutableStateFlow<ModelAvailability?>(null)
+    private val ai = combine(availability, downloader.state) { availability, download -> AiStatusUi(availability, download) }
 
-    val state: StateFlow<SettingsUiState> = combine(userSettings.settings, editor) { settings, editor ->
+    val state: StateFlow<SettingsUiState> = combine(userSettings.settings, editor, ai) { settings, editor, ai ->
         SettingsUiState(
             isLoading = false,
             bodyWeightKg = settings.bodyWeightKg,
             trainingDays = settings.trainingDays,
             askAboutUnloggedDays = settings.askAboutUnloggedDays,
             editor = editor,
+            ai = ai,
         )
     }
         .catch { e ->
@@ -59,7 +68,24 @@ class SettingsViewModel(
 
             is SettingsAction.OnAskAboutUnloggedDaysChange -> save { userSettings.setAskAboutUnloggedDays(action.ask) }
 
+            SettingsAction.OnDownloadModelClick -> if (state.value.ai.canDownload) downloader.start()
+            SettingsAction.OnScreenResumed -> refreshModel()
+
             SettingsAction.OnDismissEditor -> editor.value = null
+        }
+    }
+
+    init {
+        refreshModel()
+        // When the download ends, AICore's answer changes (Ready, or still Downloadable).
+        viewModelScope.launch {
+            downloader.state.collect { if (it is DownloadState.Done || it is DownloadState.Failed) refreshModel() }
+        }
+    }
+
+    private fun refreshModel() {
+        viewModelScope.launch {
+            availability.value = runCatching { model.availability() }.getOrDefault(ModelAvailability.Unavailable)
         }
     }
 

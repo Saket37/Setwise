@@ -2,6 +2,8 @@ package dev.saketanand.setwise.ui.settings
 
 import androidx.compose.runtime.Immutable
 import java.time.DayOfWeek
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.DownloadState
 
 /** Everything [SettingsScreen] draws. */
 @Immutable
@@ -12,7 +14,20 @@ data class SettingsUiState(
     val askAboutUnloggedDays: Boolean = true,
     /** The editor dialog that's open, if any. */
     val editor: SettingsEditor? = null,
+    val ai: AiStatusUi = AiStatusUi(),
 )
+
+/** The "On-device AI" row: Gemini Nano's state, and the download (followed app-wide). */
+@Immutable
+data class AiStatusUi(
+    /** Null until checked. */
+    val availability: ModelAvailability? = null,
+    val download: DownloadState = DownloadState.Idle,
+) {
+    val canDownload: Boolean
+        get() = availability != ModelAvailability.Ready &&
+            (availability == ModelAvailability.Downloadable || download is DownloadState.Failed)
+}
 
 /** Settings edited in a dialog. */
 @Immutable

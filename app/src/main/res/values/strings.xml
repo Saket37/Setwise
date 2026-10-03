@@ -315,6 +315,25 @@
     <string name="delete_workout">Delete workout</string>
     <string name="delete_workout_title">Delete %1$s?</string>
     <string name="delete_workout_message">Its sets are removed from your history and progress. This can\'t be undone.</string>
+    <!-- Settings: on-device AI -->
+    <string name="settings_ai">Smart features</string>
+    <string name="ai_on_device">On-device AI</string>
+    <string name="ai_checking">Checking…</string>
+    <string name="ai_ready">Ready</string>
+    <string name="ai_ready_detail">Gemini Nano runs on this phone. Your workouts never leave it.</string>
+    <string name="ai_download">Download</string>
+    <string name="ai_downloadable_detail">Gemini Nano can run on this phone for sharper estimates. Setwise works fully without it.</string>
+    <string name="ai_downloading">Downloading</string>
+    <string name="ai_downloading_percent">Downloading %1$d%%</string>
+    <string name="ai_downloading_detail">It keeps going in the background. Setwise uses its formulas until it\'s ready.</string>
+    <string name="ai_unavailable">Not on this phone</string>
+    <string name="ai_unavailable_detail">This phone can\'t run Gemini Nano, so Setwise uses its built-in formulas.</string>
+    <string name="ai_try_again">Try again</string>
+    <string name="ai_waiting">Waiting to start…</string>
+    <string name="ai_waiting_detail">Android downloads it in the background when it can. It\'s a large download, so this can take a while, especially off Wi-Fi.</string>
+    <string name="ai_download_no_space">Not enough storage for Gemini Nano. Free some space and tap to try again.</string>
+    <string name="ai_download_needs_update">Gemini Nano needs newer system software. Update Android AICore and your phone, then tap to try again.</string>
+    <string name="ai_download_failed">The download didn\'t finish. Tap to try again.</string>
     <!-- Create exercise -->
     <string name="new_exercise">New exercise</string>
     <string name="exercise_name">Name</string>
