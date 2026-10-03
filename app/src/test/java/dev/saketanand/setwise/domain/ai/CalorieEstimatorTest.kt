@@ -44,11 +44,12 @@ class CalorieEstimatorTest {
     }
 
     @Test
-    fun `a plausible answer from the model is used`() = runTest {
+    fun `a plausible number from the model is used, with the formula's intensity`() = runTest {
+        // Extra keys (an intensity the model wasn't asked for) are ignored: intensity is the rule's.
         val model = FakeOnDeviceModel(ModelAvailability.Ready, answer = { "```json\n{\"kcal\": 410, \"intensity\": \"Vigorous\"}\n```" })
 
         assertEquals(
-            SourcedCalorieEstimate(CalorieEstimate(410, Intensity.Vigorous), CalorieEstimator.MODEL_SOURCE),
+            SourcedCalorieEstimate(CalorieEstimate(410, Intensity.Moderate), CalorieEstimator.MODEL_SOURCE),
             CalorieEstimator(model).estimate(session, 70.0),
         )
     }
@@ -58,11 +59,11 @@ class CalorieEstimatorTest {
         val model = FakeOnDeviceModel(ModelAvailability.Ready)
         val estimator = CalorieEstimator(model)
 
-        model.answer = { """{"kcal": 1200, "intensity": "vigorous"}""" } // over 1.5 × 350
+        model.answer = { """{"kcal": 1200}""" } // over 1.5 × 350
         assertEquals(formula, estimator.estimate(session, 70.0))
-        model.answer = { """{"kcal": 150, "intensity": "light"}""" } // under 0.6 × 350
+        model.answer = { """{"kcal": 150}""" } // under 0.6 × 350
         assertEquals(formula, estimator.estimate(session, 70.0))
-        model.answer = { """{"kcal": 330, "intensity": "extreme"}""" }
+        model.answer = { """{"kcal": "lots"}""" }
         assertEquals(formula, estimator.estimate(session, 70.0))
         model.answer = { "About 330 calories!" }
         assertEquals(formula, estimator.estimate(session, 70.0))
@@ -85,6 +86,7 @@ class CalorieEstimatorTest {
             listOf(
                 "Body weight: 70 kg",
                 "Length: 60 min",
+                "Completed sets: 18 (18 per hour)",
                 "Bench Press: " + List(10) { "60kg x8" }.joinToString(", "), // capped at 10 sets
                 "Rest between sets: median 1:30 (17 rests)",
                 "Formula estimate: 350 kcal, moderate",

@@ -43,6 +43,8 @@ import dev.saketanand.setwise.domain.ai.OnDeviceModel
 import dev.saketanand.setwise.llm.GeminiNanoModel
 import dev.saketanand.setwise.domain.ai.CalorieEstimator
 import dev.saketanand.setwise.domain.ai.ModelDownloader
+import dev.saketanand.setwise.domain.ai.AiCheck
+import org.koin.core.module.dsl.factoryOf
 
 val appModule = module {
     // The app's clock ("now", today + midnight rollover); swapped for a fixed date in tests.
@@ -60,6 +62,7 @@ val appModule = module {
     single<OnDeviceModel> { GeminiNanoModel() }
     singleOf(::CalorieEstimator)
     single { ModelDownloader(get(), get(ApplicationScope)) }
+    factoryOf(::AiCheck) // debug launch extra only (MainActivity)
     singleOf(::CalorieSync)
     single<NotificationPermission> { AndroidNotificationPermission(androidContext()) }
     single { RestTimerCoordinator(androidContext(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)) } bind

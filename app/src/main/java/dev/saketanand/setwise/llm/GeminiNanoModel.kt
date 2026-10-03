@@ -89,14 +89,17 @@ class GeminiNanoModel : OnDeviceModel {
                 val typed = model.generateContent(generateTypedContentRequest(request.toMlKit(), output.type))
                 typed.candidates.firstOrNull()?.response.also { answer ->
                     if (answer == null) Log.w(TAG, "No structured answer (finish reason ${typed.candidates.firstOrNull()?.finishReason})")
+                    else Log.d(TAG, "Structured answer: $answer")
                 }
             } catch (e: GenAiException) {
                 // The answer broke the schema (or ran out of tokens): no answer, the caller falls back.
+                Log.w(TAG, "Structured output failed (error ${e.errorCode})", e)
                 if (e.errorCode in INVALID_STRUCTURED_ANSWER) null else throw e
             }
         }
         // No structured output on this phone: ask for the JSON in words and read it.
         val answer = generate(request.copy(system = request.system + " Answer with JSON only: " + output.textFormat))
+        Log.d(TAG, "Text answer: ${answer.take(MAX_LOGGED_ANSWER)}")
         return ModelJson.decode(answer, output.json)
     }
 
@@ -133,7 +136,7 @@ class GeminiNanoModel : OnDeviceModel {
     /** AICore's answer, or null if asking failed: then it's asked again next time, not remembered as "no". */
     private suspend fun askOnce(feature: String, check: suspend () -> Boolean): Boolean? =
         try {
-            check()
+            check().also { Log.d(TAG, "Supports $feature: $it") }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -143,6 +146,7 @@ class GeminiNanoModel : OnDeviceModel {
 
     private companion object {
         const val TAG = "GeminiNanoModel"
+        const val MAX_LOGGED_ANSWER = 300
         val INVALID_STRUCTURED_ANSWER = setOf(
             GenAiException.ErrorCode.STRUCTURED_OUTPUT_RESPONSE_ERROR,
             GenAiException.ErrorCode.STRUCTURED_OUTPUT_MAX_TOKENS_ERROR,
