@@ -19,4 +19,10 @@ sealed interface OnboardingAction {
     data class OnDayToggle(val day: DayOfWeek) : OnboardingAction
     data class OnAskToggle(val ask: Boolean) : OnboardingAction
     data object OnBodyWeightEdited : OnboardingAction
+
+    /**
+     * The system's notification prompt was answered (allowed or not), after "Allow notifications"
+     * on the last step. Nothing to save: the system keeps the answer.
+     */
+    data object OnNotificationsAnswered : OnboardingAction
 }

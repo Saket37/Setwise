@@ -19,6 +19,8 @@ import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.TemplateRepository
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
+import dev.saketanand.setwise.timer.AndroidNotificationPermission
+import dev.saketanand.setwise.timer.NotificationPermission
 import dev.saketanand.setwise.timer.DefaultRestTimer
 import dev.saketanand.setwise.timer.RestAlert
 import dev.saketanand.setwise.timer.RestNotificationRefresher
@@ -49,6 +51,7 @@ val appModule = module {
     single<ElapsedClock> { SystemElapsedClock }
     single<RestTimer> { DefaultRestTimer(CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate), get()) }
     single { RestAlert(androidContext()) }
+    single<NotificationPermission> { AndroidNotificationPermission(androidContext()) }
     single { RestTimerCoordinator(androidContext(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)) } bind
         RestNotificationRefresher::class
 

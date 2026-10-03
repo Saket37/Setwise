@@ -30,7 +30,42 @@ class OnboardingViewModelTest {
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
     @After fun tearDown() = Dispatchers.resetMain()
 
-    private fun viewModel(handle: SavedStateHandle = SavedStateHandle()) = OnboardingViewModel(settings, handle)
+    /** Default: notifications already allowed (or Android 12-), so no notifications step. */
+    private fun viewModel(handle: SavedStateHandle = SavedStateHandle(), needsNotificationPermission: Boolean = false) =
+        OnboardingViewModel(settings, { needsNotificationPermission }, handle)
+
+    @Test
+    fun `the notifications step comes last when the permission still has to be asked`() = runTest(dispatcher) {
+        val vm = viewModel(SavedStateHandle(mapOf("step" to OnboardingStep.CheckIns.name)), needsNotificationPermission = true)
+        assertEquals(5, vm.state.value.stepCount)
+
+        vm.onAction(OnboardingAction.OnContinue())
+        assertEquals(OnboardingStep.Notifications, vm.state.value.step)
+        assertTrue(vm.state.value.isLastStep)
+        assertFalse(settings.settings.value.onboardingDone)
+
+        // Allowed or not, the system prompt's answer ends onboarding.
+        vm.onAction(OnboardingAction.OnNotificationsAnswered)
+        vm.onFinished.first()
+        assertTrue(settings.settings.value.onboardingDone)
+    }
+
+    @Test
+    fun `without a permission to ask, check-ins is the last step`() = runTest(dispatcher) {
+        val vm = viewModel(SavedStateHandle(mapOf("step" to OnboardingStep.CheckIns.name)))
+        assertEquals(4, vm.state.value.stepCount)
+        assertTrue(vm.state.value.isLastStep)
+    }
+
+    @Test
+    fun `not now on notifications finishes without asking`() = runTest(dispatcher) {
+        val vm = viewModel(SavedStateHandle(mapOf("step" to OnboardingStep.Notifications.name)), needsNotificationPermission = true)
+
+        vm.onAction(OnboardingAction.OnSkipStep)
+
+        vm.onFinished.first()
+        assertTrue(settings.settings.value.onboardingDone)
+    }
 
     @Test
     fun `answering every step saves the answers and finishes`() = runTest(dispatcher) {
@@ -65,7 +100,7 @@ class OnboardingViewModelTest {
 
     @Test
     fun `an implausible weight stays on the step with a message, an empty one skips`() = runTest(dispatcher) {
-        val vm = viewModel(SavedStateHandle(mapOf("step" to OnboardingStep.BodyWeight.ordinal)))
+        val vm = viewModel(SavedStateHandle(mapOf("step" to OnboardingStep.BodyWeight.name)))
 
         vm.onAction(OnboardingAction.OnContinue(bodyWeightText = "7"))
         assertEquals(OnboardingStep.BodyWeight, vm.state.value.step)

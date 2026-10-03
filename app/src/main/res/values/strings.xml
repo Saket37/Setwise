@@ -232,7 +232,7 @@
     <!-- %1$d = current step, %2$d = number of steps -->
     <string name="a11y_onboarding_step">Step %1$d of %2$d</string>
     <string name="onboarding_welcome_title">Welcome to Setwise</string>
-    <string name="onboarding_welcome_message">Log sets fast, see last time\'s numbers, and keep your rests on time. Three quick questions to set it up. All optional.</string>
+    <string name="onboarding_welcome_message">Log sets fast, see last time\'s numbers, and keep your rests on time. A few quick questions to set it up. All optional.</string>
     <string name="onboarding_days_title">Which days do you usually train?</string>
     <string name="onboarding_days_message">If one of these days passes without a workout, Setwise can ask what happened. Pick none if it changes week to week.</string>
     <string name="onboarding_weight_title">What do you weigh?</string>
@@ -240,6 +240,14 @@
     <string name="onboarding_weight_invalid">Enter a weight between 20 and 400 kg.</string>
     <string name="a11y_body_weight_kg">Body weight in kg</string>
     <string name="onboarding_checkins_title">Ask about days you didn\'t log?</string>
+    <string name="onboarding_notifications_title">Get told when rest is over</string>
+    <string name="onboarding_notifications_message">Setwise uses one notification while you rest, so you can put the phone down or switch apps and still keep time.</string>
+    <string name="onboarding_notifications_countdown_title">Rest countdown</string>
+    <string name="onboarding_notifications_countdown_message">Time left before your next set, on the lock screen and in the notification shade.</string>
+    <string name="onboarding_notifications_alert_title">Rest-over alert</string>
+    <string name="onboarding_notifications_alert_message">A buzz when it\'s time for your next set, even with the screen off.</string>
+    <string name="onboarding_notifications_note">Only during rests: no reminders, no ads. You can change this anytime in your phone\'s settings.</string>
+    <string name="allow_notifications">Allow notifications</string>
     <string name="onboarding_checkins_message">When you open the app after a day without a workout, Setwise asks once whether you trained, rested or missed it. Never during a workout, at most once a day.</string>
     <string name="ask_about_unlogged_days">Ask about days I didn\'t log</string>
     <string name="settings_change_later">You can change all of this in Settings.</string>

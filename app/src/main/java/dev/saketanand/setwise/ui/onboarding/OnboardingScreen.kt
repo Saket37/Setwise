@@ -1,6 +1,10 @@
 package dev.saketanand.setwise.ui.onboarding
 
+import android.Manifest
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import dev.saketanand.setwise.ui.designsystem.components.IconTile
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -81,7 +85,23 @@ fun OnboardingScreenRoot(
         snapshotFlow { bodyWeight.text.toString() }.drop(1).collect { viewModel.onAction(OnboardingAction.OnBodyWeightEdited) }
     }
 
-    OnboardingScreen(uiState = uiState, bodyWeight = bodyWeight, onAction = viewModel::onAction)
+    // "Allow notifications": the system prompt; whatever the answer, onboarding moves on.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        viewModel.onAction(OnboardingAction.OnNotificationsAnswered)
+    }
+
+    OnboardingScreen(
+        uiState = uiState,
+        bodyWeight = bodyWeight,
+        onAction = { action ->
+            // The step only exists on Android 13+ (OnboardingViewModel), where the permission is asked at runtime.
+            if (action is OnboardingAction.OnContinue && uiState.step == OnboardingStep.Notifications) {
+                notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                viewModel.onAction(action)
+            }
+        },
+    )
 }
 
 /** One step at a time: step dots and "Skip setup" on top, the question, Continue / Skip at the bottom. */
@@ -166,6 +186,27 @@ fun OnboardingScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
+                    OnboardingStep.Notifications -> {
+                        StepText(R.string.onboarding_notifications_title, R.string.onboarding_notifications_message)
+                        Column(modifier = Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            NotificationBenefit(
+                                icon = R.drawable.ic_timer,
+                                title = R.string.onboarding_notifications_countdown_title,
+                                message = R.string.onboarding_notifications_countdown_message,
+                            )
+                            NotificationBenefit(
+                                icon = R.drawable.ic_bell,
+                                title = R.string.onboarding_notifications_alert_title,
+                                message = R.string.onboarding_notifications_alert_message,
+                            )
+                        }
+                        Text(
+                            text = stringResource(R.string.onboarding_notifications_note),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                    }
                 }
             }
         }
@@ -189,6 +230,24 @@ private fun StepText(title: Int, message: Int) {
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
+}
+
+/** "⏱ Rest countdown / Time left before your next set…": what the permission is for. */
+@Composable
+private fun NotificationBenefit(icon: Int, title: Int, message: Int) {
+    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        IconTile(
+            icon = icon,
+            size = 44.dp,
+            iconSize = 22.dp,
+            cornerRadius = 12.dp,
+            contentColor = MaterialTheme.colorScheme.primary,
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(stringResource(title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+            Text(stringResource(message), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
 }
 
 /** Big "72.5 kg" input; the keyboard's Done continues. */
@@ -224,7 +283,10 @@ private fun BodyWeightInput(state: TextFieldState, isInvalid: Boolean, onDone: (
     }
 }
 
-/** Primary: "Get started" / "Continue" / "Finish". Secondary: "Skip" (this step), except on Welcome. */
+/**
+ * Primary: "Get started" / "Continue" / "Finish" / "Allow notifications". Secondary: "Skip" (this
+ * step; "Not now" for notifications), except on Welcome.
+ */
 @Composable
 private fun OnboardingButtons(uiState: OnboardingUiState, onContinue: () -> Unit, onAction: (OnboardingAction) -> Unit) {
     Column(
@@ -238,6 +300,7 @@ private fun OnboardingButtons(uiState: OnboardingUiState, onContinue: () -> Unit
             text = stringResource(
                 when {
                     uiState.step == OnboardingStep.Welcome -> R.string.get_started
+                    uiState.step == OnboardingStep.Notifications -> R.string.allow_notifications
                     uiState.isLastStep -> R.string.finish_setup
                     else -> R.string.continue_action
                 }
@@ -250,7 +313,7 @@ private fun OnboardingButtons(uiState: OnboardingUiState, onContinue: () -> Unit
         Box(modifier = Modifier.height(44.dp), contentAlignment = Alignment.Center) {
             if (uiState.step != OnboardingStep.Welcome) {
                 SetwiseButton(
-                    text = stringResource(R.string.skip),
+                    text = stringResource(if (uiState.step == OnboardingStep.Notifications) R.string.not_now else R.string.skip),
                     onClick = { onAction(OnboardingAction.OnSkipStep) },
                     style = SetwiseButtonStyle.Text,
                     size = SetwiseButtonSize.Medium,
@@ -311,4 +374,10 @@ private fun OnboardingWeightPreview() = SetwiseScreenPreview {
 @Composable
 private fun OnboardingCheckInsPreview() = SetwiseScreenPreview {
     OnboardingScreen(uiState = OnboardingUiState(step = OnboardingStep.CheckIns), bodyWeight = rememberTextFieldState(), onAction = {})
+}
+
+@ScreenPreviews
+@Composable
+private fun OnboardingNotificationsPreview() = SetwiseScreenPreview {
+    OnboardingScreen(uiState = OnboardingUiState(step = OnboardingStep.Notifications), bodyWeight = rememberTextFieldState(), onAction = {})
 }

@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.saketanand.setwise.domain.model.UserSettings
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
+import dev.saketanand.setwise.timer.NotificationPermission
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,11 +24,22 @@ import kotlinx.coroutines.launch
  */
 class OnboardingViewModel(
     private val userSettings: UserSettingsRepository,
+    notificationPermission: NotificationPermission,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
+    private val steps = OnboardingStep.entries.filter { step ->
+        step != OnboardingStep.Notifications || notificationPermission.needsAsking()
+    }
+
     private val _state = MutableStateFlow(
-        OnboardingUiState(step = OnboardingStep.entries[savedStateHandle[KEY_STEP] ?: 0])
+        OnboardingUiState(
+            // Saved by name: the steps shown can differ after the app is killed (permission granted meanwhile).
+            step = savedStateHandle.get<String>(KEY_STEP)
+                ?.let { name -> steps.firstOrNull { it.name == name } }
+                ?: steps.first(),
+            steps = steps,
+        )
     )
     val state: StateFlow<OnboardingUiState> = _state.asStateFlow()
 
@@ -46,6 +58,7 @@ class OnboardingViewModel(
             }
             is OnboardingAction.OnAskToggle -> _state.update { it.copy(askAboutUnloggedDays = action.ask) }
             OnboardingAction.OnBodyWeightEdited -> _state.update { it.copy(isBodyWeightInvalid = false) }
+            OnboardingAction.OnNotificationsAnswered -> next()
         }
     }
 
@@ -69,8 +82,10 @@ class OnboardingViewModel(
             }
             OnboardingStep.CheckIns -> {
                 save { userSettings.setAskAboutUnloggedDays(state.askAboutUnloggedDays) }
-                finish()
+                next()
             }
+            // OnboardingScreenRoot shows the system prompt instead; its answer → OnNotificationsAnswered.
+            OnboardingStep.Notifications -> next()
         }
     }
 
@@ -79,9 +94,9 @@ class OnboardingViewModel(
     }
 
     private fun goTo(index: Int) {
-        if (index !in OnboardingStep.entries.indices) return
-        savedStateHandle[KEY_STEP] = index
-        _state.update { it.copy(step = OnboardingStep.entries[index], isBodyWeightInvalid = false) }
+        val step = steps.getOrNull(index) ?: return
+        savedStateHandle[KEY_STEP] = step.name
+        _state.update { it.copy(step = step, isBodyWeightInvalid = false) }
     }
 
     private fun finish() {
