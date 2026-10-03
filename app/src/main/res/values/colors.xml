@@ -10,4 +10,7 @@
     <!-- Filled bar = colorScheme.primary (Moss); outlines = colorScheme.outline. -->
     <color name="setwise_mark_empty_fill">#FF3E6A00</color>
     <color name="setwise_mark_empty_outline">#FFC5CCC2</color>
+
+    <!-- Notification accent (icon tint, action text) = colorScheme.primary: Moss in light, Volt in dark. -->
+    <color name="notification_accent">#FF3E6A00</color>
 </resources>

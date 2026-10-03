@@ -1,12 +1,17 @@
 package dev.saketanand.setwise.ui.navigation
 
-import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
@@ -27,7 +32,18 @@ import dev.saketanand.setwise.ui.workout.CardioEntryScreenRoot
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
-private const val TransitionMillis = 200
+private val FadeThroughOut = fadeOut(tween(durationMillis = 90, easing = FastOutLinearInEasing))
+private val FadeThroughIn = fadeIn(tween(durationMillis = 210, delayMillis = 90, easing = LinearOutSlowInEasing)) +
+    scaleIn(tween(durationMillis = 210, delayMillis = 90, easing = LinearOutSlowInEasing), initialScale = 0.92f)
+
+/** Height of the bottom navigation bar (Material's 80dp). Tab screens keep this much free at the bottom. */
+val TabBarHeight = 80.dp
+
+/** A tab's content, kept clear of the bottom bar floating over it (see SetwiseAppRoot). */
+@Composable
+private fun TabScreen(content: @Composable () -> Unit) {
+    Box(modifier = Modifier.padding(bottom = TabBarHeight)) { content() }
+}
 
 /** Key under which the exercise picker hands its selection back to the screen that opened it. */
 private const val PICKED_EXERCISE_IDS = "picked_exercise_ids"
@@ -45,33 +61,38 @@ fun SetwiseNavHost(
         navController = navController,
         startDestination = Route.Home,
         modifier = modifier,
-        // Short fades (Material's ~200ms instead of Navigation's default 700ms). On back, the
-        // screen being left disappears at once: during a cross-fade it's drawn on top and still
-        // gets touches, so a quick tap on the screen underneath (e.g. "Resume workout") was lost.
-        enterTransition = { fadeIn(tween(TransitionMillis)) },
-        exitTransition = { fadeOut(tween(TransitionMillis)) },
-        popEnterTransition = { fadeIn(tween(TransitionMillis)) },
-        popExitTransition = { ExitTransition.None },
+        // Material "fade through": the old screen fades out quickly (90ms), then the new one
+        // fades and grows in. Short on purpose: while a screen is leaving it's drawn on top and
+        // still gets touches, so with Navigation's default 700ms cross-fade a quick tap on the
+        // next screen (e.g. "Resume workout" right after going back) was lost.
+        enterTransition = { FadeThroughIn },
+        exitTransition = { FadeThroughOut },
+        popEnterTransition = { FadeThroughIn },
+        popExitTransition = { FadeThroughOut },
     ) {
         // Tabs
 
         composable<Route.Home> {
-            HomeScreenRoot(
-                onStartWorkout = { workoutId -> navController.navigate(Route.ActiveWorkout(workoutId)) },
-                onEditTemplate = { templateId -> navController.navigate(Route.TemplateEditor(templateId)) },
-                onCreateTemplateFromGoal = { navController.navigate(Route.TemplateFromGoal) },
-                onOpenExercise = { exerciseId -> navController.navigate(Route.ExerciseDetail(exerciseId)) },
-            )
+            TabScreen {
+                HomeScreenRoot(
+                    onStartWorkout = { workoutId -> navController.navigate(Route.ActiveWorkout(workoutId)) },
+                    onEditTemplate = { templateId -> navController.navigate(Route.TemplateEditor(templateId)) },
+                    onCreateTemplateFromGoal = { navController.navigate(Route.TemplateFromGoal) },
+                    onOpenExercise = { exerciseId -> navController.navigate(Route.ExerciseDetail(exerciseId)) },
+                )
+            }
         }
 
         composable<Route.History> {
-            HistoryScreenRoot(
-                onOpenWorkout = { workoutId -> navController.navigate(Route.WorkoutSummary(workoutId)) },
-            )
+            TabScreen {
+                HistoryScreenRoot(
+                    onOpenWorkout = { workoutId -> navController.navigate(Route.WorkoutSummary(workoutId)) },
+                )
+            }
         }
 
         composable<Route.Settings> {
-            SettingsScreenRoot()
+            TabScreen { SettingsScreenRoot() }
         }
 
         // Workout flow

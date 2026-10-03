@@ -34,15 +34,16 @@
             </intent-filter>
         </activity>
 
-        <!-- TODO (milestone 6): declare your timer service here, e.g.
+        <!-- Keeps the rest countdown running (and its notification up) while the app is in the
+             background. specialUse: none of the standard foreground-service types fit a
+             user-started countdown between sets. -->
         <service
             android:name=".service.WorkoutTimerService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Workout session timer and rest countdown" />
+                android:value="Rest countdown between sets of a workout the user is logging" />
         </service>
-        -->
     </application>
 </manifest>

@@ -32,6 +32,8 @@ val viewModelModule = module {
             dateProvider = get(),
             savedStateHandle = get(),
             writeScope = get(ApplicationScope),
+            restTimer = get(),
+            restNotifications = get(),
         )
     }
     viewModelOf(::CardioEntryViewModel)

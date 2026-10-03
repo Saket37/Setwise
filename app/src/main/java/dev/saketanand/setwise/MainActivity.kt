@@ -1,5 +1,6 @@
 package dev.saketanand.setwise
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
@@ -8,9 +9,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dev.saketanand.setwise.ui.SetwiseAppRoot
+import dev.saketanand.setwise.ui.navigation.AppLink
+import dev.saketanand.setwise.ui.navigation.AppLinks
 import dev.saketanand.setwise.ui.designsystem.theme.SetwiseTheme
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 
 class MainActivity : ComponentActivity() {
+
+    /** Screens to open, from notifications (see AppLinks). Read by SetwiseAppRoot. */
+    private val appLinks = Channel<AppLink>(Channel.BUFFERED)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Must run before super.onCreate. On Android 12+ the splash icon animates, so on a fresh
         // launch hold the splash until the bars have finished rising (see avd_splash_mark.xml).
@@ -22,11 +31,21 @@ class MainActivity : ComponentActivity() {
         }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Fresh launch only: after a rotation or a restore the link was already handled (the
+        // activity is recreated with the same intent).
+        if (savedInstanceState == null) AppLinks.from(intent)?.let(appLinks::trySend)
         setContent {
             SetwiseTheme {
-                SetwiseAppRoot()
+                SetwiseAppRoot(appLinks = appLinks.receiveAsFlow())
             }
         }
+    }
+
+    /** The app was already open (launchMode singleTop) and a notification was tapped. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        AppLinks.from(intent)?.let(appLinks::trySend)
     }
 }
 
