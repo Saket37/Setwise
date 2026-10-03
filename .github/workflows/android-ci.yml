@@ -1,0 +1,51 @@
+# Builds the app and runs the checks on every pull request (and on main after a merge).
+# The ruleset on main requires the "Build and unit tests" job to pass before a PR can be merged.
+name: Android CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push to the same PR cancels the run that's still going.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Read-only: the workflow only checks code. (Pull requests from forks get no secrets anyway.)
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Same JDK the project compiles for.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Caches Gradle downloads and build outputs between runs; validates the Gradle wrapper.
+      - uses: gradle/actions/setup-gradle@v6
+
+      # Debug build, JVM unit tests, and Android Lint (fails only on errors, not warnings).
+      # Instrumented tests (androidTest) need an emulator and are run locally for now.
+      - name: Build, test and lint
+        run: ./gradlew assembleDebug testDebugUnitTest lintDebug --stacktrace
+
+      # When something fails, the reports are downloadable from the run's summary page.
+      - name: Upload reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            app/build/reports/tests/
+            app/build/reports/lint-results-debug.html
+          retention-days: 7
