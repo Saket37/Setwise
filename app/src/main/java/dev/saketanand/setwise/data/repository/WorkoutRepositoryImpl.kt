@@ -156,6 +156,10 @@ class WorkoutRepositoryImpl(
             updated
         }
 
+    override suspend fun refreshPersonalRecords(workoutId: Long) {
+        database.withTransaction { markPersonalRecords(workoutId) }
+    }
+
     /** Sets isPr on this workout's record sets (and clears it elsewhere in it). Call inside a transaction. */
     private suspend fun markPersonalRecords(workoutId: Long) {
         val session = workoutDao.getWorkoutWithExercises(workoutId)

@@ -77,6 +77,12 @@ interface WorkoutRepository {
      */
     suspend fun updateFinishedTimes(workoutId: Long, startedAt: Instant, endedAt: Instant): Boolean
 
+    /**
+     * Re-marks a finished workout's record sets (isPr) with the record rules, e.g. after its
+     * data was written some other way (sample data; later, editing a finished workout).
+     */
+    suspend fun refreshPersonalRecords(workoutId: Long)
+
     /** Deletes a running workout and everything in it. */
     suspend fun discardWorkout(workoutId: Long)
 

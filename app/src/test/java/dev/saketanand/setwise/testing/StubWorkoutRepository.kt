@@ -32,5 +32,6 @@ open class StubWorkoutRepository : WorkoutRepository {
     override suspend fun updateStartTime(workoutId: Long, startedAt: Instant) = Unit
     override suspend fun finishWorkout(workoutId: Long, endedAt: Instant): Boolean = true
     override suspend fun updateFinishedTimes(workoutId: Long, startedAt: Instant, endedAt: Instant): Boolean = true
+    override suspend fun refreshPersonalRecords(workoutId: Long) = Unit
     override suspend fun discardWorkout(workoutId: Long) = Unit
 }
