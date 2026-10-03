@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTimePickerDialog
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
 import dev.saketanand.setwise.util.toShortTimeLabel
 import java.time.LocalTime
+import kotlinx.coroutines.launch
 
 /**
  * Artboard 2: "Start a workout" bottom sheet. Empty workout, one row per template, and the
@@ -56,11 +58,23 @@ fun StartWorkoutSheet(
     onAction: (HomeAction) -> Unit,
 ) {
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
-    val enabled = !uiState.isStartingWorkout
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    var isClosing by remember { mutableStateOf(false) }
+    val enabled = !uiState.isStartingWorkout && !isClosing
+
+    // Slide the sheet away first, then start: otherwise the next screen opens while the sheet
+    // is still up, and it's seen closing when you come back.
+    val closeThen: (HomeAction) -> Unit = { action ->
+        if (!isClosing) {
+            isClosing = true
+            scope.launch { sheetState.hide() }.invokeOnCompletion { onAction(action) }
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = { onAction(HomeAction.OnStartSheetDismiss) },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column(
@@ -81,7 +95,7 @@ fun StartWorkoutSheet(
                 )
             }
 
-            EmptyWorkoutRow(enabled = enabled, onClick = { onAction(HomeAction.OnStartEmptyWorkout) })
+            EmptyWorkoutRow(enabled = enabled, onClick = { closeThen(HomeAction.OnStartEmptyWorkout) })
 
             if (uiState.templates.isNotEmpty()) {
                 SectionLabel(stringResource(R.string.from_a_template))
@@ -90,7 +104,7 @@ fun StartWorkoutSheet(
                         SheetTemplateRow(
                             template = template,
                             enabled = enabled,
-                            onClick = { onAction(HomeAction.OnStartFromTemplate(template.id)) },
+                            onClick = { closeThen(HomeAction.OnStartFromTemplate(template.id)) },
                         )
                     }
                 }

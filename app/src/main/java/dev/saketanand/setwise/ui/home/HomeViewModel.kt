@@ -102,7 +102,8 @@ class HomeViewModel(
                 startWorkout(templateId = dialog.templateIdToStart, discardRunningWorkoutId = dialog.runningWorkoutId)
             }
 
-            HomeAction.OnDismissDiscardDialog -> _state.update { it.copy(discardDialog = null) }
+            // Cancelled: the start time picked in the sheet doesn't carry over to the next start.
+            HomeAction.OnDismissDiscardDialog -> _state.update { it.copy(discardDialog = null, customStartTime = null) }
 
             is HomeAction.OnSaveLastWorkoutAsTemplate -> saveWorkoutAsTemplate(action.workoutId)
 
@@ -124,6 +125,9 @@ class HomeViewModel(
      * only one workout can be in progress at a time.
      */
     private fun requestStart(templateId: Long?) {
+        // The sheet has already slid away (StartWorkoutSheet); take it out of the state too, so
+        // it doesn't stay composed (invisible) behind the discard dialog. The start time stays.
+        _state.update { it.copy(isStartSheetVisible = false) }
         val running = _state.value.activeWorkout
         if (running == null) {
             startWorkout(templateId)
