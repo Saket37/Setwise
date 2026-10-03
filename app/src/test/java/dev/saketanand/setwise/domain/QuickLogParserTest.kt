@@ -82,4 +82,25 @@ class QuickLogParserTest {
         assertFalse(QuickLogParser.parse("bench").isComplete) // nothing to log
         assertFalse(QuickLogParser.parse("bench 3x8 at 900").isComplete) // 900 kg: not believed
     }
+
+    @Test
+    fun `lines as speech-to-text writes them`() {
+        check("bench three sets of eight at sixty", "bench", kg(60.0, 8, 3))
+        check("Squat 3 by 5 at 100 kilos", "squat", kg(100.0, 5, 3))
+        check("curls 12 and a half for 10", "curls", kg(12.5, 10))
+        check("ohp thirty seven point five for eight", "ohp", kg(37.5, 8))
+        check("deadlift a hundred and forty for five", "deadlift", kg(140.0, 5))
+        check("plank three by forty-five seconds", "plank", secs(45, 3))
+        check("Bench 60 for 8.", "bench", kg(60.0, 8))
+        assertEquals(
+            CardioValues(1_200, inclinePct = 6.0, distanceKm = 2.0),
+            QuickLogParser.parse("treadmill twenty minutes six percent incline two kilometers").cardio,
+        )
+    }
+
+    @Test
+    fun `number words that aren't counts stay words`() {
+        assertEquals("one arm dumbbell row 3 x 10", QuickLogParser.withDigits("One arm dumbbell row three x ten"))
+        assertEquals("ohp 40 for 6, last one 37.5 for 8", QuickLogParser.withDigits("ohp forty for six, last one thirty seven and a half for eight"))
+    }
 }

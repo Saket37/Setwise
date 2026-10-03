@@ -63,6 +63,9 @@ class ActiveWorkoutViewModel(
     /** What the "Understood as" card shows, kept to add on confirm. */
     private var pendingQuickLog: QuickLogResult? = null
 
+    /** The line the card (or "couldn't understand") is about. */
+    private var readLine: String? = null
+
     /** Exercise the user opened or closed; null = automatic (first one with sets left). */
     private val expandedChoice = savedStateHandle.getStateFlow<Long?>(KEY_EXPANDED, null)
 
@@ -160,8 +163,13 @@ class ActiveWorkoutViewModel(
                 pendingQuickLog = null
                 overlays.update { it.copy(quickLog = QuickLogUi()) }
             }
-            ActiveWorkoutAction.OnQuickLogEdited ->
-                if (overlays.value.quickLog.problem != null) overlays.update { it.copy(quickLog = QuickLogUi()) }
+            is ActiveWorkoutAction.OnQuickLogEdited -> {
+                val quickLog = overlays.value.quickLog
+                if (!quickLog.isReading && action.text.trim() != readLine && (quickLog.preview != null || quickLog.problem != null)) {
+                    pendingQuickLog = null
+                    overlays.update { it.copy(quickLog = QuickLogUi()) }
+                }
+            }
 
             ActiveWorkoutAction.OnRenameClick -> showDialog(ActiveWorkoutDialog.Rename(state.value.name))
             is ActiveWorkoutAction.OnRenameConfirm -> {
@@ -320,6 +328,7 @@ class ActiveWorkoutViewModel(
     private fun readQuickLog(text: String) {
         val current = session ?: return
         if (text.isBlank() || overlays.value.quickLog.isReading) return
+        readLine = text.trim()
         overlays.update { it.copy(quickLog = QuickLogUi(isReading = true)) }
         viewModelScope.launch {
             val result = runCatching {

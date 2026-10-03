@@ -11,6 +11,13 @@
     <!-- Downloading the LLM model in-app (later milestone) -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- The phone's speech recognizer, for speaking a quick log (the mic hides without one) -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+    </queries>
+
     <application
         android:name=".SetwiseApp"
         android:allowBackup="true"

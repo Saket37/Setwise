@@ -78,6 +78,6 @@ sealed interface ActiveWorkoutAction {
     /** "Edit" on the card: back to the line to change it. */
     data object OnQuickLogEdit : ActiveWorkoutAction
 
-    /** The line was changed: an old "couldn't understand" goes away. */
-    data object OnQuickLogEdited : ActiveWorkoutAction
+    /** The line changed: a card or "couldn't understand" about another line goes away. */
+    data class OnQuickLogEdited(val text: String) : ActiveWorkoutAction
 }

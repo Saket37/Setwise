@@ -55,7 +55,9 @@ class QuickLogInterpreter(
      *   named ("60 for 8").
      */
     suspend fun interpret(text: String, session: WorkoutSession, openWorkoutExerciseId: Long?, library: List<Exercise>): QuickLogResult {
-        val parse = QuickLogParser.parse(text)
+        // Spoken numbers as digits, so the model's numbers can be checked against the line's.
+        val line = QuickLogParser.withDigits(text)
+        val parse = QuickLogParser.parse(line)
         val target = target(parse.exercisePhrase, session, openWorkoutExerciseId, library)
             ?: return QuickLogResult.NotUnderstood(QuickLogResult.Reason.NoExercise)
         val exercise = target.exercise
@@ -72,7 +74,7 @@ class QuickLogInterpreter(
         if (parse.isComplete) return QuickLogResult.Sets(target, parse.sets.fitTo(exercise), SuggestionSource.Keywords)
 
         // Words the parser couldn't place ("last one", "twice"): the model, if it's there.
-        modelSets(text, exercise)?.let { return QuickLogResult.Sets(target, it.fitTo(exercise), SuggestionSource.Model) }
+        modelSets(line, exercise)?.let { return QuickLogResult.Sets(target, it.fitTo(exercise), SuggestionSource.Model) }
         if (parse.sets.isNotEmpty()) return QuickLogResult.Sets(target, parse.sets.fitTo(exercise), SuggestionSource.Keywords)
         return QuickLogResult.NotUnderstood(QuickLogResult.Reason.NothingToLog)
     }

@@ -75,7 +75,8 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
-import kotlinx.coroutines.flow.drop
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import dev.saketanand.setwise.ui.RecognizeSpeech
 
 /**
  * Destination: [Route.ActiveWorkout].
@@ -129,11 +130,20 @@ fun ActiveWorkoutScreenRoot(
     val minimize = dropUnlessResumed(block = onMinimize)
     val addExercises = dropUnlessResumed(block = onAddExercises)
 
-    // The quick-log line lives here (typing stays in sync); an edit clears an old "couldn't understand".
+    // The quick-log line lives here (typing stays in sync); changing it drops a card about the old one.
     val quickLogField = rememberTextFieldState()
     val focusManager = LocalFocusManager.current
     LaunchedEffect(quickLogField) {
-        snapshotFlow { quickLogField.text.toString() }.drop(1).collect { viewModel.onAction(ActiveWorkoutAction.OnQuickLogEdited) }
+        snapshotFlow { quickLogField.text.toString() }.collect { viewModel.onAction(ActiveWorkoutAction.OnQuickLogEdited(it)) }
+    }
+    // Speaking: what was heard goes in the bar and is read straight away.
+    val canSpeak = remember(context) { RecognizeSpeech.isAvailable(context) }
+    val speakPrompt = stringResource(R.string.quick_log_speak_prompt)
+    val speak = rememberLauncherForActivityResult(RecognizeSpeech()) { heard ->
+        if (heard != null) {
+            quickLogField.setTextAndPlaceCursorAtEnd(heard)
+            viewModel.onAction(ActiveWorkoutAction.OnQuickLogSubmit(heard))
+        }
     }
 
     // Events navigate directly (not through dropUnlessResumed): they're delivered from STARTED,
@@ -154,6 +164,7 @@ fun ActiveWorkoutScreenRoot(
     ActiveWorkoutScreen(
         uiState = uiState,
         quickLogField = quickLogField,
+        onSpeak = if (canSpeak) dropUnlessResumed { speak.launch(speakPrompt) } else null,
         onAction = { action ->
             when (action) {
                 ActiveWorkoutAction.OnMinimizeClick -> minimize()

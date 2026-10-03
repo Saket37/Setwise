@@ -404,13 +404,17 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
-    fun `a line it can't use says why, until it's edited`() = runTest(dispatcher) {
+    fun `a line it can't use says why, until it's changed`() = runTest(dispatcher) {
         val vm = viewModel()
 
         vm.onAction(ActiveWorkoutAction.OnQuickLogSubmit("zercher squat 3x5 at 80"))
         assertEquals(QuickLogResult.Reason.NoExercise, vm.state.value.quickLog.problem)
 
-        vm.onAction(ActiveWorkoutAction.OnQuickLogEdited)
+        // The same line (as when a spoken one is filled in and read at once): still said.
+        vm.onAction(ActiveWorkoutAction.OnQuickLogEdited("zercher squat 3x5 at 80"))
+        assertEquals(QuickLogResult.Reason.NoExercise, vm.state.value.quickLog.problem)
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogEdited("zercher squat 3x5 at 8"))
         assertEquals(null, vm.state.value.quickLog.problem)
     }
 

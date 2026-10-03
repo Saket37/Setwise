@@ -21,7 +21,8 @@ data class QuickLogParse(
 /**
  * The quick-log bar's own reader for the usual ways of writing sets: "3x8 at 60", "60x8x3",
  * "3 sets of 6 at 40", "100 for 5, 105 for 3", "8 reps at 20", "x12 x12 x10", "3x45s",
- * "same as last time", and cardio ("30 min 6% incline", "5 km", "level 8", "7 km/h"). Anything
+ * "same as last time", and cardio ("30 min 6% incline", "5 km", "level 8", "7 km/h"), also as
+ * speech-to-text writes them ("three sets of eight at sixty", "3 by 8", "37 and a half"). Anything
  * else is left over, for the on-device model. Plain functions, unit-tested.
  */
 object QuickLogParser {
@@ -103,12 +104,72 @@ object QuickLogParser {
         return regexes.mapNotNull { it.find(normalized)?.range?.first }.minOrNull()
     }
 
+    /**
+     * [text] in lower case with spoken numbers as digits: "Thirty seven and a half" → "37.5",
+     * "three sets of eight" → "3 sets of 8". Only number words next to a number or a word about
+     * sets become digits: "one arm row" and "last one" keep theirs.
+     */
+    fun withDigits(text: String): String {
+        val words = text.lowercase(Locale.ROOT)
+            .replace(Regex("\\b(${TENS.keys.joinToString("|")})-"), "$1 ") // sixty-five
+            .trim()
+            .split(Regex("\\s+"))
+        val out = mutableListOf<String>()
+        var i = 0
+        while (i < words.size) {
+            val number = numberAt(words, i)
+            if (number != null) {
+                val (value, end) = number
+                val neighbours = listOfNotNull(out.lastOrNull(), words.getOrNull(end))
+                    .map { it.trimEnd(',', ';', '.') }
+                val nearNumbers = neighbours.any { it in NUMBER_CONTEXT || it.firstOrNull()?.isDigit() == true }
+                if (nearNumbers && out.lastOrNull() !in NOT_A_COUNT) {
+                    out += value.toString() + words[end - 1].takeLastWhile { it in ",;." }
+                    i = end
+                    continue
+                }
+            }
+            out += words[i]
+            i++
+        }
+        return out.joinToString(" ")
+            .replace(Regex("(\\d+) point (\\d+)"), "$1.$2")
+            .replace(Regex("(\\d+) and a half\\b"), "$1.5")
+    }
+
+    /** The number spelled out from words[start] ("sixty five", "a hundred and ten") and where it ends. */
+    private fun numberAt(words: List<String>, start: Int): Pair<Int, Int>? {
+        var i = start
+        fun word() = words.getOrNull(i)?.trimEnd(',', ';', '.')
+        fun belowHundred(): Int? {
+            val tens = TENS[word()]
+            if (tens != null) {
+                i++
+                if (!words[i - 1].last().isLetter()) return tens // "sixty, five"
+                val unit = UNITS[word()]?.takeIf { it in 1..9 }?.also { i++ }
+                return tens + (unit ?: 0)
+            }
+            return UNITS[word()]?.also { i++ }
+        }
+        var value = belowHundred()
+        if (word() == "hundred" && (value == null || value in 1..9)) {
+            i++
+            value = (value ?: 1) * 100
+            val afterHundred = i
+            if (word() == "and") i++
+            val rest = belowHundred()
+            if (rest != null) value += rest else i = afterHundred
+        }
+        return value?.let { it to i }
+    }
+
     private fun normalize(text: String): String {
-        var t = text.lowercase(Locale.ROOT)
+        var t = withDigits(text)
             .replace('×', 'x')
             .replace("@", " at ")
             .replace(Regex("(\\d),(\\d)"), "$1.$2") // 37,5 → 37.5
-            .replace(Regex("[,;]"), " ")
+            .replace(Regex("[,;]|\\.(?!\\d)"), " ")
+            .replace(Regex("(\\d) (?:by|times) (?=\\d)"), "$1 x ") // "3 by 8", spoken
             // A lone "x12": 12 reps, not part of "a x b". Either the x is attached to its number
             // but not to the one before ("x12 x12 x10"), or it starts the reps with nothing
             // numeric before it ("dips x 12"). "60 x 8" and "3x8" are left as they are.
@@ -124,7 +185,9 @@ object QuickLogParser {
         } while (t != before)
         return t
             .replace(Regex("(\\d)([a-z%/]+)"), "$1 $2") // "60kg", "45sec", "6%", "7km/h"
-            .replace(Regex("\\b(kgs|kilos?)\\b"), "kg")
+            .replace(Regex("\\b(kgs|kilos?|kilograms?)\\b"), "kg")
+            .replace(Regex("\\b(kms|kilometers?|kilometres?)\\b"), "km")
+            .replace(Regex("\\bpercent\\b"), "%")
             .replace(Regex("\\b(seconds?|secs?)\\b"), "s")
             .replace(Regex("\\b(minutes?|mins?)\\b"), "min")
             .replace(Regex("\\breps?\\b"), "rep")
@@ -156,6 +219,23 @@ object QuickLogParser {
     private val REPS = r("$I rep")
 
     private val FILLER = setOf("and", "then", "set", "sets", "rep", "kg", "x", "at", "for", "of", "with", "the", "a", "in", "did", "i", "my")
+
+    private val UNITS = listOf(
+        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",
+        "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
+    ).withIndex().associate { (value, word) -> word to value }
+    private val TENS = listOf("twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety")
+        .withIndex().associate { (index, word) -> word to (index + 2) * 10 }
+
+    /** Words around a number in a log line: a number word next to one is a number. */
+    private val NUMBER_CONTEXT = setOf(
+        "set", "sets", "of", "rep", "reps", "at", "for", "with", "x", "by", "times", "and", "point",
+        "kg", "kgs", "kilo", "kilos", "kilograms", "s", "sec", "secs", "second", "seconds", "min", "mins", "minute", "minutes",
+        "km", "kms", "kilometers", "kilometres", "level", "percent", "%", "incline",
+    )
+
+    /** "last one", "the one": a word, not a count. */
+    private val NOT_A_COUNT = setOf("last", "the", "that", "this", "each", "every", "which")
 
     private const val MAX_SETS = 20
     private const val MAX_REPS = 100
