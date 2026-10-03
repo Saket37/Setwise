@@ -39,4 +39,6 @@ data class WorkoutSet(
     val durationSec: Int?,
     val isCompleted: Boolean,
     val isPr: Boolean,
+    /** Cardio exercises only: the logged time, distance, etc. Null for other exercises. */
+    val cardio: CardioValues? = null,
 )
