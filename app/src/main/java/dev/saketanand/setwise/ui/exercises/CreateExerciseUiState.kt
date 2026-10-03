@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.exercises
 
 import androidx.compose.runtime.Immutable
+import dev.saketanand.setwise.domain.ai.SuggestionSource
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
 
@@ -20,6 +21,8 @@ data class CreateExerciseUiState(
     /** [match] has exactly this name: creating it again isn't allowed. */
     val isNameTaken: Boolean = false,
     val isSaving: Boolean = false,
+    /** Where the pre-filled details came from (caption under them); null: nothing suggested. */
+    val suggestionSource: SuggestionSource? = null,
 ) {
     val canCreate: Boolean
         get() = name.isNotBlank() && !isNameTaken && !isSaving &&

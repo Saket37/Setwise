@@ -62,7 +62,7 @@ val viewModelModule = module {
 
     viewModelOf(::ExercisePickerViewModel)
     viewModel { params ->
-        CreateExerciseViewModel(initialName = params.get(), exerciseRepository = get(), savedStateHandle = get())
+        CreateExerciseViewModel(initialName = params.get(), exerciseRepository = get(), assistant = get(), savedStateHandle = get())
     }
     viewModel { params ->
         ExerciseDetailViewModel(

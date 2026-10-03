@@ -367,6 +367,8 @@
     <string name="decrease_rest">Less rest</string>
     <string name="increase_rest">More rest</string>
     <string name="create_exercise">Create exercise</string>
+    <string name="suggested_by_model">Suggested on-device by Gemini Nano. Tap any field to change it.</string>
+    <string name="suggested_from_name">Suggested from the name. Tap any field to change it.</string>
     <!-- Template editor -->
     <string name="new_template_title">New template</string>
     <string name="edit_template">Edit template</string>
