@@ -6,6 +6,8 @@ import java.time.Instant
 data class WorkoutSession(
     val id: Long,
     val name: String,
+    /** Template it was started from; null for an empty workout. */
+    val templateId: Long?,
     val startedAt: Instant,
     /** Null while the workout is running. */
     val endedAt: Instant?,
@@ -22,7 +24,12 @@ data class SessionExercise(
     val sets: List<WorkoutSet>,
     /** Completed sets of the last finished session of this exercise, in order; empty if none. */
     val previousSets: List<PreviousSet>,
-)
+    /** Best sets of this exercise in workouts before this one: what records are measured against. */
+    val bestsBefore: PersonalBests = PersonalBests.None,
+) {
+    /** This workout's record in this exercise, if any. */
+    val personalRecord: PersonalRecord? get() = PersonalRecords.find(exercise, sets, bestsBefore)
+}
 
 data class WorkoutSet(
     val id: Long,

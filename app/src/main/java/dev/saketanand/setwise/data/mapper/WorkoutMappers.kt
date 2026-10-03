@@ -3,12 +3,14 @@ package dev.saketanand.setwise.data.mapper
 import dev.saketanand.setwise.data.local.entity.SetEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.relation.ActiveWorkoutRow
+import dev.saketanand.setwise.data.local.relation.ExerciseHistorySetRow
 import dev.saketanand.setwise.data.local.relation.PreviousSetRow
 import dev.saketanand.setwise.data.local.relation.TemplateWithExercises
 import dev.saketanand.setwise.data.local.relation.WorkoutStatsRow
 import dev.saketanand.setwise.data.local.relation.WorkoutWithExercises
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.PersonalBests
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.Template
@@ -58,11 +60,18 @@ fun TemplateWithExercises.toDomain(lastUsedAtMillis: Long?): Template = Template
 )
 
 /** Joins the workout tree with the "previous" rows; sorts what Room returns unordered. */
-fun WorkoutWithExercises.toSession(previous: List<PreviousSetRow>): WorkoutSession {
+fun WorkoutWithExercises.toSession(
+    previous: List<PreviousSetRow>,
+    history: List<ExerciseHistorySetRow> = emptyList(),
+): WorkoutSession {
     val previousByItem = previous.groupBy { it.workoutExerciseId }
+    val bestsByExercise = history.groupBy { it.exerciseId }.mapValues { (_, rows) ->
+        PersonalBests.from(rows.map { PreviousSet(weightKg = it.weightKg, reps = it.reps, durationSec = it.durationSec) })
+    }
     return WorkoutSession(
         id = workout.id,
         name = workout.name,
+        templateId = workout.templateId,
         startedAt = Instant.ofEpochMilli(workout.startedAt),
         endedAt = workout.endedAt?.let(Instant::ofEpochMilli),
         exercises = items
@@ -75,6 +84,7 @@ fun WorkoutWithExercises.toSession(previous: List<PreviousSetRow>): WorkoutSessi
                     previousSets = previousByItem[row.item.id].orEmpty()
                         .sortedBy { it.setNumber }
                         .map { PreviousSet(weightKg = it.weightKg, reps = it.reps, durationSec = it.durationSec) },
+                    bestsBefore = bestsByExercise[row.exercise.id] ?: PersonalBests.None,
                 )
             },
     )

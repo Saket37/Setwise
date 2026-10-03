@@ -8,6 +8,7 @@ import dev.saketanand.setwise.data.local.entity.SetEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
 import dev.saketanand.setwise.data.local.relation.ActiveWorkoutRow
+import dev.saketanand.setwise.data.local.relation.ExerciseHistorySetRow
 import dev.saketanand.setwise.data.local.relation.PreviousSetRow
 import dev.saketanand.setwise.data.local.relation.WorkoutStatsRow
 import dev.saketanand.setwise.data.local.relation.WorkoutWithExercises
@@ -99,6 +100,42 @@ interface WorkoutDao {
     )
     fun observePreviousSets(workoutId: Long): Flow<List<PreviousSetRow>>
 
+    /**
+     * Every completed set, from workouts finished and started before [workoutId], of the
+     * exercises in [workoutId]: what its personal records are measured against.
+     */
+    @Query(
+        """
+        SELECT we.exerciseId AS exerciseId, s.weightKg AS weightKg, s.reps AS reps, s.durationSec AS durationSec
+        FROM sets s
+        JOIN workout_exercises we ON we.id = s.workoutExerciseId
+        JOIN workouts w ON w.id = we.workoutId
+        WHERE s.isCompleted = 1 AND w.endedAt IS NOT NULL AND w.id != :workoutId
+          AND w.startedAt < (SELECT startedAt FROM workouts WHERE id = :workoutId)
+          AND we.exerciseId IN (SELECT exerciseId FROM workout_exercises WHERE workoutId = :workoutId)
+        """
+    )
+    fun observeHistorySets(workoutId: Long): Flow<List<ExerciseHistorySetRow>>
+
+    /** One-off read of [observeHistorySets], e.g. while finishing a workout. */
+    @Query(
+        """
+        SELECT we.exerciseId AS exerciseId, s.weightKg AS weightKg, s.reps AS reps, s.durationSec AS durationSec
+        FROM sets s
+        JOIN workout_exercises we ON we.id = s.workoutExerciseId
+        JOIN workouts w ON w.id = we.workoutId
+        WHERE s.isCompleted = 1 AND w.endedAt IS NOT NULL AND w.id != :workoutId
+          AND w.startedAt < (SELECT startedAt FROM workouts WHERE id = :workoutId)
+          AND we.exerciseId IN (SELECT exerciseId FROM workout_exercises WHERE workoutId = :workoutId)
+        """
+    )
+    suspend fun getHistorySets(workoutId: Long): List<ExerciseHistorySetRow>
+
+    /** One-off read of [observeWorkoutWithExercises]. */
+    @Transaction
+    @Query("SELECT * FROM workouts WHERE id = :workoutId")
+    suspend fun getWorkoutWithExercises(workoutId: Long): WorkoutWithExercises?
+
     /** Completed sets in the last finished session of an exercise (0 if never done). */
     @Query(
         """
@@ -183,6 +220,21 @@ interface WorkoutDao {
         """
     )
     suspend fun deleteExercisesWithoutSets(workoutId: Long)
+
+    @Query(
+        """
+        UPDATE sets SET isPr = 0
+        WHERE workoutExerciseId IN (SELECT id FROM workout_exercises WHERE workoutId = :workoutId)
+        """
+    )
+    suspend fun clearPersonalRecords(workoutId: Long)
+
+    @Query("UPDATE sets SET isPr = 1 WHERE id IN (:setIds)")
+    suspend fun markPersonalRecords(setIds: List<Long>)
+
+    /** Corrects the times of a finished workout (Summary → edit times). */
+    @Query("UPDATE workouts SET startedAt = :startedAt, endedAt = :endedAt WHERE id = :workoutId AND endedAt IS NOT NULL")
+    suspend fun updateFinishedTimes(workoutId: Long, startedAt: Long, endedAt: Long): Int
 
     /** Returns 1 if the workout was running and is now finished, 0 otherwise. */
     @Query("UPDATE workouts SET endedAt = :endedAt WHERE id = :workoutId AND endedAt IS NULL")

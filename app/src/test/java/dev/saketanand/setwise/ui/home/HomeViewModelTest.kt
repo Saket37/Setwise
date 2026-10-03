@@ -150,6 +150,7 @@ class HomeViewModelTest {
 
     private object FakeTemplateRepository : TemplateRepository {
         override fun observeTemplates(): Flow<List<Template>> = flowOf(emptyList())
+        override suspend fun createFromWorkout(workoutId: Long, createdAt: Instant): Long = 1
     }
 
     /** Always Saturday 3 Oct 2026; today() emits once (no midnight loop in tests). */

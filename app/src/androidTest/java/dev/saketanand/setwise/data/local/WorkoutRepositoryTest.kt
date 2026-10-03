@@ -7,6 +7,7 @@ import dev.saketanand.setwise.data.local.entity.ExerciseEntity
 import dev.saketanand.setwise.data.local.entity.SetEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
+import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
 import dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
@@ -118,6 +119,67 @@ class WorkoutRepositoryTest {
         val session = repository.observeSession(current).first()!!
         assertEquals(Instant.ofEpochMilli(3_000), session.endedAt)
         assertEquals(1, session.exercises.single().sets.size)
+    }
+
+    @Test
+    fun finishMarksTheRecordSet() = runTest {
+        // Two sets last time → the new workout gets two sets too.
+        finishedWorkout(startedAt = 1_000, bench to listOf(60.0 to 8, 57.5 to 8))
+        val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(2_000))
+        repository.addExercises(current, listOf(bench))
+        val sets = repository.observeSession(current).first()!!.exercises.single().sets
+        repository.setCompleted(sets[0].id, Instant.ofEpochMilli(2_100), 60.0, 8, null)
+        repository.setCompleted(sets[1].id, Instant.ofEpochMilli(2_200), 62.5, 6, null)
+
+        repository.finishWorkout(current, Instant.ofEpochMilli(3_000))
+
+        val done = repository.observeSession(current).first()!!.exercises.single().sets
+        assertEquals(listOf(false, true), done.map { it.isPr })
+    }
+
+    @Test
+    fun recordsOnlyCountWorkoutsThatStartedEarlier() = runTest {
+        finishedWorkout(startedAt = 1_000, bench to listOf(60.0 to 8))
+        finishedWorkout(startedAt = 9_000, bench to listOf(100.0 to 5)) // later: doesn't count
+        val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(5_000))
+        repository.addExercises(current, listOf(bench))
+
+        val bests = repository.observeSession(current).first()!!.exercises.single().bestsBefore
+
+        assertEquals(PreviousSet(60.0, 8), bests.heaviest)
+    }
+
+    @Test
+    fun finishedTimesCanBeCorrectedButNotARunningWorkouts() = runTest {
+        val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(1_000))
+        assertFalse(repository.updateFinishedTimes(current, Instant.ofEpochMilli(500), Instant.ofEpochMilli(4_000)))
+
+        repository.addExercises(current, listOf(bench))
+        val set = repository.observeSession(current).first()!!.exercises.single().sets.first()
+        repository.setCompleted(set.id, Instant.ofEpochMilli(2_000), 60.0, 8, null)
+        repository.finishWorkout(current, Instant.ofEpochMilli(3_000))
+
+        assertTrue(repository.updateFinishedTimes(current, Instant.ofEpochMilli(500), Instant.ofEpochMilli(4_000)))
+        val session = repository.observeSession(current).first()!!
+        assertEquals(Instant.ofEpochMilli(500), session.startedAt)
+        assertEquals(Instant.ofEpochMilli(4_000), session.endedAt)
+    }
+
+    @Test
+    fun aFinishedWorkoutBecomesATemplate() = runTest {
+        val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(1_000))
+        repository.addExercises(current, listOf(squat, bench)) // 3 sets each
+        val (squatRow, benchRow) = repository.observeSession(current).first()!!.exercises
+        squatRow.sets.take(2).forEach { repository.setCompleted(it.id, Instant.ofEpochMilli(2_000), 100.0, 5, null) }
+        repository.setCompleted(benchRow.sets.first().id, Instant.ofEpochMilli(2_000), 60.0, 8, null)
+        repository.finishWorkout(current, Instant.ofEpochMilli(3_000))
+
+        val templates = TemplateRepositoryImpl(db, db.templateDao(), db.workoutDao())
+        val templateId = templates.createFromWorkout(current, Instant.ofEpochMilli(4_000))
+
+        val template = templates.observeTemplates().first().single { it.id == templateId }
+        assertEquals("Workout", template.name)
+        assertEquals(listOf("Back Squat" to 2, "Bench Press" to 1), template.exercises.map { it.name to it.targetSets })
     }
 
     @Test
