@@ -46,6 +46,11 @@ import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
+import dev.saketanand.setwise.domain.ai.Heard
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.testing.FakeSpeechInput
+import dev.saketanand.setwise.testing.FakeSpokenTextFixer
+import kotlinx.coroutines.test.advanceTimeBy
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ActiveWorkoutViewModelTest {
@@ -59,6 +64,8 @@ class ActiveWorkoutViewModelTest {
     @After fun tearDown() = Dispatchers.resetMain()
 
     private val model = FakeOnDeviceModel()
+    private val speech = FakeSpeechInput(availability = ModelAvailability.Unavailable)
+    private val fixer = FakeSpokenTextFixer()
 
     private fun TestScope.viewModel() =
         ActiveWorkoutViewModel(
@@ -68,6 +75,8 @@ class ActiveWorkoutViewModelTest {
             restNotifications = { notificationRefreshes++ },
             quickLogInterpreter = QuickLogInterpreter(model, ExerciseAssistant(model)),
             exerciseRepository = FakeLibrary,
+            speechInput = speech,
+            spokenTextFixer = fixer,
         ).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
         }
@@ -428,6 +437,74 @@ class ActiveWorkoutViewModelTest {
 
         assertEquals(null, vm.state.value.quickLog.preview)
         assertTrue(repository.loggedSets.isEmpty())
+    }
+
+    @Test
+    fun `listening shows what's heard, and a pause after it reads the line`() = runTest(dispatcher) {
+        speech.availability = ModelAvailability.Ready
+        speech.script = listOf(Heard.Partial("bench three"), Heard.Final("bench three sets of eight at sixty"))
+        val vm = viewModel()
+        val events = mutableListOf<ActiveWorkoutEvent>()
+        backgroundScope.launch { vm.events.collect { events += it } }
+        assertTrue(vm.state.value.onDeviceSpeech)
+
+        vm.onAction(ActiveWorkoutAction.OnStartListening)
+        advanceTimeBy(350)
+        assertEquals(QuickLogUi(isListening = true, heard = "bench three"), vm.state.value.quickLog)
+        advanceTimeBy(300)
+        assertEquals("bench three sets of eight at sixty", vm.state.value.quickLog.heard)
+
+        advanceTimeBy(1_300) // the pause after it
+        assertEquals(1, speech.stops)
+        assertEquals(List(3) { SetFact(60.0, 8, null) }, vm.state.value.quickLog.preview?.sets)
+        assertTrue(ActiveWorkoutEvent.QuickLogHeard("bench three sets of eight at sixty") in events)
+        assertTrue(fixer.asked.isEmpty()) // understood as heard: no proofreading
+    }
+
+    @Test
+    fun `a line not understood as heard is proofread once, and kept if it then is`() = runTest(dispatcher) {
+        speech.availability = ModelAvailability.Ready
+        speech.script = listOf(Heard.Final("bench tree sets of ate at sixty"))
+        fixer.fixes = mapOf("bench tree sets of ate at sixty" to "bench three sets of eight at sixty")
+        val vm = viewModel()
+        val events = mutableListOf<ActiveWorkoutEvent>()
+        backgroundScope.launch { vm.events.collect { events += it } }
+
+        vm.onAction(ActiveWorkoutAction.OnStartListening)
+        advanceTimeBy(2_000)
+
+        assertEquals(listOf("bench tree sets of ate at sixty"), fixer.asked)
+        assertEquals(3, vm.state.value.quickLog.preview?.sets?.size)
+        assertEquals(ActiveWorkoutEvent.QuickLogHeard("bench three sets of eight at sixty"), events.last())
+    }
+
+    @Test
+    fun `silence, or a failing mic, says so`() = runTest(dispatcher) {
+        speech.availability = ModelAvailability.Ready
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnStartListening)
+        vm.onAction(ActiveWorkoutAction.OnStopListening)
+        advanceTimeBy(100)
+        assertEquals(MicProblem.NothingHeard, vm.state.value.quickLog.micProblem)
+
+        speech.failure = IllegalStateException("no mic")
+        vm.onAction(ActiveWorkoutAction.OnStartListening)
+        advanceTimeBy(100)
+        assertEquals(MicProblem.Failed, vm.state.value.quickLog.micProblem)
+    }
+
+    @Test
+    fun `using the phone's recognizer gets on-device speech ready once`() = runTest(dispatcher) {
+        speech.availability = ModelAvailability.Downloadable
+        val vm = viewModel()
+        assertEquals(false, vm.state.value.onDeviceSpeech)
+
+        vm.onAction(ActiveWorkoutAction.OnPhoneSpeechUsed)
+        vm.onAction(ActiveWorkoutAction.OnPhoneSpeechUsed)
+        advanceTimeBy(100)
+
+        assertEquals(1, speech.downloads)
     }
 
     private object FakeLibrary : ExerciseRepository {

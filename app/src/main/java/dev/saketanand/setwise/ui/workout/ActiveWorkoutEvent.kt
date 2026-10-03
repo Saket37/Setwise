@@ -12,4 +12,7 @@ sealed interface ActiveWorkoutEvent {
 
     /** A quick-logged line was added: clear the bar. */
     data object QuickLogAdded : ActiveWorkoutEvent
+
+    /** A spoken line, as heard (or as proofread): goes in the quick-log bar. */
+    data class QuickLogHeard(val text: String) : ActiveWorkoutEvent
 }

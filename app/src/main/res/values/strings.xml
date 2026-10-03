@@ -389,6 +389,11 @@
     <string name="quick_log_send">Read it</string>
     <string name="quick_log_speak">Speak</string>
     <string name="quick_log_speak_prompt">Say what you did, like “bench 3 by 8 at 60”</string>
+    <string name="quick_log_stop_listening">Stop listening</string>
+    <string name="quick_log_listening">Listening…</string>
+    <string name="quick_log_listening_hint">Say what you did, like “bench three sets of eight at sixty”</string>
+    <string name="quick_log_nothing_heard">Didn\'t catch that. Try again, or type it.</string>
+    <string name="quick_log_mic_failed">Couldn\'t use the microphone. Try again, or type it.</string>
     <string name="quick_log_reading">Reading…</string>
     <string name="quick_log_understood">Understood as</string>
     <string name="quick_log_check">Check before adding</string>

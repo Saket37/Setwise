@@ -31,6 +31,8 @@ data class ActiveWorkoutUiState(
     val rest: RestUi? = null,
     /** The quick-log bar's state: reading, the "Understood as" card, or why it wasn't understood. */
     val quickLog: QuickLogUi = QuickLogUi(),
+    /** The mic listens on-device (needs the microphone permission); else the phone's recognizer is used. */
+    val onDeviceSpeech: Boolean = false,
 ) {
     val completedSets: Int get() = exercises.sumOf { it.completedSets }
 
@@ -139,7 +141,21 @@ data class QuickLogUi(
     val preview: QuickLogPreview? = null,
     /** Why the last line couldn't be used; cleared when the line is edited. */
     val problem: QuickLogResult.Reason? = null,
+    /** On-device speech recognition is listening to the mic. */
+    val isListening: Boolean = false,
+    /** What it has heard so far, while listening. */
+    val heard: String = "",
+    /** Why listening gave nothing. */
+    val micProblem: MicProblem? = null,
 )
+
+enum class MicProblem {
+    /** Silence, or nothing it could make out. */
+    NothingHeard,
+
+    /** Recognition failed (or the mic couldn't be used). */
+    Failed,
+}
 
 /** "Overhead Press (Barbell) · Matched from “ohp” · in today's workout", then the sets (or cardio). */
 @Immutable

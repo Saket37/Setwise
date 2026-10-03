@@ -80,4 +80,13 @@ sealed interface ActiveWorkoutAction {
 
     /** The line changed: a card or "couldn't understand" about another line goes away. */
     data class OnQuickLogEdited(val text: String) : ActiveWorkoutAction
+
+    /** The mic, with on-device speech and the microphone permission: listen. */
+    data object OnStartListening : ActiveWorkoutAction
+
+    /** The mic again while listening: stop (what was heard is still read). */
+    data object OnStopListening : ActiveWorkoutAction
+
+    /** The phone's recognizer was used instead: on-device speech can be got ready for next time. */
+    data object OnPhoneSpeechUsed : ActiveWorkoutAction
 }

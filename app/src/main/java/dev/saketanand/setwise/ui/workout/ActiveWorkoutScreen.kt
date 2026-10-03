@@ -137,6 +137,8 @@ fun ActiveWorkoutScreenRoot(
         snapshotFlow { quickLogField.text.toString() }.collect { viewModel.onAction(ActiveWorkoutAction.OnQuickLogEdited(it)) }
     }
     // Speaking: what was heard goes in the bar and is read straight away.
+    // Speaking: on-device (with the microphone permission) where the phone has it, else its
+    // own recognizer's dialog, which needs no permission (also when the permission is declined).
     val canSpeak = remember(context) { RecognizeSpeech.isAvailable(context) }
     val speakPrompt = stringResource(R.string.quick_log_speak_prompt)
     val speak = rememberLauncherForActivityResult(RecognizeSpeech()) { heard ->
@@ -154,6 +156,7 @@ fun ActiveWorkoutScreenRoot(
             ActiveWorkoutEvent.Closed -> onMinimize()
             // TODO: replace with a snackbar once the screen has a SnackbarHost.
             ActiveWorkoutEvent.SaveFailed -> Toast.makeText(context, R.string.save_failed, Toast.LENGTH_SHORT).show()
+            is ActiveWorkoutEvent.QuickLogHeard -> quickLogField.setTextAndPlaceCursorAtEnd(event.text)
             ActiveWorkoutEvent.QuickLogAdded -> {
                 quickLogField.clearText()
                 focusManager.clearFocus()
@@ -161,10 +164,36 @@ fun ActiveWorkoutScreenRoot(
         }
     }
 
+    val usePhoneRecognizer = dropUnlessResumed {
+        viewModel.onAction(ActiveWorkoutAction.OnPhoneSpeechUsed)
+        speak.launch(speakPrompt)
+    }
+    val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            viewModel.onAction(ActiveWorkoutAction.OnStartListening)
+        } else if (canSpeak) {
+            usePhoneRecognizer()
+        }
+    }
+    val onSpeak: (() -> Unit)? = when {
+        uiState.onDeviceSpeech -> {
+            {
+                when {
+                    uiState.quickLog.isListening -> viewModel.onAction(ActiveWorkoutAction.OnStopListening)
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED ->
+                        viewModel.onAction(ActiveWorkoutAction.OnStartListening)
+                    else -> micPermission.launch(Manifest.permission.RECORD_AUDIO)
+                }
+            }
+        }
+        canSpeak -> usePhoneRecognizer
+        else -> null
+    }
+
     ActiveWorkoutScreen(
         uiState = uiState,
         quickLogField = quickLogField,
-        onSpeak = if (canSpeak) dropUnlessResumed { speak.launch(speakPrompt) } else null,
+        onSpeak = onSpeak,
         onAction = { action ->
             when (action) {
                 ActiveWorkoutAction.OnMinimizeClick -> minimize()
