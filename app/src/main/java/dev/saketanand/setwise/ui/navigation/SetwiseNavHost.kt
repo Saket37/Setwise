@@ -8,6 +8,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import dev.saketanand.setwise.ui.exercises.CreateExerciseScreenRoot
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailScreenRoot
 import dev.saketanand.setwise.ui.exercises.ExercisePickerScreenRoot
@@ -19,6 +20,8 @@ import dev.saketanand.setwise.ui.templates.TemplateEditorScreenRoot
 import dev.saketanand.setwise.ui.templates.TemplateFromGoalScreenRoot
 import dev.saketanand.setwise.ui.workout.ActiveWorkoutScreenRoot
 import dev.saketanand.setwise.ui.workout.CardioEntryScreenRoot
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 /** Key under which the exercise picker hands its selection back to the screen that opened it. */
 private const val PICKED_EXERCISE_IDS = "picked_exercise_ids"
@@ -61,8 +64,10 @@ fun SetwiseNavHost(
         // Workout flow
 
         composable<Route.ActiveWorkout> { entry ->
+            val route = entry.toRoute<Route.ActiveWorkout>()
             val pickedExerciseIds = entry.pickedExerciseIds()
             ActiveWorkoutScreenRoot(
+                viewModel = koinViewModel { parametersOf(route.workoutId) },
                 pickedExerciseIds = pickedExerciseIds,
                 onPickedExercisesConsumed = { entry.clearPickedExerciseIds() },
                 onAddExercises = { navController.navigate(Route.ExercisePicker) },

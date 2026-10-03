@@ -3,8 +3,10 @@ package dev.saketanand.setwise.ui.navigation
 import kotlinx.serialization.Serializable
 
 /**
- * Type-safe navigation destinations. Arguments are constructor properties; a ViewModel reads
- * them with `savedStateHandle.toRoute<Route.X>()`.
+ * Type-safe navigation destinations. Arguments are constructor properties. SetwiseNavHost reads
+ * them with `entry.toRoute<Route.X>()` and passes them to the ViewModel through Koin
+ * (`koinViewModel { parametersOf(route.id) }`), so ViewModels stay unit-testable (toRoute on a
+ * SavedStateHandle needs an Android Bundle).
  */
 @Serializable
 sealed interface Route {
