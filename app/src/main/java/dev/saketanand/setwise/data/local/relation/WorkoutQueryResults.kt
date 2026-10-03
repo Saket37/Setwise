@@ -45,3 +45,16 @@ data class ExerciseHistorySetRow(
     val reps: Int?,
     val durationSec: Int?,
 )
+
+/** A finished workout with its totals, for the History list. */
+data class WorkoutHistoryRow(
+    val id: Long,
+    val name: String,
+    val startedAt: Long,
+    val endedAt: Long,
+    val calories: Int?,
+    val completedSets: Int,
+    val volumeKg: Double,
+    val distanceKm: Double,
+    val personalRecords: Int,
+)

@@ -10,6 +10,7 @@ import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
 import dev.saketanand.setwise.data.local.relation.ActiveWorkoutRow
 import dev.saketanand.setwise.data.local.relation.ExerciseHistorySetRow
 import dev.saketanand.setwise.data.local.relation.PreviousSetRow
+import dev.saketanand.setwise.data.local.relation.WorkoutHistoryRow
 import dev.saketanand.setwise.data.local.relation.WorkoutStatsRow
 import dev.saketanand.setwise.data.local.relation.WorkoutWithExercises
 import kotlinx.coroutines.flow.Flow
@@ -70,6 +71,27 @@ interface WorkoutDao {
 
     @Query("SELECT COUNT(*) FROM workouts")
     suspend fun count(): Int
+
+    /**
+     * Every finished workout, newest first, with its totals over ticked-off sets: sets, volume
+     * (weight × reps), cardio distance and personal records. One row per workout.
+     */
+    @Query(
+        """
+        SELECT w.id AS id, w.name AS name, w.startedAt AS startedAt, w.endedAt AS endedAt, w.calories AS calories,
+            COUNT(s.id) AS completedSets,
+            COALESCE(SUM(COALESCE(s.weightKg, 0) * COALESCE(s.reps, 0)), 0) AS volumeKg,
+            COALESCE(SUM(COALESCE(s.distanceKm, 0)), 0) AS distanceKm,
+            COALESCE(SUM(s.isPr), 0) AS personalRecords
+        FROM workouts w
+        LEFT JOIN workout_exercises we ON we.workoutId = w.id
+        LEFT JOIN sets s ON s.workoutExerciseId = we.id AND s.isCompleted = 1
+        WHERE w.endedAt IS NOT NULL
+        GROUP BY w.id
+        ORDER BY w.startedAt DESC
+        """
+    )
+    fun observeHistory(): Flow<List<WorkoutHistoryRow>>
 
     // Active workout: reads
 

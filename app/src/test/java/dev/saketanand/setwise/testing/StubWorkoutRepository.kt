@@ -2,6 +2,7 @@ package dev.saketanand.setwise.testing
 
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
@@ -17,6 +18,7 @@ import kotlin.time.Duration
 open class StubWorkoutRepository : WorkoutRepository {
     override fun observeLastFinishedWorkout(): Flow<FinishedWorkout?> = flowOf(null)
     override fun observeActiveWorkout(): Flow<ActiveWorkout?> = flowOf(null)
+    override fun observeHistory(): Flow<List<WorkoutHistoryItem>> = flowOf(emptyList())
     override fun observeStats(from: Instant, to: Instant): Flow<WorkoutStats> =
         flowOf(WorkoutStats(workouts = 0, timeTrained = Duration.ZERO, prs = 0))
     override suspend fun startWorkout(templateId: Long?, startedAt: Instant, discardRunningWorkoutId: Long?): Long = 0
@@ -30,5 +32,6 @@ open class StubWorkoutRepository : WorkoutRepository {
     override suspend fun updateStartTime(workoutId: Long, startedAt: Instant) = Unit
     override suspend fun finishWorkout(workoutId: Long, endedAt: Instant): Boolean = true
     override suspend fun updateFinishedTimes(workoutId: Long, startedAt: Instant, endedAt: Instant): Boolean = true
+    override suspend fun refreshPersonalRecords(workoutId: Long) = Unit
     override suspend fun discardWorkout(workoutId: Long) = Unit
 }

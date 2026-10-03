@@ -253,4 +253,18 @@
     <string name="not_set">Not set</string>
     <string name="every_day">Every day</string>
     <string name="ask_about_unlogged_days_detail">Once a day at most, never during a workout</string>
+    <!-- History -->
+    <string name="history">History</string>
+    <string name="no_workouts_yet">No workouts yet</string>
+    <string name="no_workouts_yet_message">Finished workouts show up here, newest first.</string>
+    <string name="unit_km">km</string>
+    <!-- Personal-record pill on a History row -->
+    <plurals name="pr_count">
+        <item quantity="one">%d PR</item>
+        <item quantity="other">%d PRs</item>
+    </plurals>
+    <!-- Week strip, for screen readers. %1$s = "Saturday, 3 October" -->
+    <string name="a11y_week_day_trained">%1$s, trained</string>
+    <string name="no_workout_logged">No workout logged</string>
+    <string name="clear_selected_day">Clear selected day</string>
 </resources>

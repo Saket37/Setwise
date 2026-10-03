@@ -4,12 +4,10 @@ import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.Template
 import dev.saketanand.setwise.domain.model.WorkoutStats
-import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalAdjusters
 import kotlin.math.roundToInt
 
 /*
@@ -24,12 +22,6 @@ private const val WORK_SECONDS_PER_SET = 40
 
 /** Cardio exercises have no rest; count each one as a 10-minute block. */
 private const val CARDIO_SECONDS_PER_SET = 10 * 60
-
-/** Monday 00:00 of [today]'s week, and the next Monday, as instants in [zone]. */
-fun weekRange(today: LocalDate, zone: ZoneId): Pair<Instant, Instant> {
-    val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-    return monday.atStartOfDay(zone).toInstant() to monday.plusWeeks(1).atStartOfDay(zone).toInstant()
-}
 
 /** Calendar days between [instant] and [today] (0 = today, 1 = yesterday). */
 fun daysAgo(instant: Instant, today: LocalDate, zone: ZoneId): Int =

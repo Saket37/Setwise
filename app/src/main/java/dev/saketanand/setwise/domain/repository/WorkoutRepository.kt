@@ -2,6 +2,7 @@ package dev.saketanand.setwise.domain.repository
 
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +13,9 @@ interface WorkoutRepository {
     fun observeLastFinishedWorkout(): Flow<FinishedWorkout?>
 
     fun observeActiveWorkout(): Flow<ActiveWorkout?>
+
+    /** Finished workouts, newest first (History tab). */
+    fun observeHistory(): Flow<List<WorkoutHistoryItem>>
 
     /** Finished workouts that started in [from, to). */
     fun observeStats(from: Instant, to: Instant): Flow<WorkoutStats>
@@ -72,6 +76,12 @@ interface WorkoutRepository {
      * "earlier workouts" may have changed). Returns false if it isn't finished.
      */
     suspend fun updateFinishedTimes(workoutId: Long, startedAt: Instant, endedAt: Instant): Boolean
+
+    /**
+     * Re-marks a finished workout's record sets (isPr) with the record rules, e.g. after its
+     * data was written some other way (sample data; later, editing a finished workout).
+     */
+    suspend fun refreshPersonalRecords(workoutId: Long)
 
     /** Deletes a running workout and everything in it. */
     suspend fun discardWorkout(workoutId: Long)

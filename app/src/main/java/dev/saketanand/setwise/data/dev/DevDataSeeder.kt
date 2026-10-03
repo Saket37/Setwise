@@ -2,6 +2,7 @@ package dev.saketanand.setwise.data.dev
 
 import android.util.Log
 import androidx.room.withTransaction
+import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import dev.saketanand.setwise.data.local.SetwiseDatabase
 import dev.saketanand.setwise.data.local.dao.ExerciseDao
 import dev.saketanand.setwise.data.local.dao.TemplateDao
@@ -31,6 +32,7 @@ class DevDataSeeder(
     private val exerciseDao: ExerciseDao,
     private val templateDao: TemplateDao,
     private val workoutDao: WorkoutDao,
+    private val workoutRepository: WorkoutRepository,
 ) {
 
     suspend fun seedIfEmpty() {
@@ -71,6 +73,7 @@ class DevDataSeeder(
         val today = LocalDate.now()
         val zone = ZoneId.systemDefault()
         val sessionsByPlan = HISTORY.groupBy { it.planName }
+        val workoutIds = mutableListOf<Long>()
         HISTORY.sortedByDescending { it.daysAgo }.forEach { session ->
             val plan = PLANS.first { it.name == session.planName }
             val occurrences = sessionsByPlan.getValue(plan.name).sortedByDescending { it.daysAgo }
@@ -88,21 +91,22 @@ class DevDataSeeder(
                     caloriesSource = "formula",
                 )
             )
+            workoutIds += workoutId
             plan.exercises.forEachIndexed { position, planned ->
                 val exercise = exercises[planned.name] ?: return@forEachIndexed
                 val workoutExerciseId = workoutDao.insertWorkoutExercise(
                     WorkoutExerciseEntity(workoutId = workoutId, exerciseId = exercise.id, position = position)
                 )
                 val completedAt = start.toInstant().toEpochMilli()
-                val isPrSession = sessionsLeft == 0 && planned.name in PR_EXERCISES
                 workoutDao.insertSets(
                     (1..planned.sets).map { number ->
                         fakeSet(exercise, planned, workoutExerciseId, number, sessionsLeft, completedAt)
-                            .copy(isPr = isPrSession && number == 1)
                     }
                 )
             }
         }
+        // Records by the app's own rules, so History, Home and the summary all agree.
+        workoutIds.forEach { workoutRepository.refreshPersonalRecords(it) }
     }
 
     private fun fakeSet(
@@ -200,6 +204,5 @@ class DevDataSeeder(
         )
 
         /** Exercises whose latest session gets a PR (top set). */
-        private val PR_EXERCISES = setOf("Bench Press (Barbell)", "Deadlift (Barbell)")
     }
 }
