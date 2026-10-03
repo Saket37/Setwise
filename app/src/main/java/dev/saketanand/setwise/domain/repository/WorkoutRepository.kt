@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.domain.repository
 
 import dev.saketanand.setwise.domain.model.ExerciseSession
+import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
@@ -109,6 +110,21 @@ interface WorkoutRepository {
 
     /** Renames a workout (running or finished); a blank name is ignored. */
     suspend fun renameWorkout(workoutId: Long, name: String)
+
+    // Quick log
+
+    /**
+     * Logs [sets] of an exercise as done, in one transaction: into its open sets first, then as
+     * new ones. [workoutExerciseId] null adds [exerciseId] to the workout first. Returns the
+     * workout-exercise id.
+     */
+    suspend fun logSets(
+        workoutId: Long,
+        workoutExerciseId: Long?,
+        exerciseId: Long,
+        sets: List<SetFact>,
+        completedAt: Instant,
+    ): Long
 
     // Cardio
 

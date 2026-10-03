@@ -15,6 +15,7 @@ import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.Intensity
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
+import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.TemplateDraft
 import dev.saketanand.setwise.domain.model.TemplateDraftExercise
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
@@ -314,6 +315,22 @@ class WorkoutRepositoryTest {
         repository.updateFinishedTimes(id, Instant.ofEpochMilli(1_000), Instant.ofEpochMilli(9_000))
 
         assertNull(repository.observeSession(id).first()!!.insight)
+    }
+
+    @Test
+    fun quickLoggedSetsFillOpenSetsThenAddMore() = runTest {
+        val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(1_000))
+        val item = repository.addExercises(current, listOf(bench)).single() // 3 open sets
+
+        repository.logSets(current, item, bench, List(4) { SetFact(60.0, 8, null) }, Instant.ofEpochMilli(2_000))
+        // Not in the workout yet: added with its set.
+        val squatItem = repository.logSets(current, null, squat, listOf(SetFact(100.0, 5, null)), Instant.ofEpochMilli(3_000))
+
+        val exercises = repository.observeSession(current).first()!!.exercises
+        val benchSets = exercises.first { it.id == item }.sets
+        assertEquals(listOf(1, 2, 3, 4), benchSets.map { it.setNumber })
+        assertTrue(benchSets.all { it.isCompleted && it.weightKg == 60.0 && it.reps == 8 })
+        assertEquals(listOf(100.0), exercises.first { it.id == squatItem }.sets.map { it.weightKg })
     }
 
     @Test

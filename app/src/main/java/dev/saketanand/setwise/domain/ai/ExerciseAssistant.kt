@@ -25,7 +25,8 @@ class ExerciseAssistant(private val model: OnDeviceModel) {
 
     /**
      * The library exercise that is the same as [typed], or null. Clear cases are code's: the
-     * same words in any order, or a close candidate ([ExerciseNames.CLOSE_MATCH]). In the
+     * same words in any order, a close candidate ([ExerciseNames.CLOSE_MATCH]), or the only
+     * name with every typed word. In the
      * uncertain middle the model picks from the code's shortlist (or says none); without the
      * model, a library name containing what's typed counts ("bench" → Bench Press), as before.
      */
@@ -33,6 +34,7 @@ class ExerciseAssistant(private val model: OnDeviceModel) {
         library.firstOrNull { ExerciseNames.sameName(it.name, typed) }?.let { return it }
         val candidates = ExerciseNames.candidates(typed, library, MAX_CANDIDATES)
         candidates.firstOrNull()?.takeIf { (_, score) -> score >= ExerciseNames.CLOSE_MATCH }?.let { return it.first }
+        ExerciseNames.onlyOneCovering(typed, library)?.let { return it }
         val contained = library.firstOrNull { it.name.contains(typed.trim(), ignoreCase = true) }
         if (candidates.isEmpty() || model.availability() != ModelAvailability.Ready) return contained
 

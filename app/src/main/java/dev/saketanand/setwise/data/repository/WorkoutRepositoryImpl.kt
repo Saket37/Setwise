@@ -16,6 +16,7 @@ import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.LoggedSet
+import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
@@ -231,6 +232,33 @@ class WorkoutRepositoryImpl(
 
     override suspend fun setCalories(workoutId: Long, estimate: CalorieEstimate, source: String) =
         workoutDao.setCalories(workoutId, estimate.kcal, estimate.intensity.storedName, source)
+
+    override suspend fun logSets(
+        workoutId: Long,
+        workoutExerciseId: Long?,
+        exerciseId: Long,
+        sets: List<SetFact>,
+        completedAt: Instant,
+    ): Long = database.withTransaction {
+        val itemId = workoutExerciseId ?: workoutDao.insertWorkoutExercise(
+            WorkoutExerciseEntity(workoutId = workoutId, exerciseId = exerciseId, position = workoutDao.nextExercisePosition(workoutId)),
+        )
+        val open = workoutDao.getSetsOf(itemId).filter { !it.isCompleted }
+        val at = completedAt.toEpochMilli()
+        sets.forEachIndexed { index, set ->
+            val setId = open.getOrNull(index)?.id
+                ?: workoutDao.insertSet(SetEntity(workoutExerciseId = itemId, setNumber = workoutDao.nextSetNumber(itemId)))
+            workoutDao.updateSetCompletion(
+                setId = setId,
+                completed = true,
+                completedAt = at,
+                weightKg = set.weightKg,
+                reps = set.reps,
+                durationSec = set.seconds,
+            )
+        }
+        itemId
+    }
 
     override suspend fun setInsight(workoutId: Long, insight: String) = workoutDao.setInsight(workoutId, insight)
 

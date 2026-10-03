@@ -40,6 +40,16 @@ object ExerciseNames {
             .take(max)
     }
 
+    /**
+     * The one exercise whose name has every typed word ("barbell row" → Bent-over Row
+     * (Barbell)); null if none or several do ("bench": both bench presses).
+     */
+    fun onlyOneCovering(typed: String, library: List<Exercise>): Exercise? {
+        val typedWords = words(typed).toSet()
+        if (typedWords.isEmpty()) return null
+        return library.filter { words(it.name).containsAll(typedWords) }.singleOrNull()
+    }
+
     /** Without the model, a candidate this close is offered as "Already in your library?". */
     const val CLOSE_MATCH = 0.6
 
@@ -49,6 +59,7 @@ object ExerciseNames {
         "ohp" to "overhead press", "rdl" to "romanian deadlift", "sldl" to "stiff leg deadlift",
         "dl" to "deadlift", "bp" to "bench press", "ez" to "ez bar",
         "pushup" to "push up", "pullup" to "pull up", "chinup" to "chin up", "situp" to "sit up",
+        "pushups" to "push up", "pullups" to "pull up", "chinups" to "chin up", "situps" to "sit up",
         "pulldown" to "pull down", "pushdown" to "push down",
     )
 
