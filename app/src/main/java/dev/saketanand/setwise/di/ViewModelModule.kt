@@ -1,10 +1,12 @@
 package dev.saketanand.setwise.di
 
+import dev.saketanand.setwise.MainViewModel
 import dev.saketanand.setwise.ui.exercises.CreateExerciseViewModel
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailViewModel
 import dev.saketanand.setwise.ui.exercises.ExercisePickerViewModel
 import dev.saketanand.setwise.ui.history.HistoryViewModel
 import dev.saketanand.setwise.ui.home.HomeViewModel
+import dev.saketanand.setwise.ui.onboarding.OnboardingViewModel
 import dev.saketanand.setwise.ui.settings.SettingsViewModel
 import dev.saketanand.setwise.ui.summary.WorkoutSummaryViewModel
 import dev.saketanand.setwise.ui.templates.TemplateEditorViewModel
@@ -20,6 +22,8 @@ import org.koin.dsl.module
  * (repositories etc.) and supplies SavedStateHandle with the navigation arguments.
  */
 val viewModelModule = module {
+    viewModelOf(::MainViewModel)
+    viewModelOf(::OnboardingViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::SettingsViewModel)

@@ -11,6 +11,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface Route {
 
+    /** First launch: training days, body weight, check-ins. Every step skippable. */
+    @Serializable data object Onboarding : Route
+
     // Top-level tabs (bottom navigation bar)
 
     /** Workout tab: start workout sheet, templates, weekly summary card. */

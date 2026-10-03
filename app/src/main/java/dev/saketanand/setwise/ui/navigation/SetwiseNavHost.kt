@@ -22,6 +22,7 @@ import dev.saketanand.setwise.ui.exercises.CreateExerciseScreenRoot
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailScreenRoot
 import dev.saketanand.setwise.ui.exercises.ExercisePickerScreenRoot
 import dev.saketanand.setwise.ui.history.HistoryScreenRoot
+import dev.saketanand.setwise.ui.onboarding.OnboardingScreenRoot
 import dev.saketanand.setwise.ui.home.HomeScreenRoot
 import dev.saketanand.setwise.ui.settings.SettingsScreenRoot
 import dev.saketanand.setwise.ui.summary.WorkoutSummaryScreenRoot
@@ -55,11 +56,12 @@ private const val PICKED_EXERCISE_IDS = "picked_exercise_ids"
 @Composable
 fun SetwiseNavHost(
     navController: NavHostController,
+    startDestination: Route,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
         navController = navController,
-        startDestination = Route.Home,
+        startDestination = startDestination,
         modifier = modifier,
         // Material "fade through": the old screen fades out quickly (90ms), then the new one
         // fades and grows in. Short on purpose: while a screen is leaving it's drawn on top and
@@ -70,6 +72,15 @@ fun SetwiseNavHost(
         popEnterTransition = { FadeThroughIn },
         popExitTransition = { FadeThroughOut },
     ) {
+        composable<Route.Onboarding> {
+            OnboardingScreenRoot(
+                // Replace onboarding with Home, so Back from Home leaves the app.
+                onFinished = {
+                    navController.navigate(Route.Home) { popUpTo<Route.Onboarding> { inclusive = true } }
+                },
+            )
+        }
+
         // Tabs
 
         composable<Route.Home> {

@@ -46,6 +46,7 @@ import dev.saketanand.setwise.ui.navigation.TopLevelDestination
  */
 @Composable
 fun SetwiseAppRoot(
+    startDestination: Route,
     navController: NavHostController = rememberNavController(),
     appLinks: Flow<AppLink> = emptyFlow(),
 ) {
@@ -66,6 +67,7 @@ fun SetwiseAppRoot(
     ) {
         SetwiseNavHost(
             navController = navController,
+            startDestination = startDestination,
             // Status and navigation bars. Plain padding (not consumed), as Scaffold did before:
             // screens still see the full insets, e.g. for the keyboard.
             modifier = Modifier.padding(WindowInsets.systemBars.asPaddingValues()),

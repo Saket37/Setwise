@@ -29,12 +29,12 @@ import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
  */
 @Composable
 fun SetwiseSettingsGroup(
-    title: String,
+    title: String?,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        SectionLabel(title)
+        if (title != null) SectionLabel(title)
         Column(
             modifier = Modifier
                 .fillMaxWidth()

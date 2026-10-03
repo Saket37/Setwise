@@ -7,6 +7,7 @@ import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSet
 import dev.saketanand.setwise.timer.NextUp
 import dev.saketanand.setwise.timer.RestTimerState
+import dev.saketanand.setwise.util.parseWeight
 import dev.saketanand.setwise.util.toWeightInput
 import dev.saketanand.setwise.util.toWeightLabel
 import java.time.Instant
@@ -96,8 +97,6 @@ private fun WorkoutSet.amount(kind: SetKind): Int? = if (kind == SetKind.Duratio
 
 private fun PreviousSet.amount(kind: SetKind): Int? = if (kind == SetKind.Duration) durationSec else reps
 
-/** "62.5" and "62,5" both mean 62.5; empty or "." means no value. */
-fun parseWeight(text: String): Double? = text.trim().replace(',', '.').toDoubleOrNull()
 
 fun parseAmount(text: String): Int? = text.trim().toIntOrNull()
 

@@ -8,14 +8,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.saketanand.setwise.ui.SetwiseAppRoot
 import dev.saketanand.setwise.ui.navigation.AppLink
 import dev.saketanand.setwise.ui.navigation.AppLinks
 import dev.saketanand.setwise.ui.designsystem.theme.SetwiseTheme
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: MainViewModel by viewModel()
 
     /** Screens to open, from notifications (see AppLinks). Read by SetwiseAppRoot. */
     private val appLinks = Channel<AppLink>(Channel.BUFFERED)
@@ -26,8 +32,10 @@ class MainActivity : ComponentActivity() {
         // Skipped when recreated (e.g. rotation), where it would only delay the first frame.
         val holdSplash = savedInstanceState == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
         val splashShownAt = SystemClock.uptimeMillis()
+        // Also held until the first screen is known (onboarding or Home), so neither flashes.
         installSplashScreen().setKeepOnScreenCondition {
-            holdSplash && SystemClock.uptimeMillis() - splashShownAt < SPLASH_ANIMATION_MS
+            (holdSplash && SystemClock.uptimeMillis() - splashShownAt < SPLASH_ANIMATION_MS) ||
+                viewModel.startDestination.value == null
         }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -36,7 +44,11 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) AppLinks.from(intent)?.let(appLinks::trySend)
         setContent {
             SetwiseTheme {
-                SetwiseAppRoot(appLinks = appLinks.receiveAsFlow())
+                val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
+                val links = remember { appLinks.receiveAsFlow() }
+                startDestination?.let { start ->
+                    SetwiseAppRoot(startDestination = start, appLinks = links)
+                }
             }
         }
     }
