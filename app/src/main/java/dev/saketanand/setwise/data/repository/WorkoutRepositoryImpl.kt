@@ -12,6 +12,7 @@ import dev.saketanand.setwise.data.mapper.toFinishedWorkout
 import dev.saketanand.setwise.data.mapper.toSession
 import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
@@ -31,6 +32,9 @@ class WorkoutRepositoryImpl(
 
     override fun observeActiveWorkout(): Flow<ActiveWorkout?> =
         workoutDao.observeActive().map { it?.toDomain() }
+
+    override fun observeHistory(): Flow<List<WorkoutHistoryItem>> =
+        workoutDao.observeHistory().map { rows -> rows.map { it.toDomain() } }
 
     override fun observeStats(from: Instant, to: Instant): Flow<WorkoutStats> =
         workoutDao.observeStats(from.toEpochMilli(), to.toEpochMilli()).map { it.toDomain() }
@@ -151,6 +155,10 @@ class WorkoutRepositoryImpl(
             if (updated) markPersonalRecords(workoutId)
             updated
         }
+
+    override suspend fun refreshPersonalRecords(workoutId: Long) {
+        database.withTransaction { markPersonalRecords(workoutId) }
+    }
 
     /** Sets isPr on this workout's record sets (and clears it elsewhere in it). Call inside a transaction. */
     private suspend fun markPersonalRecords(workoutId: Long) {

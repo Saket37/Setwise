@@ -183,6 +183,21 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun historyListsFinishedWorkoutsNewestFirstWithTotals() = runTest {
+        finishedWorkout(startedAt = 1_000, bench to listOf(60.0 to 8, 60.0 to 6))
+        finishedWorkout(startedAt = 5_000, squat to listOf(100.0 to 5))
+        repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(9_000)) // running: not listed
+
+        val history = repository.observeHistory().first()
+
+        assertEquals(listOf(5_000L, 1_000L), history.map { it.startedAt.toEpochMilli() })
+        val first = history.last()
+        assertEquals(2, first.completedSets)
+        assertEquals(60.0 * 8 + 60.0 * 6, first.volumeKg, 0.001)
+        assertEquals(0, first.personalRecords)
+    }
+
+    @Test
     fun startTimeCanOnlyChangeWhileRunning() = runTest {
         val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(1_000))
         repository.updateStartTime(current, Instant.ofEpochMilli(500))
