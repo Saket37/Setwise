@@ -1,6 +1,17 @@
 package dev.saketanand.setwise.ui.history
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.selected
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardOutline
+import java.time.LocalDate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,6 +77,7 @@ fun HistoryScreenRoot(
         onAction = { action ->
             when (action) {
                 is HistoryAction.OnWorkoutClick -> onOpenWorkout(action.workoutId)
+                else -> viewModel.onAction(action)
             }
         },
     )
@@ -84,16 +96,20 @@ fun HistoryScreen(
             .background(MaterialTheme.colorScheme.background),
     ) {
         Column(
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 12.dp),
+            modifier = Modifier.padding(top = 20.dp, bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Text(
                 text = stringResource(R.string.history),
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.semantics { heading() },
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .semantics { heading() },
             )
-            if (uiState.week.isNotEmpty()) WeekStrip(uiState.week)
+            if (uiState.days.isNotEmpty()) {
+                DayStrip(days = uiState.days, onDayClick = { onAction(HistoryAction.OnDayClick(it)) })
+            }
         }
         when {
             uiState.isLoading -> Unit
@@ -102,64 +118,111 @@ fun HistoryScreen(
                 message = stringResource(R.string.no_workouts_yet_message),
                 icon = R.drawable.ic_nav_history,
             )
-            else -> LazyColumn(
-                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                uiState.months.forEach { month ->
-                    item(key = "month-${month.month}", contentType = "month") {
-                        val label = month.month.format(DateTimeFormatter.ofPattern("LLLL yyyy", currentLocale()))
-                        SectionLabel(label, Modifier.padding(top = 8.dp, bottom = 2.dp))
-                    }
-                    items(month.workouts, key = { "workout-${it.id}" }, contentType = { "workout" }) { workout ->
-                        HistoryWorkoutRow(workout, onClick = { onAction(HistoryAction.OnWorkoutClick(workout.id)) })
-                    }
-                }
+            else -> WorkoutList(uiState = uiState, onAction = onAction)
+        }
+    }
+}
+
+/** Finished workouts by month. Jumps to the selected day and outlines its workouts. */
+@Composable
+private fun WorkoutList(uiState: HistoryUiState, onAction: (HistoryAction) -> Unit) {
+    val listState = rememberLazyListState()
+    // A day tapped in the strip → its workouts (or the nearest earlier ones) at the top.
+    LaunchedEffect(uiState.selectedDate) {
+        val date = uiState.selectedDate ?: return@LaunchedEffect
+        val index = listIndexFor(date, uiState.months) ?: (listState.layoutInfo.totalItemsCount - 1).coerceAtLeast(0)
+        // One item back: keep the month header (or the row above) in view for context.
+        listState.animateScrollToItem((index - 1).coerceAtLeast(0))
+    }
+    LazyColumn(
+        state = listState,
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        uiState.months.forEach { month ->
+            item(key = "month-${month.month}", contentType = "month") {
+                val label = month.month.format(DateTimeFormatter.ofPattern("LLLL yyyy", currentLocale()))
+                SectionLabel(label, Modifier.padding(top = 8.dp, bottom = 2.dp))
+            }
+            items(month.workouts, key = { "workout-${it.id}" }, contentType = { "workout" }) { workout ->
+                HistoryWorkoutRow(
+                    workout = workout,
+                    isHighlighted = workout.date == uiState.selectedDate,
+                    onClick = { onAction(HistoryAction.OnWorkoutClick(workout.id)) },
+                )
             }
         }
     }
 }
 
-/** Monday to Sunday: today highlighted, a dot on days with a finished workout. */
+/**
+ * Day chips from today (right edge) back to the first workout; scroll left for the past.
+ * Today is tinted, the selected day outlined, trained days dotted. The 1st of a month shows the
+ * month ("OCT") instead of the weekday, for orientation while scrolling.
+ */
 @Composable
-private fun WeekStrip(week: List<WeekDayUi>) {
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        week.forEach { day ->
-            val locale = currentLocale()
-            val dayName = day.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale))
-            val description = if (day.trained) stringResource(R.string.a11y_week_day_trained, dayName) else dayName
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(64.dp)
-                    .background(
-                        if (day.isToday) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
-                        MaterialTheme.shapes.large,
-                    )
-                    .clearAndSetSemantics { contentDescription = description },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
-            ) {
-                val textColor = if (day.isToday) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                Text(
-                    text = day.date.dayOfWeek.getDisplayName(TextStyle.NARROW, locale),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (day.isToday) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(day.date.dayOfMonth.toString(), style = MaterialTheme.typography.numberMedium, color = textColor)
-                Box(
-                    Modifier
-                        .size(6.dp)
-                        .background(if (day.trained) MaterialTheme.colorScheme.primary else Color.Transparent, CircleShape),
-                )
-            }
+private fun DayStrip(days: List<DayUi>, onDayClick: (LocalDate) -> Unit) {
+    LazyRow(
+        // Newest first + reverse layout: opens at today, on the right.
+        reverseLayout = true,
+        contentPadding = PaddingValues(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        items(days, key = { it.date.toEpochDay() }, contentType = { "day" }) { day ->
+            DayChip(day = day, onClick = { onDayClick(day.date) })
         }
     }
 }
+
+@Composable
+private fun DayChip(day: DayUi, onClick: () -> Unit) {
+    val locale = currentLocale()
+    val dayName = day.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale))
+    val description = if (day.trained) stringResource(R.string.a11y_week_day_trained, dayName) else dayName
+    val shape = MaterialTheme.shapes.large
+    val textColor = if (day.isToday) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+    Column(
+        modifier = Modifier
+            .width(DayChipWidth)
+            .height(64.dp)
+            .clip(shape)
+            .background(if (day.isToday) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer)
+            .border(2.dp, if (day.isSelected) MaterialTheme.colorScheme.primary else Color.Transparent, shape)
+            .selectable(selected = day.isSelected, onClick = onClick, role = Role.Tab)
+            // One clear announcement per chip instead of "S", "3".
+            .clearAndSetSemantics {
+                contentDescription = description
+                selected = day.isSelected
+                this.onClick { onClick(); true }
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+    ) {
+        Text(
+            text = if (day.date.dayOfMonth == 1) {
+                day.date.month.getDisplayName(TextStyle.SHORT, locale).uppercase(locale)
+            } else {
+                day.date.dayOfWeek.getDisplayName(TextStyle.NARROW, locale)
+            },
+            style = MaterialTheme.typography.labelSmall,
+            color = if (day.isToday) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+        Text(day.date.dayOfMonth.toString(), style = MaterialTheme.typography.numberMedium, color = textColor)
+        Box(
+            Modifier
+                .size(6.dp)
+                .background(if (day.trained) MaterialTheme.colorScheme.primary else Color.Transparent, CircleShape),
+        )
+    }
+}
+
+/** 7 chips fill a phone's width (like the design's week); more scroll in. */
+private val DayChipWidth = 46.dp
 
 /** "FRI | 2  Push Day [2 PRs] · 1h 9m · 8,420 kg". */
 @Composable
-private fun HistoryWorkoutRow(workout: HistoryWorkoutUi, onClick: () -> Unit) {
+private fun HistoryWorkoutRow(workout: HistoryWorkoutUi, isHighlighted: Boolean, onClick: () -> Unit) {
     val locale = currentLocale()
     SetwiseListCard(
         onClick = onClick,
@@ -197,6 +260,7 @@ private fun HistoryWorkoutRow(workout: HistoryWorkoutUi, onClick: () -> Unit) {
             }
         },
         supportingContent = { Text(workoutMeta(workout, locale), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        outline = if (isHighlighted) SetwiseListCardOutline.Solid(MaterialTheme.colorScheme.primary) else SetwiseListCardOutline.None,
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
         horizontalSpacing = 14.dp,
         textSpacing = 4.dp,

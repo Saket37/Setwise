@@ -1,6 +1,5 @@
 package dev.saketanand.setwise.util
 
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -23,13 +22,5 @@ class WeeksTest {
     fun `on a Monday the week starts that day`() {
         val monday = LocalDate.of(2026, 9, 28)
         assertEquals(monday.atStartOfDay(zone).toInstant(), weekRange(monday, zone).first)
-    }
-
-    @Test
-    fun `week days are Monday to Sunday`() {
-        val days = weekDays(LocalDate.of(2026, 10, 3)) // a Saturday
-        assertEquals(LocalDate.of(2026, 9, 28), days.first())
-        assertEquals(LocalDate.of(2026, 10, 4), days.last())
-        assertEquals(DayOfWeek.MONDAY, days.first().dayOfWeek)
     }
 }

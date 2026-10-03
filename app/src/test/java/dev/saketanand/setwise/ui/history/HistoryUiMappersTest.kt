@@ -17,13 +17,36 @@ class HistoryUiMappersTest {
     private val today = LocalDate.of(2026, 10, 3) // Saturday
 
     @Test
-    fun `the week strip is Monday to Sunday, with today and trained days marked`() {
+    fun `the day strip runs from today back to the first workout, at least four weeks`() {
         val ui = historyUi(listOf(workout(1, 2026, 10, 2), workout(2, 2026, 9, 30)), today, zone)
 
-        assertEquals(LocalDate.of(2026, 9, 28), ui.week.first().date)
-        assertEquals(LocalDate.of(2026, 10, 4), ui.week.last().date)
-        assertEquals(listOf(today), ui.week.filter { it.isToday }.map { it.date })
-        assertEquals(listOf(LocalDate.of(2026, 9, 30), LocalDate.of(2026, 10, 2)), ui.week.filter { it.trained }.map { it.date })
+        assertEquals(today, ui.days.first().date)
+        assertEquals(today.minusDays(MIN_STRIP_DAYS - 1L), ui.days.last().date)
+        assertEquals(listOf(today), ui.days.filter { it.isToday }.map { it.date })
+        assertEquals(listOf(LocalDate.of(2026, 10, 2), LocalDate.of(2026, 9, 30)), ui.days.filter { it.trained }.map { it.date })
+
+        val old = historyUi(listOf(workout(1, 2026, 6, 1)), today, zone)
+        assertEquals(LocalDate.of(2026, 6, 1), old.days.last().date)
+    }
+
+    @Test
+    fun `the selected day is marked`() {
+        val selected = LocalDate.of(2026, 9, 30)
+        val ui = historyUi(listOf(workout(1, 2026, 9, 30)), today, zone, selectedDate = selected)
+
+        assertEquals(listOf(selected), ui.days.filter { it.isSelected }.map { it.date })
+        assertEquals(selected, ui.selectedDate)
+    }
+
+    @Test
+    fun `jumping to a day finds its workout, or the nearest earlier one`() {
+        // Items: [Oct header, W1 (2 Oct), Sep header, W2 (30 Sep), W3 (24 Sep)]
+        val months = historyUi(listOf(workout(1, 2026, 10, 2), workout(2, 2026, 9, 30), workout(3, 2026, 9, 24)), today, zone).months
+
+        assertEquals(1, listIndexFor(LocalDate.of(2026, 10, 2), months))
+        assertEquals(3, listIndexFor(LocalDate.of(2026, 9, 30), months))
+        assertEquals("rest day → the nearest earlier workout", 4, listIndexFor(LocalDate.of(2026, 9, 27), months))
+        assertEquals("before the first workout → nothing", null, listIndexFor(LocalDate.of(2026, 9, 1), months))
     }
 
     @Test
