@@ -39,6 +39,8 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import dev.saketanand.setwise.domain.CalorieSync
+import dev.saketanand.setwise.domain.ai.OnDeviceModel
+import dev.saketanand.setwise.llm.GeminiNanoModel
 
 val appModule = module {
     // The app's clock ("now", today + midnight rollover); swapped for a fixed date in tests.
@@ -52,6 +54,8 @@ val appModule = module {
     single<ElapsedClock> { SystemElapsedClock }
     single<RestTimer> { DefaultRestTimer(CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate), get()) }
     single { RestAlert(androidContext()) }
+    // On-device model (Gemini Nano). Features take OnDeviceModel, so tests use a fake.
+    single<OnDeviceModel> { GeminiNanoModel() }
     singleOf(::CalorieSync)
     single<NotificationPermission> { AndroidNotificationPermission(androidContext()) }
     single { RestTimerCoordinator(androidContext(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)) } bind
