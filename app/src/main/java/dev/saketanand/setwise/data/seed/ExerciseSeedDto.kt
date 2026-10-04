@@ -12,7 +12,13 @@ data class ExerciseSeedFile(
     /** Bump when built-in exercises are added, to re-seed on app update (future). */
     val version: Int,
     val exercises: List<ExerciseSeedDto>,
+    /** Built-in exercises renamed (e.g. to name their equipment), applied before adding new ones. */
+    val renames: List<ExerciseRenameDto> = emptyList(),
 )
+
+/** "Preacher Curl" → "Preacher Curl (Barbell)": the same exercise and its history, a clearer name. */
+@Serializable
+data class ExerciseRenameDto(val from: String, val to: String)
 
 @Serializable
 data class ExerciseSeedDto(

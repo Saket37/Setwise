@@ -12,8 +12,9 @@ import kotlinx.serialization.json.Json
  * Loads the built-in exercise library from assets/exercises.json.
  *
  * Runs on first launch, and again whenever the file's "version" is higher than the version
- * last seeded (e.g. an app update added exercises). When you add exercises to the JSON,
- * bump its "version", otherwise existing users won't get them.
+ * last seeded (e.g. an app update added exercises). When you add or rename exercises in the
+ * JSON, bump its "version", otherwise existing users won't get them. Renames run first, so a
+ * renamed exercise keeps its id and history instead of being added again under the new name.
  */
 class ExerciseSeeder(
     private val context: Context,
@@ -32,13 +33,14 @@ class ExerciseSeeder(
             }
             if (seedFile.version <= seededVersion) return
 
+            val renamed = seedFile.renames.sumOf { exerciseDao.renameBuiltIn(it.from, it.to) }
             // IGNORE + unique name index: existing exercises are skipped, only new ones inserted.
             val ids = exerciseDao.insertAll(seedFile.exercises.map { it.toEntity() })
             // Saved only after a successful insert, so a failed seed is retried next launch.
             seedPreferences.setExerciseSeedVersion(seedFile.version)
 
             val added = ids.count { it != -1L }
-            Log.i(TAG, "Seed v$seededVersion -> v${seedFile.version}: added $added new exercises")
+            Log.i(TAG, "Seed v$seededVersion -> v${seedFile.version}: renamed $renamed, added $added new exercises")
         } catch (e: Exception) {
             // Don't crash the app over the seed; the list stays empty and Logcat says why.
             Log.e(TAG, "Exercise seeding failed", e)

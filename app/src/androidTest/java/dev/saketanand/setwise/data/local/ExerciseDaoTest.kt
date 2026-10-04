@@ -112,6 +112,26 @@ class ExerciseDaoTest {
         }
     }
 
+    @Test
+    fun aBuiltInExerciseIsRenamedInPlaceButNotACustomOneOrOverAnotherName() = runTest {
+        val (preacher, mine, curl, taken) = exerciseDao.insertAll(
+            listOf(
+                exercise("Preacher Curl", "Biceps"),
+                exercise("Hammer Curl", "Biceps").copy(isCustom = true),
+                exercise("Barbell Curl", "Biceps"),
+                exercise("Bicep Curl (Barbell)", "Biceps"),
+            ),
+        )
+
+        assertEquals(1, exerciseDao.renameBuiltIn("Preacher Curl", "Preacher Curl (Barbell)"))
+        assertEquals(preacher, exerciseDao.getByName("Preacher Curl (Barbell)")?.id) // same id: its history stays
+        assertEquals(0, exerciseDao.renameBuiltIn("Hammer Curl", "Hammer Curl (Dumbbell)")) // theirs
+        assertEquals(mine, exerciseDao.getByName("Hammer Curl")?.id)
+        assertEquals(0, exerciseDao.renameBuiltIn("Barbell Curl", "Bicep Curl (Barbell)")) // name taken
+        assertEquals(curl, exerciseDao.getByName("Barbell Curl")?.id)
+        assertEquals(taken, exerciseDao.getByName("Bicep Curl (Barbell)")?.id)
+    }
+
     private fun set(weightKg: Double?, reps: Int, completed: Boolean = true) =
         SetEntity(workoutExerciseId = 0, setNumber = 0, weightKg = weightKg, reps = reps, isCompleted = completed)
 
