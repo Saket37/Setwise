@@ -41,9 +41,20 @@ jobs:
           build-mode: manual
           queries: security-extended
 
-      # Every compile task must actually run for CodeQL to see it: no up-to-date or cached tasks.
+      # Every compile task must actually run for CodeQL to see it: no up-to-date or cached tasks,
+      # and the Kotlin compiler inside Gradle's process (not the Kotlin daemon, which CodeQL's
+      # tracer doesn't follow).
       - name: Build
-        run: ./gradlew assembleDebug --no-build-cache --rerun-tasks --no-daemon --stacktrace
+        run: >-
+          ./gradlew assembleDebug --no-build-cache --rerun-tasks --no-daemon --stacktrace
+          -Pkotlin.compiler.execution.strategy=in-process
+
+      # An analysis that saw no Kotlin would pass with nothing found: fail instead.
+      - name: Check the Kotlin code was extracted
+        run: |
+          count=$(find "$RUNNER_TEMP/codeql_databases/java/src" -name '*.kt' | wc -l)
+          echo "Kotlin files in the CodeQL database: $count"
+          test "$count" -gt 100
 
       - uses: github/codeql-action/analyze@v4
         with:
