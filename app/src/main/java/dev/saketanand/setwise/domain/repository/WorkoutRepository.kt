@@ -12,6 +12,7 @@ import java.time.Instant
 import dev.saketanand.setwise.domain.model.CardioEntry
 import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.CalorieEstimate
+import dev.saketanand.setwise.domain.model.LoggedSetRecord
 
 interface WorkoutRepository {
 
@@ -138,4 +139,7 @@ interface WorkoutRepository {
         /** Sets added for an exercise the user has never done. */
         const val DEFAULT_SET_COUNT = 3
     }
+
+    /** Every completed set of every finished workout, newest workout first (history questions). */
+    suspend fun getTrainingLog(): List<LoggedSetRecord>
 }

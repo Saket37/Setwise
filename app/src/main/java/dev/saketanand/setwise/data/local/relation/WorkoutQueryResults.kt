@@ -70,3 +70,19 @@ data class ExerciseLogRow(
     val durationSec: Int?,
     val distanceKm: Double?,
 )
+
+/** One completed set with its workout and exercise: the training log that history questions read. */
+data class TrainingLogRow(
+    val workoutId: Long,
+    val workoutName: String,
+    val startedAt: Long,
+    val exerciseId: Long,
+    val exerciseName: String,
+    val muscleGroup: String,
+    val setNumber: Int,
+    val weightKg: Double?,
+    val reps: Int?,
+    val durationSec: Int?,
+    val distanceKm: Double?,
+    val isPr: Boolean,
+)

@@ -22,6 +22,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import dev.saketanand.setwise.domain.ai.HistoryAssistant
+import dev.saketanand.setwise.domain.ai.HistoryReply
+import dev.saketanand.setwise.domain.repository.ExerciseRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Screen: [HistoryScreenRoot]. Live: a finished workout, a deleted one, corrected times or a day
@@ -34,7 +40,12 @@ class HistoryViewModel(
     userSettingsRepository: UserSettingsRepository,
     private val dateProvider: DateProvider,
     private val savedStateHandle: SavedStateHandle,
+    private val historyAssistant: HistoryAssistant,
+    private val exerciseRepository: ExerciseRepository,
 ) : ViewModel() {
+
+    private val ask = MutableStateFlow(AskUi())
+    private var asking: Job? = null
 
     /** Epoch day of the selected day (LocalDate isn't a SavedStateHandle type); null = none. */
     private val selectedEpochDay = savedStateHandle.getStateFlow<Long?>(KEY_SELECTED_DAY, null)
@@ -52,14 +63,41 @@ class HistoryViewModel(
     ) { today, history, marks, trainingDays, selected ->
         historyUi(history, today, dateProvider.zone, selected, marks, trainingDays)
     }
+        .combine(ask) { ui, ask -> ui.copy(ask = ask) }
         .catch { e ->
             Log.e(TAG, "Loading the history failed", e)
             emit(HistoryUiState(isLoading = false))
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HistoryUiState())
 
+    /** Looks the question up over the whole training log (a one-off read, on each question). */
+    private fun ask(question: String) {
+        val text = question.trim()
+        if (text.isEmpty()) return
+        asking?.cancel()
+        ask.value = AskUi(question = text, isLooking = true)
+        asking = viewModelScope.launch {
+            val reply = try {
+                val log = workoutRepository.getTrainingLog()
+                val library = exerciseRepository.observeExercises("", null).first()
+                historyAssistant.ask(text, log, library, dateProvider.today().first(), dateProvider.zone)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Answering '$text' failed", e)
+                HistoryReply.NotUnderstood
+            }
+            ask.value = AskUi(question = text, reply = reply)
+        }
+    }
+
     fun onAction(action: HistoryAction) {
         when (action) {
+            is HistoryAction.OnAsk -> ask(action.question)
+            HistoryAction.OnAskClosed -> {
+                asking?.cancel()
+                ask.value = AskUi()
+            }
             is HistoryAction.OnDayClick -> {
                 val day = action.date.toEpochDay()
                 savedStateHandle[KEY_SELECTED_DAY] = if (selectedEpochDay.value == day) null else day

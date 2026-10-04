@@ -5,6 +5,7 @@ import dev.saketanand.setwise.domain.model.DayState
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.time.Duration
+import dev.saketanand.setwise.domain.ai.HistoryReply
 
 /** Everything [HistoryScreen] draws. */
 @Immutable
@@ -17,6 +18,8 @@ data class HistoryUiState(
     /** Day tapped in the strip: the list jumps there and outlines its workouts. */
     val selectedDate: LocalDate? = null,
     val today: LocalDate? = null,
+    /** "Ask about your training": the question asked and its reply. */
+    val ask: AskUi = AskUi(),
 ) {
     val isEmpty: Boolean get() = !isLoading && months.isEmpty()
 
@@ -68,3 +71,14 @@ data class HistoryWorkoutUi(
     val calories: Int?,
     val personalRecords: Int,
 )
+
+/** The asked question, while it's looked up, then its reply. */
+@Immutable
+data class AskUi(
+    val question: String = "",
+    val isLooking: Boolean = false,
+    val reply: HistoryReply? = null,
+) {
+    /** The answer panel shows instead of the day strip and the list. */
+    val isOpen: Boolean get() = isLooking || reply != null
+}
