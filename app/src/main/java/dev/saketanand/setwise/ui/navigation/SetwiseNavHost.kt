@@ -33,6 +33,8 @@ import dev.saketanand.setwise.ui.workout.CardioEntryScreenRoot
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import dev.saketanand.setwise.ui.body.BodyScreenRoot
+import dev.saketanand.setwise.ui.importing.ImportScreenRoot
+import androidx.navigation.NavGraph.Companion.findStartDestination
 
 private val FadeThroughOut = fadeOut(tween(durationMillis = 90, easing = FastOutLinearInEasing))
 private val FadeThroughIn = fadeIn(tween(durationMillis = 210, delayMillis = 90, easing = LinearOutSlowInEasing)) +
@@ -108,7 +110,26 @@ fun SetwiseNavHost(
         }
 
         composable<Route.Settings> {
-            TabScreen { SettingsScreenRoot(onOpenBody = { navController.navigate(Route.Body) }) }
+            TabScreen {
+                SettingsScreenRoot(
+                    onOpenBody = { navController.navigate(Route.Body) },
+                    onOpenImport = { navController.navigate(Route.ImportWorkouts()) },
+                )
+            }
+        }
+
+        composable<Route.ImportWorkouts> { entry ->
+            val route = entry.toRoute<Route.ImportWorkouts>()
+            ImportScreenRoot(
+                sharedText = route.sharedText,
+                onBack = { navController.popBackStack() },
+                onOpenHistory = {
+                    navController.navigate(Route.History) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                    }
+                },
+            )
         }
 
         composable<Route.Body> {

@@ -60,6 +60,7 @@ import dev.saketanand.setwise.domain.model.UserSettings
 @Composable
 fun SettingsScreenRoot(
     onOpenBody: () -> Unit,
+    onOpenImport: () -> Unit,
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -69,9 +70,16 @@ fun SettingsScreenRoot(
         onPauseOrDispose { }
     }
     val openBody = dropUnlessResumed(block = onOpenBody)
+    val openImport = dropUnlessResumed(block = onOpenImport)
     SettingsScreen(
         uiState = uiState,
-        onAction = { action -> if (action == SettingsAction.OnBodyCompositionClick) openBody() else viewModel.onAction(action) },
+        onAction = { action ->
+            when (action) {
+                SettingsAction.OnBodyCompositionClick -> openBody()
+                SettingsAction.OnImportClick -> openImport()
+                else -> viewModel.onAction(action)
+            }
+        },
     )
 }
 
@@ -179,6 +187,15 @@ fun SettingsScreen(
                 supporting = stringResource(R.string.workout_notification_detail),
                 checked = uiState.workoutNotification,
                 onCheckedChange = { onAction(SettingsAction.OnWorkoutNotificationChange(it)) },
+                showDivider = false,
+            )
+        }
+        SetwiseSettingsGroup(title = stringResource(R.string.settings_data)) {
+            SetwiseSettingsRow(
+                label = stringResource(R.string.import_title),
+                value = "",
+                supporting = stringResource(R.string.import_settings_detail),
+                onClick = { onAction(SettingsAction.OnImportClick) },
                 showDivider = false,
             )
         }
