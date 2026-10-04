@@ -1,0 +1,55 @@
+# Dependency security. GitHub only knows a Gradle project's dependencies (transitive ones
+# included) when a build submits them:
+#  - On main: submit the dependency graph, so Dependabot raises security alerts for every
+#    dependency the app resolves.
+#  - On pull requests: submit the PR's graph, then dependency review fails the PR if it adds a
+#    dependency with a known vulnerability (moderate or worse).
+name: Dependency security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    name: Dependency graph
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Dependabot's PRs get a read-only token and can't submit; their updates are reviewed on main.
+    if: github.actor != 'dependabot[bot]'
+    permissions:
+      # Submitting the graph needs write access to the repository's dependency data.
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/dependency-submission@v6
+
+  review:
+    name: Dependency review
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+    needs: submit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      # Writes a summary comment on the PR.
+      pull-requests: write
+    steps:
+      - uses: actions/dependency-review-action@v5.0.0
+        with:
+          fail-on-severity: moderate
+          # The graph for this PR's head is submitted by the job above; wait for it.
+          retry-on-snapshot-warnings: true
+          comment-summary-in-pr: on-failure
