@@ -29,6 +29,12 @@ data class QuickLogParse(
  */
 object QuickLogParser {
 
+    /** "5 5 4" → [5, 5, 4]; null if any isn't a believable rep count. */
+    private fun repsList(text: String): List<Int>? =
+        text.trim().split(" ").map { it.toInt() }.takeIf { reps -> reps.all { it in 1..MAX_REPS } }
+
+    // One ordered pass of patterns (the order decides which reading wins); splitting it would scatter that order.
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     fun parse(text: String): QuickLogParse {
         var rest = " " + normalize(text) + " "
         val found = mutableListOf<Pair<Int, List<SetFact>>>() // position → sets, to keep their order
@@ -70,6 +76,8 @@ object QuickLogParser {
             sets(m, int(m, 1) ?: 0, num(m, 4), if (seconds != null) null else reps, seconds)
         }
         // "40 for 6 x 3" before the plain "a x b" forms read "6 x 3" as sets × reps.
+        // "100kg 5,5,5", "80 kg x 8, 8, 7", "22kg - 10, 9, 8": one weight, then each set's reps.
+        take(WEIGHT_THEN_REPS) { m -> repsList(m.groupValues[2])?.also { found += m.range.first to it.map { r -> SetFact(num(m, 1), r, null) } } != null }
         take(WEIGHT_FOR_REPS) { m ->
             val count = int(m, 3) ?: int(m, 4) ?: int(m, 5) ?: if (m.groups[6] != null) 2 else 1
             sets(m, count, num(m, 1), int(m, 2), null)
@@ -84,7 +92,7 @@ object QuickLogParser {
             else sets(m, first.toInt(), null, int(m, 3), null)
         }
         take(REPS_AT_WEIGHT) { sets(it, 1, num(it, 2), int(it, 1), null) }
-        take(WEIGHT_KG_REPS) { sets(it, 1, num(it, 1), int(it, 2), null) }
+        take(WEIGHT_KG_REPS) { sets(it, int(it, 3) ?: 1, num(it, 1), int(it, 2), null) }
         take(X_REPS) { sets(it, 1, null, int(it, 1), null) }
         // "45 seconds, three times", "20 reps twice".
         take(SECONDS) { sets(it, int(it, 2) ?: if (it.groups[3] != null) 2 else 1, null, null, int(it, 1)) }
@@ -202,8 +210,9 @@ object QuickLogParser {
         var t = withDigits(text)
             .replace('×', 'x')
             .replace("@", " at ")
-            .replace(Regex("(\\d),(\\d)"), "$1.$2") // 37,5 → 37.5
-            .replace(Regex("[,;]|\\.(?!\\d)"), " ")
+            // 37,5 → 37.5; but "5,5,5" is a list of reps, not a decimal.
+            .replace(Regex("(?<![\\d,])(\\d+),(\\d{1,2})(?![\\d,])"), "$1.$2")
+            .replace(Regex("[,;:]|\\.(?!\\d)|(?<=\\s)[-–](?=\\s)"), " ")
             .replace(Regex("(\\d) (?:by|times) (?=\\d)"), "$1 x ") // "3 by 8", spoken
             // A lone "x12": 12 reps, not part of "a x b". Either the x is attached to its number
             // but not to the one before ("x12 x12 x10"), or it starts the reps with nothing
@@ -252,7 +261,8 @@ object QuickLogParser {
     private val REPS_AT_WEIGHT = r("$I rep (?:at|with) $N(?: kg)?")
     private val REPS_KG = r("$I rep $N kg")
     private val LEADING_COUNT = r("$I sets?(?: of)?(?= [a-z])")
-    private val WEIGHT_KG_REPS = r("$N kg $I rep")
+    private val WEIGHT_KG_REPS = r("$N kg $I rep(?: $I sets?)?")
+    private val WEIGHT_THEN_REPS = r("$N kg(?: xr?)?((?: \\d{1,3}){2,})")
     private val X_REPS = r("xr $I")
     private val SECONDS = r("$I s(?: (?:$I times|(twice)))?")
     private val REPS = r("$I rep(?: (?:$I times|(twice)))?")

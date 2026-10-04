@@ -14,16 +14,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import dev.saketanand.setwise.ui.body.BodyScreenRoot
 import dev.saketanand.setwise.ui.exercises.CreateExerciseScreenRoot
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailScreenRoot
 import dev.saketanand.setwise.ui.exercises.ExercisePickerScreenRoot
 import dev.saketanand.setwise.ui.history.HistoryScreenRoot
-import dev.saketanand.setwise.ui.onboarding.OnboardingScreenRoot
 import dev.saketanand.setwise.ui.home.HomeScreenRoot
+import dev.saketanand.setwise.ui.importing.ImportScreenRoot
+import dev.saketanand.setwise.ui.importing.SharedImport
+import dev.saketanand.setwise.ui.onboarding.OnboardingScreenRoot
 import dev.saketanand.setwise.ui.settings.SettingsScreenRoot
 import dev.saketanand.setwise.ui.summary.WorkoutSummaryScreenRoot
 import dev.saketanand.setwise.ui.templates.TemplateEditorScreenRoot
@@ -32,9 +36,6 @@ import dev.saketanand.setwise.ui.workout.ActiveWorkoutScreenRoot
 import dev.saketanand.setwise.ui.workout.CardioEntryScreenRoot
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import dev.saketanand.setwise.ui.body.BodyScreenRoot
-import dev.saketanand.setwise.ui.importing.ImportScreenRoot
-import androidx.navigation.NavGraph.Companion.findStartDestination
 
 private val FadeThroughOut = fadeOut(tween(durationMillis = 90, easing = FastOutLinearInEasing))
 private val FadeThroughIn = fadeIn(tween(durationMillis = 210, delayMillis = 90, easing = LinearOutSlowInEasing)) +
@@ -121,7 +122,7 @@ fun SetwiseNavHost(
         composable<Route.ImportWorkouts> { entry ->
             val route = entry.toRoute<Route.ImportWorkouts>()
             ImportScreenRoot(
-                sharedText = route.sharedText,
+                shared = SharedImport(route.sharedText, route.sharedFile, route.sharedImages),
                 onBack = { navController.popBackStack() },
                 onOpenHistory = {
                     navController.navigate(Route.History) {
