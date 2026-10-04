@@ -104,7 +104,7 @@ class SettingsViewModel(
                     }
                 }
             }
-            SettingsAction.OnBodyCompositionClick -> Unit
+            SettingsAction.OnBodyCompositionClick, SettingsAction.OnImportClick -> Unit
             SettingsAction.OnShowWeeklySummary -> viewModelScope.launch { userSettings.setWeeklySummaryDismissed(null) }
             SettingsAction.OnBodyWeightClick -> editor.value = SettingsEditor.BodyWeight()
             is SettingsAction.OnSaveBodyWeight -> saveBodyWeight(action.text)

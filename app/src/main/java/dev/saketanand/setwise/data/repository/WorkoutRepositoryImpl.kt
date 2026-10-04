@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.map
 import java.time.Instant
 import dev.saketanand.setwise.domain.model.CalorieEstimate
 import dev.saketanand.setwise.domain.model.LoggedSetRecord
+import dev.saketanand.setwise.domain.model.SharedSet
 
 class WorkoutRepositoryImpl(
     private val database: SetwiseDatabase,
@@ -333,5 +334,36 @@ class WorkoutRepositoryImpl(
             distanceKm = it.distanceKm,
             isPr = it.isPr,
         )
+    }
+
+    override suspend fun importWorkout(name: String, startedAt: Instant, endedAt: Instant, exercises: List<Pair<Long, List<SharedSet>>>): Long {
+        val id = database.withTransaction {
+            val workoutId = workoutDao.insertWorkout(WorkoutEntity(name = name, startedAt = startedAt.toEpochMilli(), endedAt = endedAt.toEpochMilli()))
+            exercises.forEachIndexed { position, (exerciseId, sets) ->
+                val itemId = workoutDao.insertWorkoutExercise(WorkoutExerciseEntity(workoutId = workoutId, exerciseId = exerciseId, position = position))
+                workoutDao.insertSets(
+                    sets.mapIndexed { i, set ->
+                        SetEntity(
+                            workoutExerciseId = itemId,
+                            setNumber = i + 1,
+                            weightKg = set.weightKg,
+                            reps = set.reps,
+                            durationSec = set.seconds,
+                            distanceKm = set.distanceKm,
+                            isCompleted = true,
+                            completedAt = startedAt.toEpochMilli(),
+                        )
+                    },
+                )
+            }
+            workoutId
+        }
+        refreshPersonalRecords(id)
+        return id
+    }
+
+    override suspend fun hasWorkoutStartedAt(startedAt: Instant): Boolean {
+        val minute = startedAt.toEpochMilli() / 60_000 * 60_000
+        return workoutDao.findWorkoutStartedBetween(minute, minute + 60_000) != null
     }
 }

@@ -49,4 +49,7 @@ sealed interface SettingsAction {
     data class OnRestSoundChange(val on: Boolean) : SettingsAction
     data class OnRestVibrateChange(val on: Boolean) : SettingsAction
     data class OnWorkoutNotificationChange(val on: Boolean) : SettingsAction
+
+    /** Opens "Import from Strong" (handled in SettingsScreenRoot). */
+    data object OnImportClick : SettingsAction
 }

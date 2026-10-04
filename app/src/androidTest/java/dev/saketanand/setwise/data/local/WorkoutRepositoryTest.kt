@@ -16,6 +16,7 @@ import dev.saketanand.setwise.domain.model.Intensity
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SetFact
+import dev.saketanand.setwise.domain.model.SharedSet
 import dev.saketanand.setwise.domain.model.TemplateDraft
 import dev.saketanand.setwise.domain.model.TemplateDraftExercise
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
@@ -331,6 +332,22 @@ class WorkoutRepositoryTest {
         assertEquals(listOf(1, 2, 3, 4), benchSets.map { it.setNumber })
         assertTrue(benchSets.all { it.isCompleted && it.weightKg == 60.0 && it.reps == 8 })
         assertEquals(listOf(100.0), exercises.first { it.id == squatItem }.sets.map { it.weightKg })
+    }
+
+    @Test
+    fun anImportedWorkoutIsFinishedWithItsSetsAndRecords() = runTest {
+        val start = Instant.ofEpochMilli(10_020_000) // on a minute, like Strong's times
+        val id = repository.importWorkout(
+            "Evening Workout", start, start.plusSeconds(1_800),
+            listOf(bench to listOf(SharedSet(60.0, 8), SharedSet(62.5, 6))),
+        )
+
+        val session = repository.observeSession(id).first()!!
+        assertEquals(start.plusSeconds(1_800), session.endedAt)
+        assertEquals(listOf(60.0 to 8, 62.5 to 6), session.exercises.single().sets.map { it.weightKg to it.reps })
+        assertTrue(session.exercises.single().sets.all { it.isCompleted })
+        assertTrue(repository.hasWorkoutStartedAt(start)) // shared again
+        assertFalse(repository.hasWorkoutStartedAt(start.plusSeconds(60)))
     }
 
     @Test

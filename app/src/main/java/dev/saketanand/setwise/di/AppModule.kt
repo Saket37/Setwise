@@ -58,6 +58,7 @@ import dev.saketanand.setwise.llm.GenAiSpeechInput
 import dev.saketanand.setwise.llm.MlKitTextReader
 import dev.saketanand.setwise.domain.ai.TextReader
 import dev.saketanand.setwise.domain.ai.BodyReportReader
+import dev.saketanand.setwise.domain.ai.WorkoutImporter
 
 val appModule = module {
     // The app's clock ("now", today + midnight rollover); swapped for a fixed date in tests.
@@ -76,6 +77,7 @@ val appModule = module {
     single<SpeechInput> { GenAiSpeechInput() }
     single<TextReader> { MlKitTextReader(androidContext()) }
     singleOf(::BodyReportReader)
+    singleOf(::WorkoutImporter)
     singleOf(::CalorieEstimator)
     singleOf(::WorkoutInsightWriter)
     singleOf(::ExerciseAssistant)

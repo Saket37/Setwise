@@ -28,6 +28,9 @@ sealed interface Route {
     /** Body composition: body checks, BMR, reports (from Settings). */
     @Serializable data object Body : Route
 
+    /** Import workouts shared from another app (Strong); [sharedText]: what was shared, if any. */
+    @Serializable data class ImportWorkouts(val sharedText: String = "") : Route
+
     // Workout flow
 
     /** Live workout with sets, rest timer and quick-log. */

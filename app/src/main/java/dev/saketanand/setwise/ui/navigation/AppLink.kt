@@ -8,6 +8,9 @@ import dev.saketanand.setwise.MainActivity
 sealed interface AppLink {
     /** The active workout, e.g. from the rest timer's notifications. */
     data class Workout(val workoutId: Long) : AppLink
+
+    /** Text shared to Setwise (e.g. a workout from Strong): the import screen, with it. */
+    data class SharedText(val text: String) : AppLink
 }
 
 /**
@@ -25,11 +28,19 @@ object AppLinks {
             .apply {
                 when (link) {
                     is AppLink.Workout -> putExtra(EXTRA_WORKOUT_ID, link.workoutId)
+                    is AppLink.SharedText -> setAction(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, link.text)
                 }
             }
 
-    fun from(intent: Intent?): AppLink? =
-        intent?.getLongExtra(EXTRA_WORKOUT_ID, NONE)?.takeIf { it != NONE }?.let(AppLink::Workout)
+    fun from(intent: Intent?): AppLink? {
+        if (intent?.action == Intent.ACTION_SEND && intent.type?.startsWith("text/") == true) {
+            return intent.getStringExtra(Intent.EXTRA_TEXT)?.takeIf { it.isNotBlank() }?.take(MAX_SHARED_TEXT)?.let(AppLink::SharedText)
+        }
+        return intent?.getLongExtra(EXTRA_WORKOUT_ID, NONE)?.takeIf { it != NONE }?.let(AppLink::Workout)
+    }
+
+    /** Plenty for a few dozen shared workouts; keeps the navigation argument small. */
+    private const val MAX_SHARED_TEXT = 100_000
 
     private const val NONE = -1L
 }

@@ -404,4 +404,8 @@ interface WorkoutDao {
         """
     )
     suspend fun getTrainingLog(): List<TrainingLogRow>
+
+    /** A workout (finished or not) that started within [from, to): to spot one imported before. */
+    @Query("SELECT id FROM workouts WHERE startedAt >= :from AND startedAt < :to LIMIT 1")
+    suspend fun findWorkoutStartedBetween(from: Long, to: Long): Long?
 }

@@ -13,6 +13,7 @@ import dev.saketanand.setwise.domain.model.CardioEntry
 import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.CalorieEstimate
 import dev.saketanand.setwise.domain.model.LoggedSetRecord
+import dev.saketanand.setwise.domain.model.SharedSet
 
 interface WorkoutRepository {
 
@@ -142,4 +143,13 @@ interface WorkoutRepository {
 
     /** Every completed set of every finished workout, newest workout first (history questions). */
     suspend fun getTrainingLog(): List<LoggedSetRecord>
+
+    /**
+     * Saves a finished workout from elsewhere (another app's share), all sets done, in one
+     * transaction, then works out its personal records. Returns its id.
+     */
+    suspend fun importWorkout(name: String, startedAt: Instant, endedAt: Instant, exercises: List<Pair<Long, List<SharedSet>>>): Long
+
+    /** Whether a workout started in the same minute as [startedAt] (imported before). */
+    suspend fun hasWorkoutStartedAt(startedAt: Instant): Boolean
 }

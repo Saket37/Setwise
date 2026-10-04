@@ -112,6 +112,7 @@ private fun NavHostController.open(link: AppLink) {
                 navigate(Route.ActiveWorkout(link.workoutId)) { launchSingleTop = true }
             }
         }
+        is AppLink.SharedText -> navigate(Route.ImportWorkouts(link.text))
     }
 }
 

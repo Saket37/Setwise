@@ -17,6 +17,7 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import dev.saketanand.setwise.ui.body.BodyViewModel
+import dev.saketanand.setwise.ui.importing.ImportViewModel
 
 /**
  * One ViewModel per screen. viewModelOf resolves constructor parameters from Koin
@@ -28,6 +29,7 @@ val viewModelModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::BodyViewModel)
+    viewModel { params -> ImportViewModel(sharedText = params.get(), importer = get(), exerciseRepository = get(), dateProvider = get()) }
     viewModelOf(::SettingsViewModel)
 
     // Route argument passed by SetwiseNavHost: koinViewModel { parametersOf(route.workoutId) }.
