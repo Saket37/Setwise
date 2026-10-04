@@ -1,5 +1,6 @@
-# Builds the app and runs the checks on every pull request (and on main after a merge).
-# The ruleset on main requires the "Build and unit tests" job to pass before a PR can be merged.
+# Builds the app and runs the unit tests with coverage on every pull request (and on main after
+# a merge). The ruleset on main requires the "Build and unit tests" job to pass before a PR can
+# be merged. Code checks (Android Lint, detekt) are in code-quality.yml.
 name: Android CI
 
 on:
@@ -34,11 +35,11 @@ jobs:
       # Caches Gradle downloads and build outputs between runs; validates the Gradle wrapper.
       - uses: gradle/actions/setup-gradle@v6
 
-      # Debug build, JVM unit tests, line coverage (Kover; fails under the minimum set in
-      # app/build.gradle.kts) and Android Lint (fails only on errors, not warnings).
+      # Debug build, JVM unit tests and line coverage (Kover), which fails under the minimum
+      # set in app/build.gradle.kts.
       # Instrumented tests (androidTest) need an emulator and are run locally for now (#37).
-      - name: Build, test, coverage and lint
-        run: ./gradlew assembleDebug testDebugUnitTest koverXmlReportDebug koverHtmlReportDebug koverVerifyDebug lintDebug --stacktrace
+      - name: Build, test and check coverage
+        run: ./gradlew assembleDebug testDebugUnitTest koverXmlReportDebug koverHtmlReportDebug koverVerifyDebug --stacktrace
 
       # Coverage per package on the run's summary page.
       - name: Coverage summary
@@ -53,13 +54,11 @@ jobs:
           path: app/build/reports/kover/htmlDebug/
           retention-days: 7
 
-      # When something fails, the reports are downloadable from the run's summary page.
-      - name: Upload reports
+      # When something fails, the test reports are downloadable from the run's summary page.
+      - name: Upload test reports
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: reports
-          path: |
-            app/build/reports/tests/
-            app/build/reports/lint-results-debug.html
+          name: test-reports
+          path: app/build/reports/tests/
           retention-days: 7

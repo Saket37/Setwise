@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
     alias(libs.plugins.kover)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -42,6 +43,10 @@ android {
         compose = true
         // BuildConfig.DEBUG gates debug-only code such as the fake-data seeder.
         buildConfig = true
+    }
+    lint {
+        // For GitHub code scanning: findings show on the PR's changed lines.
+        sarifReport = true
     }
     testOptions {
         // JVM unit tests run against stub Android classes: make calls like Log.e() no-ops
@@ -97,6 +102,23 @@ dependencies {
 
     // Instrumented tests (./gradlew connectedDebugAndroidTest)
     androidTestImplementation(libs.bundles.android.test)
+}
+
+detekt {
+    // Kotlin best practices, Compose rules and ktlint formatting; config/detekt/detekt.yml
+    // switches rules on top of detekt's defaults.
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    // Findings already in the code when detekt was added; new code must not add more.
+    baseline = file("detekt-baseline.xml")
+    parallel = true
+    // Its type analysis doesn't see BuildConfig or kotlinx.serialization's generated serializer();
+    // it reports those as compiler errors, which only blunt checks at those lines.
+}
+
+dependencies {
+    detektPlugins(libs.detekt.compose.rules)
+    detektPlugins(libs.detekt.ktlint.wrapper)
 }
 
 kover {

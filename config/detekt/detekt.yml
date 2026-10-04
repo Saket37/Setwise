@@ -1,0 +1,87 @@
+# detekt: Kotlin best practices on top of detekt's defaults (buildUponDefaultConfig = true), plus
+# the Compose rules (io.nlopez.compose.rules) and ktlint formatting. Only changes from the
+# defaults are listed, each with its reason. Findings already in the code are in
+# app/detekt-baseline.xml; new code must not add any.
+
+style:
+  MaxLineLength:
+    # Setwise keeps one statement per line rather than wrapping; 180 fits all but a few.
+    maxLineLength: 180
+  ReturnCount:
+    # Early returns ("?: return null") are the house style for guard clauses.
+    active: false
+  UnusedPrivateProperty:
+    # detekt 2.0.0-alpha.6 misses uses inside lambdas in property initialisers (false positives).
+    active: false
+  UnusedPrivateFunction:
+    # Previews are used by Android Studio.
+    ignoreAnnotated: ['Preview', 'ComponentPreviews', 'ScreenPreviews', 'AccessibilityPreviews']
+  MagicNumber:
+    # Layout values in composables and named defaults are read in place.
+    ignoreAnnotated: ['Composable', 'Preview', 'ComponentPreviews', 'ScreenPreviews', 'AccessibilityPreviews']
+    ignorePropertyDeclaration: true
+    ignoreNamedArgument: true
+    ignoreEnums: true
+  ForbiddenComment:
+    # TODOs are tracked as GitHub issues instead.
+    active: true
+
+naming:
+  FunctionNaming:
+    # Composables are PascalCase.
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    # Compose-style constants (e.g. val DefaultPadding = 16.dp).
+    constantPattern: '[A-Z][A-Za-z0-9_]*'
+
+complexity:
+  LongParameterList:
+    # A composable's parameters are its state and callbacks.
+    ignoreAnnotated: ['Composable']
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+
+ktlint:
+  # Formatting the codebase doesn't follow (one statement per line, no forced wrapping): off.
+  # Kept: imports, spacing, indentation, trailing commas on declarations, naming.
+  MaximumLineLength:
+    active: false
+  ArgumentListWrapping:
+    active: false
+  ParameterListWrapping:
+    active: false
+  FunctionLiteral:
+    active: false
+  FunctionSignature:
+    active: false
+  ClassSignature:
+    active: false
+  BinaryExpressionWrapping:
+    active: false
+  BlankLineBetweenWhenConditions:
+    active: false
+  Wrapping:
+    active: false
+  StatementWrapping:
+    active: false
+  PropertyWrapping:
+    active: false
+  MultiLineIfElse:
+    active: false
+  ChainMethodContinuation:
+    active: false
+  TrailingCommaOnCallSite:
+    active: false
+  FunctionNaming:
+    # Covered by detekt's naming rule (which skips composables).
+    active: false
+  ImportOrdering:
+    # Plain lexicographic order, as Android Studio sorts them.
+    layout: '*'
+
+Compose:
+  # Compose rules: defaults, with the project's design-system wrappers known.
+  ModifierMissing:
+    active: true
+  CompositionLocalAllowlist:
+    allowedCompositionLocals: ['LocalSetwiseColors', 'LocalSpacing']
