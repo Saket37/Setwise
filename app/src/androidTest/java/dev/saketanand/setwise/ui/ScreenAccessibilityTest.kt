@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.ui
 
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +30,8 @@ import dev.saketanand.setwise.ui.settings.SampleSettingsState
 import dev.saketanand.setwise.ui.settings.SettingsScreen
 import dev.saketanand.setwise.ui.summary.SampleWorkoutSummaryState
 import dev.saketanand.setwise.ui.summary.WorkoutSummaryScreen
+import dev.saketanand.setwise.ui.templates.SampleTemplateFromGoalState
+import dev.saketanand.setwise.ui.templates.TemplateFromGoalScreen
 import dev.saketanand.setwise.ui.workout.ActiveWorkoutScreen
 import dev.saketanand.setwise.ui.workout.SampleActiveWorkoutState
 import java.time.LocalDate
@@ -70,6 +73,16 @@ class ScreenAccessibilityTest {
 
     @Test
     fun settings() = check { SettingsScreen(uiState = SampleSettingsState, onAction = {}) }
+
+    @Test
+    fun buildFromAGoal() = check {
+        TemplateFromGoalScreen(
+            uiState = SampleTemplateFromGoalState,
+            goal = rememberTextFieldState("Get stronger at squat and bench, 45 minutes"),
+            onAction = {},
+            onBack = {},
+        )
+    }
 
     @Test
     fun import() = check {

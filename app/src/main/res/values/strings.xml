@@ -11,6 +11,7 @@
     <string name="create_a_template">Create a template</string>
     <string name="create_a_template_description">Save a routine like Push Day</string>
     <string name="build_from_a_goal">Build from a goal</string>
+    <string name="from_a_goal">From a goal</string>
     <string name="build_from_a_goal_description">Describe it; drafted on-device</string>
     <!-- %1$s = name of the user's last workout, e.g. "Pull Day". -->
     <string name="save_workout_as_template">Save %1$s as a template</string>
@@ -666,6 +667,40 @@
     </plurals>
     <string name="target_seconds">%d s</string>
     <string name="target_any_reps">Any reps</string>
+    <string name="goal_title">Build from a goal</string>
+    <string name="goal_label">What do you want to train for?</string>
+    <string name="goal_hint">e.g. Get stronger at squat and bench, 45 minutes, I only have dumbbells and a barbell</string>
+    <plurals name="goal_days">
+        <item quantity="one">%d day / week</item>
+        <item quantity="other">%d days / week</item>
+    </plurals>
+    <string name="goal_minutes">%d min</string>
+    <string name="goal_gear_any">Any equipment</string>
+    <string name="goal_gear_bodyweight">Bodyweight only</string>
+    <string name="gear_barbell">barbell</string>
+    <string name="gear_dumbbells">dumbbells</string>
+    <string name="gear_kettlebells">kettlebells</string>
+    <string name="gear_cables">cables</string>
+    <string name="gear_machines">machines</string>
+    <string name="gear_bodyweight">bodyweight</string>
+    <string name="goal_type_strength">Strength</string>
+    <string name="goal_type_muscle">Muscle</string>
+    <string name="goal_type_general">General fitness</string>
+    <plurals name="goal_draft">
+        <item quantity="one">Draft · %d template</item>
+        <item quantity="other">Draft · %d templates</item>
+    </plurals>
+    <string name="goal_regenerate">Regenerate</string>
+    <plurals name="goal_template_meta">
+        <item quantity="one">%1$d exercise · ~%2$d min</item>
+        <item quantity="other">%1$d exercises · ~%2$d min</item>
+    </plurals>
+    <string name="goal_scheme">%1$d × %2$d</string>
+    <string name="goal_scheme_seconds">%1$d × %2$d s</string>
+    <string name="goal_note">Uses only exercises from your library. You can change anything in the template editor.</string>
+    <string name="goal_note_by_model">Uses only exercises from your library, chosen for your goal on this phone by Gemini Nano. You can change anything in the template editor.</string>
+    <string name="goal_save">Edit and save templates</string>
+    <string name="goal_save_failed">Couldn\'t save the templates. Try again.</string>
     <string name="target_any_time">Any time</string>
     <string name="fewer_reps">Fewer target reps for %1$s</string>
     <string name="more_reps">More target reps for %1$s</string>

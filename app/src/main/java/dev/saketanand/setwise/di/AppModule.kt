@@ -22,6 +22,7 @@ import dev.saketanand.setwise.domain.ai.BodyReportReader
 import dev.saketanand.setwise.domain.ai.CalorieEstimator
 import dev.saketanand.setwise.domain.ai.ExerciseAssistant
 import dev.saketanand.setwise.domain.ai.FileTextReader
+import dev.saketanand.setwise.domain.ai.GoalPlanAssistant
 import dev.saketanand.setwise.domain.ai.HistoryAssistant
 import dev.saketanand.setwise.domain.ai.ImportReader
 import dev.saketanand.setwise.domain.ai.ModelDownloader
@@ -83,6 +84,7 @@ val appModule = module {
     singleOf(::WorkoutImporter)
     single<FileTextReader> { ContentResolverFileTextReader(androidContext().contentResolver) }
     singleOf(::ImportReader)
+    singleOf(::GoalPlanAssistant)
     singleOf(::CalorieEstimator)
     singleOf(::WorkoutInsightWriter)
     singleOf(::ExerciseAssistant)

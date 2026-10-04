@@ -6,6 +6,8 @@ import dev.saketanand.setwise.domain.model.BestSetFact
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseChange
 import dev.saketanand.setwise.domain.model.ExerciseSession
+import dev.saketanand.setwise.domain.model.GoalPlanner
+import dev.saketanand.setwise.domain.model.GoalReader
 import dev.saketanand.setwise.domain.model.Intensity
 import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.domain.model.Measure
@@ -56,6 +58,7 @@ class AiCheck(
     private val estimator: CalorieEstimator,
     private val insightWriter: WorkoutInsightWriter,
     private val weeklyRecapWriter: WeeklyRecapWriter,
+    private val goalPlanAssistant: GoalPlanAssistant,
     private val exerciseAssistant: ExerciseAssistant,
     private val quickLogInterpreter: QuickLogInterpreter,
     private val plateauNotes: PlateauNoteWriter,
@@ -80,6 +83,7 @@ class AiCheck(
                 ONLY_ASK -> checkAsk()
                 ONLY_IMPORT -> checkImport()
                 ONLY_PERSONAL -> checkPersonal()
+                ONLY_GOAL -> checkGoal()
                 else -> checkAll(workouts)
             }
             Log.i(TAG, "Done")
@@ -100,6 +104,23 @@ class AiCheck(
         checkExerciseNames()
         checkQuickLog()
         checkPlateauNotes()
+    }
+
+    /** Plans for goals that say more than code reads: code's picks, then the model's. */
+    private suspend fun checkGoal() {
+        val library = exerciseRepository.observeExercises("", null).first()
+        SAMPLE_GOALS.forEach { text ->
+            val goal = GoalReader.read(text)
+            val startedAt = System.nanoTime()
+            val byCode = GoalPlanner.plan(goal, library)
+            val plan = goalPlanAssistant.plan(text, goal, library, emptySet())
+            Log.i(TAG, "Goal (${(System.nanoTime() - startedAt) / 1_000_000} ms, byModel=${plan.byModel}): $text")
+            plan.templates.zip(byCode).forEach { (chosen, code) ->
+                val changes = chosen.exercises.zip(code.exercises).filter { (a, b) -> a.exercise != b.exercise }
+                    .joinToString("; ") { (a, b) -> "${b.exercise.name} -> ${a.exercise.name}" }
+                Log.i(TAG, "  ${chosen.name}: " + chosen.exercises.joinToString(" | ") { it.exercise.name } + if (changes.isNotEmpty()) "  [model: $changes]" else "")
+            }
+        }
     }
 
     /** The workout insight and weekly recap with the profile's name and planned days (or sample ones). */
@@ -313,6 +334,14 @@ class AiCheck(
         const val ONLY_SPEECH = "speech"
         const val ONLY_ASK = "ask"
         const val ONLY_PERSONAL = "personal"
+        const val ONLY_GOAL = "goal"
+
+        /** Goals that say more than code reads: the model's picks should follow them. */
+        private val SAMPLE_GOALS = listOf(
+            "Build muscle 4 days a week, an hour, my knees don't like deep squats",
+            "Get stronger at bench, 3 days, 45 min, I hate burpees and love pull-ups",
+            "3 days a week at the gym, 45 minutes, sore lower back so go easy on deadlifts",
+        )
         const val ONLY_IMPORT = "import"
 
         /** Prose no code reader takes apart: what's left for the model. */
