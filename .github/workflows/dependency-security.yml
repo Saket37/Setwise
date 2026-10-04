@@ -1,7 +1,7 @@
 # Dependency security. GitHub only knows a Gradle project's dependencies (transitive ones
 # included) when a build submits them:
-#  - On main: submit the dependency graph, so Dependabot raises security alerts for every
-#    dependency the app resolves.
+#  - On main: submit the dependency graph of the app's own classpaths (what users install), so
+#    Dependabot raises security alerts for every library in the app, transitive ones included.
 #  - On pull requests: submit the PR's graph, then dependency review fails the PR if it adds a
 #    dependency with a known vulnerability (moderate or worse).
 name: Dependency security
@@ -35,6 +35,10 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/dependency-submission@v6
+        with:
+          # Only the app's own classpaths: what users install. Build plugins and AGP's test
+          # platform run only on developer machines and CI; their advisories are tracked in #82.
+          dependency-graph-include-configurations: "^(debug|release)(Compile|Runtime)Classpath$"
 
   review:
     name: Dependency review
