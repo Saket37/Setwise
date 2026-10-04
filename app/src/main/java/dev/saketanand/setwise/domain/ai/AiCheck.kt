@@ -47,6 +47,7 @@ class AiCheck(
     private val quickLogInterpreter: QuickLogInterpreter,
     private val plateauNotes: PlateauNoteWriter,
     private val historyAssistant: HistoryAssistant,
+    private val importReader: ImportReader,
     private val exerciseRepository: ExerciseRepository,
     private val workoutRepository: WorkoutRepository,
     private val userSettingsRepository: UserSettingsRepository,
@@ -64,6 +65,7 @@ class AiCheck(
                 ONLY_CLIENT -> checkClientReopen()
                 ONLY_SPEECH -> checkSpeech()
                 ONLY_ASK -> checkAsk()
+                ONLY_IMPORT -> checkImport()
                 else -> checkAll(workouts)
             }
             Log.i(TAG, "Done")
@@ -84,6 +86,21 @@ class AiCheck(
         checkExerciseNames()
         checkQuickLog()
         checkPlateauNotes()
+    }
+
+    /** Free-form workout logs: what the model makes of them, after the number guard. */
+    private suspend fun checkImport() {
+        SAMPLE_LOGS.forEach { log ->
+            val startedAt = System.nanoTime()
+            val read = importReader.fromText(log)
+            Log.i(TAG, "Log (${(System.nanoTime() - startedAt) / 1_000_000} ms, ${read.source}): ${log.lines().first()}")
+            read.workouts.forEach { workout ->
+                Log.i(TAG, "  ${workout.name} @ ${workout.startedAt}: " + workout.exercises.joinToString(" | ") { exercise ->
+                    exercise.name + " " + exercise.sets.joinToString(", ") { listOfNotNull(it.weightKg?.let { kg -> "$kg kg" }, it.reps?.let { r -> "×$r" }, it.seconds?.let { s -> "${s}s" }).joinToString(" ") }
+                })
+            }
+            if (read.workouts.isEmpty()) Log.i(TAG, "  nothing kept")
+        }
     }
 
     /** History questions over the real log: the reply, and whether the model picked the lookup. */
@@ -256,6 +273,14 @@ class AiCheck(
         const val ONLY_CLIENT = "client"
         const val ONLY_SPEECH = "speech"
         const val ONLY_ASK = "ask"
+        const val ONLY_IMPORT = "import"
+
+        /** Prose no code reader takes apart: what's left for the model. */
+        private val SAMPLE_LOGS = listOf(
+            "Leg day on 29/09/2026 at 18:30. Squatted 100 for three sets of 5, then planks of 60 and 45 seconds.",
+            "2 Oct 2026, push: benched 60 for 8, then 62.5 for 6 twice. Lateral raises with 10 for 15, three times.",
+            "Saturday 3rd October 2026 morning I did pullups (10, 8 and 6) and barbell rows, 3 sets of 10 with 60.",
+        )
 
         /** The first five the code reads; the rest need the model to pick a lookup (or "none"). */
         private val SAMPLE_QUESTIONS = listOf(
