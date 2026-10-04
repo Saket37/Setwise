@@ -40,6 +40,10 @@ import java.time.ZoneId
 import kotlin.time.Duration
 import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.NewExercise
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.WeeklyRecapWriter
+import dev.saketanand.setwise.domain.model.LoggedSetRecord
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
@@ -52,8 +56,50 @@ class HomeViewModelTest {
     private val marks = FakeDayMarkRepository()
     private val settings = FakeUserSettingsRepository()
 
+    private val model = FakeOnDeviceModel()
+
     private fun viewModel() =
-        HomeViewModel(FakeExerciseRepository, workouts, FakeTemplateRepository, marks, settings, FixedDateProvider)
+        HomeViewModel(FakeExerciseRepository, workouts, FakeTemplateRepository, marks, settings, FixedDateProvider, WeeklyRecapWriter(model))
+
+    // Weekly summary. Today is Sat 3 Oct: last week is Mon 21 – Sun 27 Sep.
+
+    @Test
+    fun `last week's summary shows its facts, and the recap is written once and kept`() = runTest {
+        workouts.history.value = listOf(historyItem(LocalDate.of(2026, 9, 22)))
+        workouts.log = listOf(
+            LoggedSetRecord(1, "Push Day", LocalDate.of(2026, 9, 22).atTime(18, 0).atZone(FixedDateProvider.zone).toInstant(), 5, "Bench Press (Barbell)", "Chest", 1, 60.0, 8, null, null, isPr = false),
+        )
+        model.availability = ModelAvailability.Ready
+        model.answer = { "One workout last week, with a best set of 60 kg x 8 on the bench." }
+
+        val summary = viewModel().state.value.weeklySummary!!
+        assertEquals(LocalDate.of(2026, 9, 21), summary.facts.weekStart)
+        assertEquals(1, summary.facts.workouts)
+        assertEquals("One workout last week, with a best set of 60 kg x 8 on the bench.", summary.recap)
+        assertEquals(LocalDate.of(2026, 9, 21), settings.settings.value.weeklyRecap?.weekStart)
+
+        viewModel() // again: the kept recap, no second request
+        assertEquals(1, model.requests.size)
+    }
+
+    @Test
+    fun `closing the summary keeps it closed for that week`() = runTest {
+        workouts.history.value = listOf(historyItem(LocalDate.of(2026, 9, 22)))
+        val vm = viewModel()
+        assertTrue(vm.state.value.weeklySummary != null)
+
+        vm.onAction(HomeAction.OnWeeklySummaryDismiss)
+
+        assertEquals(null, vm.state.value.weeklySummary)
+        assertEquals(LocalDate.of(2026, 9, 21), settings.settings.value.weeklySummaryDismissedWeek)
+        assertEquals(null, viewModel().state.value.weeklySummary)
+    }
+
+    @Test
+    fun `no workout last week, no summary`() = runTest {
+        workouts.history.value = listOf(historyItem(LocalDate.of(2026, 9, 30)))
+        assertEquals(null, viewModel().state.value.weeklySummary)
+    }
 
     // Day check-in. Today is Sat 3 Oct; the only workout was Wed 30 Sep.
 
@@ -224,6 +270,9 @@ class HomeViewModelTest {
         var lastStartedAt: Instant? = null
         val startCalls = mutableListOf<StartCall>()
         var failStart = false
+        var log: List<LoggedSetRecord> = emptyList()
+
+        override suspend fun getTrainingLog(): List<LoggedSetRecord> = log
 
         override fun observeLastFinishedWorkout(): Flow<FinishedWorkout?> = flowOf(null)
         override fun observeActiveWorkout(): Flow<ActiveWorkout?> = active

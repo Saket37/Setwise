@@ -384,6 +384,50 @@
     <string name="plateau_source_rules">Detected from your logs</string>
     <string name="flat_since">flat since %1$s</string>
 
+    <!-- Weekly summary (Home) -->
+    <string name="weekly_your_week">Your week</string>
+    <string name="weekly_close">Close last week\'s summary</string>
+    <string name="weekly_recap">Weekly recap</string>
+    <string name="weekly_writing">Writing your recap on-device…</string>
+    <plurals name="weekly_stat_workouts">
+        <item quantity="one">workout</item>
+        <item quantity="other">workouts</item>
+    </plurals>
+    <string name="weekly_stat_trained">trained</string>
+    <plurals name="weekly_stat_prs">
+        <item quantity="one">PR</item>
+        <item quantity="other">PRs</item>
+    </plurals>
+    <string name="weekly_stat_volume">volume</string>
+    <string name="weekly_stat_volume_kg">kg lifted</string>
+    <string name="weekly_best_set">%1$s best set</string>
+    <string name="weekly_part_volume">%1$s volume vs last week</string>
+    <string name="weekly_plateau">%1$s estimated 1RM</string>
+    <plurals name="weekly_flat_weeks">
+        <item quantity="one">flat %d wk</item>
+        <item quantity="other">flat %d wks</item>
+    </plurals>
+    <string name="weekly_see_plan">See %1$s plan</string>
+    <plurals name="weekly_template_workouts">
+        <item quantity="one">%d workout</item>
+        <item quantity="other">%d workouts</item>
+    </plurals>
+    <plurals name="weekly_template_prs">
+        <item quantity="one">%d PR</item>
+        <item quantity="other">%d PRs</item>
+    </plurals>
+    <string name="weekly_template_week">%1$s and %2$s last week.</string>
+    <string name="weekly_template_week_no_prs">%1$s last week.</string>
+    <string name="weekly_template_best">Your best set was %1$s %2$s.</string>
+    <string name="weekly_template_volume">Volume was %1$s%% on the week before.</string>
+    <string name="weekly_template_plateau">%1$s is still flat, so try its lighter, higher-rep plan this week.</string>
+    <string name="weekly_part_legs">Leg</string>
+    <string name="weekly_part_chest">Chest</string>
+    <string name="weekly_part_back">Back</string>
+    <string name="weekly_part_shoulders">Shoulder</string>
+    <string name="weekly_part_arms">Arm</string>
+    <string name="weekly_part_core">Core</string>
+
     <!-- Ask about your training (History) -->
     <string name="ask_placeholder">Ask about your training</string>
     <string name="ask_send">Ask</string>

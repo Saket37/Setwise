@@ -405,20 +405,6 @@ fun WeekStatsRow(
     }
 }
 
-/**
- * Artboard 13: "Your week" card. Recap text from the LLM (placeholder while isGeneratingRecap),
- * highlights, and "See <exercise> plan" when there's a plateau.
- * Actions: OnPlateauExerciseClick, OnWeeklySummaryDismiss.
- */
-@Composable
-fun WeeklySummaryCard(
-    summary: WeeklySummaryUi,
-    onAction: (HomeAction) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    // TODO
-}
-
 /** "Templates" title with a "+ New" button (OnCreateTemplateClick). */
 @Composable
 fun TemplatesHeader(
