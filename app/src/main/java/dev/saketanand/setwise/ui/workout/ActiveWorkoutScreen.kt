@@ -29,6 +29,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,11 +41,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -51,6 +59,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.ObserveAsEvents
+import dev.saketanand.setwise.ui.RecognizeSpeech
+import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
@@ -61,7 +71,6 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
-import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.rememberElapsedTime
 import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toShortDayLabel
@@ -69,14 +78,6 @@ import dev.saketanand.setwise.util.toShortTimeLabel
 import java.time.LocalDate
 import java.time.LocalTime
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import dev.saketanand.setwise.ui.RecognizeSpeech
 
 /**
  * Destination: [Route.ActiveWorkout].
@@ -101,11 +102,13 @@ fun ActiveWorkoutScreenRoot(
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // The picker's result arrives once; hand it to the ViewModel and clear it.
+    // The picker's result arrives once; hand it to the ViewModel and clear it. The latest
+    // callback, not the one from when the effect started (#35).
+    val onPickedConsumed by rememberUpdatedState(onPickedExercisesConsumed)
     LaunchedEffect(pickedExerciseIds) {
         if (pickedExerciseIds != null) {
             viewModel.onAction(ActiveWorkoutAction.OnExercisesPicked(pickedExerciseIds))
-            onPickedExercisesConsumed()
+            onPickedConsumed()
         }
     }
 

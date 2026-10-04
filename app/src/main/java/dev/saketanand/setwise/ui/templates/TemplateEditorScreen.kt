@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -69,10 +70,12 @@ fun TemplateEditorScreenRoot(
     val context = LocalContext.current
     val addExercises = dropUnlessResumed(block = onAddExercises)
 
+    // The latest callback, not the one from when the effect started (#35).
+    val onPickedConsumed by rememberUpdatedState(onPickedExercisesConsumed)
     LaunchedEffect(pickedExerciseIds) {
         if (pickedExerciseIds != null) {
             viewModel.onAction(TemplateEditorAction.OnExercisesPicked(pickedExerciseIds))
-            onPickedExercisesConsumed()
+            onPickedConsumed()
         }
     }
     ObserveAsEvents(viewModel.events) { event ->
