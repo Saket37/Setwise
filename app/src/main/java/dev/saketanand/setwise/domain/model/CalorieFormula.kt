@@ -27,14 +27,22 @@ data class CalorieEstimate(val kcal: Int, val intensity: Intensity)
  * - Cardio, per logged entry, by the exercise's [CalorieMethod]: its MET × time; the ACSM
  *   treadmill equation from speed and incline; or the ACSM running / walking equation from
  *   pace (distance ÷ time). Without what a method needs, a typical MET for it.
+ * - A MET-hour is 1 kcal per kg of body weight, or, with a known BMR (a body report, body fat
+ *   or the profile), the person's own resting burn: BMR ÷ 24 ("corrected MET").
  */
 object CalorieFormula {
 
     const val SOURCE = "formula"
 
-    /** Null without a body weight, or for a workout with no time. */
-    fun estimate(session: WorkoutSession, bodyWeightKg: Double?): CalorieEstimate? {
+    private const val HOURS_PER_DAY = 24.0
+
+    /**
+     * Null without a body weight, or for a workout with no time.
+     * @param bmrKcal resting burn per day, when known: personalises every MET-hour.
+     */
+    fun estimate(session: WorkoutSession, bodyWeightKg: Double?, bmrKcal: Int? = null): CalorieEstimate? {
         val weight = bodyWeightKg?.takeIf { it > 0 } ?: return null
+        val kcalPerMetHour = kcalPerMetHour(weight, bmrKcal)
         val end = session.endedAt ?: return null
         val totalHours = Duration.between(session.startedAt, end).seconds / 3600.0
         if (totalHours <= 0) return null
@@ -44,21 +52,21 @@ object CalorieFormula {
             exercise.sets.filter { it.isCompleted }.mapNotNull { set -> set.cardio?.let { exercise.exercise to it } }
         }
         val cardioHours = cardioEntries.sumOf { (_, values) -> (values.durationSec ?: 0) / 3600.0 }
-        val cardioKcal = cardioEntries.sumOf { (exercise, values) -> cardioKcal(exercise, values, weight) }
+        val cardioKcal = cardioEntries.sumOf { (exercise, values) -> cardioKcal(exercise, values, kcalPerMetHour) }
 
         val strengthSets = session.exercises
             .filter { it.exercise.type != ExerciseType.CARDIO }
             .sumOf { exercise -> exercise.sets.count { it.isCompleted } }
         val strengthHours = (totalHours - cardioHours).coerceAtLeast(0.0)
         val strengthIntensity = strengthIntensity(strengthSets, strengthHours)
-        val strengthKcal = if (strengthSets > 0) strengthIntensity.met() * weight * strengthHours else 0.0
+        val strengthKcal = if (strengthSets > 0) strengthIntensity.met() * kcalPerMetHour * strengthHours else 0.0
 
         val kcal = (strengthKcal + cardioKcal).roundToInt()
         if (kcal <= 0) return null
         val intensity = when {
             strengthSets > 0 -> strengthIntensity
             // Cardio only: from its average MET.
-            cardioHours > 0 -> metIntensity(cardioKcal / (weight * cardioHours))
+            cardioHours > 0 -> metIntensity(cardioKcal / (kcalPerMetHour * cardioHours))
             else -> Intensity.Moderate
         }
         return CalorieEstimate(kcal, intensity)
@@ -75,7 +83,12 @@ object CalorieFormula {
         }
     }
 
-    fun cardioKcal(exercise: Exercise, values: CardioValues, weightKg: Double): Double {
+    /** One MET for an hour: 1 kcal per kg, or the person's measured or estimated resting burn. */
+    fun kcalPerMetHour(weightKg: Double, bmrKcal: Int?): Double =
+        bmrKcal?.takeIf { it in BodyRules.BMR_KCAL }?.let { it / HOURS_PER_DAY } ?: weightKg
+
+    /** @param kcalPerMetHour see [kcalPerMetHour]. */
+    fun cardioKcal(exercise: Exercise, values: CardioValues, kcalPerMetHour: Double): Double {
         val seconds = values.durationSec ?: return 0.0
         val minutes = seconds / 60.0
         val speedKmh = values.averageSpeedKmh() ?: values.distanceKm?.let { it / (minutes / 60.0) }
@@ -87,9 +100,9 @@ object CalorieFormula {
             CalorieMethod.ACSM_WALK_FROM_PACE -> speedKmh?.let { walkingVo2(it, 0.0) }
             CalorieMethod.MET, null -> null
         }
-        // 1 MET = 3.5 ml/kg/min; kcal = MET × kg × hours.
+        // 1 MET = 3.5 ml/kg/min; kcal = MET × (kcal per MET-hour) × hours.
         val met = vo2?.let { it / 3.5 } ?: exercise.met ?: typicalMet(exercise.calorieMethod)
-        return met * weightKg * (minutes / 60.0)
+        return met * kcalPerMetHour * (minutes / 60.0)
     }
 
     private fun CardioValues.averageSpeedKmh(): Double? = when {

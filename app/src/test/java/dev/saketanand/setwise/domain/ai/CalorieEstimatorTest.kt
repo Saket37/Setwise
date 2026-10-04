@@ -77,6 +77,12 @@ class CalorieEstimatorTest {
     }
 
     @Test
+    fun `a known BMR is in the prompt and in the formula's number`() {
+        val request = CalorieEstimator.prompt(session, 70.0, formula.estimate, bmrKcal = 1_649)
+        assertTrue(request.prompt, "Body weight: 70 kg\nResting burn (BMR): 1649 kcal/day\n" in request.prompt)
+    }
+
+    @Test
     fun `the prompt gives the model the sets, rest times and the formula's number`() {
         val request = CalorieEstimator.prompt(session, 70.0, formula.estimate)
         val log = request.prompt.substringAfter("## Workout\n<workout>\n").substringBefore("\n</workout>")
