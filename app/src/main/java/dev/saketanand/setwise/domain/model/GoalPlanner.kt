@@ -2,8 +2,11 @@ package dev.saketanand.setwise.domain.model
 
 import java.util.Locale
 
-/** One exercise of a planned template: sets × reps (seconds for a timed one). */
-data class PlannedExercise(val exercise: Exercise, val sets: Int, val reps: Int) {
+/**
+ * One exercise of a planned template: sets × reps (seconds for a timed one). [position] is its
+ * slot's place in the day ([GoalPlanner.Day.slots]).
+ */
+data class PlannedExercise(val exercise: Exercise, val sets: Int, val reps: Int, val position: Int = 0) {
     val isTimed: Boolean get() = exercise.isTimed
 }
 
@@ -116,7 +119,7 @@ object GoalPlanner {
                 val (sets, reps) = scheme(goal.type, slot, planned.size, exercise)
                 val cost = sets * (exercise.defaultRestSec + WORK_SECONDS_PER_SET)
                 if (planned.size >= MIN_EXERCISES && seconds + cost > goal.minutes * SECONDS_PER_MINUTE) break
-                planned += PlannedExercise(exercise, sets, reps)
+                planned += PlannedExercise(exercise, sets, reps, position)
                 seconds += cost
                 used += exercise.id
             }
