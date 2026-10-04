@@ -15,6 +15,7 @@ import dev.saketanand.setwise.data.local.relation.WorkoutHistoryRow
 import dev.saketanand.setwise.data.local.relation.WorkoutStatsRow
 import dev.saketanand.setwise.data.local.relation.WorkoutWithExercises
 import kotlinx.coroutines.flow.Flow
+import dev.saketanand.setwise.data.local.relation.TrainingLogRow
 
 @Dao
 interface WorkoutDao {
@@ -386,4 +387,21 @@ interface WorkoutDao {
         """
     )
     suspend fun finishedWorkoutsWithExercisesFrom(exerciseIds: List<Long>, fromStartedAt: Long): List<Long>
+
+    /** Every completed set of every finished workout: newest workout first, then in the order done. */
+    @Query(
+        """
+        SELECT w.id AS workoutId, w.name AS workoutName, w.startedAt AS startedAt,
+               e.id AS exerciseId, e.name AS exerciseName, e.muscleGroup AS muscleGroup,
+               s.setNumber AS setNumber, s.weightKg AS weightKg, s.reps AS reps,
+               s.durationSec AS durationSec, s.distanceKm AS distanceKm, s.isPr AS isPr
+        FROM sets s
+        JOIN workout_exercises we ON we.id = s.workoutExerciseId
+        JOIN workouts w ON w.id = we.workoutId
+        JOIN exercises e ON e.id = we.exerciseId
+        WHERE s.isCompleted = 1 AND w.endedAt IS NOT NULL
+        ORDER BY w.startedAt DESC, w.id DESC, we.position, s.setNumber
+        """
+    )
+    suspend fun getTrainingLog(): List<TrainingLogRow>
 }

@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 import dev.saketanand.setwise.domain.model.CalorieEstimate
+import dev.saketanand.setwise.domain.model.LoggedSetRecord
 
 class WorkoutRepositoryImpl(
     private val database: SetwiseDatabase,
@@ -315,5 +316,22 @@ class WorkoutRepositoryImpl(
     private companion object {
         /** For empty workouts; tap the title to rename. */
         const val DEFAULT_WORKOUT_NAME = "Workout"
+    }
+
+    override suspend fun getTrainingLog(): List<LoggedSetRecord> = workoutDao.getTrainingLog().map {
+        LoggedSetRecord(
+            workoutId = it.workoutId,
+            workoutName = it.workoutName,
+            startedAt = Instant.ofEpochMilli(it.startedAt),
+            exerciseId = it.exerciseId,
+            exerciseName = it.exerciseName,
+            muscleGroup = it.muscleGroup,
+            setNumber = it.setNumber,
+            weightKg = it.weightKg,
+            reps = it.reps,
+            durationSec = it.durationSec,
+            distanceKm = it.distanceKm,
+            isPr = it.isPr,
+        )
     }
 }
