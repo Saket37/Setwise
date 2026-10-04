@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import android.net.Uri
+import android.util.Log
 
 class MainActivity : ComponentActivity() {
 
@@ -46,7 +48,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         // Fresh launch only: after a rotation or a restore the link was already handled (the
         // activity is recreated with the same intent).
-        if (savedInstanceState == null) AppLinks.from(intent)?.let(appLinks::trySend)
+        if (savedInstanceState == null) AppLinks.from(intent, ::readSharedText)?.let(appLinks::trySend)
         startAiCheck(intent)
         setContent {
             SetwiseTheme {
@@ -63,7 +65,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        AppLinks.from(intent)?.let(appLinks::trySend)
+        AppLinks.from(intent, ::readSharedText)?.let(appLinks::trySend)
         startAiCheck(intent)
     }
 
@@ -78,6 +80,12 @@ class MainActivity : ComponentActivity() {
         intent.removeExtra(AiCheck.EXTRA)
         get<CoroutineScope>(ApplicationScope).launch { get<AiCheck>().run(only) }
     }
+
+    /** A shared file's text (a CSV export), read now while the share's permission holds. */
+    private fun readSharedText(uri: Uri): String? =
+        runCatching { contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } }
+            .onFailure { Log.w("MainActivity", "Couldn't read the shared file", it) }
+            .getOrNull()
 }
 
 /** Matches the total length of avd_splash_mark.xml (last bar: 340ms offset + 380ms). */

@@ -113,6 +113,7 @@ private fun NavHostController.open(link: AppLink) {
             }
         }
         is AppLink.SharedText -> navigate(Route.ImportWorkouts(link.text))
+        is AppLink.SharedImages -> navigate(Route.ImportWorkouts(sharedImages = link.uris))
     }
 }
 

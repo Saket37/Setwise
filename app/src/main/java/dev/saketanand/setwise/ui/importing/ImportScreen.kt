@@ -45,15 +45,41 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import java.time.format.DateTimeFormatter
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import dev.saketanand.setwise.domain.ai.ImportReader
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
-fun ImportScreenRoot(sharedText: String, onBack: () -> Unit, onOpenHistory: () -> Unit) {
-    val viewModel: ImportViewModel = koinViewModel { parametersOf(sharedText) }
+fun ImportScreenRoot(sharedText: String, sharedImages: List<String>, onBack: () -> Unit, onOpenHistory: () -> Unit) {
+    val viewModel: ImportViewModel = koinViewModel { parametersOf(sharedText, sharedImages) }
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val chooseFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            scope.launch {
+                val text = withContext(Dispatchers.IO) {
+                    runCatching { context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } }.getOrNull()
+                }
+                viewModel.read(text.orEmpty())
+            }
+        }
+    }
+    val chooseScreenshots = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(MAX_SCREENSHOTS)) { uris ->
+        viewModel.readImages(uris.map { it.toString() })
+    }
     ImportScreen(
         uiState = uiState,
         initialText = sharedText,
         onRead = viewModel::read,
+        onChooseFile = { chooseFile.launch(arrayOf("text/csv", "text/comma-separated-values", "application/csv", "text/plain", "application/vnd.ms-excel")) },
+        onChooseScreenshots = { chooseScreenshots.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
         onImport = viewModel::import,
         onBack = dropUnlessResumed(block = onBack),
         onOpenHistory = dropUnlessResumed(block = onOpenHistory),
@@ -69,6 +95,8 @@ fun ImportScreen(
     uiState: ImportUiState,
     initialText: String,
     onRead: (String) -> Unit,
+    onChooseFile: () -> Unit,
+    onChooseScreenshots: () -> Unit,
     onImport: () -> Unit,
     onBack: () -> Unit,
     onOpenHistory: () -> Unit,
@@ -99,6 +127,26 @@ fun ImportScreen(
             }
             item(key = "how") {
                 Text(stringResource(R.string.import_how), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            item(key = "sources") {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SetwiseButton(
+                        text = stringResource(R.string.import_choose_file),
+                        onClick = onChooseFile,
+                        style = SetwiseButtonStyle.Tonal,
+                        size = SetwiseButtonSize.Medium,
+                        enabled = !uiState.isReading,
+                        modifier = Modifier.weight(1f),
+                    )
+                    SetwiseButton(
+                        text = stringResource(R.string.import_choose_screenshots),
+                        onClick = onChooseScreenshots,
+                        style = SetwiseButtonStyle.Tonal,
+                        size = SetwiseButtonSize.Medium,
+                        enabled = !uiState.isReading,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
             item(key = "text") {
                 val hint = stringResource(R.string.import_paste_hint)
@@ -139,6 +187,20 @@ fun ImportScreen(
                 }
                 uiState.nothingFound -> item(key = "none") { Problem(stringResource(R.string.import_nothing_found)) }
                 uiState.failed -> item(key = "failed") { Problem(stringResource(R.string.import_failed)) }
+            }
+            if (uiState.unreadLines > 0) {
+                item(key = "unread") {
+                    Text(
+                        pluralStringResource(R.plurals.import_unread_lines, uiState.unreadLines, uiState.unreadLines),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
+            }
+            if (uiState.source == ImportReader.Source.Model) {
+                item(key = "by-model") {
+                    Text(stringResource(R.string.import_by_model), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.tertiary)
+                }
             }
             uiState.plan?.let { plan ->
                 items(plan.workouts, key = { it.shared.startedAt.toString() + it.shared.name }) { workout -> PlannedWorkoutCard(workout) }
@@ -201,3 +263,6 @@ private fun PlannedWorkoutCard(workout: WorkoutImporter.PlannedWorkout) {
         }
     }
 }
+
+/** The most screenshots read at once. */
+private const val MAX_SCREENSHOTS = 20

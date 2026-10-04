@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dev.saketanand.setwise.domain.ai.ImportReader
 
 @Immutable
 data class ImportUiState(
@@ -24,6 +25,10 @@ data class ImportUiState(
     val isImporting: Boolean = false,
     val result: WorkoutImporter.Result? = null,
     val failed: Boolean = false,
+    /** What read the workouts (the on-device model: check them carefully). */
+    val source: ImportReader.Source? = null,
+    /** Lines of a hand-written log that couldn't be read (not imported). */
+    val unreadLines: Int = 0,
 )
 
 /**
@@ -32,6 +37,8 @@ data class ImportUiState(
  */
 class ImportViewModel(
     sharedText: String,
+    sharedImages: List<String>,
+    private val reader: ImportReader,
     private val importer: WorkoutImporter,
     private val exerciseRepository: ExerciseRepository,
     private val dateProvider: DateProvider,
@@ -41,17 +48,35 @@ class ImportViewModel(
     val state: StateFlow<ImportUiState> = _state.asStateFlow()
 
     init {
-        if (sharedText.isNotBlank()) read(sharedText)
+        when {
+            sharedImages.isNotEmpty() -> readImages(sharedImages)
+            sharedText.isNotBlank() -> read(sharedText)
+        }
     }
 
+    /** Pasted or shared text, or a CSV file's content. */
     fun read(text: String) {
-        if (text.isBlank() || _state.value.isReading) return
+        if (text.isBlank()) return
+        readWith { reader.fromText(text) }
+    }
+
+    /** Screenshots, in the order picked. */
+    fun readImages(uris: List<String>) {
+        if (uris.isEmpty()) return
+        readWith { reader.fromImages(uris) }
+    }
+
+    private fun readWith(read: suspend () -> ImportReader.Read) {
+        if (_state.value.isReading) return
         _state.value = ImportUiState(isReading = true)
         viewModelScope.launch {
+            var source: ImportReader.Source? = null
+            var unread = 0
             val plan = try {
+                val workouts = read().also { source = it.source; unread = it.unreadLines }.workouts
                 val library = exerciseRepository.observeExercises("", null).first()
                 val done = exerciseRepository.observeRecentExercises(DONE_EXERCISES).first().map { it.exercise }
-                importer.plan(text, library, done, dateProvider.zone)
+                importer.plan(workouts, library, done, dateProvider.zone)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -61,7 +86,7 @@ class ImportViewModel(
             _state.value = when {
                 plan == null -> ImportUiState(failed = true)
                 plan.workouts.isEmpty() -> ImportUiState(nothingFound = true)
-                else -> ImportUiState(plan = plan)
+                else -> ImportUiState(plan = plan, source = source, unreadLines = unread)
             }
         }
     }
@@ -79,7 +104,7 @@ class ImportViewModel(
                 Log.e(TAG, "Importing failed", e)
                 null
             }
-            _state.value = if (result == null) ImportUiState(plan = plan, failed = true) else ImportUiState(result = result)
+            _state.value = if (result == null) _state.value.copy(isImporting = false, failed = true) else ImportUiState(result = result)
         }
     }
 

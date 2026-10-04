@@ -29,7 +29,16 @@ val viewModelModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::BodyViewModel)
-    viewModel { params -> ImportViewModel(sharedText = params.get(), importer = get(), exerciseRepository = get(), dateProvider = get()) }
+    viewModel { params ->
+        ImportViewModel(
+            sharedText = params.get(),
+            sharedImages = params.get(),
+            reader = get(),
+            importer = get(),
+            exerciseRepository = get(),
+            dateProvider = get(),
+        )
+    }
     viewModelOf(::SettingsViewModel)
 
     // Route argument passed by SetwiseNavHost: koinViewModel { parametersOf(route.workoutId) }.

@@ -122,6 +122,7 @@ fun SetwiseNavHost(
             val route = entry.toRoute<Route.ImportWorkouts>()
             ImportScreenRoot(
                 sharedText = route.sharedText,
+                sharedImages = route.sharedImages,
                 onBack = { navController.popBackStack() },
                 onOpenHistory = {
                     navController.navigate(Route.History) {
