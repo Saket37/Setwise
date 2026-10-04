@@ -1,0 +1,61 @@
+# CodeQL security analysis of the Kotlin code (java-kotlin): unsafe intent handling, paths or
+# queries built from untrusted input, data from shared intents and files reaching sensitive
+# APIs. Findings go to GitHub code scanning, next to Lint's and detekt's.
+name: CodeQL
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  # Weekly, so new queries also run over code that hasn't changed.
+  schedule:
+    - cron: "17 4 * * 1"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: CodeQL (Kotlin)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6
+
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: java-kotlin
+          # CodeQL reads the code as the compiler sees it, so it watches a real build.
+          build-mode: manual
+          queries: security-extended
+
+      # Every compile task must actually run for CodeQL to see it: no up-to-date or cached tasks,
+      # and the Kotlin compiler inside Gradle's process (not the Kotlin daemon, which CodeQL's
+      # tracer doesn't follow).
+      - name: Build
+        run: >-
+          ./gradlew assembleDebug --no-build-cache --rerun-tasks --no-daemon --stacktrace
+          -Pkotlin.compiler.execution.strategy=in-process
+
+      # An analysis that saw no Kotlin would pass with nothing found: fail instead.
+      - name: Check the Kotlin code was extracted
+        run: |
+          count=$(find "$RUNNER_TEMP/codeql_databases/java/src" -name '*.kt' | wc -l)
+          echo "Kotlin files in the CodeQL database: $count"
+          test "$count" -gt 100
+
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: codeql-kotlin
