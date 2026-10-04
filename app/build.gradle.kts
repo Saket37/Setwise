@@ -190,8 +190,8 @@ kover {
     reports {
         verify {
             rule("Line coverage") {
-                // 72% with device-only code left out (#70); raise it as coverage grows, never lower it.
-                minBound(71)
+                // Raise it as coverage grows (72.8% after #38), never lower it.
+                minBound(72)
             }
         }
         filters {
