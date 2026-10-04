@@ -11,7 +11,7 @@ coreSplashscreen = "1.2.0"
 composeBom = "2026.06.01"  # last BOM on Compose 1.11 (compileSdk 36); 1.12+ needs SDK 37
 navigation = "2.9.8"  # 2.10+ needs compileSdk 37
 datastore = "1.2.1"
-work = "2.11.2"
+work = "2.12.0"
 room = "2.8.5"
 
 # Other
