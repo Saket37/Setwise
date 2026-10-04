@@ -41,13 +41,30 @@ object ExerciseNames {
     }
 
     /**
-     * The one exercise whose name is what's typed plus its equipment ("deadlift" → Deadlift
-     * (Barbell), not Romanian Deadlift); null if none or several are, or equipment was typed.
+     * The one exercise with the same name apart from equipment, whose equipment (if any) fits
+     * what's typed: "deadlift" → Deadlift (Barbell), "Preacher Curl (Barbell)" → Preacher Curl,
+     * "Bicep Curl (Barbell)" → Barbell Curl (not Cable Curl). Null if none, or several and none
+     * with exactly the typed equipment ("bench press": barbell or dumbbell?).
      */
     fun onlyOneBesidesEquipment(typed: String, library: List<Exercise>): Exercise? {
-        val typedWords = words(typed).sorted()
-        if (typedWords.isEmpty() || typedWords.any { it in EQUIPMENT_WORDS }) return null
-        return library.filter { exercise -> words(exercise.name).filter { it !in EQUIPMENT_WORDS }.sorted() == typedWords }.singleOrNull()
+        val typedWords = words(typed)
+        val core = typedWords.filter { it !in EQUIPMENT_WORDS }.sorted()
+        val gear = typedWords.filter { it in EQUIPMENT_WORDS }.toSet()
+        if (core.isEmpty()) return null
+        val same = library.filter { exercise ->
+            val words = words(exercise.name)
+            val nameGear = words.filter { it in EQUIPMENT_WORDS }.toSet()
+            // Its equipment is (part of) what's typed: "(Bar)" for "Cable - Straight Bar".
+            words.filter { it !in EQUIPMENT_WORDS }.sorted() == core && (gear.isEmpty() || gear.containsAll(nameGear))
+        }
+        if (same.size <= 1) return same.singleOrNull()
+        return same.filter { exercise -> words(exercise.name).filter { it in EQUIPMENT_WORDS }.toSet() == gear }.singleOrNull()
+    }
+
+    /** Every typed word that isn't equipment is in [name]: nothing that tells them apart is dropped ("preacher"). */
+    fun coversCore(typed: String, name: String): Boolean {
+        val nameWords = words(name).toSet()
+        return words(typed).filter { it !in EQUIPMENT_WORDS }.all { it in nameWords }
     }
 
     /**
@@ -111,6 +128,7 @@ object ExerciseNames {
         "dl" to "deadlift", "bp" to "bench press", "ez" to "ez bar",
         "pushup" to "push up", "pullup" to "pull up", "chinup" to "chin up", "situp" to "sit up",
         "pushups" to "push up", "pullups" to "pull up", "chinups" to "chin up", "situps" to "sit up",
+        "skullcrusher" to "skull crusher", "skullcrushers" to "skull crusher",
         "pulldown" to "pull down", "pushdown" to "push down",
     )
 
@@ -122,7 +140,12 @@ object ExerciseNames {
         "extensions" to "extension", "deadlifts" to "deadlift", "ups" to "up",
     )
 
-    private val FILLER = setOf("the", "a", "with", "on", "and")
+    /** Words that don't tell exercises apart ("Bicep Curl" is a curl). */
+    private val FILLER = setOf("the", "a", "with", "on", "and", "bicep", "biceps")
 
-    private val EQUIPMENT_WORDS = setOf("barbell", "dumbbell", "machine", "cable", "kettlebell", "smith", "ez", "bar", "bodyweight")
+    private val EQUIPMENT_WORDS = setOf(
+        "barbell", "dumbbell", "machine", "cable", "kettlebell", "smith", "ez", "bar", "bodyweight",
+        // Attachments and the like (Strong: "Triceps Pushdown (Cable - Straight Bar)").
+        "straight", "rope", "handle", "attachment", "plate", "loaded",
+    )
 }

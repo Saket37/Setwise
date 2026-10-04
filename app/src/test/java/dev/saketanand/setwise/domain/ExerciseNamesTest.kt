@@ -57,6 +57,16 @@ class ExerciseNamesTest {
         assertEquals(null, ExerciseNames.onlyOneBesidesEquipment("bench press", library)) // barbell or dumbbell?
         assertEquals(null, ExerciseNames.onlyOneBesidesEquipment("dumbbell deadlift", library))
         assertTrue(ExerciseNames.sameName("pull ups", "Pull-up"))
+        // As Strong names them: the equipment in brackets.
+        val curls = listOf("Barbell Curl", "Dumbbell Curl", "Hammer Curl", "Preacher Curl", "Cable Curl", "Bicep Curl (Machine)", "Skull Crusher")
+            .mapIndexed { i, name -> library.first().copy(id = 200L + i, name = name) }
+        assertEquals("Preacher Curl", ExerciseNames.onlyOneBesidesEquipment("Preacher Curl (Barbell)", curls)?.name)
+        assertEquals("Hammer Curl", ExerciseNames.onlyOneBesidesEquipment("Hammer Curl (Dumbbell)", curls)?.name)
+        assertEquals("Barbell Curl", ExerciseNames.onlyOneBesidesEquipment("Bicep Curl (Barbell)", curls)?.name)
+        assertTrue(ExerciseNames.sameName("Skullcrusher", "Skull Crusher"))
+        assertEquals(false, ExerciseNames.coversCore("Preacher Curl (Barbell)", "Barbell Curl"))
+        val pushdowns = listOf("Triceps Pushdown (Rope)", "Triceps Pushdown (Bar)").mapIndexed { i, name -> library.first().copy(id = 300L + i, name = name) }
+        assertEquals("Triceps Pushdown (Bar)", ExerciseNames.onlyOneBesidesEquipment("Triceps Pushdown (Cable - Straight Bar)", pushdowns)?.name)
     }
 
     @Test

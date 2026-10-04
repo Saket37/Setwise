@@ -28,7 +28,7 @@ class ExerciseAssistant(private val model: OnDeviceModel) {
         library.firstOrNull { ExerciseNames.sameName(it.name, typed) }?.let { return it }
         ExerciseNames.onlyOneBesidesEquipment(typed, library)?.let { return it }
         ExerciseNames.candidates(typed, library, 1).firstOrNull()
-            ?.takeIf { (_, score) -> score >= ExerciseNames.CLOSE_MATCH }
+            ?.takeIf { (exercise, score) -> score >= ExerciseNames.CLOSE_MATCH && ExerciseNames.coversCore(typed, exercise.name) }
             ?.let { return it.first }
         return ExerciseNames.onlyOneCovering(typed, library)
     }
