@@ -20,7 +20,7 @@ data class PlannedTemplate(val name: String, val category: String, val exercises
 
 /** A movement a template needs, and which library exercises can fill it. */
 enum class Slot(private val matches: (Exercise, String) -> Boolean) {
-    Squat({ e, n -> e.muscleGroup == "Quads" && ("squat" in n && "split" !in n || "leg press" in n) }),
+    Squat({ e, n -> e.muscleGroup == "Quads" && (("squat" in n && "split" !in n) || "leg press" in n) }),
     Hinge({ _, n -> listOf("deadlift", "romanian", "good morning", "hip thrust", "kettlebell swing").any { it in n } && "rack pull" !in n }),
     HorizontalPush({ _, n -> ("bench press" in n || "chest press" in n || "push-up" in n || "floor press" in n) && "close-grip" !in n }),
     InclinePush({ _, n -> "incline" in n && ("press" in n || "push-up" in n) }),
@@ -35,7 +35,8 @@ enum class Slot(private val matches: (Exercise, String) -> Boolean) {
     Biceps({ e, _ -> e.muscleGroup == "Biceps" }),
     Triceps({ e, n -> e.muscleGroup == "Triceps" && "bench press" !in n }),
     LateralRaise({ _, n -> "lateral raise" in n }),
-    RearDelt({ _, n -> "rear delt" in n || "face pull" in n });
+    RearDelt({ _, n -> "rear delt" in n || "face pull" in n }),
+    ;
 
     fun fits(exercise: Exercise): Boolean =
         exercise.type != ExerciseType.CARDIO && matches(exercise, exercise.name.lowercase(Locale.ROOT))
@@ -62,10 +63,10 @@ object GoalPlanner {
     /** The split for [goal]: full body for up to 3 days, upper / lower for 4, push / pull / legs for 5+. */
     fun days(goal: Goal): List<Day> {
         val prefix = if (goal.type == GoalType.Strength) "Strength" else "Full Body"
-        return when (goal.daysPerWeek) {
-            1 -> listOf(Day(prefix, "Full body", FULL_BODY_A))
-            in 2..3 -> listOf(Day("$prefix A", "Full body", FULL_BODY_A), Day("$prefix B", "Full body", FULL_BODY_B))
-            4 -> listOf(Day("Upper", "Upper", UPPER), Day("Lower", "Lower", LOWER))
+        return when {
+            goal.daysPerWeek == 1 -> listOf(Day(prefix, "Full body", FULL_BODY_A))
+            goal.daysPerWeek <= FULL_BODY_MAX_DAYS -> listOf(Day("$prefix A", "Full body", FULL_BODY_A), Day("$prefix B", "Full body", FULL_BODY_B))
+            goal.daysPerWeek == UPPER_LOWER_DAYS -> listOf(Day("Upper", "Upper", UPPER), Day("Lower", "Lower", LOWER))
             else -> listOf(Day("Push", "Push", PUSH), Day("Pull", "Pull", PULL), Day("Legs", "Legs", LEGS))
         }
     }
@@ -109,19 +110,27 @@ object GoalPlanner {
         return days(goal).mapIndexed { dayIndex, day ->
             val planned = mutableListOf<PlannedExercise>()
             var seconds = 0
+            var full = false
             for ((position, slot) in day.slots.withIndex()) {
-                if (planned.size >= MAX_EXERCISES) break
+                if (full) break
                 val options = candidates(slot, goal, library, doneIds).filter { it.id !in used }
                     .ifEmpty { candidates(slot, goal, library, doneIds).filter { it.id !in planned.map { p -> p.exercise.id } } }
-                if (options.isEmpty()) continue
-                val exercise = pick(dayIndex, position, slot, options)?.takeIf { it in options }
-                    ?: options[if (goal.focus.any { it in options.first().name.lowercase(Locale.ROOT) }) 0 else variation % options.size]
-                val (sets, reps) = scheme(goal.type, slot, planned.size, exercise)
-                val cost = sets * (exercise.defaultRestSec + WORK_SECONDS_PER_SET)
-                if (planned.size >= MIN_EXERCISES && seconds + cost > goal.minutes * SECONDS_PER_MINUTE) break
-                planned += PlannedExercise(exercise, sets, reps, position)
-                seconds += cost
-                used += exercise.id
+                val exercise = options.firstOrNull()?.let { first ->
+                    pick(dayIndex, position, slot, options)?.takeIf { it in options }
+                        ?: options[if (goal.focus.any { it in first.name.lowercase(Locale.ROOT) }) 0 else variation % options.size]
+                }
+                if (exercise != null) {
+                    val (sets, reps) = scheme(goal.type, slot, planned.size, exercise)
+                    val cost = sets * (exercise.defaultRestSec + WORK_SECONDS_PER_SET)
+                    if (planned.size >= MIN_EXERCISES && seconds + cost > goal.minutes * SECONDS_PER_MINUTE) {
+                        full = true
+                    } else {
+                        planned += PlannedExercise(exercise, sets, reps, position)
+                        seconds += cost
+                        used += exercise.id
+                        full = planned.size >= MAX_EXERCISES
+                    }
+                }
             }
             PlannedTemplate(day.name, day.category, withTimeFilled(planned, goal.minutes * SECONDS_PER_MINUTE - seconds))
         }.filter { it.exercises.isNotEmpty() }
@@ -154,18 +163,30 @@ object GoalPlanner {
 
     /** Sets × reps (seconds for a timed exercise) by goal; a strength plan's first two main lifts are 4 × 5. */
     fun scheme(type: GoalType, slot: Slot, position: Int, exercise: Exercise): Pair<Int, Int> = when {
-        exercise.isTimed -> 3 to TIMED_SECONDS
-        type == GoalType.Strength && slot.isMainLift && position < 2 -> 4 to 5
-        type == GoalType.Strength && slot.isMainLift -> 3 to 8
-        type == GoalType.Strength -> 3 to 10
-        type == GoalType.Muscle && slot.isMainLift -> 3 to 10
-        type == GoalType.Muscle -> 3 to 12
-        else -> 3 to 12
+        exercise.isTimed -> TIMED
+        type == GoalType.Strength && slot.isMainLift && position < HEAVY_LIFTS -> HEAVY
+        type == GoalType.Strength && slot.isMainLift -> STRENGTH_MAIN
+        type == GoalType.Strength -> STRENGTH_ACCESSORY
+        type == GoalType.Muscle && slot.isMainLift -> MUSCLE_MAIN
+        else -> HIGHER_REPS
     }
 
     private const val MIN_EXERCISES = 3
     private const val MAX_EXERCISES = 8
     private const val TIMED_SECONDS = 45
+    private const val FULL_BODY_MAX_DAYS = 3
+    private const val UPPER_LOWER_DAYS = 4
+
+    /** A strength plan's first main lifts are heavy. */
+    private const val HEAVY_LIFTS = 2
+
+    // Sets to reps (seconds when timed).
+    private val TIMED = 3 to TIMED_SECONDS
+    private val HEAVY = 4 to 5
+    private val STRENGTH_MAIN = 3 to 8
+    private val STRENGTH_ACCESSORY = 3 to 10
+    private val MUSCLE_MAIN = 3 to 10
+    private val HIGHER_REPS = 3 to 12
     private const val MAX_MAIN_SETS = 5
     private const val MAX_OTHER_SETS = 4
 
@@ -173,6 +194,7 @@ object GoalPlanner {
     private val FULL_BODY_B = listOf(Slot.Hinge, Slot.InclinePush, Slot.VerticalPull, Slot.SingleLeg, Slot.Triceps, Slot.LateralRaise, Slot.Core)
     private val UPPER = listOf(Slot.HorizontalPush, Slot.HorizontalPull, Slot.VerticalPush, Slot.VerticalPull, Slot.Biceps, Slot.Triceps, Slot.LateralRaise)
     private val LOWER = listOf(Slot.Squat, Slot.Hinge, Slot.SingleLeg, Slot.LegCurl, Slot.Calves, Slot.Core)
+
     // A slot listed twice takes a different exercise the second time (one isn't repeated in a plan).
     private val PUSH = listOf(Slot.HorizontalPush, Slot.VerticalPush, Slot.InclinePush, Slot.LateralRaise, Slot.Triceps, Slot.ChestFly, Slot.Triceps)
     private val PULL = listOf(Slot.VerticalPull, Slot.HorizontalPull, Slot.RearDelt, Slot.Biceps, Slot.HorizontalPull, Slot.Biceps, Slot.Core)

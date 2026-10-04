@@ -18,6 +18,8 @@ import kotlinx.serialization.Serializable
  */
 class GoalPlanAssistant(private val model: OnDeviceModel) {
 
+    suspend fun canChoose(): Boolean = model.availability() == ModelAvailability.Ready
+
     /** [templates] for the goal; [byModel] when the model's choices were used. */
     data class Plan(val templates: List<PlannedTemplate>, val byModel: Boolean)
 
@@ -39,6 +41,8 @@ class GoalPlanAssistant(private val model: OnDeviceModel) {
         val planned = byCode.flatMapIndexed { day, template -> template.exercises.map { day to it.position } }.toSet()
         val slots = options.filter { (key, list) -> key in planned && list.size > 1 }
         if (slots.isEmpty()) return Plan(byCode, byModel = false)
+        // Any failure of the model keeps code's plan; OnDeviceModel doesn't narrow what it throws.
+        @Suppress("TooGenericExceptionCaught")
         val picks = try {
             model.generate(prompt(goalText, slots.map { (key, list) -> names[key.first] to list.map { it.name } }), ModelGoalPicks.OUTPUT)
         } catch (e: CancellationException) {

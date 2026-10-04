@@ -164,6 +164,7 @@ fun HomeDashboardContent(
             item(key = "templatesHeader", contentType = "templatesHeader") {
                 TemplatesHeader(
                     onNewClick = { onAction(HomeAction.OnCreateTemplateClick) },
+                    onFromGoalClick = { onAction(HomeAction.OnCreateTemplateFromGoalClick) },
                     modifier = Modifier.padding(bottom = CardGap),
                 )
             }
@@ -215,9 +216,7 @@ fun PlanYourRoutineSection(
         }
         PlanRoutineCards(
             onCreateTemplate = { onAction(HomeAction.OnCreateTemplateClick) },
-            // Hidden until "Build from a goal" exists (milestone 15, on-device LLM):
-            // { onAction(HomeAction.OnCreateTemplateFromGoalClick) }
-            onBuildFromGoal = null,
+            onBuildFromGoal = { onAction(HomeAction.OnCreateTemplateFromGoalClick) },
         )
     }
 }
@@ -405,10 +404,11 @@ fun WeekStatsRow(
     }
 }
 
-/** "Templates" title with a "+ New" button (OnCreateTemplateClick). */
+/** "Templates" title with "✦ From a goal" and "+ New" buttons. */
 @Composable
 fun TemplatesHeader(
     onNewClick: () -> Unit,
+    onFromGoalClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -417,6 +417,13 @@ fun TemplatesHeader(
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.weight(1f),
+        )
+        SetwiseButton(
+            text = stringResource(R.string.from_a_goal),
+            onClick = onFromGoalClick,
+            style = SetwiseButtonStyle.Text,
+            size = SetwiseButtonSize.Small,
+            startIcon = R.drawable.ic_ai_sparkle,
         )
         SetwiseButton(
             text = stringResource(R.string.new_template),

@@ -7,7 +7,13 @@ enum class GoalType { Strength, Muscle, General }
 
 /** Kinds of equipment a plan may use; each library exercise belongs to one ([Gear.of]). */
 enum class Gear {
-    Barbell, Dumbbell, Kettlebell, Cable, Machine, Bodyweight;
+    Barbell,
+    Dumbbell,
+    Kettlebell,
+    Cable,
+    Machine,
+    Bodyweight,
+    ;
 
     companion object {
         /** A library exercise's equipment ("EZ Bar", "Smith Machine", "None"…) as a [Gear]. */
