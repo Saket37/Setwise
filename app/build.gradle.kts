@@ -84,6 +84,7 @@ dependencies {
 
     // On-device LLM: Gemini Nano via ML Kit Prompt API (AICore)
     implementation(libs.mlkit.genai.prompt)
+    implementation(libs.mlkit.genai.speech.recognition)
     // Structured output: @Generable answer classes; KSP generates their schemas.
     implementation(libs.mlkit.genai.schema)
     ksp(libs.mlkit.genai.schema.compiler)

@@ -93,6 +93,12 @@ class QuickLogParserTest {
         // One set before "last one": nothing to change, so it's the model's.
         assertEquals(listOf("last"), QuickLogParser.parse("bench 60 for 8, last one 55 for 10").leftover)
         assertEquals(listOf("dropped"), QuickLogParser.parse("row 3x10 at 50 then dropped to 40 for 8").leftover)
+        // Numbers on their own, for the interpreter (reps of a bodyweight exercise).
+        QuickLogParser.parse("pull ups 10, 8, 6").let {
+            assertEquals("pull ups", it.exercisePhrase)
+            assertEquals(listOf(10, 8, 6), it.bare)
+            assertFalse(it.isComplete)
+        }
         assertFalse(QuickLogParser.parse("bench").isComplete) // nothing to log
         assertFalse(QuickLogParser.parse("bench 3x8 at 900").isComplete) // 900 kg: not believed
     }
@@ -106,6 +112,11 @@ class QuickLogParserTest {
         check("deadlift a hundred and forty for five", "deadlift", kg(140.0, 5))
         check("plank three by forty-five seconds", "plank", secs(45, 3))
         check("Bench 60 for 8.", "bench", kg(60.0, 8))
+        check("Squad 100 for 5, then two more sets of five at 105.", "squad", kg(100.0, 5) + kg(105.0, 5, 2))
+        check("Flank 45 seconds, three times.", "flank", secs(45, 3))
+        check("push ups 20 reps twice", "push ups", reps(20, 20))
+        check("3 sets of bench at 15 reps 16 kg.", "bench", kg(16.0, 15, 3))
+        check("two sets of curls 12 reps at 10 kg", "curls", kg(10.0, 12, 2))
         assertEquals(
             CardioValues(1_200, inclinePct = 6.0, distanceKm = 2.0),
             QuickLogParser.parse("treadmill twenty minutes six percent incline two kilometers").cardio,

@@ -35,6 +35,14 @@ import dev.saketanand.setwise.domain.ai.QuickLogResult
 import dev.saketanand.setwise.domain.ai.SuggestionSource
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import kotlinx.coroutines.flow.first
+import dev.saketanand.setwise.domain.ai.Heard
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.SpeechInput
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.lastOrNull
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Screen: [ActiveWorkoutScreenRoot].
@@ -58,7 +66,12 @@ class ActiveWorkoutViewModel(
     private val restNotifications: RestNotificationRefresher,
     private val quickLogInterpreter: QuickLogInterpreter,
     private val exerciseRepository: ExerciseRepository,
+    private val speechInput: SpeechInput,
 ) : ViewModel() {
+
+    /** On-device listening in progress, if any. */
+    private var listening: Job? = null
+    private var speechDownloadStarted = false
 
     /** What the "Understood as" card shows, kept to add on confirm. */
     private var pendingQuickLog: QuickLogResult? = null
@@ -111,6 +124,7 @@ class ActiveWorkoutViewModel(
             isFinishing = overlays.isFinishing,
             rest = rest?.toUi(),
             quickLog = overlays.quickLog,
+            onDeviceSpeech = overlays.onDeviceSpeech,
         )
     }
         .catch { e ->
@@ -120,6 +134,11 @@ class ActiveWorkoutViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ActiveWorkoutUiState())
 
     init {
+        // On-device speech for the mic, if the phone has it ready.
+        viewModelScope.launch {
+            val ready = speechInput.availability() == ModelAvailability.Ready
+            overlays.update { it.copy(onDeviceSpeech = ready) }
+        }
         // The write queue: one write at a time, in order. Main.immediate: the writes also update
         // SavedStateHandle, which belongs on the main thread (Room does its own threading).
         writeScope.launch(Dispatchers.Main.immediate) {
@@ -160,6 +179,9 @@ class ActiveWorkoutViewModel(
             ActiveWorkoutAction.OnDismissDialog -> showDialog(null)
 
             is ActiveWorkoutAction.OnQuickLogSubmit -> readQuickLog(action.text)
+            ActiveWorkoutAction.OnStartListening -> startListening()
+            ActiveWorkoutAction.OnStopListening -> viewModelScope.launch { speechInput.stop() }
+            ActiveWorkoutAction.OnPhoneSpeechUsed -> prepareOnDeviceSpeech()
             ActiveWorkoutAction.OnQuickLogConfirm -> confirmQuickLog()
             ActiveWorkoutAction.OnQuickLogEdit -> {
                 pendingQuickLog = null
@@ -333,16 +355,90 @@ class ActiveWorkoutViewModel(
         readLine = text.trim()
         overlays.update { it.copy(quickLog = QuickLogUi(isReading = true)) }
         viewModelScope.launch {
-            val result = runCatching {
-                val recent = exerciseRepository.observeRecentExercises(RECENT_EXERCISES).first().map { it.exercise }
-                val library = exerciseRepository.observeExercises("", null).first()
-                quickLogInterpreter.interpret(text.trim(), current, state.value.expandedExerciseId, recent, library)
-            }.getOrElse { e ->
-                Log.e(TAG, "Reading quick log '$text' failed", e)
-                QuickLogResult.NotUnderstood(QuickLogResult.Reason.NothingToLog)
-            }
+            val result = interpret(text.trim(), current)
             pendingQuickLog = result
             overlays.update { it.copy(quickLog = result.toUi()) }
+        }
+    }
+
+    private suspend fun interpret(text: String, current: WorkoutSession): QuickLogResult = runCatching {
+        val recent = exerciseRepository.observeRecentExercises(RECENT_EXERCISES).first().map { it.exercise }
+        val library = exerciseRepository.observeExercises("", null).first()
+        quickLogInterpreter.interpret(text, current, state.value.expandedExerciseId, recent, library)
+    }.getOrElse { e ->
+        if (e is CancellationException) throw e
+        Log.e(TAG, "Reading quick log '$text' failed", e)
+        QuickLogResult.NotUnderstood(QuickLogResult.Reason.NothingToLog)
+    }
+
+    /**
+     * Listens on-device: what's heard shows as it comes; after a finished stretch of speech and
+     * a short pause (or Stop, or [MAX_LISTEN_MS]) it goes in the bar and is read.
+     */
+    private fun startListening() {
+        if (listening?.isActive == true) return
+        pendingQuickLog = null
+        overlays.update { it.copy(quickLog = QuickLogUi(isListening = true)) }
+        listening = viewModelScope.launch {
+            val said = StringBuilder()
+            var failed = false
+            try {
+                withTimeoutOrNull(MAX_LISTEN_MS) {
+                    coroutineScope {
+                        var pause: Job? = null
+                        speechInput.listen().collect { heard ->
+                            pause?.cancel()
+                            when (heard) {
+                                is Heard.Partial -> showHeard("$said ${heard.text}")
+                                is Heard.Final -> {
+                                    said.append(' ').append(heard.text.trim())
+                                    showHeard(said.toString())
+                                    pause = launch {
+                                        delay(PAUSE_AFTER_SPEECH_MS)
+                                        speechInput.stop()
+                                    }
+                                }
+                            }
+                        }
+                        pause?.cancel()
+                    }
+                } ?: speechInput.stop()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "Listening failed", e)
+                failed = true
+            }
+            val text = said.toString().trim()
+            overlays.update {
+                it.copy(
+                    quickLog = QuickLogUi(
+                        micProblem = when {
+                            text.isNotEmpty() -> null
+                            failed -> MicProblem.Failed
+                            else -> MicProblem.NothingHeard
+                        },
+                    ),
+                )
+            }
+            if (text.isNotEmpty()) {
+                eventChannel.trySend(ActiveWorkoutEvent.QuickLogHeard(text))
+                readQuickLog(text)
+            }
+        }
+    }
+
+    private fun showHeard(text: String) =
+        overlays.update { it.copy(quickLog = it.quickLog.copy(heard = text.replace(Regex("\\s+"), " ").trim())) }
+
+    /** The phone's recognizer was used: get on-device speech ready for next time (once). */
+    private fun prepareOnDeviceSpeech() {
+        if (speechDownloadStarted) return
+        speechDownloadStarted = true
+        writeScope.launch {
+            if (speechInput.availability() != ModelAvailability.Downloadable) return@launch
+            val last = speechInput.download().lastOrNull()
+            Log.i(TAG, "Speech recognition download: $last")
         }
     }
 
@@ -410,12 +506,19 @@ class ActiveWorkoutViewModel(
         val isStartTimePickerVisible: Boolean = false,
         val isFinishing: Boolean = false,
         val quickLog: QuickLogUi = QuickLogUi(),
+        val onDeviceSpeech: Boolean = false,
     )
 
     private companion object {
         const val TAG = "ActiveWorkoutViewModel"
         const val KEY_EXPANDED = "expanded_exercise"
         const val ALL_COLLAPSED = -1L
+
+        /** Listening stops on its own after this long. */
+        const val MAX_LISTEN_MS = 20_000L
+
+        /** A pause this long after a finished stretch of speech ends listening. */
+        const val PAUSE_AFTER_SPEECH_MS = 1_200L
 
         /** Exercises done before that a quick-logged name is matched against before the library. */
         const val RECENT_EXERCISES = 50

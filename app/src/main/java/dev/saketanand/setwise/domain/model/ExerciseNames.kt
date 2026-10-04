@@ -60,6 +60,47 @@ object ExerciseNames {
         return library.filter { words(it.name).containsAll(typedWords) }.singleOrNull()
     }
 
+    /**
+     * [typed] with each word that's in no exercise name swapped for the one word that is and is a
+     * letter away (two for words over 5 letters): what speech-to-text writes for gym words
+     * ("squad" → squat, "flank" → plank, "full ops" → pull ups). Words with no single close
+     * match stay as they are.
+     */
+    fun soundAlikeFixed(typed: String, library: List<Exercise>): String {
+        val vocabulary = buildSet {
+            library.forEach { addAll(rawWords(it.name)) }
+            addAll(SHORTHAND.keys)
+            SHORTHAND.values.forEach { addAll(it.split(" ")) }
+            addAll(SYNONYMS.keys)
+            addAll(SYNONYMS.values)
+        }
+        return rawWords(typed).joinToString(" ") { word ->
+            if (word in vocabulary || word.length < 3 || word.any { it.isDigit() }) return@joinToString word
+            val allowed = if (word.length > 5) 2 else 1
+            val closest = vocabulary.map { it to editDistance(word, it) }.filter { (_, d) -> d <= allowed }
+            val best = closest.minOfOrNull { it.second } ?: return@joinToString word
+            val tied = closest.filter { it.second == best }.map { it.first }
+            // A tie goes to the word it starts with: the same word with an ending ("pulled" → pull).
+            tied.singleOrNull() ?: tied.filter { word.startsWith(it) }.singleOrNull() ?: word
+        }
+    }
+
+    private fun rawWords(text: String) =
+        text.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), " ").trim().split(" ").filter { it.isNotEmpty() }
+
+    /** Edits (insert, delete, change, swap two neighbours) from [a] to [b]. */
+    private fun editDistance(a: String, b: String): Int {
+        val d = Array(a.length + 1) { i -> IntArray(b.length + 1) { j -> if (i == 0) j else if (j == 0) i else 0 } }
+        for (i in 1..a.length) {
+            for (j in 1..b.length) {
+                val change = if (a[i - 1] == b[j - 1]) 0 else 1
+                d[i][j] = minOf(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + change)
+                if (i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]) d[i][j] = minOf(d[i][j], d[i - 2][j - 2] + 1)
+            }
+        }
+        return d[a.length][b.length]
+    }
+
     /** Without the model, a candidate this close is offered as "Already in your library?". */
     const val CLOSE_MATCH = 0.6
 

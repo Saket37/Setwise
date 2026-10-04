@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- The quick log's mic: on-device speech recognition, only while listening -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Downloading the LLM model in-app (later milestone) -->
     <uses-permission android:name="android.permission.INTERNET" />
 

@@ -18,6 +18,7 @@ room = "2.8.5"
 koin = "4.2.2"
 kotlinxSerialization = "1.9.0"
 mlkitGenaiPrompt = "1.0.0-beta4"
+mlkitGenaiSpeech = "1.0.0-alpha1"
 mlkitGenaiSchema = "1.0.0-alpha1"
 
 # Testing
@@ -61,6 +62,7 @@ koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compos
 
 # On-device LLM
 mlkit-genai-prompt = { group = "com.google.mlkit", name = "genai-prompt", version.ref = "mlkitGenaiPrompt" }
+mlkit-genai-speech-recognition = { group = "com.google.mlkit", name = "genai-speech-recognition", version.ref = "mlkitGenaiSpeech" }
 mlkit-genai-schema = { group = "com.google.mlkit", name = "genai-schema", version.ref = "mlkitGenaiSchema" }
 mlkit-genai-schema-compiler = { group = "com.google.mlkit", name = "genai-schema-compiler", version.ref = "mlkitGenaiSchema" }
 

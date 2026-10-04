@@ -40,6 +40,7 @@ val viewModelModule = module {
             restNotifications = get(),
             quickLogInterpreter = get(),
             exerciseRepository = get(),
+            speechInput = get(),
         )
     }
     viewModel { params ->

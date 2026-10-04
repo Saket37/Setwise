@@ -15,6 +15,15 @@ import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.domain.model.Measure
 import dev.saketanand.setwise.domain.model.Plateau
 import dev.saketanand.setwise.domain.model.Progression
+import android.content.Context
+import dev.saketanand.setwise.domain.model.Exercise
+import java.io.File
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.lastOrNull
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.withTimeout
+import org.json.JSONArray
 
 /**
  * Debug-only check of the on-device model on a real phone: runs the calorie estimate and the
@@ -29,7 +38,9 @@ import dev.saketanand.setwise.domain.model.Progression
  *     adb shell am start -n dev.saketanand.setwise/.MainActivity --ez ai_check true
  */
 class AiCheck(
+    private val context: Context,
     private val model: OnDeviceModel,
+    private val speechInput: SpeechInput,
     private val estimator: CalorieEstimator,
     private val insightWriter: WorkoutInsightWriter,
     private val exerciseAssistant: ExerciseAssistant,
@@ -50,6 +61,7 @@ class AiCheck(
                 ONLY_QUICK_LOG -> checkQuickLog()
                 ONLY_PLATEAU -> checkPlateauNotes()
                 ONLY_CLIENT -> checkClientReopen()
+                ONLY_SPEECH -> checkSpeech()
                 else -> checkAll(workouts)
             }
             Log.i(TAG, "Done")
@@ -71,6 +83,63 @@ class AiCheck(
         checkQuickLog()
         checkPlateauNotes()
     }
+
+    /**
+     * Spoken quick-log lines (debug assets: text-to-speech clips, US and Indian English): what
+     * on-device speech recognition heard and what the quick log
+     * understands from each. Downloads the speech model if it's missing.
+     */
+    private suspend fun checkSpeech() {
+        if (!ensureReady("Speech recognition", { speechInput.availability() }, { speechInput.download() })) return
+        val recent = exerciseRepository.observeRecentExercises(50).first().map { it.exercise }
+        val library = exerciseRepository.observeExercises("", null).first()
+        val empty = WorkoutSession(0, "", null, Instant.EPOCH, null, emptyList())
+        val clips = JSONArray(context.assets.open("speech/index.json").bufferedReader().use { it.readText() })
+        for (i in 0 until clips.length()) {
+            val clip = clips.getJSONObject(i)
+            val file = File(context.cacheDir, clip.getString("file"))
+            context.assets.open("speech/${clip.getString("file")}").use { input -> file.outputStream().use { input.copyTo(it) } }
+            val startedAt = System.nanoTime()
+            val heard = try {
+                withTimeout(SPEECH_TIMEOUT_MS) {
+                    speechInput.listen(file).toList().filterIsInstance<Heard.Final>().joinToString(" ") { it.text.trim() }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                "(failed: ${e.message})"
+            } finally {
+                file.delete()
+            }
+            val ms = (System.nanoTime() - startedAt) / 1_000_000
+            Log.i(TAG, "Said (${clip.getString("voice")}): '${clip.getString("said")}'")
+            Log.i(TAG, "  heard in $ms ms: '$heard' → ${understood(heard, empty, recent, library)}")
+        }
+    }
+
+    /** Ready, after downloading if it can be; logs what happened. */
+    private suspend fun ensureReady(
+        feature: String,
+        availability: suspend () -> ModelAvailability,
+        download: () -> Flow<ModelDownload>,
+    ): Boolean {
+        val status = availability()
+        Log.i(TAG, "$feature: $status")
+        if (status == ModelAvailability.Downloadable || status == ModelAvailability.Downloading) {
+            val last = download().onEach { if (it !is ModelDownload.Progress) Log.i(TAG, "$feature download: $it") }.lastOrNull()
+            Log.i(TAG, "$feature after download: ${availability()} ($last)")
+        }
+        return availability() == ModelAvailability.Ready
+    }
+
+    private suspend fun understood(line: String, session: WorkoutSession, recent: List<Exercise>, library: List<Exercise>): String =
+        when (val result = quickLogInterpreter.interpret(line, session, null, recent, library)) {
+            is QuickLogResult.Sets -> "${result.target.exercise.name}: " +
+                result.sets.joinToString { listOfNotNull(it.weightKg?.let { kg -> "$kg kg" }, it.reps?.let { r -> "$r" }, it.seconds?.let { s -> "${s}s" }).joinToString(" × ") } +
+                " (${result.source})"
+            is QuickLogResult.Cardio -> "${result.target.exercise.name}: ${result.values}"
+            is QuickLogResult.NotUnderstood -> "not understood: ${result.reason}"
+        }
 
     /**
      * The model's client closed (as when the app goes to the background) and reopened between
@@ -142,16 +211,7 @@ class AiCheck(
         val recent = exerciseRepository.observeRecentExercises(50).first().map { it.exercise }
         val library = exerciseRepository.observeExercises("", null).first()
         val empty = WorkoutSession(0, "", null, Instant.EPOCH, null, emptyList())
-        SAMPLE_LINES.forEach { line ->
-            val understood = when (val result = quickLogInterpreter.interpret(line, empty, null, recent, library)) {
-                is QuickLogResult.Sets -> "${result.target.exercise.name}: " +
-                    result.sets.joinToString { listOfNotNull(it.weightKg?.let { kg -> "$kg kg" }, it.reps?.let { r -> "$r" }, it.seconds?.let { s -> "${s}s" }).joinToString(" × ") } +
-                    " (${result.source})"
-                is QuickLogResult.Cardio -> "${result.target.exercise.name}: ${result.values}"
-                is QuickLogResult.NotUnderstood -> "not understood: ${result.reason}"
-            }
-            Log.i(TAG, "'$line' → $understood")
-        }
+        SAMPLE_LINES.forEach { line -> Log.i(TAG, "'$line' → ${understood(line, empty, recent, library)}") }
     }
 
     companion object {
@@ -180,6 +240,7 @@ class AiCheck(
         const val ONLY_QUICK_LOG = "quick_log"
         const val ONLY_PLATEAU = "plateau"
         const val ONLY_CLIENT = "client"
+        const val ONLY_SPEECH = "speech"
 
         private val SAMPLE_PLATEAUS: List<Triple<String, Plateau, ExerciseSession>> = run {
             val since = Instant.parse("2026-09-07T12:00:00Z")
@@ -210,5 +271,6 @@ class AiCheck(
         }
         private val running = AtomicBoolean(false)
         private const val DEFAULT_WORKOUTS = 5
+        private const val SPEECH_TIMEOUT_MS = 30_000L
     }
 }

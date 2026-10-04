@@ -1,8 +1,6 @@
 package dev.saketanand.setwise.llm
 
 import android.util.Log
-import com.google.mlkit.genai.common.DownloadStatus
-import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.common.GenAiException
 import com.google.mlkit.genai.prompt.GenerateContentRequest
 import com.google.mlkit.genai.prompt.Generation
@@ -19,7 +17,6 @@ import dev.saketanand.setwise.domain.ai.ModelRequest
 import dev.saketanand.setwise.domain.ai.OnDeviceModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
 import dev.saketanand.setwise.domain.ai.DownloadFailure
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.emitAll
@@ -78,21 +75,13 @@ class GeminiNanoModel : OnDeviceModel {
         client = null
     }
 
-    /** Download size, from DownloadStarted, for progress. */
-    private var totalBytes: Long? = null
-
     // Checked once, when the model is first used (null = not yet).
     private var supportsSystemInstruction: Boolean? = null
     private var supportsStructuredOutput: Boolean? = null
 
     override suspend fun availability(): ModelAvailability =
         runCatching {
-            when (withClient { it.checkStatus() }) {
-                FeatureStatus.AVAILABLE -> ModelAvailability.Ready
-                FeatureStatus.DOWNLOADABLE -> ModelAvailability.Downloadable
-                FeatureStatus.DOWNLOADING -> ModelAvailability.Downloading
-                else -> ModelAvailability.Unavailable
-            }
+            withClient { it.checkStatus() }.toModelAvailability()
         }
             .onFailure { e -> Log.i(TAG, "Gemini Nano isn't available here", e) }
             .getOrDefault(ModelAvailability.Unavailable)
@@ -100,19 +89,7 @@ class GeminiNanoModel : OnDeviceModel {
     override fun download(): Flow<ModelDownload> =
         // Inside flow {}: if AICore throws while starting (or getting the client), it reaches
         // catch below instead of escaping to the caller.
-        flow { withClient { emitAll(it.download()) } }
-            .map { status ->
-                when (status) {
-                    is DownloadStatus.DownloadStarted -> {
-                        totalBytes = status.bytesToDownload.takeIf { it > 0 }
-                        ModelDownload.Progress(0, totalBytes)
-                    }
-                    is DownloadStatus.DownloadProgress -> ModelDownload.Progress(status.totalBytesDownloaded, totalBytes)
-                    is DownloadStatus.DownloadFailed -> ModelDownload.Failed(status.e.message, status.e.toDownloadFailure())
-                    DownloadStatus.DownloadCompleted -> ModelDownload.Done
-                    else -> ModelDownload.Progress(0, totalBytes)
-                }
-            }
+        flow { withClient { emitAll(it.download().toModelDownloads()) } }
             .catch { e ->
                 Log.w(TAG, "Downloading Gemini Nano failed", e)
                 emit(ModelDownload.Failed(e.message, (e as? GenAiException)?.toDownloadFailure() ?: DownloadFailure.Other))
@@ -157,12 +134,6 @@ class GeminiNanoModel : OnDeviceModel {
         } else {
             generateContentRequest(TextPart("## Instructions\n$system\n\n$prompt"), configure)
         }
-    }
-
-    private fun GenAiException.toDownloadFailure() = when (errorCode) {
-        GenAiException.ErrorCode.NOT_ENOUGH_DISK_SPACE -> DownloadFailure.NotEnoughSpace
-        GenAiException.ErrorCode.NEEDS_SYSTEM_UPDATE, GenAiException.ErrorCode.AICORE_INCOMPATIBLE -> DownloadFailure.NeedsSystemUpdate
-        else -> DownloadFailure.Other
     }
 
     private suspend fun supportsSystemInstruction(): Boolean =

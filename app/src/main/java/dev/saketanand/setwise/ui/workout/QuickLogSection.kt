@@ -44,6 +44,15 @@ import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 import dev.saketanand.setwise.util.toWeightLabel
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
 
 /** Lines to tap in "Try saying" (they fill the bar). */
 private val EXAMPLES = listOf("bench 3x8 at 60", "same as last time", "treadmill 30 min 6% incline")
@@ -74,7 +83,16 @@ fun QuickLogSection(
     ) {
         val preview = quickLog.preview
         when {
+            quickLog.isListening -> ListeningRow(heard = quickLog.heard)
             preview != null -> QuickLogCard(preview = preview, onAction = onAction)
+            quickLog.micProblem != null -> Text(
+                text = stringResource(if (quickLog.micProblem == MicProblem.Failed) R.string.quick_log_mic_failed else R.string.quick_log_nothing_heard),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .padding(horizontal = 4.dp)
+                    .semantics { liveRegion = LiveRegionMode.Polite },
+            )
             quickLog.problem != null -> Text(
                 text = stringResource(quickLog.problem.messageRes()),
                 style = MaterialTheme.typography.bodyMedium,
@@ -106,13 +124,18 @@ fun QuickLogSection(
             onFocusChange = onFieldFocusChange,
         ) {
             if (onSpeak != null) {
+                // Listening: the mic becomes Stop, filled so it reads as on.
                 SetwiseIconButton(
-                    icon = R.drawable.ic_mic,
-                    contentDescription = stringResource(R.string.quick_log_speak),
+                    icon = if (quickLog.isListening) R.drawable.ic_stop else R.drawable.ic_mic,
+                    contentDescription = stringResource(if (quickLog.isListening) R.string.quick_log_stop_listening else R.string.quick_log_speak),
                     onClick = onSpeak,
                     size = 44.dp,
                     iconSize = 20.dp,
-                    colors = SetwiseIconButtonDefaults.plainColors(MaterialTheme.colorScheme.onSurfaceVariant),
+                    colors = if (quickLog.isListening) {
+                        SetwiseIconButtonDefaults.filledColors()
+                    } else {
+                        SetwiseIconButtonDefaults.plainColors(MaterialTheme.colorScheme.onSurfaceVariant)
+                    },
                 )
             }
             if (quickLog.isReading) {
@@ -133,6 +156,43 @@ fun QuickLogSection(
                     iconSize = 20.dp,
                 )
             }
+        }
+    }
+}
+
+/** "● Listening…" and what's been heard so far (or what to say). */
+@Composable
+private fun ListeningRow(heard: String) {
+    val pulse = rememberInfiniteTransition(label = "listening")
+    val alpha by pulse.animateFloat(
+        initialValue = 1f,
+        targetValue = 0.3f,
+        animationSpec = infiniteRepeatable(tween(durationMillis = 700), RepeatMode.Reverse),
+        label = "dot",
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.large)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(top = 6.dp)
+                .size(8.dp)
+                .graphicsLayer { this.alpha = alpha }
+                .background(MaterialTheme.colorScheme.error, CircleShape),
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(stringResource(R.string.quick_log_listening), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Text(
+                text = heard.ifEmpty { stringResource(R.string.quick_log_listening_hint) },
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (heard.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+            )
         }
     }
 }

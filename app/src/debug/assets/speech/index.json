@@ -1,0 +1,102 @@
+[
+ {
+  "file": "01-us.pcm",
+  "said": "bench three sets of eight at sixty",
+  "voice": "Samantha"
+ },
+ {
+  "file": "01-in.pcm",
+  "said": "bench three sets of eight at sixty",
+  "voice": "Rishi"
+ },
+ {
+  "file": "02-us.pcm",
+  "said": "overhead press forty kilos for six, last one thirty seven and a half for eight",
+  "voice": "Samantha"
+ },
+ {
+  "file": "02-in.pcm",
+  "said": "overhead press forty kilos for six, last one thirty seven and a half for eight",
+  "voice": "Rishi"
+ },
+ {
+  "file": "03-us.pcm",
+  "said": "deadlift one forty for five",
+  "voice": "Samantha"
+ },
+ {
+  "file": "03-in.pcm",
+  "said": "deadlift one forty for five",
+  "voice": "Rishi"
+ },
+ {
+  "file": "04-us.pcm",
+  "said": "pull ups ten, eight, six",
+  "voice": "Samantha"
+ },
+ {
+  "file": "04-in.pcm",
+  "said": "pull ups ten, eight, six",
+  "voice": "Rishi"
+ },
+ {
+  "file": "05-us.pcm",
+  "said": "squat a hundred for five, then two more sets of five at one oh five",
+  "voice": "Samantha"
+ },
+ {
+  "file": "05-in.pcm",
+  "said": "squat a hundred for five, then two more sets of five at one oh five",
+  "voice": "Rishi"
+ },
+ {
+  "file": "06-us.pcm",
+  "said": "plank forty five seconds, three times",
+  "voice": "Samantha"
+ },
+ {
+  "file": "06-in.pcm",
+  "said": "plank forty five seconds, three times",
+  "voice": "Rishi"
+ },
+ {
+  "file": "07-us.pcm",
+  "said": "treadmill thirty minutes at six percent incline",
+  "voice": "Samantha"
+ },
+ {
+  "file": "07-in.pcm",
+  "said": "treadmill thirty minutes at six percent incline",
+  "voice": "Rishi"
+ },
+ {
+  "file": "08-us.pcm",
+  "said": "same as last time",
+  "voice": "Samantha"
+ },
+ {
+  "file": "08-in.pcm",
+  "said": "same as last time",
+  "voice": "Rishi"
+ },
+ {
+  "file": "09-us.pcm",
+  "said": "incline dumbbell press twenty two kilos, ten reps",
+  "voice": "Samantha"
+ },
+ {
+  "file": "09-in.pcm",
+  "said": "incline dumbbell press twenty two kilos, ten reps",
+  "voice": "Rishi"
+ },
+ {
+  "file": "10-us.pcm",
+  "said": "lat pulldown three by twelve at fifty",
+  "voice": "Samantha"
+ },
+ {
+  "file": "10-in.pcm",
+  "said": "lat pulldown three by twelve at fifty",
+  "voice": "Rishi"
+ }
+]

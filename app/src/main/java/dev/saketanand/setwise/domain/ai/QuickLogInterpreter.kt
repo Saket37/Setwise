@@ -5,6 +5,7 @@ import com.google.mlkit.genai.schema.annotations.Generable
 import com.google.mlkit.genai.schema.annotations.Guide
 import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.ExerciseNames
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.QuickLogParser
 import dev.saketanand.setwise.domain.model.SetFact
@@ -81,6 +82,14 @@ class QuickLogInterpreter(
         }
         if (parse.isComplete) return QuickLogResult.Sets(target, parse.sets.fitTo(exercise), SuggestionSource.Keywords)
 
+        // Bodyweight, numbers alone ("pull ups 10, 8, 6"): a set each, reps (or a hold's seconds).
+        if (exercise.type == ExerciseType.BODYWEIGHT && parse.sets.isEmpty() && parse.bare.isNotEmpty() &&
+            parse.leftover.all { it.toIntOrNull() != null } && parse.bare.all { it in 1..MAX_BARE }
+        ) {
+            val sets = parse.bare.map { if (exercise.isTimed) SetFact(null, null, it) else SetFact(null, it, null) }
+            return QuickLogResult.Sets(target, sets, SuggestionSource.Keywords)
+        }
+
         // Words the parser couldn't place ("last one", "twice"): the model, if it's there.
         modelSets(line, exercise, parse.sets)?.let { return QuickLogResult.Sets(target, it.fitTo(exercise), SuggestionSource.Model) }
         if (parse.sets.isNotEmpty()) return QuickLogResult.Sets(target, parse.sets.fitTo(exercise), SuggestionSource.Keywords)
@@ -101,10 +110,12 @@ class QuickLogInterpreter(
             return QuickLogTarget(open.exercise, open.id, matchedFrom = null)
         }
         // Clear matches in today's workout, then in what they've done; the model only judges the
-        // whole library (one call at most).
-        val exercise = assistant.clearMatch(phrase, session.exercises.map { it.exercise })
-            ?: assistant.clearMatch(phrase, recent)
-            ?: assistant.findMatch(phrase, library)
+        // whole library (one call at most). Words speech-to-text misheard ("squad") are put right
+        // against exercise names first.
+        val heard = ExerciseNames.soundAlikeFixed(phrase, library).ifEmpty { phrase }
+        val exercise = assistant.clearMatch(heard, session.exercises.map { it.exercise })
+            ?: assistant.clearMatch(heard, recent)
+            ?: assistant.findMatch(heard, library)
             ?: return null
         // In today's workout (however it was found): its open card, not a second one.
         val items = session.exercises.filter { it.exercise.id == exercise.id }
@@ -123,7 +134,7 @@ class QuickLogInterpreter(
             Log.w(TAG, "The model couldn't read '$text'", e)
             null
         }
-        val sets = answer?.let { acceptSets(it, text, parsed) }
+        val sets = answer?.let { acceptSets(it, text, parsed, statedSets(text)) }
         Log.d(TAG, "'$text': ${if (sets != null) "used" else "rejected"} $answer (${(System.nanoTime() - startedAt) / 1_000_000} ms)")
         return sets
     }
@@ -131,12 +142,16 @@ class QuickLogInterpreter(
     companion object {
         private const val TAG = "QuickLogInterpreter"
 
+        /** Bare numbers up to this are reps (or seconds of a hold). */
+        private const val MAX_BARE = 300
+
         /**
          * The model's sets, or null if any number in them isn't in [text] (no invented weights or
          * reps), one the parser read is missing ([parsed]: nothing dropped), there are none, or a
          * set has neither reps nor seconds.
          */
-        fun acceptSets(answer: ModelQuickLog, text: String, parsed: List<SetFact>): List<SetFact>? {
+        fun acceptSets(answer: ModelQuickLog, text: String, parsed: List<SetFact>, statedSets: Int? = null): List<SetFact>? {
+            if (statedSets != null && answer.sets.size != statedSets) return null
             val numbers = Regex("\\d+(?:[.,]\\d+)?").findAll(text).map { it.value.replace(',', '.').toDouble() }.toSet()
             val sets = answer.sets.map { set ->
                 SetFact(
@@ -151,6 +166,13 @@ class QuickLogInterpreter(
             }
             val kept = sets.flatMap { it.values() }.toSet().containsAll(parsed.flatMap { it.values() })
             return sets.takeIf { ok && kept }
+        }
+
+        /** "3 sets": the one set count the line states, if it states exactly one (no "more", no "last one"). */
+        fun statedSets(text: String): Int? {
+            val lower = text.lowercase()
+            if (Regex("\\b(more|last|final|then|and)\\b").containsMatchIn(lower)) return null
+            return Regex("(\\d+) sets?\\b").findAll(lower).map { it.groupValues[1].toInt() }.toList().singleOrNull()
         }
 
         private fun SetFact.values() = listOfNotNull(weightKg, reps?.toDouble(), seconds?.toDouble())
