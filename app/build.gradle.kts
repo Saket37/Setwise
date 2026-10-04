@@ -117,6 +117,11 @@ dependencies {
 
     // Instrumented tests (./gradlew connectedDebugAndroidTest)
     androidTestImplementation(libs.bundles.android.test)
+    // Compose UI tests with Google's Accessibility Test Framework checks (#62); the checks need
+    // API 34+ on a device or emulator (they don't run on Robolectric).
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4.accessibility)
 }
 
 detekt {
