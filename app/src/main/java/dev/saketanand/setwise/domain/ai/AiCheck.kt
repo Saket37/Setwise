@@ -2,13 +2,21 @@ package dev.saketanand.setwise.domain.ai
 
 import android.content.Context
 import android.util.Log
+import dev.saketanand.setwise.domain.model.BestSetFact
 import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.ExerciseChange
 import dev.saketanand.setwise.domain.model.ExerciseSession
+import dev.saketanand.setwise.domain.model.Intensity
 import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.domain.model.Measure
 import dev.saketanand.setwise.domain.model.Plateau
+import dev.saketanand.setwise.domain.model.PrKind
+import dev.saketanand.setwise.domain.model.PreviousWorkout
 import dev.saketanand.setwise.domain.model.Progression
+import dev.saketanand.setwise.domain.model.RecordFact
+import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.SharedSet
+import dev.saketanand.setwise.domain.model.WeekFacts
 import dev.saketanand.setwise.domain.model.WorkoutFacts
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
@@ -16,6 +24,7 @@ import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import java.io.File
 import java.time.Instant
+import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -46,6 +55,7 @@ class AiCheck(
     private val speechInput: SpeechInput,
     private val estimator: CalorieEstimator,
     private val insightWriter: WorkoutInsightWriter,
+    private val weeklyRecapWriter: WeeklyRecapWriter,
     private val exerciseAssistant: ExerciseAssistant,
     private val quickLogInterpreter: QuickLogInterpreter,
     private val plateauNotes: PlateauNoteWriter,
@@ -69,6 +79,7 @@ class AiCheck(
                 ONLY_SPEECH -> checkSpeech()
                 ONLY_ASK -> checkAsk()
                 ONLY_IMPORT -> checkImport()
+                ONLY_PERSONAL -> checkPersonal()
                 else -> checkAll(workouts)
             }
             Log.i(TAG, "Done")
@@ -89,6 +100,29 @@ class AiCheck(
         checkExerciseNames()
         checkQuickLog()
         checkPlateauNotes()
+    }
+
+    /** The workout insight and weekly recap with the profile's name and planned days (or sample ones). */
+    private suspend fun checkPersonal() {
+        val person = PersonFacts.from(userSettingsRepository.settings.first())
+            .let { if (it.firstName == null) it.copy(firstName = "Alex") else it }
+            .let { if (it.plannedDaysPerWeek == null) it.copy(plannedDaysPerWeek = 4) else it }
+        val workout = WorkoutFacts(
+            workoutName = "Push Day", minutes = 64, intensity = Intensity.Moderate, medianRestSec = 95,
+            changes = listOf(ExerciseChange("Bench Press (Barbell)", Measure.Weight, SetFact(62.5, 8, null), SetFact(60.0, 8, null))),
+            records = listOf(RecordFact("Bench Press (Barbell)", PrKind.Weight)),
+            volumeKg = 8_420.0, previous = PreviousWorkout("Push Day", 7_900.0),
+        )
+        val week = WeekFacts(
+            LocalDate.of(2026, 9, 28), 3, java.time.Duration.ofMinutes(190), 1, 21_400.0, 6,
+            BestSetFact("Back Squat", 100.0, 5, null, isPr = true), null, null,
+        )
+        listOf(person, person.copy(firstName = "Priya")).forEachIndexed { round, person ->
+            Log.i(TAG, "Personal $round insight facts:\n${WorkoutInsightWriter.factLines(workout, person)}")
+            Log.i(TAG, "Personal $round insight: ${insightWriter.write(workout, person) ?: "(rejected or no model)"}")
+            Log.i(TAG, "Personal $round recap facts:\n${WeeklyRecapWriter.factLines(week, person)}")
+            Log.i(TAG, "Personal $round recap: ${weeklyRecapWriter.write(week, person) ?: "(rejected or no model)"}")
+        }
     }
 
     /** Free-form workout logs: what the model makes of them, after the number guard. */
@@ -278,6 +312,7 @@ class AiCheck(
         const val ONLY_CLIENT = "client"
         const val ONLY_SPEECH = "speech"
         const val ONLY_ASK = "ask"
+        const val ONLY_PERSONAL = "personal"
         const val ONLY_IMPORT = "import"
 
         /** Prose no code reader takes apart: what's left for the model. */

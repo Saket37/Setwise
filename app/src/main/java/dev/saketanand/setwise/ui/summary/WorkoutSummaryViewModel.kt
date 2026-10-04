@@ -3,10 +3,15 @@ package dev.saketanand.setwise.ui.summary
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.saketanand.setwise.domain.ai.PersonFacts
+import dev.saketanand.setwise.domain.ai.WorkoutInsightWriter
+import dev.saketanand.setwise.domain.model.WorkoutFacts
 import dev.saketanand.setwise.domain.repository.TemplateRepository
+import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.DateProvider
+import dev.saketanand.setwise.util.parseWeight
 import java.time.LocalTime
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -15,16 +20,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import dev.saketanand.setwise.domain.repository.UserSettingsRepository
-import dev.saketanand.setwise.util.parseWeight
-import kotlinx.coroutines.flow.map
-import dev.saketanand.setwise.domain.ai.WorkoutInsightWriter
-import dev.saketanand.setwise.domain.model.WorkoutFacts
 
 /**
  * Screen: [WorkoutSummaryScreenRoot]. Shown after Finish and when opening a workout from History.
@@ -188,7 +190,7 @@ class WorkoutSummaryViewModel(
         if (insightRequested) return
         insightRequested = true
         viewModelScope.launch {
-            val text = runCatching { insightWriter.write(facts) }
+            val text = runCatching { insightWriter.write(facts, PersonFacts.from(userSettingsRepository.settings.first())) }
                 .onFailure { e -> Log.w(TAG, "Writing the insight of workout $workoutId failed", e) }
                 .getOrNull() ?: return@launch
             runCatching { workoutRepository.setInsight(workoutId, text) }

@@ -15,9 +15,10 @@ class WeeklyRecapWriter(private val model: OnDeviceModel) {
 
     suspend fun canWrite(): Boolean = model.availability() == ModelAvailability.Ready
 
-    suspend fun write(facts: WeekFacts): String? {
+    /** @param person the profile's name and planned days, to address them and frame the week. */
+    suspend fun write(facts: WeekFacts, person: PersonFacts = PersonFacts()): String? {
         if (!canWrite()) return null
-        val lines = factLines(facts)
+        val lines = factLines(facts, person)
         val startedAt = System.nanoTime()
         val answer = try {
             model.generate(prompt(lines))
@@ -43,7 +44,9 @@ class WeeklyRecapWriter(private val model: OnDeviceModel) {
         )
 
         /** One fact per line, numbers written once and exactly. */
-        fun factLines(facts: WeekFacts): String = buildList {
+        fun factLines(facts: WeekFacts, person: PersonFacts = PersonFacts()): String = buildList {
+            person.nameLine()?.let(::add)
+            person.plannedDaysPerWeek?.let { add(planLine(facts.workouts, it)) }
             val hours = facts.timeTrained.toHours()
             val minutes = facts.timeTrained.toMinutes() % 60
             add("Week: ${facts.workouts} workouts, ${if (hours > 0) "$hours h $minutes min" else "$minutes min"} trained, ${facts.prs} personal records")
@@ -60,12 +63,21 @@ class WeeklyRecapWriter(private val model: OnDeviceModel) {
             facts.plateau?.let { add("Stalled: ${it.exerciseName}, flat for ${it.weeks} weeks (its plan: lighter weight, more reps)") }
         }.joinToString("\n")
 
+        /** The week against the plan, worked out here: a small model can't be trusted to compare. */
+        fun planLine(workouts: Int, planned: Int): String = when {
+            workouts == planned -> "Plan: all $planned planned training days done"
+            workouts < planned -> "Plan: $workouts of $planned planned training days done (${planned - workouts} missed)"
+            else -> "Plan: $workouts workouts, ${workouts - planned} more than the $planned planned"
+        }
+
         private fun Int.signed() = if (this > 0) "+$this" else "$this"
         private fun Double.kg() = if (this % 1.0 == 0.0) toLong().toString() else "%.1f".format(Locale.ROOT, this)
 
         private const val SYSTEM =
             "You write a short recap of someone's training week for them. Use only the facts given, with numbers exactly as written. " +
                 "2 or 3 short sentences, under 50 words, plain text, encouraging. If a lift is stalled, suggest its plan. " +
+                "Write to them as \"you\". If a plan is given, say how the week went against it, as the fact states. " +
+                "If a name is given, you may address them by it once (\"Sam, you...\"); never write about them by name. " +
                 "No greetings, lists or emoji."
 
         private val EXAMPLE = """

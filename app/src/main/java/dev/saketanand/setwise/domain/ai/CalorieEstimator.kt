@@ -26,9 +26,12 @@ data class SourcedCalorieEstimate(val estimate: CalorieEstimate, val source: Str
  */
 class CalorieEstimator(private val model: OnDeviceModel) {
 
-    /** @param useModel false: the formula only (e.g. an old workout, or the model just failed). */
-    suspend fun estimate(session: WorkoutSession, bodyWeightKg: Double?, useModel: Boolean = true): SourcedCalorieEstimate? {
-        val formula = CalorieFormula.estimate(session, bodyWeightKg) ?: return null
+    /**
+     * @param bmrKcal resting burn per day, when known (personalises the formula and the prompt).
+     * @param useModel false: the formula only (e.g. an old workout, or the model just failed).
+     */
+    suspend fun estimate(session: WorkoutSession, bodyWeightKg: Double?, bmrKcal: Int? = null, useModel: Boolean = true): SourcedCalorieEstimate? {
+        val formula = CalorieFormula.estimate(session, bodyWeightKg, bmrKcal) ?: return null
         val fallback = SourcedCalorieEstimate(formula, CalorieFormula.SOURCE)
         if (!useModel || model.availability() != ModelAvailability.Ready) return fallback
 
@@ -40,7 +43,7 @@ class CalorieEstimator(private val model: OnDeviceModel) {
         )
 
         val parsed = try {
-            model.generate(prompt(session, bodyWeightKg!!, formula), ModelCalorieAnswer.OUTPUT)
+            model.generate(prompt(session, bodyWeightKg!!, formula, bmrKcal), ModelCalorieAnswer.OUTPUT)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -78,19 +81,20 @@ class CalorieEstimator(private val model: OnDeviceModel) {
          * part stays under 200 words, so it needs no prefix caching. The answer's shape comes
          * from [ModelCalorieAnswer] (structured output), not from the prompt.
          */
-        fun prompt(session: WorkoutSession, bodyWeightKg: Double, formula: CalorieEstimate): ModelRequest =
+        fun prompt(session: WorkoutSession, bodyWeightKg: Double, formula: CalorieEstimate, bmrKcal: Int? = null): ModelRequest =
             ModelRequest(
                 system = SYSTEM,
-                prompt = "## Examples\n$EXAMPLES\n\n## Workout\n<workout>\n${workoutLog(session, bodyWeightKg, formula)}\n</workout>",
+                prompt = "## Examples\n$EXAMPLES\n\n## Workout\n<workout>\n${workoutLog(session, bodyWeightKg, formula, bmrKcal)}\n</workout>",
                 temperature = 0.2f,
                 maxOutputTokens = 80,
             )
 
         /** Facts, one per line, kept short for a small model's context. */
-        fun workoutLog(session: WorkoutSession, bodyWeightKg: Double, formula: CalorieEstimate): String {
+        fun workoutLog(session: WorkoutSession, bodyWeightKg: Double, formula: CalorieEstimate, bmrKcal: Int? = null): String {
             val minutes = session.endedAt?.let { Duration.between(session.startedAt, it).toMinutes() } ?: 0
             val lines = buildList {
                 add("Body weight: ${bodyWeightKg.format()} kg")
+                bmrKcal?.let { add("Resting burn (BMR): $it kcal/day") }
                 add("Length: $minutes min")
                 strengthDensity(session, minutes)?.let { add(it) }
                 session.exercises.forEach { exercise ->

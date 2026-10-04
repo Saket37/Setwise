@@ -53,6 +53,20 @@ class CalorieFormulaTest {
     }
 
     @Test
+    fun `a known BMR is the person's own resting burn per MET-hour`() {
+        val strength = session(60, strength(18)) // moderate, MET 5
+        // 1,680 kcal/day = 70 per hour: the same as 70 kg.
+        assertEquals(CalorieEstimate(350, Intensity.Moderate), CalorieFormula.estimate(strength, 70.0, bmrKcal = 1_680))
+        // 1,440 kcal/day = 60 per hour: a slower metabolism burns less.
+        assertEquals(CalorieEstimate(300, Intensity.Moderate), CalorieFormula.estimate(strength, 70.0, bmrKcal = 1_440))
+        // Cardio too: the run's MET 10.5 × 60 × 0.5 h ≈ 316 (368 with 70 kg).
+        val run = cardio(CalorieMethod.ACSM_RUN_FROM_PACE, met = null, CardioValues(1_800, distanceKm = 5.0))
+        assertEquals(CalorieEstimate(316, Intensity.Vigorous), CalorieFormula.estimate(session(30, run), 70.0, bmrKcal = 1_440))
+        // An implausible BMR (a misread) is ignored.
+        assertEquals(CalorieEstimate(350, Intensity.Moderate), CalorieFormula.estimate(strength, 70.0, bmrKcal = 90))
+    }
+
+    @Test
     fun `no estimate without a body weight, or for an unfinished workout`() {
         assertNull(CalorieFormula.estimate(session(60, strength(18)), null))
         assertNull(CalorieFormula.estimate(session(60, strength(18)).copy(endedAt = null), 70.0))
