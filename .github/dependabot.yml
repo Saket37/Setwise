@@ -7,6 +7,22 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # Kotlin follows the version bundled with Android Studio (a mismatch breaks the IDE's
+      # Compose support): bump it by hand when Studio updates.
+      - dependency-name: "org.jetbrains.kotlin*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # The Android Gradle Plugin needs a matching Gradle wrapper (and Android Studio), which
+      # Dependabot can't update: bump them together by hand.
+      - dependency-name: "com.android.application"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # These need compileSdk 37 (see libs.versions.toml); the app compiles against 36.
+      - dependency-name: "androidx.core:core-ktx"
+        versions: [">= 1.19.0"]
+      - dependency-name: "androidx.navigation:navigation-compose"
+        versions: [">= 2.10.0"]
+      - dependency-name: "androidx.compose:compose-bom"
+        versions: [">= 2026.07.00"]
     groups:
       androidx-compose:
         patterns: ["androidx.compose*", "androidx.activity*", "androidx.lifecycle*", "androidx.navigation*"]
