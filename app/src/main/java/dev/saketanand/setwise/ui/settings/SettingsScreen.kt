@@ -337,14 +337,7 @@ private fun DialogButton(text: Int, onClick: () -> Unit) {
 @ScreenPreviews
 @Composable
 private fun SettingsScreenPreview() = SetwiseScreenPreview {
-    SettingsScreen(
-        uiState = SettingsUiState(
-            isLoading = false,
-            bodyWeightKg = 72.5,
-            trainingDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
-        ),
-        onAction = {},
-    )
+    SettingsScreen(uiState = SampleSettingsState, onAction = {})
 }
 
 @ScreenPreviews
@@ -352,6 +345,13 @@ private fun SettingsScreenPreview() = SetwiseScreenPreview {
 private fun SettingsScreenNothingSetPreview() = SetwiseScreenPreview {
     SettingsScreen(uiState = SettingsUiState(isLoading = false), onAction = {})
 }
+
+/** Settings with weight and training days set: previews and UI tests. */
+internal val SampleSettingsState = SettingsUiState(
+    isLoading = false,
+    bodyWeightKg = 72.5,
+    trainingDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+)
 
 private fun Sex.labelRes() = when (this) {
     Sex.Male -> R.string.sex_male

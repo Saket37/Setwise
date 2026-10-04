@@ -399,14 +399,14 @@ private fun WorkoutClock(startedAtMillis: Long, modifier: Modifier = Modifier) {
 @ScreenPreviews
 @Composable
 private fun ActiveWorkoutScreenPreview() = SetwiseScreenPreview {
-    ActiveWorkoutScreen(uiState = previewState, onAction = {})
+    ActiveWorkoutScreen(uiState = SampleActiveWorkoutState, onAction = {})
 }
 
 @ScreenPreviews
 @Composable
 private fun ActiveWorkoutEmptyPreview() = SetwiseScreenPreview {
     ActiveWorkoutScreen(
-        uiState = previewState.copy(name = "Workout", exercises = emptyList(), expandedExerciseId = null),
+        uiState = SampleActiveWorkoutState.copy(name = "Workout", exercises = emptyList(), expandedExerciseId = null),
         onAction = {},
     )
 }
@@ -415,12 +415,13 @@ private fun ActiveWorkoutEmptyPreview() = SetwiseScreenPreview {
 @Composable
 private fun ActiveWorkoutFinishDialogPreview() = SetwiseScreenPreview {
     ActiveWorkoutScreen(
-        uiState = previewState.copy(dialog = ActiveWorkoutDialog.FinishWithIncompleteSets(incompleteSets = 5)),
+        uiState = SampleActiveWorkoutState.copy(dialog = ActiveWorkoutDialog.FinishWithIncompleteSets(incompleteSets = 5)),
         onAction = {},
     )
 }
 
-private val previewState = ActiveWorkoutUiState(
+/** A workout mid-way: previews and UI tests. */
+internal val SampleActiveWorkoutState = ActiveWorkoutUiState(
     isLoading = false,
     name = "Push Day",
     startedAtMillis = System.currentTimeMillis() - 38 * 60_000,

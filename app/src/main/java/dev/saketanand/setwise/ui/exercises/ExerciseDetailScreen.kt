@@ -370,24 +370,7 @@ private fun ProgressMetric.unitRes(): Int = when (this) {
 @Composable
 private fun ExerciseDetailPreview() = SetwiseScreenPreview {
     ExerciseDetailScreen(
-        uiState = ExerciseDetailUiState(
-            isLoading = false,
-            name = "Overhead Press (Barbell)",
-            muscleGroup = "Shoulders",
-            equipment = "Barbell",
-            progress = ProgressUi(
-                metric = ProgressMetric.EstimatedOneRepMax,
-                weeks = listOf(40.0, 42.0, 44.5, null, 48.0, 48.0, 47.5, 48.0),
-                firstWeek = LocalDate.of(2026, 8, 10),
-                latest = 48.0,
-            ),
-            plateau = PlateauUi(weeks = 4, sessions = 8, since = LocalDate.of(2026, 9, 7), best = 48, metric = ProgressMetric.EstimatedOneRepMax),
-            nextSession = NextSession(37.5, 8, null, 3, ProgressionRule.Lighter, SetFact(40.0, 6, null)),
-            sessions = listOf(
-                ExerciseSessionUi(1, LocalDate.of(2026, 10, 2), listOf(LoggedSet(40.0, 6, null, null), LoggedSet(37.5, 8, null, null))),
-                ExerciseSessionUi(2, LocalDate.of(2026, 9, 29), listOf(LoggedSet(40.0, 6, null, null), LoggedSet(40.0, 5, null, null))),
-            ),
-        ),
+        uiState = SampleExerciseDetailState,
         onBack = {},
         onSessionClick = {},
     )
@@ -402,3 +385,23 @@ private fun ExerciseDetailEmptyPreview() = SetwiseScreenPreview {
         onSessionClick = {},
     )
 }
+
+/** An exercise with progress, a plateau and sessions: previews and UI tests. */
+internal val SampleExerciseDetailState = ExerciseDetailUiState(
+    isLoading = false,
+    name = "Overhead Press (Barbell)",
+    muscleGroup = "Shoulders",
+    equipment = "Barbell",
+    progress = ProgressUi(
+        metric = ProgressMetric.EstimatedOneRepMax,
+        weeks = listOf(40.0, 42.0, 44.5, null, 48.0, 48.0, 47.5, 48.0),
+        firstWeek = LocalDate.of(2026, 8, 10),
+        latest = 48.0,
+    ),
+    plateau = PlateauUi(weeks = 4, sessions = 8, since = LocalDate.of(2026, 9, 7), best = 48, metric = ProgressMetric.EstimatedOneRepMax),
+    nextSession = NextSession(37.5, 8, null, 3, ProgressionRule.Lighter, SetFact(40.0, 6, null)),
+    sessions = listOf(
+        ExerciseSessionUi(1, LocalDate.of(2026, 10, 2), listOf(LoggedSet(40.0, 6, null, null), LoggedSet(37.5, 8, null, null))),
+        ExerciseSessionUi(2, LocalDate.of(2026, 9, 29), listOf(LoggedSet(40.0, 6, null, null), LoggedSet(40.0, 5, null, null))),
+    ),
+)
