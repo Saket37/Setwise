@@ -117,6 +117,11 @@ class QuickLogParserTest {
         check("push ups 20 reps twice", "push ups", reps(20, 20))
         check("3 sets of bench at 15 reps 16 kg.", "bench", kg(16.0, 15, 3))
         check("two sets of curls 12 reps at 10 kg", "curls", kg(10.0, 12, 2))
+        // Notes-app notation: a weight, then each set's reps.
+        check("Squat: 100kg 5,5,5", "squat", kg(100.0, 5, 3))
+        check("Romanian deadlift 80kg x 8, 8, 7", "romanian deadlift", kg(80.0, 8, 2) + kg(80.0, 7))
+        check("incline db press 22kg - 10, 9, 8", "incline db press", kg(22.0, 10) + kg(22.0, 9) + kg(22.0, 8))
+        check("lateral raises 10 kg 15 reps 3 sets", "lateral raises", kg(10.0, 15, 3))
         assertEquals(
             CardioValues(1_200, inclinePct = 6.0, distanceKm = 2.0),
             QuickLogParser.parse("treadmill twenty minutes six percent incline two kilometers").cardio,
