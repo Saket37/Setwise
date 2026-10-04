@@ -30,6 +30,8 @@ import java.time.ZoneId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertTrue
+import dev.saketanand.setwise.domain.repository.BodyRepository
+import dev.saketanand.setwise.domain.model.BodyMeasurement
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
@@ -42,7 +44,7 @@ class SettingsViewModelTest {
 
     private val model = FakeOnDeviceModel(ModelAvailability.Downloadable)
 
-    private fun TestScope.viewModel() = SettingsViewModel(settings, model, ModelDownloader(model, backgroundScope), FixedDates).also { vm ->
+    private fun TestScope.viewModel() = SettingsViewModel(settings, model, ModelDownloader(model, backgroundScope), FixedDates, NoBody).also { vm ->
         backgroundScope.launch { vm.state.collect {} }
     }
 
@@ -166,5 +168,11 @@ class SettingsViewModelTest {
         override val zone: ZoneId = ZoneId.of("Asia/Kolkata")
         override fun now(): Instant = LocalDate.of(2026, 10, 5).atTime(9, 0).atZone(zone).toInstant()
         override fun today(): Flow<LocalDate> = flowOf(LocalDate.of(2026, 10, 5))
+    }
+
+    private object NoBody : BodyRepository {
+        override fun observeMeasurements(): Flow<List<BodyMeasurement>> = flowOf(emptyList())
+        override suspend fun add(measurement: BodyMeasurement) = Unit
+        override suspend fun delete(id: Long) = Unit
     }
 }

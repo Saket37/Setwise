@@ -48,10 +48,17 @@ import dev.saketanand.setwise.domain.ai.ModelAvailability
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import dev.saketanand.setwise.domain.ai.DownloadFailure
 import dev.saketanand.setwise.domain.ai.DownloadState
+import dev.saketanand.setwise.domain.model.Sex
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseChoiceDialog
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseValueDialog
+import dev.saketanand.setwise.ui.designsystem.components.ValueKind
+import java.text.NumberFormat
+import androidx.lifecycle.compose.dropUnlessResumed
 
 /** Destination: [Route.Settings]. */
 @Composable
 fun SettingsScreenRoot(
+    onOpenBody: () -> Unit,
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -60,7 +67,11 @@ fun SettingsScreenRoot(
         viewModel.onAction(SettingsAction.OnScreenResumed)
         onPauseOrDispose { }
     }
-    SettingsScreen(uiState = uiState, onAction = viewModel::onAction)
+    val openBody = dropUnlessResumed(block = onOpenBody)
+    SettingsScreen(
+        uiState = uiState,
+        onAction = { action -> if (action == SettingsAction.OnBodyCompositionClick) openBody() else viewModel.onAction(action) },
+    )
 }
 
 /**
@@ -90,11 +101,39 @@ fun SettingsScreen(
         if (uiState.isLoading) return@Column
 
         SetwiseSettingsGroup(title = stringResource(R.string.settings_profile)) {
+            val notSet = stringResource(R.string.not_set)
+            SetwiseSettingsRow(
+                label = stringResource(R.string.profile_name),
+                value = uiState.name ?: notSet,
+                onClick = { onAction(SettingsAction.OnNameClick) },
+            )
+            SetwiseSettingsRow(
+                label = stringResource(R.string.profile_age),
+                value = uiState.age?.toString() ?: notSet,
+                onClick = { onAction(SettingsAction.OnAgeClick) },
+            )
+            SetwiseSettingsRow(
+                label = stringResource(R.string.profile_sex),
+                value = uiState.sex?.let { stringResource(it.labelRes()) } ?: notSet,
+                onClick = { onAction(SettingsAction.OnSexClick) },
+            )
+            SetwiseSettingsRow(
+                label = stringResource(R.string.profile_height),
+                value = uiState.heightCm?.let { stringResource(R.string.height_cm, it.toWeightLabel(currentLocale())) } ?: notSet,
+                onClick = { onAction(SettingsAction.OnHeightClick) },
+            )
             SetwiseSettingsRow(
                 label = stringResource(R.string.body_weight),
                 value = uiState.bodyWeightKg?.let { stringResource(R.string.weight_kg, it.toWeightLabel(currentLocale())) }
-                    ?: stringResource(R.string.not_set),
+                    ?: notSet,
                 onClick = { onAction(SettingsAction.OnBodyWeightClick) },
+            )
+            SetwiseSettingsRow(
+                label = stringResource(R.string.body_composition),
+                value = uiState.bmr?.let { stringResource(R.string.bmr_kcal, NumberFormat.getIntegerInstance(currentLocale()).format(it.kcal)) }
+                    ?: stringResource(R.string.body_composition_add),
+                supporting = stringResource(R.string.body_composition_detail),
+                onClick = { onAction(SettingsAction.OnBodyCompositionClick) },
                 showDivider = false,
             )
         }
@@ -136,6 +175,46 @@ fun SettingsScreen(
             },
         )
         is SettingsEditor.TrainingDays -> TrainingDaysDialog(selected = editor.selected, onAction = onAction)
+        SettingsEditor.Name -> SetwiseValueDialog(
+            title = stringResource(R.string.profile_name),
+            current = uiState.name.orEmpty(),
+            kind = ValueKind.Text,
+            placeholder = stringResource(R.string.profile_name_hint),
+            onSave = { onAction(SettingsAction.OnSaveName(it)) },
+            onDismiss = { onAction(SettingsAction.OnDismissEditor) },
+            onRemove = uiState.name?.let { { onAction(SettingsAction.OnRemoveProfileValue(editor)) } },
+        )
+        is SettingsEditor.Age -> SetwiseValueDialog(
+            title = stringResource(R.string.profile_age),
+            current = uiState.age?.toString().orEmpty(),
+            kind = ValueKind.Integer,
+            unit = stringResource(R.string.unit_years),
+            placeholder = "30",
+            errorMessage = stringResource(R.string.profile_age_invalid).takeIf { editor.isInvalid },
+            onSave = { onAction(SettingsAction.OnSaveAge(it)) },
+            onDismiss = { onAction(SettingsAction.OnDismissEditor) },
+            onRemove = uiState.age?.let { { onAction(SettingsAction.OnRemoveProfileValue(editor)) } },
+        )
+        is SettingsEditor.Height -> SetwiseValueDialog(
+            title = stringResource(R.string.profile_height),
+            current = uiState.heightCm?.toWeightInput().orEmpty(),
+            kind = ValueKind.Decimal,
+            unit = stringResource(R.string.unit_cm),
+            placeholder = "175",
+            errorMessage = stringResource(R.string.profile_height_invalid).takeIf { editor.isInvalid },
+            onSave = { onAction(SettingsAction.OnSaveHeight(it)) },
+            onDismiss = { onAction(SettingsAction.OnDismissEditor) },
+            onRemove = uiState.heightCm?.let { { onAction(SettingsAction.OnRemoveProfileValue(editor)) } },
+        )
+        SettingsEditor.SexChoice -> SetwiseChoiceDialog(
+            title = stringResource(R.string.profile_sex),
+            message = stringResource(R.string.profile_sex_detail),
+            options = Sex.entries.map { it to stringResource(it.labelRes()) },
+            selected = uiState.sex,
+            onSelect = { onAction(SettingsAction.OnSaveSex(it)) },
+            onDismiss = { onAction(SettingsAction.OnDismissEditor) },
+            onRemove = uiState.sex?.let { { onAction(SettingsAction.OnRemoveProfileValue(editor)) } },
+        )
         null -> Unit
     }
 }
@@ -221,4 +300,9 @@ private fun SettingsScreenPreview() = SetwiseScreenPreview {
 @Composable
 private fun SettingsScreenNothingSetPreview() = SetwiseScreenPreview {
     SettingsScreen(uiState = SettingsUiState(isLoading = false), onAction = {})
+}
+
+private fun Sex.labelRes() = when (this) {
+    Sex.Male -> R.string.sex_male
+    Sex.Female -> R.string.sex_female
 }

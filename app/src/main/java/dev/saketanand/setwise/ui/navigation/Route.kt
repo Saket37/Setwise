@@ -25,6 +25,9 @@ sealed interface Route {
     /** Settings tab: profile, rest timer, on-device AI, connected apps, data. */
     @Serializable data object Settings : Route
 
+    /** Body composition: body checks, BMR, reports (from Settings). */
+    @Serializable data object Body : Route
+
     // Workout flow
 
     /** Live workout with sets, rest timer and quick-log. */

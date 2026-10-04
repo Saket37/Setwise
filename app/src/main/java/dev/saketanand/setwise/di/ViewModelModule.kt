@@ -16,6 +16,7 @@ import dev.saketanand.setwise.ui.workout.CardioEntryViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
+import dev.saketanand.setwise.ui.body.BodyViewModel
 
 /**
  * One ViewModel per screen. viewModelOf resolves constructor parameters from Koin
@@ -26,6 +27,7 @@ val viewModelModule = module {
     viewModelOf(::OnboardingViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::HistoryViewModel)
+    viewModelOf(::BodyViewModel)
     viewModelOf(::SettingsViewModel)
 
     // Route argument passed by SetwiseNavHost: koinViewModel { parametersOf(route.workoutId) }.

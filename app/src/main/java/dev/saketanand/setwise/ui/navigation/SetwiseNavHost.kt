@@ -32,6 +32,7 @@ import dev.saketanand.setwise.ui.workout.ActiveWorkoutScreenRoot
 import dev.saketanand.setwise.ui.workout.CardioEntryScreenRoot
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import dev.saketanand.setwise.ui.body.BodyScreenRoot
 
 private val FadeThroughOut = fadeOut(tween(durationMillis = 90, easing = FastOutLinearInEasing))
 private val FadeThroughIn = fadeIn(tween(durationMillis = 210, delayMillis = 90, easing = LinearOutSlowInEasing)) +
@@ -107,7 +108,11 @@ fun SetwiseNavHost(
         }
 
         composable<Route.Settings> {
-            TabScreen { SettingsScreenRoot() }
+            TabScreen { SettingsScreenRoot(onOpenBody = { navController.navigate(Route.Body) }) }
+        }
+
+        composable<Route.Body> {
+            BodyScreenRoot(onBack = { navController.popBackStack() })
         }
 
         // Workout flow
