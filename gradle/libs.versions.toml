@@ -1,5 +1,5 @@
 [versions]
-agp = "9.1.0"
+agp = "9.4.1"
 kotlin = "2.4.20"
 ksp = "2.3.12"
 
@@ -21,6 +21,8 @@ mlkitGenaiPrompt = "1.0.0-beta4"
 mlkitGenaiSpeech = "1.0.0-alpha1"
 playServicesTextRecognition = "19.0.1"
 mlkitGenaiSchema = "1.0.0-alpha1"
+# Not used directly: ML Kit GenAI brings Guava 31.0.1-jre (advisories, #83); this is the floor.
+guava = "33.7.2-android"
 
 # Code checks
 kover = "0.9.11"
@@ -30,7 +32,9 @@ composeGuard = "2.6.0"
 
 # Testing
 junit = "4.13.2"
-coroutinesTest = "1.11.0"
+# The app's coroutines and kotlinx-coroutines-test share one version: the test APK runs against
+# the app's coroutines, so a newer test library alone breaks instrumented tests (#85).
+coroutines = "1.11.0"
 turbine = "1.2.1"
 robolectric = "4.17"
 androidxTestExtJunit = "1.3.0"
@@ -62,6 +66,7 @@ room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 # DI
@@ -73,6 +78,7 @@ mlkit-genai-prompt = { group = "com.google.mlkit", name = "genai-prompt", versio
 mlkit-text-recognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version.ref = "playServicesTextRecognition" }
 mlkit-genai-speech-recognition = { group = "com.google.mlkit", name = "genai-speech-recognition", version.ref = "mlkitGenaiSpeech" }
 mlkit-genai-schema = { group = "com.google.mlkit", name = "genai-schema", version.ref = "mlkitGenaiSchema" }
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 mlkit-genai-schema-compiler = { group = "com.google.mlkit", name = "genai-schema-compiler", version.ref = "mlkitGenaiSchema" }
 
 # Code checks (detekt rule sets)
@@ -81,7 +87,7 @@ detekt-ktlint-wrapper = { group = "dev.detekt", name = "detekt-rules-ktlint-wrap
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }
-kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
