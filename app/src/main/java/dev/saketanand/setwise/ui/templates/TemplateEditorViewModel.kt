@@ -71,6 +71,7 @@ class TemplateEditorViewModel(
             is TemplateEditorAction.OnNameChange -> edit { it.copy(name = action.name) }
             is TemplateEditorAction.OnCategoryClick -> edit { it.withCategoryToggled(action.category) }
             is TemplateEditorAction.OnSetsChange -> edit { it.withSetsChanged(action.exerciseId, action.delta) }
+            is TemplateEditorAction.OnRepsChange -> edit { it.withRepsChanged(action.exerciseId, action.delta) }
             is TemplateEditorAction.OnMoveUp -> edit { it.withMoved(action.exerciseId, -1) }
             is TemplateEditorAction.OnMoveDown -> edit { it.withMoved(action.exerciseId, +1) }
             is TemplateEditorAction.OnRemoveExercise -> edit { it.withRemoved(action.exerciseId) }

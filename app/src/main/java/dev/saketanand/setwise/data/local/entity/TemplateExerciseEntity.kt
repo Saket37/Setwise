@@ -32,4 +32,6 @@ data class TemplateExerciseEntity(
     val exerciseId: Long,
     val position: Int,
     val targetSets: Int,
+    /** Reps each set aims for (seconds for timed exercises); null: none, last time's are hinted. */
+    val targetReps: Int? = null,
 )

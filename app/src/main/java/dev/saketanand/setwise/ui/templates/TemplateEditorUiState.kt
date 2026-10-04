@@ -25,6 +25,15 @@ data class TemplateEditorUiState(
         val CATEGORY_OPTIONS = listOf("Push", "Pull", "Legs", "Upper", "Lower", "Full body", "Core", "Cardio")
         val SET_RANGE = 1..10
         const val DEFAULT_SETS = 3
+
+        /** Target reps: from none, + starts at [FIRST_REPS]; − below the first value is none again. */
+        val REP_RANGE = 1..50
+        const val FIRST_REPS = 8
+
+        /** Timed targets, in seconds, in steps of [SECONDS_STEP]. */
+        val SECONDS_RANGE = 15..600
+        const val FIRST_SECONDS = 30
+        const val SECONDS_STEP = 15
     }
 }
 
@@ -50,6 +59,10 @@ data class TemplateEditorExercise(
     val targetSets: Int,
     /** Logged as time / distance, not in sets: no set count (always 1 block). */
     val isCardio: Boolean = false,
+    /** Reps each set aims for (seconds when [isTimed]); null: any, last time's are hinted. */
+    val targetReps: Int? = null,
+    /** Held for time (plank): [targetReps] is seconds. */
+    val isTimed: Boolean = false,
 )
 
 enum class TemplateEditorDialog {

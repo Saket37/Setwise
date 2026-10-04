@@ -89,6 +89,7 @@ class WorkoutRepositoryImpl(
                             workoutId = workoutId,
                             exerciseId = row.exercise.id,
                             position = index,
+                            targetReps = row.item.targetReps.takeIf { row.exercise.type != ExerciseType.CARDIO },
                         )
                     )
                     // Empty sets to fill in during the workout, one per planned set. Cardio is one

@@ -2,6 +2,7 @@ package dev.saketanand.setwise.ui.templates
 
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.TemplateDraftExercise
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -18,6 +19,39 @@ class TemplateEditorDraftsTest {
         assertEquals(4, draft.withSetsChanged(1, +1).exercises[0].targetSets)
         assertEquals(1, draft.withSetsChanged(2, -1).exercises[1].targetSets)
         assertEquals(10, draft.withSetsChanged(3, +1).exercises[2].targetSets)
+    }
+
+    @Test
+    fun `target reps start at 8, step by 1, and go back to none below 1`() {
+        val start = TemplateEditorDraft(name = "Push", exercises = listOf(row(1, 3)))
+        fun TemplateEditorDraft.reps() = exercises.single().targetReps
+
+        assertNull(start.withRepsChanged(1, -1).reps()) // none stays none
+        val eight = start.withRepsChanged(1, +1)
+        assertEquals(8, eight.reps())
+        assertEquals(9, eight.withRepsChanged(1, +1).reps())
+        val one = TemplateEditorDraft(name = "Push", exercises = listOf(row(1, 3).copy(targetReps = 1)))
+        assertNull(one.withRepsChanged(1, -1).reps())
+        val fifty = TemplateEditorDraft(name = "Push", exercises = listOf(row(1, 3).copy(targetReps = 50)))
+        assertEquals(50, fifty.withRepsChanged(1, +1).reps())
+    }
+
+    @Test
+    fun `a timed target is seconds in steps of 15, and cardio has none`() {
+        val plank = TemplateEditorDraft(name = "Core", exercises = listOf(row(1, 3).copy(isTimed = true)))
+        val thirty = plank.withRepsChanged(1, +1)
+        assertEquals(30, thirty.exercises.single().targetReps)
+        assertEquals(45, thirty.withRepsChanged(1, +1).exercises.single().targetReps)
+        assertNull(thirty.withRepsChanged(1, -1).withRepsChanged(1, -1).exercises.single().targetReps) // 30 → 15 → none
+
+        val run = TemplateEditorDraft(name = "Run", exercises = listOf(row(1, 1).copy(isCardio = true)))
+        assertNull(run.withRepsChanged(1, +1).exercises.single().targetReps)
+    }
+
+    @Test
+    fun `target reps are saved with the draft`() {
+        val draft = TemplateEditorDraft(name = "Push", exercises = listOf(row(1, 4).copy(targetReps = 5)))
+        assertEquals(TemplateDraftExercise(1, 4, 5), draft.toDraft(7).exercises.single())
     }
 
     @Test

@@ -12,7 +12,10 @@ fun Template.toEditorDraft() = TemplateEditorDraft(
     name = name,
     category = category,
     exercises = exercises.map {
-        TemplateEditorExercise(it.exerciseId, it.name, it.muscleGroup, if (it.isCardio) 1 else it.targetSets, it.isCardio)
+        TemplateEditorExercise(
+            it.exerciseId, it.name, it.muscleGroup, if (it.isCardio) 1 else it.targetSets, it.isCardio,
+            targetReps = it.targetReps.takeIf { _ -> !it.isCardio }, isTimed = it.isTimed,
+        )
     },
 )
 
@@ -20,7 +23,7 @@ fun TemplateEditorDraft.toDraft(templateId: Long) = TemplateDraft(
     id = templateId,
     name = name,
     category = category,
-    exercises = exercises.map { TemplateDraftExercise(it.exerciseId, if (it.isCardio) 1 else it.targetSets) },
+    exercises = exercises.map { TemplateDraftExercise(it.exerciseId, if (it.isCardio) 1 else it.targetSets, it.targetReps.takeIf { _ -> !it.isCardio }) },
 )
 
 fun TemplateEditorDraft.withCategoryToggled(option: String) = copy(category = if (category == option) null else option)
@@ -32,6 +35,27 @@ fun TemplateEditorDraft.withSetsChanged(exerciseId: Long, delta: Int) = copy(
         } else {
             it
         }
+    },
+)
+
+/**
+ * One step more or fewer target reps ([delta] = +1 / -1); seconds in steps of 15 for a timed
+ * exercise. From none, + starts at a first value; − below the smallest is none again.
+ */
+fun TemplateEditorDraft.withRepsChanged(exerciseId: Long, delta: Int) = copy(
+    exercises = exercises.map { exercise ->
+        if (exercise.exerciseId != exerciseId || exercise.isCardio) return@map exercise
+        val (range, first, step) = if (exercise.isTimed) {
+            Triple(TemplateEditorUiState.SECONDS_RANGE, TemplateEditorUiState.FIRST_SECONDS, TemplateEditorUiState.SECONDS_STEP)
+        } else {
+            Triple(TemplateEditorUiState.REP_RANGE, TemplateEditorUiState.FIRST_REPS, 1)
+        }
+        val current = exercise.targetReps
+        val next = when {
+            current == null -> if (delta > 0) first else null
+            else -> (current + delta * step).takeIf { it >= range.first }?.coerceAtMost(range.last)
+        }
+        exercise.copy(targetReps = next)
     },
 )
 
@@ -51,7 +75,7 @@ fun TemplateEditorDraft.withAdded(picked: List<Exercise>): TemplateEditorDraft {
     val added = picked.distinctBy { it.id }.filter { it.id !in present }
         .map {
             val isCardio = it.type == ExerciseType.CARDIO
-            TemplateEditorExercise(it.id, it.name, it.muscleGroup, if (isCardio) 1 else TemplateEditorUiState.DEFAULT_SETS, isCardio)
+            TemplateEditorExercise(it.id, it.name, it.muscleGroup, if (isCardio) 1 else TemplateEditorUiState.DEFAULT_SETS, isCardio, isTimed = it.isTimed)
         }
     return copy(exercises = exercises + added)
 }

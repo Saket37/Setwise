@@ -6,6 +6,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import dev.saketanand.setwise.data.local.entity.ExerciseEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
+import dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.TemplateDraft
 import dev.saketanand.setwise.domain.model.TemplateDraftExercise
@@ -72,6 +73,22 @@ class TemplateRepositoryTest {
         assertEquals("Push Day", templates.single().name)
         assertEquals("Push", templates.single().category)
         assertEquals(listOf(row to 4, bench to 2), templates.single().exercises.map { it.exerciseId to it.targetSets })
+    }
+
+    @Test
+    fun targetRepsAreSavedAndAWorkoutStartedFromTheTemplateHintsThem() = runTest {
+        val id = repository.saveTemplate(
+            TemplateDraft(0, "Strength A", null, listOf(TemplateDraftExercise(squat, 4, targetReps = 5), TemplateDraftExercise(bench, 3))),
+            Instant.EPOCH,
+        )
+        assertEquals(listOf(5, null), repository.getTemplate(id)!!.exercises.map { it.targetReps })
+
+        val workouts = WorkoutRepositoryImpl(db, db.workoutDao(), db.templateDao())
+        val workoutId = workouts.startWorkout(templateId = id, startedAt = Instant.ofEpochMilli(1_000))
+        val session = workouts.observeSession(workoutId).first()!!
+
+        assertEquals(listOf(5, null), session.exercises.map { it.targetReps })
+        assertEquals(4, session.exercises.first().sets.size)
     }
 
     @Test

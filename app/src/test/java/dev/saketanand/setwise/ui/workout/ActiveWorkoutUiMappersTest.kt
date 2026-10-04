@@ -48,6 +48,15 @@ class ActiveWorkoutUiMappersTest {
     }
 
     @Test
+    fun `a template's target reps are the reps hint, ahead of last time`() {
+        val previous = listOf(PreviousSet(60.0, 8, null), PreviousSet(60.0, 7, null))
+        val sets = SessionExercise(1, exercise(ExerciseType.STRENGTH), listOf(set(1), set(2), set(3)), previous, targetReps = 5).toUi().sets
+
+        assertEquals(listOf("5", "5", "5"), sets.map { it.repsHint })
+        assertEquals(listOf("60", "60", "60"), sets.map { it.weightHint }) // weights still from last time
+    }
+
+    @Test
     fun `a progression hint shows a change, never for a workout logged afterwards`() {
         val startedAt = at(2026, 10, 4, 18, 0, ZoneId.of("Asia/Kolkata"))
         fun done(daysBefore: Long, vararg reps: Int) =

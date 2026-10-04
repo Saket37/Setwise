@@ -9,6 +9,7 @@ sealed interface TemplateEditorAction {
 
     /** − / + on an exercise's set count. */
     data class OnSetsChange(val exerciseId: Long, val delta: Int) : TemplateEditorAction
+    data class OnRepsChange(val exerciseId: Long, val delta: Int) : TemplateEditorAction
 
     data class OnMoveUp(val exerciseId: Long) : TemplateEditorAction
     data class OnMoveDown(val exerciseId: Long) : TemplateEditorAction

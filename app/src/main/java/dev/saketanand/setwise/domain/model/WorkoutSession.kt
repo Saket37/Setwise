@@ -33,6 +33,8 @@ data class SessionExercise(
     val bestsBefore: PersonalBests = PersonalBests.None,
     /** Finished sessions of this exercise before this workout, newest first: its progression. */
     val history: List<ExerciseSession> = emptyList(),
+    /** The template's reps (or seconds) per set, when started from one that has them. */
+    val targetReps: Int? = null,
 ) {
     /** This workout's record in this exercise, if any. */
     val personalRecord: PersonalRecord? get() = PersonalRecords.find(exercise, sets, bestsBefore)

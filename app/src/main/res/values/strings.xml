@@ -660,6 +660,15 @@
     <string name="move_down">Move down</string>
     <string name="fewer_sets">Fewer sets for %1$s</string>
     <string name="more_sets">More sets for %1$s</string>
+    <plurals name="target_reps">
+        <item quantity="one">%d rep</item>
+        <item quantity="other">%d reps</item>
+    </plurals>
+    <string name="target_seconds">%d s</string>
+    <string name="target_any_reps">Any reps</string>
+    <string name="target_any_time">Any time</string>
+    <string name="fewer_reps">Fewer target reps for %1$s</string>
+    <string name="more_reps">More target reps for %1$s</string>
     <string name="template_options">Template options</string>
     <string name="delete_template">Delete template</string>
     <string name="delete_template_title">Delete %1$s?</string>

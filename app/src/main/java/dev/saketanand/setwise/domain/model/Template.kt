@@ -22,6 +22,10 @@ data class TemplateExercise(
     val muscleGroup: String = "",
     /** Logged as time / distance on the cardio screen, not in sets: [targetSets] is always 1. */
     val isCardio: Boolean = false,
+    /** Held for time (plank): [targetReps] is seconds. */
+    val isTimed: Boolean = false,
+    /** Reps each set aims for (seconds for a timed exercise); null: none. */
+    val targetReps: Int? = null,
 )
 
 /**
@@ -35,4 +39,4 @@ data class TemplateDraft(
     val exercises: List<TemplateDraftExercise>,
 )
 
-data class TemplateDraftExercise(val exerciseId: Long, val targetSets: Int)
+data class TemplateDraftExercise(val exerciseId: Long, val targetSets: Int, val targetReps: Int? = null)
