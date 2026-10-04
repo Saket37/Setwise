@@ -1,5 +1,5 @@
 [versions]
-agp = "9.1.0"
+agp = "9.4.1"
 kotlin = "2.4.20"
 ksp = "2.3.12"
 
@@ -21,6 +21,8 @@ mlkitGenaiPrompt = "1.0.0-beta4"
 mlkitGenaiSpeech = "1.0.0-alpha1"
 playServicesTextRecognition = "19.0.1"
 mlkitGenaiSchema = "1.0.0-alpha1"
+# Not used directly: ML Kit GenAI brings Guava 31.0.1-jre (advisories, #83); this is the floor.
+guava = "33.7.2-android"
 
 # Code checks
 kover = "0.9.11"
@@ -76,6 +78,7 @@ mlkit-genai-prompt = { group = "com.google.mlkit", name = "genai-prompt", versio
 mlkit-text-recognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version.ref = "playServicesTextRecognition" }
 mlkit-genai-speech-recognition = { group = "com.google.mlkit", name = "genai-speech-recognition", version.ref = "mlkitGenaiSpeech" }
 mlkit-genai-schema = { group = "com.google.mlkit", name = "genai-schema", version.ref = "mlkitGenaiSchema" }
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 mlkit-genai-schema-compiler = { group = "com.google.mlkit", name = "genai-schema-compiler", version.ref = "mlkitGenaiSchema" }
 
 # Code checks (detekt rule sets)

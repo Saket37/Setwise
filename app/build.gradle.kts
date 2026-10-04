@@ -101,6 +101,11 @@ dependencies {
     // Structured output: @Generable answer classes; KSP generates their schemas.
     implementation(libs.mlkit.genai.schema)
     ksp(libs.mlkit.genai.schema.compiler)
+    constraints {
+        // ML Kit GenAI brings Guava 31.0.1-jre (via kotlinx-coroutines-guava), which has two
+        // advisories: use the Android build at a fixed version instead (#83).
+        implementation(libs.guava) { because("GHSA-7g45-4rm6-3mm3, GHSA-5mg8-w23w-74h3") }
+    }
 
     // Unit tests
     testImplementation(libs.bundles.test)
@@ -124,6 +129,39 @@ detekt {
     parallel = true
     // Its type analysis doesn't see BuildConfig or kotlinx.serialization's generated serializer();
     // it reports those as compiler errors, which only blunt checks at those lines.
+}
+
+// AGP's own tool configurations in this module (the test platform that runs instrumented tests)
+// resolve libraries with known advisories (#82). Raise them to fixed versions; never lower one.
+// Remove an entry once AGP brings a fixed version itself.
+val toolingSecurityFloors = mapOf(
+    "org.bouncycastle" to "1.85", // GHSA-574f-3g2m-x479 and others; the jdk18on modules share one version
+    "org.apache.commons:commons-lang3" to "3.21.0", // GHSA-j288-q9x7-2f5v
+    "org.apache.httpcomponents:httpclient" to "4.5.14", // GHSA-7r82-7xv7-xcpj
+    "org.bitbucket.b_c:jose4j" to "0.9.7", // GHSA-3677-xxcr-wjqv
+    "org.jdom:jdom2" to "2.0.6.1", // GHSA-2363-cqg2-863c
+)
+
+/** "1.80.2" < "1.85", "2.0.6" < "2.0.6.1": by their numbers, part by part. */
+fun isLower(version: String, than: String): Boolean {
+    fun numbers(v: String) = Regex("\\d+").findAll(v).map { it.value.toInt() }.toList()
+    val a = numbers(version)
+    val b = numbers(than)
+    val difference = a.zip(b).firstOrNull { (x, y) -> x != y }
+    return if (difference != null) difference.first < difference.second else a.size < b.size
+}
+
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        val floor = toolingSecurityFloors["${requested.group}:${requested.name}"]
+            ?: toolingSecurityFloors[requested.group]?.takeIf { requested.name.endsWith("-jdk18on") }
+            ?: return@eachDependency
+        val requestedVersion = requested.version ?: return@eachDependency
+        if (isLower(requestedVersion, floor)) {
+            useVersion(floor)
+            because("Known advisories in $requestedVersion (#82)")
+        }
+    }
 }
 
 composeGuardCheck {
