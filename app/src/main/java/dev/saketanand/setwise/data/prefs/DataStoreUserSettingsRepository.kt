@@ -60,8 +60,8 @@ class DataStoreUserSettingsRepository(
         dataStore.edit { it[CHECK_IN_LAST_ASKED_ON] = day.toEpochDay() }
     }
 
-    override suspend fun setWeeklySummaryDismissed(weekStart: LocalDate) {
-        dataStore.edit { it[WEEKLY_SUMMARY_DISMISSED] = weekStart.toEpochDay() }
+    override suspend fun setWeeklySummaryDismissed(weekStart: LocalDate?) {
+        dataStore.edit { if (weekStart != null) it[WEEKLY_SUMMARY_DISMISSED] = weekStart.toEpochDay() else it.remove(WEEKLY_SUMMARY_DISMISSED) }
     }
 
     override suspend fun setWeeklyRecap(recap: WeeklyRecap) {

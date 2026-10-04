@@ -22,4 +22,7 @@ sealed interface SettingsAction {
 
     /** Cancel, back or outside the dialog. */
     data object OnDismissEditor : SettingsAction
+
+    /** "Show again": last week's summary back on Home. */
+    data object OnShowWeeklySummary : SettingsAction
 }

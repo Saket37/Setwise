@@ -23,7 +23,8 @@ interface UserSettingsRepository {
 
     suspend fun setCheckInLastAskedOn(day: LocalDate)
 
-    suspend fun setWeeklySummaryDismissed(weekStart: LocalDate)
+    /** The week (Monday) whose summary was closed; null shows it again. */
+    suspend fun setWeeklySummaryDismissed(weekStart: LocalDate?)
 
     suspend fun setWeeklyRecap(recap: WeeklyRecap)
 }

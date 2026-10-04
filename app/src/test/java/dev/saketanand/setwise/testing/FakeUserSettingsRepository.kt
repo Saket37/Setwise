@@ -22,6 +22,6 @@ class FakeUserSettingsRepository(initial: UserSettings = UserSettings()) : UserS
     override suspend fun setAskAboutUnloggedDays(ask: Boolean) = settings.update { it.copy(askAboutUnloggedDays = ask) }
     override suspend fun setOnboardingDone() = settings.update { it.copy(onboardingDone = true) }
     override suspend fun setCheckInLastAskedOn(day: LocalDate) = settings.update { it.copy(checkInLastAskedOn = day) }
-    override suspend fun setWeeklySummaryDismissed(weekStart: LocalDate) = settings.update { it.copy(weeklySummaryDismissedWeek = weekStart) }
+    override suspend fun setWeeklySummaryDismissed(weekStart: LocalDate?) = settings.update { it.copy(weeklySummaryDismissedWeek = weekStart) }
     override suspend fun setWeeklyRecap(recap: WeeklyRecap) = settings.update { it.copy(weeklyRecap = recap) }
 }

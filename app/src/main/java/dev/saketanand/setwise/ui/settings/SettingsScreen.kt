@@ -109,6 +109,12 @@ fun SettingsScreen(
                 supporting = stringResource(R.string.ask_about_unlogged_days_detail),
                 checked = uiState.askAboutUnloggedDays,
                 onCheckedChange = { onAction(SettingsAction.OnAskAboutUnloggedDaysChange(it)) },
+            )
+            SetwiseSettingsRow(
+                label = stringResource(R.string.settings_weekly_summary),
+                value = stringResource(if (uiState.isWeeklySummaryClosed) R.string.settings_weekly_summary_show else R.string.settings_weekly_summary_on_home),
+                supporting = stringResource(R.string.settings_weekly_summary_detail),
+                onClick = { if (uiState.isWeeklySummaryClosed) onAction(SettingsAction.OnShowWeeklySummary) },
                 showDivider = false,
             )
         }

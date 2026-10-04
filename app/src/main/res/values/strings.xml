@@ -385,6 +385,10 @@
     <string name="flat_since">flat since %1$s</string>
 
     <!-- Weekly summary (Home) -->
+    <string name="settings_weekly_summary">Last week\'s summary</string>
+    <string name="settings_weekly_summary_show">Show again</string>
+    <string name="settings_weekly_summary_on_home">On Home</string>
+    <string name="settings_weekly_summary_detail">Shown on Home all week for the week before, until you close it.</string>
     <string name="weekly_your_week">Your week</string>
     <string name="weekly_close">Close last week\'s summary</string>
     <string name="weekly_recap">Weekly recap</string>
