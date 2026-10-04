@@ -34,10 +34,24 @@ jobs:
       # Caches Gradle downloads and build outputs between runs; validates the Gradle wrapper.
       - uses: gradle/actions/setup-gradle@v6
 
-      # Debug build, JVM unit tests, and Android Lint (fails only on errors, not warnings).
-      # Instrumented tests (androidTest) need an emulator and are run locally for now.
-      - name: Build, test and lint
-        run: ./gradlew assembleDebug testDebugUnitTest lintDebug --stacktrace
+      # Debug build, JVM unit tests, line coverage (Kover; fails under the minimum set in
+      # app/build.gradle.kts) and Android Lint (fails only on errors, not warnings).
+      # Instrumented tests (androidTest) need an emulator and are run locally for now (#37).
+      - name: Build, test, coverage and lint
+        run: ./gradlew assembleDebug testDebugUnitTest koverXmlReportDebug koverHtmlReportDebug koverVerifyDebug lintDebug --stacktrace
+
+      # Coverage per package on the run's summary page.
+      - name: Coverage summary
+        if: always()
+        run: python3 .github/scripts/coverage_summary.py app/build/reports/kover/reportDebug.xml >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: app/build/reports/kover/htmlDebug/
+          retention-days: 7
 
       # When something fails, the reports are downloadable from the run's summary page.
       - name: Upload reports

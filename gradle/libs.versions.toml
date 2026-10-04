@@ -22,6 +22,9 @@ mlkitGenaiSpeech = "1.0.0-alpha1"
 playServicesTextRecognition = "19.0.1"
 mlkitGenaiSchema = "1.0.0-alpha1"
 
+# Code checks
+kover = "0.9.11"
+
 # Testing
 junit = "4.13.2"
 coroutinesTest = "1.10.2"
@@ -99,3 +102,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

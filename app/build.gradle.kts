@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -96,4 +97,23 @@ dependencies {
 
     // Instrumented tests (./gradlew connectedDebugAndroidTest)
     androidTestImplementation(libs.bundles.android.test)
+}
+
+kover {
+    reports {
+        verify {
+            rule("Line coverage") {
+                // About 62% when this was added; raise it as coverage grows, never lower it.
+                minBound(60)
+            }
+        }
+        filters {
+            excludes {
+                // Generated code: Room, KSP schema providers, BuildConfig, Compose singletons.
+                classes("*_Impl", "*_Impl\$*", "*_GeneratedProvider", "*.BuildConfig", "*ComposableSingletons*")
+                // Composables are checked on a device, not by JVM unit tests.
+                annotatedBy("androidx.compose.runtime.Composable", "androidx.compose.ui.tooling.preview.Preview")
+            }
+        }
+    }
 }
