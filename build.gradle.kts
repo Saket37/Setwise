@@ -12,6 +12,11 @@ buildscript {
             classpath("org.bouncycastle:bcprov-jdk18on:1.85")
             classpath("org.bouncycastle:bcpkix-jdk18on:1.85")
             classpath("org.bouncycastle:bcutil-jdk18on:1.85")
+            // AGP's other dependencies with advisories (#82); remove each once AGP brings a
+            // fixed version itself.
+            classpath("org.bitbucket.b_c:jose4j:0.9.7") // GHSA-3677-xxcr-wjqv
+            classpath("org.jdom:jdom2:2.0.6.1") // GHSA-2363-cqg2-863c
+            classpath("org.apache.commons:commons-lang3:3.21.0") // GHSA-j288-q9x7-2f5v
         }
     }
 }
