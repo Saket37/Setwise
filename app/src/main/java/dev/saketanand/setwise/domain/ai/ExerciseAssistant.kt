@@ -26,6 +26,7 @@ class ExerciseAssistant(private val model: OnDeviceModel) {
     /** [findMatch]'s clear cases alone: no model, no guess. */
     fun clearMatch(typed: String, library: List<Exercise>): Exercise? {
         library.firstOrNull { ExerciseNames.sameName(it.name, typed) }?.let { return it }
+        ExerciseNames.usualVariant(typed, library)?.let { return it }
         ExerciseNames.onlyOneBesidesEquipment(typed, library)?.let { return it }
         ExerciseNames.candidates(typed, library, 1).firstOrNull()
             ?.takeIf { (exercise, score) -> score >= ExerciseNames.CLOSE_MATCH && ExerciseNames.coversCore(typed, exercise.name) }

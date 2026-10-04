@@ -180,7 +180,7 @@ private fun AnsweredWorkoutRow(workout: AnsweredWorkout, onClick: () -> Unit) {
             Text(workout.name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
             workout.highlight?.let { set ->
                 Text(
-                    text = listOfNotNull("${set.exerciseName.substringBefore(" (")} ${set.short(locale)}", stringResource(R.string.ask_pr).takeIf { set.isPr }).joinToString(" · "),
+                    text = listOfNotNull("${set.exerciseName} ${set.short(locale)}", stringResource(R.string.ask_pr).takeIf { set.isPr }).joinToString(" · "),
                     style = MaterialTheme.typography.numberSmall,
                     color = if (set.isPr) MaterialTheme.colorScheme.pr else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -297,8 +297,8 @@ private fun periodLabel(name: PeriodName): String = when (name) {
     is PeriodName.InMonth -> stringResource(R.string.ask_period_in, name.month.format(DateTimeFormatter.ofPattern("LLLL yyyy", currentLocale())))
 }
 
-/** "Back Squat (Barbell)" → "Back Squat": how it's said. */
-private fun dev.saketanand.setwise.domain.model.Exercise.shortName() = name.substringBefore(" (")
+/** The full name: with equipment variants, "Bicep Curl" alone doesn't say which. */
+private fun dev.saketanand.setwise.domain.model.Exercise.shortName() = name
 
 /** "100 × 5", "12 reps", "45 s". */
 private fun AnsweredSet.short(locale: Locale): String = when {

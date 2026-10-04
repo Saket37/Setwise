@@ -22,8 +22,23 @@ class ExerciseSeedTest {
     }
 
     @Test
-    fun `seed file has 128 exercises`() {
-        assertEquals(128, seed.exercises.size)
+    fun `seed file has 204 exercises`() {
+        assertEquals(204, seed.exercises.size)
+    }
+
+    @Test
+    fun `every rename leads to an exercise in the file, and away from one that isn't`() {
+        val names = seed.exercises.map { it.name }.toSet()
+        seed.renames.forEach { rename ->
+            assertTrue(rename.to, rename.to in names)
+            assertTrue(rename.from, rename.from !in names)
+        }
+    }
+
+    @Test
+    fun `every equipment is one the app offers, or a piece of its own`() {
+        val own = setOf("Ab Wheel", "Sled", "Jump Rope")
+        seed.exercises.forEach { assertTrue(it.name, it.equipment in dev.saketanand.setwise.domain.model.ExerciseCatalog.EQUIPMENT || it.equipment in own) }
     }
 
     @Test

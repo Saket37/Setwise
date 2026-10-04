@@ -75,7 +75,7 @@ object WeeklySummaryRules {
         val volumeBefore = before.volume()
 
         val best = sets.maxWithOrNull(compareBy({ it.isPr }, { score(it) }))?.let {
-            BestSetFact(it.exerciseName.substringBefore(" ("), it.weightKg?.takeIf { kg -> kg > 0 }, it.reps, it.durationSec, it.isPr)
+            BestSetFact(it.exerciseName, it.weightKg?.takeIf { kg -> kg > 0 }, it.reps, it.durationSec, it.isPr)
         }
         val partChange = BodyPart.entries.mapNotNull { part ->
             val now = sets.filter { it.muscleGroup in part.groups }.volume()
@@ -89,7 +89,7 @@ object WeeklySummaryRules {
         val plateau = sets.map { it.exerciseId }.distinct().firstNotNullOfOrNull { id ->
             val exercise = byId[id] ?: return@firstNotNullOfOrNull null
             val sessions = log.filter { it.exerciseId == id && it.startedAt.isBefore(weekEndAt) }.toSessions()
-            Progression.plateau(exercise, sessions, weekEndAt)?.let { PlateauFact(id, exercise.name.substringBefore(" ("), it.weeks) }
+            Progression.plateau(exercise, sessions, weekEndAt)?.let { PlateauFact(id, exercise.name, it.weeks) }
         }
 
         return WeekFacts(

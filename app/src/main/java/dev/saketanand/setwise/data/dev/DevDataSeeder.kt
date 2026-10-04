@@ -171,10 +171,10 @@ class DevDataSeeder(
             Plan(
                 "Push Day", "Push", listOf(
                     PlannedExercise("Bench Press (Barbell)", 4, 62.5, Trend.Ready),
-                    PlannedExercise("Incline Dumbbell Press", 3, 24.0),
+                    PlannedExercise("Incline Bench Press (Dumbbell)", 3, 24.0),
                     PlannedExercise("Overhead Press (Barbell)", 3, 40.0, Trend.Plateau),
                     PlannedExercise("Lateral Raise (Dumbbell)", 3, 10.0),
-                    PlannedExercise("Triceps Pushdown (Rope)", 3, 25.0),
+                    PlannedExercise("Triceps Pushdown (Cable - Rope)", 3, 25.0),
                     PlannedExercise("Chest Dip", 3, null),
                 )
             ),
@@ -183,8 +183,8 @@ class DevDataSeeder(
                     PlannedExercise("Deadlift (Barbell)", 3, 120.0),
                     PlannedExercise("Bent-over Row (Barbell)", 3, 60.0),
                     PlannedExercise("Pull-up", 3, null),
-                    PlannedExercise("Face Pull", 3, 20.0),
-                    PlannedExercise("Barbell Curl", 3, 30.0),
+                    PlannedExercise("Face Pull (Rope)", 3, 20.0),
+                    PlannedExercise("Bicep Curl (Barbell)", 3, 30.0),
                 )
             ),
             Plan(

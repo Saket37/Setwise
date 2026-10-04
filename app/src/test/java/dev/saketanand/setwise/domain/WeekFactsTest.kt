@@ -44,9 +44,9 @@ class WeekFactsTest {
         assertEquals(Duration.ofMinutes(120), facts.timeTrained)
         assertEquals(1, facts.prs)
         assertEquals(100.0 * 5 + 40.0 * 6 + 42.5 * 4, facts.volumeKg, 0.01) // squat 1 Oct, OHP 30 Sep and 2 Oct
-        assertEquals(BestSetFact("Back Squat", 100.0, 5, null, isPr = true), facts.bestSet)
+        assertEquals(BestSetFact("Back Squat (Barbell)", 100.0, 5, null, isPr = true), facts.bestSet)
         assertEquals(BodyPartChange(BodyPart.Legs, 11), facts.bodyPartChange) // 500 vs 450
-        assertEquals(PlateauFact(2, "Overhead Press", 3), facts.plateau) // 9 Sep – 2 Oct
+        assertEquals(PlateauFact(2, "Overhead Press (Barbell)", 3), facts.plateau) // 9 Sep – 2 Oct
     }
 
     @Test

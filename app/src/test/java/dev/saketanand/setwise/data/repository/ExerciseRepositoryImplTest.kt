@@ -76,6 +76,8 @@ class ExerciseRepositoryImplTest {
         private val rows: List<ExerciseEntity>,
         private val recent: List<RecentExerciseRow> = emptyList(),
     ) : ExerciseDao {
+        override suspend fun renameBuiltIn(from: String, to: String): Int = 0
+
         var lastQuery: String? = null
         var lastMuscleGroup: String? = null
 

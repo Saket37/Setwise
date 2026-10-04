@@ -119,4 +119,17 @@ interface ExerciseDao {
      */
     @Insert
     suspend fun insert(exercise: ExerciseEntity): Long
+
+    /**
+     * Renames a built-in exercise (never one the user made), unless an exercise already has the
+     * new name. Returns 1 if renamed. Its id, and so its history, stay the same.
+     */
+    @Query(
+        """
+        UPDATE exercises SET name = :to
+        WHERE name = :from AND isCustom = 0
+          AND NOT EXISTS (SELECT 1 FROM exercises WHERE name = :to)
+        """
+    )
+    suspend fun renameBuiltIn(from: String, to: String): Int
 }
