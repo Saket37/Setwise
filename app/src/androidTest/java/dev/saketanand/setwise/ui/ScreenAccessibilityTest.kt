@@ -10,8 +10,6 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SdkSuppress
-import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResultUtils.matchesChecks
-import com.google.android.apps.common.testing.accessibility.framework.checks.TouchTargetSizeCheck
 import com.google.android.apps.common.testing.accessibility.framework.integrations.espresso.AccessibilityValidator
 import dev.saketanand.setwise.domain.model.DayState
 import dev.saketanand.setwise.ui.designsystem.theme.SetwiseTheme
@@ -36,7 +34,6 @@ import dev.saketanand.setwise.ui.workout.SampleActiveWorkoutState
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.time.Duration.Companion.minutes
-import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -60,14 +57,10 @@ class ScreenAccessibilityTest {
     fun homeFirstRun() = check { HomeScreen(uiState = HomeUiState(isLoading = false), onAction = {}) }
 
     @Test
-    fun activeWorkout() = check(knownSmallTouchTargets = true) {
-        ActiveWorkoutScreen(uiState = SampleActiveWorkoutState, onAction = {})
-    }
+    fun activeWorkout() = check { ActiveWorkoutScreen(uiState = SampleActiveWorkoutState, onAction = {}) }
 
     @Test
-    fun workoutSummary() = check(knownSmallTouchTargets = true) {
-        WorkoutSummaryScreen(uiState = SampleWorkoutSummaryState, onAction = {})
-    }
+    fun workoutSummary() = check { WorkoutSummaryScreen(uiState = SampleWorkoutSummaryState, onAction = {}) }
 
     @Test
     fun history() = check { HistoryScreen(uiState = historyState, onAction = {}) }
@@ -92,17 +85,9 @@ class ScreenAccessibilityTest {
         )
     }
 
-    /**
-     * [screen] in light, then dark theme, checked as it first appears.
-     * @param knownSmallTouchTargets the screen's touch targets under 48dp are tracked in #34:
-     *   skip only that check until it's fixed (every other check still runs).
-     */
-    private fun check(knownSmallTouchTargets: Boolean = false, screen: @Composable () -> Unit) {
-        val validator = AccessibilityValidator().setRunChecksFromRootView(true)
-        if (knownSmallTouchTargets) {
-            validator.setSuppressingResultMatcher(matchesChecks(equalTo(TouchTargetSizeCheck::class.java)))
-        }
-        compose.enableAccessibilityChecks(validator)
+    /** [screen] in light, then dark theme, checked as it first appears. */
+    private fun check(screen: @Composable () -> Unit) {
+        compose.enableAccessibilityChecks(AccessibilityValidator().setRunChecksFromRootView(true))
         var dark by mutableStateOf(false)
         compose.setContent { SetwiseTheme(darkTheme = dark) { screen() } }
         compose.onRoot().tryPerformAccessibilityChecks()

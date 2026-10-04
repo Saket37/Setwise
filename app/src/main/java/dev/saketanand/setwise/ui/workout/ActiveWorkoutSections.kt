@@ -257,7 +257,8 @@ private fun SetTableHeader(kind: SetKind) {
 @Composable
 private fun SetTableRow(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        // 48dp: the ✓ button's full touch target, ticked-off rows (text, no fields) included.
+        modifier = modifier.fillMaxWidth().heightIn(min = 48.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(SetColumns.Gap),
         content = content,
