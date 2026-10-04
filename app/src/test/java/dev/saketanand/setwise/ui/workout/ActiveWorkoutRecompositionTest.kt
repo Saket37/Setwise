@@ -65,9 +65,9 @@ class ActiveWorkoutRecompositionTest {
         change { it.copy(rest = RestUi(endsAtElapsed = compose.mainClock.currentTime + 60_000, totalMillis = 90_000, nextSetNumber = 3, nextExerciseName = null)) }
         counter.reset()
         compose.mainClock.advanceTimeBy(1_000)
-        // Measured: 89 for a second of rest: the whole bar recomposes on each of its 10 updates
-        // a second (#77); fixing that should bring this to a few scopes.
-        assertAtMost(95, "1 s of rest")
+        // Measured: 20 for a second of rest and the clock. Only the countdown text (once a second)
+        // and the clock recompose; the progress line moves at draw time (#77; it was 89).
+        assertAtMost(24, "1 s of rest")
     }
 
     @Test
