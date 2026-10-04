@@ -41,4 +41,12 @@ sealed interface SettingsAction {
 
     /** Opens Body composition (handled in SettingsScreenRoot). */
     data object OnBodyCompositionClick : SettingsAction
+
+    data object OnDefaultRestClick : SettingsAction
+
+    /** Null: each exercise's own rest. */
+    data class OnSaveDefaultRest(val seconds: Int?) : SettingsAction
+    data class OnRestSoundChange(val on: Boolean) : SettingsAction
+    data class OnRestVibrateChange(val on: Boolean) : SettingsAction
+    data class OnWorkoutNotificationChange(val on: Boolean) : SettingsAction
 }

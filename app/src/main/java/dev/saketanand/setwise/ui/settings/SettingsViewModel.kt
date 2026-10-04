@@ -48,6 +48,10 @@ class SettingsViewModel(
             bodyWeightKg = settings.bodyWeightKg,
             trainingDays = settings.trainingDays,
             askAboutUnloggedDays = settings.askAboutUnloggedDays,
+            restSecOverride = settings.restSecOverride,
+            restSound = settings.restSound,
+            restVibrate = settings.restVibrate,
+            workoutNotification = settings.workoutNotification,
             isWeeklySummaryClosed = settings.weeklySummaryDismissedWeek != null &&
                 settings.weeklySummaryDismissedWeek == WeeklySummaryRules.lastWeekStart(dateProvider.now().atZone(dateProvider.zone).toLocalDate()),
             editor = editor,
@@ -62,6 +66,14 @@ class SettingsViewModel(
 
     fun onAction(action: SettingsAction) {
         when (action) {
+            SettingsAction.OnDefaultRestClick -> editor.value = SettingsEditor.DefaultRest
+            is SettingsAction.OnSaveDefaultRest -> {
+                editor.value = null
+                save { userSettings.setRestSecOverride(action.seconds) }
+            }
+            is SettingsAction.OnRestSoundChange -> save { userSettings.setRestSound(action.on) }
+            is SettingsAction.OnRestVibrateChange -> save { userSettings.setRestVibrate(action.on) }
+            is SettingsAction.OnWorkoutNotificationChange -> save { userSettings.setWorkoutNotification(action.on) }
             SettingsAction.OnNameClick -> editor.value = SettingsEditor.Name
             is SettingsAction.OnSaveName -> {
                 editor.value = null

@@ -24,6 +24,15 @@ interface UserSettingsRepository {
 
     suspend fun setSex(sex: Sex?)
 
+    /** Null: each exercise's own rest. */
+    suspend fun setRestSecOverride(seconds: Int?)
+
+    suspend fun setRestSound(on: Boolean)
+
+    suspend fun setRestVibrate(on: Boolean)
+
+    suspend fun setWorkoutNotification(on: Boolean)
+
     /** False (nothing saved) if the height is implausible. */
     suspend fun setHeightCm(cm: Double?): Boolean
 

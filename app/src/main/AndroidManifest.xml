@@ -52,7 +52,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Rest countdown between sets of a workout the user is logging" />
+                android:value="The workout the user is logging: its elapsed time and sets done, and the rest countdown between sets" />
         </service>
         <!-- Report photos from the camera (Body composition), in the app's cache -->
         <provider

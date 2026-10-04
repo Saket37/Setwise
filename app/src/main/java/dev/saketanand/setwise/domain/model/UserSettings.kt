@@ -26,6 +26,13 @@ data class UserSettings(
     /** For the BMR formula only; null = not given. */
     val sex: Sex? = null,
     val heightCm: Double? = null,
+    /** Rest after every set; null = each exercise's own (its library default). */
+    val restSecOverride: Int? = null,
+    /** "Rest over": sound and vibration (each can be off). */
+    val restSound: Boolean = true,
+    val restVibrate: Boolean = true,
+    /** An ongoing notification while a workout runs (time, sets done; the rest countdown). */
+    val workoutNotification: Boolean = true,
 ) {
     /** Age this year (from the birth year). */
     fun ageOn(today: LocalDate): Int? = birthYear?.let { today.year - it }
@@ -33,6 +40,9 @@ data class UserSettings(
     companion object {
         /** A plausible body weight; anything outside is a typo. */
         val BODY_WEIGHT_RANGE_KG = 20.0..400.0
+
+        /** The default rests offered (seconds). */
+        val REST_CHOICES = listOf(30, 45, 60, 90, 120, 150, 180, 240, 300)
     }
 }
 

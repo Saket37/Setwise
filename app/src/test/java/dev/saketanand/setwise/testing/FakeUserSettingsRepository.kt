@@ -38,4 +38,8 @@ class FakeUserSettingsRepository(initial: UserSettings = UserSettings()) : UserS
         settings.update { it.copy(heightCm = cm) }
         return true
     }
+    override suspend fun setRestSecOverride(seconds: Int?) = settings.update { it.copy(restSecOverride = seconds) }
+    override suspend fun setRestSound(on: Boolean) = settings.update { it.copy(restSound = on) }
+    override suspend fun setRestVibrate(on: Boolean) = settings.update { it.copy(restVibrate = on) }
+    override suspend fun setWorkoutNotification(on: Boolean) = settings.update { it.copy(workoutNotification = on) }
 }

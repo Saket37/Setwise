@@ -50,6 +50,7 @@ import dev.saketanand.setwise.domain.ai.Heard
 import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.testing.FakeSpeechInput
 import kotlinx.coroutines.test.advanceTimeBy
+import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ActiveWorkoutViewModelTest {
@@ -64,6 +65,7 @@ class ActiveWorkoutViewModelTest {
 
     private val model = FakeOnDeviceModel()
     private val speech = FakeSpeechInput(availability = ModelAvailability.Unavailable)
+    private val settings = FakeUserSettingsRepository()
 
     private fun TestScope.viewModel() =
         ActiveWorkoutViewModel(
@@ -74,6 +76,7 @@ class ActiveWorkoutViewModelTest {
             quickLogInterpreter = QuickLogInterpreter(model, ExerciseAssistant(model)),
             exerciseRepository = FakeLibrary,
             speechInput = speech,
+            userSettings = settings,
         ).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
         }
@@ -162,6 +165,16 @@ class ActiveWorkoutViewModelTest {
         vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "", reps = ""))
 
         assertEquals(FakeRestTimer.Start(WORKOUT_ID, 120, NextUp.Set(2)), restTimer.starts.single())
+    }
+
+    @Test
+    fun `settings' default rest replaces the exercise's own`() = runTest(dispatcher) {
+        settings.setRestSecOverride(90)
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "", reps = ""))
+
+        assertEquals(90, restTimer.starts.single().durationSec)
     }
 
     @Test
