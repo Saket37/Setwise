@@ -1,6 +1,8 @@
 # Code checks on every pull request (and on main after a merge), in parallel jobs:
 #  - Android Lint: Android-specific problems (API levels, resources, accessibility, security).
 #  - Kotlin checks: detekt with the Compose rules and ktlint formatting (config/detekt/).
+#  - Compose stability: Compose Guard fails when a composable stops being skippable or gains
+#    unstable parameters, compared with the golden reports in app/compose_reports/.
 # Lint and detekt findings also go to GitHub code scanning, so they show on the PR's lines.
 name: Code quality
 
@@ -86,3 +88,20 @@ jobs:
           name: detekt-report
           path: app/build/reports/detekt/*.html
           retention-days: 7
+
+  compose-stability:
+    name: Compose stability
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6
+
+      # Compares the Compose compiler's reports with app/compose_reports/. After an intended
+      # change, regenerate them: ./gradlew debugComposeCompilerGenerate
+      - name: Compose Guard
+        run: ./gradlew debugComposeCompilerCheck --stacktrace

@@ -1,6 +1,6 @@
 # Builds the app and runs the unit tests with coverage on every pull request (and on main after
 # a merge). The ruleset on main requires the "Build and unit tests" job to pass before a PR can
-# be merged. Code checks (Android Lint, detekt) are in code-quality.yml.
+# be merged. Code checks (Android Lint, detekt, Compose stability) are in code-quality.yml.
 name: Android CI
 
 on:
@@ -35,8 +35,8 @@ jobs:
       # Caches Gradle downloads and build outputs between runs; validates the Gradle wrapper.
       - uses: gradle/actions/setup-gradle@v6
 
-      # Debug build, JVM unit tests and line coverage (Kover), which fails under the minimum
-      # set in app/build.gradle.kts.
+      # Debug build, JVM unit tests (Compose recomposition tests included, on Robolectric), and
+      # line coverage (Kover), which fails under the minimum set in app/build.gradle.kts.
       # Instrumented tests (androidTest) need an emulator and are run locally for now (#37).
       - name: Build, test and check coverage
         run: ./gradlew assembleDebug testDebugUnitTest koverXmlReportDebug koverHtmlReportDebug koverVerifyDebug --stacktrace

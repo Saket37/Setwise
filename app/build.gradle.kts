@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.room)
     alias(libs.plugins.kover)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.compose.guard)
 }
 
 android {
@@ -52,6 +53,8 @@ android {
         // JVM unit tests run against stub Android classes: make calls like Log.e() no-ops
         // instead of throwing "not mocked", so error paths can be tested.
         unitTests.isReturnDefaultValues = true
+        // Robolectric (Compose UI tests on the JVM) needs the app's resources.
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -99,6 +102,11 @@ dependencies {
 
     // Unit tests
     testImplementation(libs.bundles.test)
+    // Compose UI on the JVM (Robolectric): recomposition tests
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.robolectric)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Instrumented tests (./gradlew connectedDebugAndroidTest)
     androidTestImplementation(libs.bundles.android.test)
@@ -114,6 +122,12 @@ detekt {
     parallel = true
     // Its type analysis doesn't see BuildConfig or kotlinx.serialization's generated serializer();
     // it reports those as compiler errors, which only blunt checks at those lines.
+}
+
+composeGuardCheck {
+    // Strong skipping (default) skips composables with unstable parameters by instance
+    // equality, so only a composable that can't skip at all is a regression worth failing on.
+    ignoreUnstableParamsOnSkippableComposables = true
 }
 
 dependencies {
