@@ -2,16 +2,19 @@ package dev.saketanand.setwise.ui.navigation
 
 import android.content.Context
 import android.content.Intent
-import dev.saketanand.setwise.MainActivity
 import android.net.Uri
+import dev.saketanand.setwise.MainActivity
 
 /** A screen something outside the app's UI (a notification) asks to open. */
 sealed interface AppLink {
     /** The active workout, e.g. from the rest timer's notifications. */
     data class Workout(val workoutId: Long) : AppLink
 
-    /** Text shared to Setwise (e.g. a workout from Strong, or a CSV file's content): the import screen, with it. */
+    /** Text shared to Setwise (e.g. a workout from Strong): the import screen, with it. */
     data class SharedText(val text: String) : AppLink
+
+    /** A file shared to Setwise (a CSV export): the import screen reads it. */
+    data class SharedFile(val uri: String) : AppLink
 
     /** Screenshots shared to Setwise: the import screen reads them. */
     data class SharedImages(val uris: List<String>) : AppLink
@@ -33,26 +36,25 @@ object AppLinks {
                 when (link) {
                     is AppLink.Workout -> putExtra(EXTRA_WORKOUT_ID, link.workoutId)
                     is AppLink.SharedText -> setAction(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, link.text)
-                    is AppLink.SharedImages -> Unit // only ever received
+                    is AppLink.SharedFile, is AppLink.SharedImages -> Unit // only ever received
                 }
             }
 
     /**
-     * @param readText reads a shared file's text (a CSV export); the activity has the permission
-     *   to read it only now, while handling the intent.
+     * The link in [intent], if any. A shared file or screenshots come as links the import screen
+     * reads: the share's read permission lasts while this activity does.
      */
-    fun from(intent: Intent?, readText: (Uri) -> String? = { null }): AppLink? {
-        val isSend = intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_SEND_MULTIPLE
-        if (isSend && intent?.type?.startsWith("image/") == true) {
-            val uris = streams(intent).map { it.toString() }
-            return uris.takeIf { it.isNotEmpty() }?.let(AppLink::SharedImages)
+    fun from(intent: Intent?): AppLink? {
+        if (intent == null) return null
+        if (intent.action != Intent.ACTION_SEND && intent.action != Intent.ACTION_SEND_MULTIPLE) {
+            return intent.getLongExtra(EXTRA_WORKOUT_ID, NONE).takeIf { it != NONE }?.let(AppLink::Workout)
         }
-        if (isSend) {
-            intent?.getStringExtra(Intent.EXTRA_TEXT)?.takeIf { it.isNotBlank() }?.take(MAX_SHARED_TEXT)?.let { return AppLink.SharedText(it) }
-            streams(intent!!).firstOrNull()?.let(readText)?.takeIf { it.isNotBlank() }?.take(MAX_SHARED_TEXT)?.let { return AppLink.SharedText(it) }
-            return null
+        val uris = streams(intent).map { it.toString() }
+        return when {
+            intent.type?.startsWith("image/") == true -> uris.takeIf { it.isNotEmpty() }?.let(AppLink::SharedImages)
+            else -> intent.getStringExtra(Intent.EXTRA_TEXT)?.takeIf { it.isNotBlank() }?.take(MAX_SHARED_TEXT)?.let(AppLink::SharedText)
+                ?: uris.firstOrNull()?.let(AppLink::SharedFile)
         }
-        return intent?.getLongExtra(EXTRA_WORKOUT_ID, NONE)?.takeIf { it != NONE }?.let(AppLink::Workout)
     }
 
     @Suppress("DEPRECATION")
@@ -60,8 +62,8 @@ object AppLinks {
         intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
             ?: listOfNotNull(intent.getParcelableExtra(Intent.EXTRA_STREAM))
 
-    /** Plenty for a few hundred workouts as CSV; keeps the navigation argument manageable. */
-    private const val MAX_SHARED_TEXT = 400_000
+    /** Plenty for dozens of shared workouts; keeps the navigation argument small. */
+    private const val MAX_SHARED_TEXT = 100_000
 
     private const val NONE = -1L
 }

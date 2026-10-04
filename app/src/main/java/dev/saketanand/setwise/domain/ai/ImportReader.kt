@@ -15,6 +15,12 @@ import java.time.LocalTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 
+/** Reads a text file the user chose or shared (a CSV export). */
+interface FileTextReader {
+    /** The text at [uri] (a content:// or file:// link), at most [maxChars]; throws if it can't be read. */
+    suspend fun read(uri: String, maxChars: Int): String
+}
+
 /**
  * Turns what the user brings into workouts to import: a CSV export, Strong's shared text,
  * screenshots, or any other text. Code first ([CsvWorkoutParser], [StrongShareParser],
@@ -25,6 +31,7 @@ import kotlinx.serialization.Serializable
  */
 class ImportReader(
     private val textReader: TextReader,
+    private val fileReader: FileTextReader,
     private val model: OnDeviceModel,
 ) {
 
@@ -40,6 +47,9 @@ class ImportReader(
         val byModel = modelWorkouts(text)
         return Read(byModel, Source.Model.takeIf { byModel.isNotEmpty() })
     }
+
+    /** A chosen or shared file (a CSV export), read as [fromText]; throws if it can't be read. */
+    suspend fun fromFile(uri: String): Read = fromText(fileReader.read(uri, MAX_FILE_CHARS))
 
     /**
      * Screenshots: their text read on the phone. A screenshot of Strong-style text with no workout
@@ -68,6 +78,8 @@ class ImportReader(
     private suspend fun modelWorkouts(text: String): List<SharedWorkout> {
         if (text.isBlank() || model.availability() != ModelAvailability.Ready) return emptyList()
         return chunks(text).mapNotNull { chunk ->
+            // Any failure of the model skips this chunk; OnDeviceModel doesn't narrow what it throws.
+            @Suppress("TooGenericExceptionCaught")
             val answer = try {
                 model.generate(prompt(chunk), ModelImportedWorkout.OUTPUT)
             } catch (e: CancellationException) {
@@ -84,6 +96,9 @@ class ImportReader(
     companion object {
         private const val TAG = "ImportReader"
         private const val MAX_CHUNK = 1_200
+
+        /** Years of one-row-per-set exports fit; a bigger file is read up to this. */
+        private const val MAX_FILE_CHARS = 8_000_000
 
         /** A stand-in header, to read a screenshot that continues another's workout. */
         private const val CONTINUED = "Continued\n1 January 2000 at 12:00"
@@ -146,7 +161,8 @@ data class ModelImportedWorkout(
         val OUTPUT = ModelOutput(
             ModelImportedWorkout::class,
             serializer(),
-            """{"name": "<name>", "date": "<yyyy-mm-dd>", "time": "<hh:mm>", "sets": [{"exercise": "<exercise>", "weightKg": <kg or 0>, "reps": <reps or 0>, "seconds": <seconds or 0>}]}""",
+            """{"name": "<name>", "date": "<yyyy-mm-dd>", "time": "<hh:mm>", "sets": [""" +
+                """{"exercise": "<exercise>", "weightKg": <kg or 0>, "reps": <reps or 0>, "seconds": <seconds or 0>}]}""",
         )
     }
 }

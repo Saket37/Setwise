@@ -29,7 +29,11 @@ sealed interface Route {
     @Serializable data object Body : Route
 
     /** Import workouts shared from another app (Strong); [sharedText]: what was shared, if any. */
-    @Serializable data class ImportWorkouts(val sharedText: String = "", val sharedImages: List<String> = emptyList()) : Route
+    @Serializable data class ImportWorkouts(
+        val sharedText: String = "",
+        val sharedFile: String = "",
+        val sharedImages: List<String> = emptyList(),
+    ) : Route
 
     // Workout flow
 

@@ -14,7 +14,12 @@ class ImportReaderTest {
 
     private val model = FakeOnDeviceModel()
     private var screenshots: Map<String, List<OcrLine>> = emptyMap()
-    private val reader = ImportReader(object : TextReader { override suspend fun read(uri: String) = screenshots.getValue(uri) }, model)
+    private var files: Map<String, String> = emptyMap()
+    private val reader = ImportReader(
+        textReader = object : TextReader { override suspend fun read(uri: String) = screenshots.getValue(uri) },
+        fileReader = object : FileTextReader { override suspend fun read(uri: String, maxChars: Int) = files.getValue(uri).take(maxChars) },
+        model = model,
+    )
 
     /** Prose no code reader takes apart. */
     private val notes = "Leg day 2 Oct 2026, 6pm: squatted 100 for sets of 5, 5 and then 4"
@@ -32,7 +37,7 @@ class ImportReaderTest {
     @Test
     fun `other text goes to the model, kept only with the text's numbers`() = runTest {
         model.availability = ModelAvailability.Ready
-        model.answer = { answer(sets = """{"exercise": "Squat", "weightKg": 100, "reps": 5, "seconds": 0}, {"exercise": "Squat", "weightKg": 100, "reps": 5, "seconds": 0}, {"exercise": "Squat", "weightKg": 100, "reps": 4, "seconds": 0}""") }
+        model.answer = { answer(sets = listOf(squat(5), squat(5), squat(4)).joinToString()) }
 
         val read = reader.fromText(notes)
 
@@ -42,10 +47,18 @@ class ImportReaderTest {
         assertEquals(listOf(SharedSet(100.0, 5), SharedSet(100.0, 5), SharedSet(100.0, 4)), leg.exercises.single().sets)
 
         // 105 isn't in the text: the workout is dropped, and nothing reads it.
-        model.answer = { answer(sets = """{"exercise": "Squat", "weightKg": 105, "reps": 5, "seconds": 0}""") }
+        model.answer = { answer(sets = squat(5, kg = 105)) }
         val invented = reader.fromText(notes)
         assertTrue(invented.workouts.isEmpty())
         assertNull(invented.source)
+    }
+
+    @Test
+    fun `a chosen or shared file is read like text`() = runTest {
+        files = mapOf("export.csv" to "Date,Exercise,Weight (kg),Reps\n2026-09-29,Bench Press,60,8")
+        val read = reader.fromFile("export.csv")
+        assertEquals(ImportReader.Source.Csv, read.source)
+        assertEquals(SharedSet(60.0, 8), read.workouts.single().exercises.single().sets.single())
     }
 
     @Test
@@ -85,6 +98,8 @@ class ImportReaderTest {
             assertEquals(order.toString(), listOf("Bicep Curl (Barbell)", "Skullcrusher (Barbell)").toSet(), workout.exercises.map { it.name }.toSet())
         }
     }
+
+    private fun squat(reps: Int, kg: Int = 100) = """{"exercise": "Squat", "weightKg": $kg, "reps": $reps, "seconds": 0}"""
 
     private fun answer(sets: String) =
         """{"name": "Leg day", "date": "2026-10-02", "time": "18:00", "sets": [$sets]}"""

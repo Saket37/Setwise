@@ -1,5 +1,8 @@
 package dev.saketanand.setwise.ui.importing
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.domain.ai.ImportReader
 import dev.saketanand.setwise.domain.ai.WorkoutImporter
 import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
@@ -45,38 +49,20 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import java.time.format.DateTimeFormatter
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import dev.saketanand.setwise.domain.ai.ImportReader
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
-fun ImportScreenRoot(sharedText: String, sharedImages: List<String>, onBack: () -> Unit, onOpenHistory: () -> Unit) {
-    val viewModel: ImportViewModel = koinViewModel { parametersOf(sharedText, sharedImages) }
+fun ImportScreenRoot(shared: SharedImport, onBack: () -> Unit, onOpenHistory: () -> Unit) {
+    val viewModel: ImportViewModel = koinViewModel { parametersOf(shared) }
     val uiState by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val chooseFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            scope.launch {
-                val text = withContext(Dispatchers.IO) {
-                    runCatching { context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } }.getOrNull()
-                }
-                viewModel.read(text.orEmpty())
-            }
-        }
+        if (uri != null) viewModel.readFile(uri.toString())
     }
     val chooseScreenshots = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(MAX_SCREENSHOTS)) { uris ->
         viewModel.readImages(uris.map { it.toString() })
     }
     ImportScreen(
         uiState = uiState,
-        initialText = sharedText,
+        initialText = shared.text,
         onRead = viewModel::read,
         onChooseFile = { chooseFile.launch(arrayOf("text/csv", "text/comma-separated-values", "application/csv", "text/plain", "application/vnd.ms-excel")) },
         onChooseScreenshots = { chooseScreenshots.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
@@ -87,8 +73,8 @@ fun ImportScreenRoot(sharedText: String, sharedImages: List<String>, onBack: () 
 }
 
 /**
- * "Import from Strong": share a workout from Strong to Setwise (or paste its shared text, one or
- * several), check what was read and how each exercise maps, then import.
+ * Import workouts from a CSV export, screenshots, shared or pasted text: check what was read and
+ * how each exercise maps, then import.
  */
 @Composable
 fun ImportScreen(
@@ -129,24 +115,7 @@ fun ImportScreen(
                 Text(stringResource(R.string.import_how), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             item(key = "sources") {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SetwiseButton(
-                        text = stringResource(R.string.import_choose_file),
-                        onClick = onChooseFile,
-                        style = SetwiseButtonStyle.Tonal,
-                        size = SetwiseButtonSize.Medium,
-                        enabled = !uiState.isReading,
-                        modifier = Modifier.weight(1f),
-                    )
-                    SetwiseButton(
-                        text = stringResource(R.string.import_choose_screenshots),
-                        onClick = onChooseScreenshots,
-                        style = SetwiseButtonStyle.Tonal,
-                        size = SetwiseButtonSize.Medium,
-                        enabled = !uiState.isReading,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+                Sources(enabled = !uiState.isReading, onChooseFile = onChooseFile, onChooseScreenshots = onChooseScreenshots)
             }
             item(key = "text") {
                 val hint = stringResource(R.string.import_paste_hint)
@@ -188,20 +157,7 @@ fun ImportScreen(
                 uiState.nothingFound -> item(key = "none") { Problem(stringResource(R.string.import_nothing_found)) }
                 uiState.failed -> item(key = "failed") { Problem(stringResource(R.string.import_failed)) }
             }
-            if (uiState.unreadLines > 0) {
-                item(key = "unread") {
-                    Text(
-                        pluralStringResource(R.plurals.import_unread_lines, uiState.unreadLines, uiState.unreadLines),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
-                }
-            }
-            if (uiState.source == ImportReader.Source.Model) {
-                item(key = "by-model") {
-                    Text(stringResource(R.string.import_by_model), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.tertiary)
-                }
-            }
+            item(key = "read-notes") { ReadNotes(unreadLines = uiState.unreadLines, byModel = uiState.source == ImportReader.Source.Model) }
             uiState.plan?.let { plan ->
                 items(plan.workouts, key = { it.shared.startedAt.toString() + it.shared.name }) { workout -> PlannedWorkoutCard(workout) }
                 item(key = "note") {
@@ -261,6 +217,41 @@ private fun PlannedWorkoutCard(workout: WorkoutImporter.PlannedWorkout) {
                 )
             }
         }
+    }
+}
+
+/** Choose a CSV export or screenshots. */
+@Composable
+private fun Sources(enabled: Boolean, onChooseFile: () -> Unit, onChooseScreenshots: () -> Unit, modifier: Modifier = Modifier) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = modifier) {
+        SetwiseButton(
+            text = stringResource(R.string.import_choose_file),
+            onClick = onChooseFile,
+            style = SetwiseButtonStyle.Tonal,
+            size = SetwiseButtonSize.Medium,
+            enabled = enabled,
+            modifier = Modifier.weight(1f),
+        )
+        SetwiseButton(
+            text = stringResource(R.string.import_choose_screenshots),
+            onClick = onChooseScreenshots,
+            style = SetwiseButtonStyle.Tonal,
+            size = SetwiseButtonSize.Medium,
+            enabled = enabled,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+/** What to check after reading: lines of a log that weren't read, and workouts the model read. */
+@Composable
+private fun ReadNotes(unreadLines: Int, byModel: Boolean, modifier: Modifier = Modifier) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = modifier) {
+        val style = MaterialTheme.typography.bodyMedium
+        if (unreadLines > 0) {
+            Text(pluralStringResource(R.plurals.import_unread_lines, unreadLines, unreadLines), style = style, color = MaterialTheme.colorScheme.tertiary)
+        }
+        if (byModel) Text(stringResource(R.string.import_by_model), style = style, color = MaterialTheme.colorScheme.tertiary)
     }
 }
 

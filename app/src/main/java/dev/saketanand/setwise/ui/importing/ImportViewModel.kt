@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.saketanand.setwise.domain.ai.ImportReader
 import dev.saketanand.setwise.domain.ai.WorkoutImporter
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.util.DateProvider
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import dev.saketanand.setwise.domain.ai.ImportReader
 
 @Immutable
 data class ImportUiState(
@@ -31,13 +31,16 @@ data class ImportUiState(
     val unreadLines: Int = 0,
 )
 
+/** What was shared to Setwise for import (at most one of them is set). */
+data class SharedImport(val text: String = "", val file: String = "", val images: List<String> = emptyList())
+
 /**
- * Screen: [ImportScreenRoot]. Shared Strong workouts: read ([WorkoutImporter.plan]), checked,
- * then imported. Text shared to Setwise arrives as [sharedText] and is read right away.
+ * Screen: [ImportScreenRoot]. Workouts from a CSV file, screenshots or text: read ([ImportReader]),
+ * matched to the library ([WorkoutImporter.plan]), checked, then imported. Anything shared to
+ * Setwise ([SharedImport]) is read right away.
  */
 class ImportViewModel(
-    sharedText: String,
-    sharedImages: List<String>,
+    shared: SharedImport,
     private val reader: ImportReader,
     private val importer: WorkoutImporter,
     private val exerciseRepository: ExerciseRepository,
@@ -49,8 +52,9 @@ class ImportViewModel(
 
     init {
         when {
-            sharedImages.isNotEmpty() -> readImages(sharedImages)
-            sharedText.isNotBlank() -> read(sharedText)
+            shared.file.isNotEmpty() -> readFile(shared.file)
+            shared.images.isNotEmpty() -> readImages(shared.images)
+            shared.text.isNotBlank() -> read(shared.text)
         }
     }
 
@@ -58,6 +62,11 @@ class ImportViewModel(
     fun read(text: String) {
         if (text.isBlank()) return
         readWith { reader.fromText(text) }
+    }
+
+    /** A CSV export, chosen or shared. */
+    fun readFile(uri: String) {
+        readWith { reader.fromFile(uri) }
     }
 
     /** Screenshots, in the order picked. */
