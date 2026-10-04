@@ -37,7 +37,7 @@ jobs:
 
       # Debug build, JVM unit tests (Compose recomposition tests included, on Robolectric), and
       # line coverage (Kover), which fails under the minimum set in app/build.gradle.kts.
-      # Instrumented tests (androidTest) need an emulator and are run locally for now (#37).
+      # Instrumented tests (androidTest) run on an emulator in instrumented-tests.yml.
       - name: Build, test and check coverage
         run: ./gradlew assembleDebug testDebugUnitTest koverXmlReportDebug koverHtmlReportDebug koverVerifyDebug --stacktrace
 
