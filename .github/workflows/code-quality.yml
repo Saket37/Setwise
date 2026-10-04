@@ -75,12 +75,27 @@ jobs:
       - name: detekt
         run: ./gradlew detektDebug detektDebugUnitTest detektDebugAndroidTest --continue --stacktrace
 
-      - name: Upload findings to code scanning
+      # One upload per source set: code scanning takes one SARIF run per category.
+      - name: Upload app findings to code scanning
         if: always() && hashFiles('app/build/reports/detekt/debug.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: app/build/reports/detekt/
-          category: detekt
+          sarif_file: app/build/reports/detekt/debug.sarif
+          category: detekt-app
+
+      - name: Upload unit-test findings to code scanning
+        if: always() && hashFiles('app/build/reports/detekt/debugUnitTest.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: app/build/reports/detekt/debugUnitTest.sarif
+          category: detekt-unit-tests
+
+      - name: Upload instrumented-test findings to code scanning
+        if: always() && hashFiles('app/build/reports/detekt/debugAndroidTest.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: app/build/reports/detekt/debugAndroidTest.sarif
+          category: detekt-android-tests
 
       - name: Upload report
         if: failure()

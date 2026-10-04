@@ -20,7 +20,7 @@ import org.robolectric.RobolectricTestRunner
  * How much of the workout screen recomposes when one thing changes: the screen stays open for a
  * whole workout, with a clock and a rest timer ticking. Ceilings are what was measured plus
  * headroom; a change that blows one (e.g. set rows recomposing on every tick) fails here. To see
- * the numbers, print [RecompositionCounter.scopes].
+ * the numbers, print [RecompositionCounter.scopes]; failures print them too.
  */
 @RunWith(RobolectricTestRunner::class)
 class ActiveWorkoutRecompositionTest {
@@ -37,15 +37,17 @@ class ActiveWorkoutRecompositionTest {
         compose.setContent {
             counter.Observe { SetwiseTheme { ActiveWorkoutScreen(uiState = uiState, onAction = {}) } }
         }
-        compose.mainClock.advanceTimeBy(100)
+        // Let the first layout and effects settle (slower on CI) before anything is counted.
+        compose.mainClock.advanceTimeBy(2_000)
     }
 
     @Test
     fun `the workout clock ticking recomposes only the clock`() {
         counter.reset()
         compose.mainClock.advanceTimeBy(3_000)
-        // Measured: 5 over 3 seconds.
-        assertAtMost(8, "3 s of the clock")
+        // Measured: 5 over 3 seconds (a tick is ~2 scopes; the clock follows wall time, so a
+        // second can tick twice). Set rows recomposing on each tick would cost 50+ a tick.
+        assertAtMost(12, "3 s of the clock")
     }
 
     @Test
