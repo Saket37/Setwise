@@ -139,8 +139,8 @@ kover {
     reports {
         verify {
             rule("Line coverage") {
-                // About 62% when this was added; raise it as coverage grows, never lower it.
-                minBound(60)
+                // 72% with device-only code left out (#70); raise it as coverage grows, never lower it.
+                minBound(71)
             }
         }
         filters {
@@ -149,6 +149,19 @@ kover {
                 classes("*_Impl", "*_Impl\$*", "*_GeneratedProvider", "*.BuildConfig", "*ComposableSingletons*")
                 // Composables are checked on a device, not by JVM unit tests.
                 annotatedBy("androidx.compose.runtime.Composable", "androidx.compose.ui.tooling.preview.Preview")
+                // Code that only runs on a device: debug-only harnesses (the on-device AI check, the
+                // fake-data seeder), thin wrappers over ML Kit / Gemini Nano in Play services (the
+                // logic around them is tested through OnDeviceModel, TextReader and SpeechInput
+                // fakes), and the app and activity setup.
+                classes(
+                    "dev.saketanand.setwise.domain.ai.AiCheck*",
+                    "dev.saketanand.setwise.data.dev.DevDataSeeder*",
+                    "dev.saketanand.setwise.llm.GeminiNanoModel*",
+                    "dev.saketanand.setwise.llm.GenAiSpeechInput*",
+                    "dev.saketanand.setwise.llm.MlKitTextReader*",
+                    "dev.saketanand.setwise.SetwiseApp*",
+                    "dev.saketanand.setwise.MainActivity*",
+                )
             }
         }
     }
