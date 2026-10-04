@@ -1,11 +1,13 @@
 package dev.saketanand.setwise.di
 
 import dev.saketanand.setwise.MainViewModel
+import dev.saketanand.setwise.ui.body.BodyViewModel
 import dev.saketanand.setwise.ui.exercises.CreateExerciseViewModel
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailViewModel
 import dev.saketanand.setwise.ui.exercises.ExercisePickerViewModel
 import dev.saketanand.setwise.ui.history.HistoryViewModel
 import dev.saketanand.setwise.ui.home.HomeViewModel
+import dev.saketanand.setwise.ui.importing.ImportViewModel
 import dev.saketanand.setwise.ui.onboarding.OnboardingViewModel
 import dev.saketanand.setwise.ui.settings.SettingsViewModel
 import dev.saketanand.setwise.ui.summary.WorkoutSummaryViewModel
@@ -16,8 +18,6 @@ import dev.saketanand.setwise.ui.workout.CardioEntryViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
-import dev.saketanand.setwise.ui.body.BodyViewModel
-import dev.saketanand.setwise.ui.importing.ImportViewModel
 
 /**
  * One ViewModel per screen. viewModelOf resolves constructor parameters from Koin
@@ -29,7 +29,15 @@ val viewModelModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::BodyViewModel)
-    viewModel { params -> ImportViewModel(sharedText = params.get(), importer = get(), exerciseRepository = get(), dateProvider = get()) }
+    viewModel { params ->
+        ImportViewModel(
+            shared = params.get(),
+            reader = get(),
+            importer = get(),
+            exerciseRepository = get(),
+            dateProvider = get(),
+        )
+    }
     viewModelOf(::SettingsViewModel)
 
     // Route argument passed by SetwiseNavHost: koinViewModel { parametersOf(route.workoutId) }.

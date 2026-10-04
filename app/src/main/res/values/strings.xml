@@ -395,18 +395,25 @@
     <!-- Import from Strong -->
     <string name="share_target_label">Import to Setwise</string>
     <string name="settings_data">Data</string>
-    <string name="import_title">Import from Strong</string>
-    <string name="import_settings_detail">Share workouts from Strong to Setwise, or paste their text</string>
-    <string name="import_how">In Strong, open a workout, tap Share and choose Setwise. Or copy what Strong shares and paste it here: one workout or several.</string>
-    <string name="import_paste_hint">Paste shared workouts here</string>
+    <string name="import_title">Import workouts</string>
+    <string name="import_settings_detail">From Strong, Hevy, FitNotes and others: a CSV file, screenshots, or shared text</string>
+    <string name="import_how">Choose a CSV export (Strong, Hevy, FitNotes…) or screenshots of your workouts, or paste text. From Strong you can also Share a workout to Setwise. You check everything before it\'s imported.</string>
+    <string name="import_choose_file">Choose a CSV file</string>
+    <plurals name="import_unread_lines">
+        <item quantity="one">%d line couldn\'t be read and is left out. Check the workouts below.</item>
+        <item quantity="other">%d lines couldn\'t be read and are left out. Check the workouts below.</item>
+    </plurals>
+    <string name="import_choose_screenshots">Choose screenshots</string>
+    <string name="import_by_model">Read on this phone by Gemini Nano: check each workout carefully. Any whose numbers weren\'t in what you gave were left out.</string>
+    <string name="import_paste_hint">Or paste workouts here</string>
     <string name="import_read">Read</string>
     <string name="import_reading">Reading…</string>
-    <string name="import_nothing_found">No shared workouts in that. It should start with the workout\'s name and date, then each exercise and its sets.</string>
+    <string name="import_nothing_found">No workouts found in that. A CSV export, Strong\'s shared text, or a log with dates, exercises and sets works best.</string>
     <string name="import_failed">Something went wrong. Nothing was imported; try again.</string>
     <string name="import_already">Already imported</string>
     <string name="import_matched">→ %1$s</string>
     <string name="import_new_exercise">→ new exercise (added to your library)</string>
-    <string name="import_duration_note">Strong\'s shared text has no workout length, so each is set to about 2½ minutes a set. Records are worked out by Setwise\'s own rules.</string>
+    <string name="import_duration_note">Where the source has no workout length, it\'s set to about 2½ minutes a set. Records are worked out by Setwise\'s own rules.</string>
     <string name="import_nothing_new">Already imported</string>
     <string name="import_see_history">See them in History</string>
     <plurals name="import_button">

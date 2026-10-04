@@ -12,6 +12,8 @@ data class SharedWorkout(
     val name: String,
     val startedAt: LocalDateTime,
     val exercises: List<SharedExercise>,
+    /** How long it took, when the source says (CSV exports do; Strong's share text doesn't). */
+    val duration: java.time.Duration? = null,
 ) {
     val setCount: Int get() = exercises.sumOf { it.sets.size }
 }

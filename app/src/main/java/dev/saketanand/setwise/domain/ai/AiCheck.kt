@@ -1,24 +1,25 @@
 package dev.saketanand.setwise.domain.ai
 
+import android.content.Context
 import android.util.Log
-import dev.saketanand.setwise.domain.model.WorkoutFacts
-import dev.saketanand.setwise.domain.model.WorkoutSession
-import dev.saketanand.setwise.domain.repository.ExerciseRepository
-import dev.saketanand.setwise.domain.repository.UserSettingsRepository
-import dev.saketanand.setwise.domain.repository.WorkoutRepository
-import java.time.Instant
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.first
+import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.domain.model.Measure
 import dev.saketanand.setwise.domain.model.Plateau
 import dev.saketanand.setwise.domain.model.Progression
-import android.content.Context
-import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.SharedSet
+import dev.saketanand.setwise.domain.model.WorkoutFacts
+import dev.saketanand.setwise.domain.model.WorkoutSession
+import dev.saketanand.setwise.domain.repository.ExerciseRepository
+import dev.saketanand.setwise.domain.repository.UserSettingsRepository
+import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import java.io.File
+import java.time.Instant
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
@@ -37,6 +38,8 @@ import org.json.JSONArray
  *
  *     adb shell am start -n dev.saketanand.setwise/.MainActivity --ez ai_check true
  */
+// One function per feature it checks, by design.
+@Suppress("TooManyFunctions")
 class AiCheck(
     private val context: Context,
     private val model: OnDeviceModel,
@@ -47,6 +50,7 @@ class AiCheck(
     private val quickLogInterpreter: QuickLogInterpreter,
     private val plateauNotes: PlateauNoteWriter,
     private val historyAssistant: HistoryAssistant,
+    private val importReader: ImportReader,
     private val exerciseRepository: ExerciseRepository,
     private val workoutRepository: WorkoutRepository,
     private val userSettingsRepository: UserSettingsRepository,
@@ -64,6 +68,7 @@ class AiCheck(
                 ONLY_CLIENT -> checkClientReopen()
                 ONLY_SPEECH -> checkSpeech()
                 ONLY_ASK -> checkAsk()
+                ONLY_IMPORT -> checkImport()
                 else -> checkAll(workouts)
             }
             Log.i(TAG, "Done")
@@ -84,6 +89,20 @@ class AiCheck(
         checkExerciseNames()
         checkQuickLog()
         checkPlateauNotes()
+    }
+
+    /** Free-form workout logs: what the model makes of them, after the number guard. */
+    private suspend fun checkImport() {
+        SAMPLE_LOGS.forEach { log ->
+            val startedAt = System.nanoTime()
+            val read = importReader.fromText(log)
+            Log.i(TAG, "Log (${(System.nanoTime() - startedAt) / 1_000_000} ms, ${read.source}): ${log.lines().first()}")
+            read.workouts.forEach { workout ->
+                val exercises = workout.exercises.joinToString(" | ") { exercise -> exercise.name + " " + exercise.sets.joinToString(", ", transform = ::setLabel) }
+                Log.i(TAG, "  ${workout.name} @ ${workout.startedAt}: $exercises")
+            }
+            if (read.workouts.isEmpty()) Log.i(TAG, "  nothing kept")
+        }
     }
 
     /** History questions over the real log: the reply, and whether the model picked the lookup. */
@@ -228,6 +247,9 @@ class AiCheck(
         SAMPLE_LINES.forEach { line -> Log.i(TAG, "'$line' → ${understood(line, empty, recent, library)}") }
     }
 
+    private fun setLabel(set: SharedSet) =
+        listOfNotNull(set.weightKg?.let { "$it kg" }, set.reps?.let { "×$it" }, set.seconds?.let { "${it}s" }).joinToString(" ")
+
     companion object {
         const val TAG = "SetwiseAiCheck"
 
@@ -256,6 +278,14 @@ class AiCheck(
         const val ONLY_CLIENT = "client"
         const val ONLY_SPEECH = "speech"
         const val ONLY_ASK = "ask"
+        const val ONLY_IMPORT = "import"
+
+        /** Prose no code reader takes apart: what's left for the model. */
+        private val SAMPLE_LOGS = listOf(
+            "Leg day on 29/09/2026 at 18:30. Squatted 100 for three sets of 5, then planks of 60 and 45 seconds.",
+            "2 Oct 2026, push: benched 60 for 8, then 62.5 for 6 twice. Lateral raises with 10 for 15, three times.",
+            "Saturday 3rd October 2026 morning I did pullups (10, 8 and 6) and barbell rows, 3 sets of 10 with 60.",
+        )
 
         /** The first five the code reads; the rest need the model to pick a lookup (or "none"). */
         private val SAMPLE_QUESTIONS = listOf(

@@ -41,8 +41,11 @@ class WorkoutImporter(
 
     data class Result(val workouts: Int, val sets: Int, val newExercises: Int)
 
-    suspend fun plan(text: String, library: List<Exercise>, done: List<Exercise>, zone: ZoneId): Plan {
-        val shared = StrongShareParser.parse(text)
+    suspend fun plan(text: String, library: List<Exercise>, done: List<Exercise>, zone: ZoneId): Plan =
+        plan(StrongShareParser.parse(text), library, done, zone)
+
+    /** As [plan] for workouts read from anywhere ([ImportReader]). */
+    suspend fun plan(shared: List<SharedWorkout>, library: List<Exercise>, done: List<Exercise>, zone: ZoneId): Plan {
         val matches = mutableMapOf<String, Exercise?>()
         return Plan(
             shared.map { workout ->
@@ -68,7 +71,7 @@ class WorkoutImporter(
                 id to planned.shared.sets
             }
             if (exercises.isEmpty()) return@forEach
-            workoutRepository.importWorkout(workout.shared.name, start, start.plus(estimatedLength(workout.shared)), exercises)
+            workoutRepository.importWorkout(workout.shared.name, start, start.plus(workout.shared.duration ?: estimatedLength(workout.shared)), exercises)
             sets += exercises.sumOf { it.second.size }
         }
         return Result(plan.toImport.size, sets, created.size)

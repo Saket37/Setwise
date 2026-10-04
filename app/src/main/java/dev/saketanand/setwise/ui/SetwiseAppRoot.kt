@@ -29,12 +29,12 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import dev.saketanand.setwise.ui.navigation.AppLink
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.ui.navigation.SetwiseNavHost
 import dev.saketanand.setwise.ui.navigation.TopLevelDestination
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * App shell: the NavHost, with the bottom navigation bar floating over it on the tabs only.
@@ -113,6 +113,8 @@ private fun NavHostController.open(link: AppLink) {
             }
         }
         is AppLink.SharedText -> navigate(Route.ImportWorkouts(link.text))
+        is AppLink.SharedFile -> navigate(Route.ImportWorkouts(sharedFile = link.uri))
+        is AppLink.SharedImages -> navigate(Route.ImportWorkouts(sharedImages = link.uris))
     }
 }
 
