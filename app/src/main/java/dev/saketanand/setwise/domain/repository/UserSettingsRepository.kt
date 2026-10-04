@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.domain.repository
 
 import dev.saketanand.setwise.domain.model.UserSettings
+import dev.saketanand.setwise.domain.model.WeeklyRecap
 import java.time.DayOfWeek
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
@@ -21,4 +22,8 @@ interface UserSettingsRepository {
     suspend fun setOnboardingDone()
 
     suspend fun setCheckInLastAskedOn(day: LocalDate)
+
+    suspend fun setWeeklySummaryDismissed(weekStart: LocalDate)
+
+    suspend fun setWeeklyRecap(recap: WeeklyRecap)
 }
