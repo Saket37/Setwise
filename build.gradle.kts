@@ -6,6 +6,12 @@ buildscript {
             // Kover's HTML report pulls FreeMarker 2.3.32 (GHSA-27j2-h3m2-8237, fixed in 2.3.35).
             // Remove once Kover brings a fixed version itself.
             classpath("org.freemarker:freemarker:2.3.35")
+            // AGP 9.1 pulls Bouncy Castle 1.79 for APK signing (GHSA-574f-3g2m-x479,
+            // GHSA-9pwp-9qqc-pr26 and others, fixed in 1.85). The three modules must match.
+            // Remove once AGP brings a fixed version itself.
+            classpath("org.bouncycastle:bcprov-jdk18on:1.85")
+            classpath("org.bouncycastle:bcpkix-jdk18on:1.85")
+            classpath("org.bouncycastle:bcutil-jdk18on:1.85")
         }
     }
 }
