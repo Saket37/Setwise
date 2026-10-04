@@ -43,6 +43,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.withTimeoutOrNull
+import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 
 /**
  * Screen: [ActiveWorkoutScreenRoot].
@@ -67,7 +68,11 @@ class ActiveWorkoutViewModel(
     private val quickLogInterpreter: QuickLogInterpreter,
     private val exerciseRepository: ExerciseRepository,
     private val speechInput: SpeechInput,
+    userSettings: UserSettingsRepository,
 ) : ViewModel() {
+
+    /** Settings' default rest; null: each exercise's own. */
+    private var restSecOverride: Int? = null
 
     /** On-device listening in progress, if any. */
     private var listening: Job? = null
@@ -134,6 +139,7 @@ class ActiveWorkoutViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ActiveWorkoutUiState())
 
     init {
+        viewModelScope.launch { userSettings.settings.collect { restSecOverride = it.restSecOverride } }
         // On-device speech for the mic, if the phone has it ready.
         viewModelScope.launch {
             val ready = speechInput.availability() == ModelAvailability.Ready
@@ -258,7 +264,9 @@ class ActiveWorkoutViewModel(
         val startedAt = session?.startedAt
         if (startedAt != null && isLoggedAfterwards(startedAt, dateProvider.now())) return
         // Rest before the next set (a new rest replaces a running one).
-        restTimer.start(workoutId, exercise.restSec, nextUpAfter(setId, exercise, state.value.exercises))
+        // Settings' default rest, if set, for everything that rests (cardio doesn't).
+        val restSec = restSecOverride?.takeIf { exercise.restSec > 0 } ?: exercise.restSec
+        restTimer.start(workoutId, restSec, nextUpAfter(setId, exercise, state.value.exercises))
     }
 
     private fun findSet(setId: Long): Pair<WorkoutExerciseUi, SetUi>? =

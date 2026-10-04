@@ -32,6 +32,10 @@ class DataStoreUserSettingsRepository(
             birthYear = prefs[BIRTH_YEAR]?.toInt(),
             sex = prefs[SEX]?.let { name -> Sex.entries.firstOrNull { it.name == name } },
             heightCm = prefs[HEIGHT_CM],
+            restSecOverride = prefs[REST_SEC]?.toInt(),
+            restSound = prefs[REST_SOUND] ?: true,
+            restVibrate = prefs[REST_VIBRATE] ?: true,
+            workoutNotification = prefs[WORKOUT_NOTIFICATION] ?: true,
             bodyWeightKg = prefs[BODY_WEIGHT_KG],
             trainingDays = prefs[TRAINING_DAYS].orEmpty()
                 .mapNotNull { name -> DayOfWeek.entries.firstOrNull { it.name == name } }
@@ -98,7 +102,27 @@ class DataStoreUserSettingsRepository(
         return true
     }
 
+    override suspend fun setRestSecOverride(seconds: Int?) {
+        dataStore.edit { if (seconds == null) it.remove(REST_SEC) else it[REST_SEC] = seconds.toLong() }
+    }
+
+    override suspend fun setRestSound(on: Boolean) {
+        dataStore.edit { it[REST_SOUND] = on }
+    }
+
+    override suspend fun setRestVibrate(on: Boolean) {
+        dataStore.edit { it[REST_VIBRATE] = on }
+    }
+
+    override suspend fun setWorkoutNotification(on: Boolean) {
+        dataStore.edit { it[WORKOUT_NOTIFICATION] = on }
+    }
+
     private companion object {
+        val REST_SEC = longPreferencesKey("rest_sec_override")
+        val REST_SOUND = booleanPreferencesKey("rest_sound")
+        val REST_VIBRATE = booleanPreferencesKey("rest_vibrate")
+        val WORKOUT_NOTIFICATION = booleanPreferencesKey("workout_notification")
         const val MAX_NAME = 40
         val NAME = stringPreferencesKey("name")
         val BIRTH_YEAR = longPreferencesKey("birth_year")
