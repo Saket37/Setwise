@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.ui.LocalBootClock
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
@@ -37,8 +38,8 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.util.toClockLabel
-import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 
 /**
  * Bottom bar while resting (design): progress line, −15, "REST · NEXT SET 3" over the countdown,
@@ -143,10 +144,11 @@ private fun RestProgress(fraction: Float) {
 /** Milliseconds until [endsAtElapsed], updated 10× a second so the progress line moves smoothly. */
 @Composable
 private fun rememberRemainingMillis(endsAtElapsed: Long): Long {
-    var remaining by remember(endsAtElapsed) { mutableLongStateOf(endsAtElapsed - SystemClock.elapsedRealtime()) }
-    LaunchedEffect(endsAtElapsed) {
+    val clock = LocalBootClock.current
+    var remaining by remember(endsAtElapsed) { mutableLongStateOf(endsAtElapsed - clock()) }
+    LaunchedEffect(endsAtElapsed, clock) {
         while (true) {
-            remaining = (endsAtElapsed - SystemClock.elapsedRealtime()).coerceAtLeast(0)
+            remaining = (endsAtElapsed - clock()).coerceAtLeast(0)
             delay(100)
         }
     }
