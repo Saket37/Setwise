@@ -24,10 +24,10 @@ mlkitGenaiSchema = "1.0.0-alpha1"
 # Not used directly: ML Kit GenAI brings Guava 31.0.1-jre (advisories, #83); this is the floor.
 guava = "33.7.2-android"
 # Not used directly: the Accessibility Test Framework (instrumented tests) brings 3.19.1, which has
-# advisories; this is the floor (latest 3.x, compatible with its generated code).
-protobufJavalite = "3.25.9"
+# advisories; this is the floor (checked: the framework still reports findings on 4.x).
+protobufJavalite = "4.36.2"
 # Not used directly: the Accessibility Test Framework brings jsoup 1.15.1 (advisories); the floor.
-jsoup = "1.23.1"
+jsoup = "1.23.2"
 
 # Code checks
 kover = "0.9.11"
