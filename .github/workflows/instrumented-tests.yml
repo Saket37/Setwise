@@ -76,6 +76,12 @@ jobs:
           disable-animations: true
           script: ./gradlew connectedDebugAndroidTest --stacktrace
 
+      # Totals per test class on the run's summary page, so a run where tests were skipped or
+      # didn't run stands out.
+      - name: Test summary
+        if: always()
+        run: python3 .github/scripts/instrumented_summary.py app/build/outputs/androidTest-results/connected | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Upload test reports
         if: failure()
         uses: actions/upload-artifact@v7
