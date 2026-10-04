@@ -122,6 +122,12 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4.accessibility)
+    constraints {
+        // The Accessibility Test Framework brings protobuf-javalite 3.19.1 and jsoup 1.15.1, which
+        // have advisories: test-only, but not vulnerable either.
+        androidTestImplementation(libs.protobuf.javalite) { because("Advisories in 3.19.1") }
+        androidTestImplementation(libs.jsoup) { because("Advisories in 1.15.1") }
+    }
 }
 
 detekt {

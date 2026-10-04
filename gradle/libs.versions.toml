@@ -23,6 +23,11 @@ playServicesTextRecognition = "19.0.1"
 mlkitGenaiSchema = "1.0.0-alpha1"
 # Not used directly: ML Kit GenAI brings Guava 31.0.1-jre (advisories, #83); this is the floor.
 guava = "33.7.2-android"
+# Not used directly: the Accessibility Test Framework (instrumented tests) brings 3.19.1, which has
+# advisories; this is the floor (latest 3.x, compatible with its generated code).
+protobufJavalite = "3.25.9"
+# Not used directly: the Accessibility Test Framework brings jsoup 1.15.1 (advisories); the floor.
+jsoup = "1.23.1"
 
 # Code checks
 kover = "0.9.11"
@@ -79,6 +84,8 @@ mlkit-text-recognition = { group = "com.google.android.gms", name = "play-servic
 mlkit-genai-speech-recognition = { group = "com.google.mlkit", name = "genai-speech-recognition", version.ref = "mlkitGenaiSpeech" }
 mlkit-genai-schema = { group = "com.google.mlkit", name = "genai-schema", version.ref = "mlkitGenaiSchema" }
 guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
+jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
+protobuf-javalite = { group = "com.google.protobuf", name = "protobuf-javalite", version.ref = "protobufJavalite" }
 mlkit-genai-schema-compiler = { group = "com.google.mlkit", name = "genai-schema-compiler", version.ref = "mlkitGenaiSchema" }
 
 # Code checks (detekt rule sets)
