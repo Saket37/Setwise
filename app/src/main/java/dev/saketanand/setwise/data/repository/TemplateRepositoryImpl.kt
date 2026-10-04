@@ -51,6 +51,7 @@ class TemplateRepositoryImpl(
                         exerciseId = exercise.exerciseId,
                         position = index,
                         targetSets = exercise.targetSets,
+                        targetReps = exercise.targetReps,
                     )
                 }
             )

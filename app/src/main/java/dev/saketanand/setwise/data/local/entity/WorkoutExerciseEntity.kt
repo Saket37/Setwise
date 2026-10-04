@@ -32,4 +32,6 @@ data class WorkoutExerciseEntity(
     val workoutId: Long,
     val exerciseId: Long,
     val position: Int,
+    /** From the template it was started from: the reps (or seconds) each set is hinted with. */
+    val targetReps: Int? = null,
 )

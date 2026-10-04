@@ -73,8 +73,10 @@ fun TemplateWithExercises.toDomain(lastUsedAtMillis: Long?): Template = Template
                 name = it.exercise.name,
                 targetSets = it.item.targetSets,
                 restSec = it.exercise.defaultRestSec,
+                targetReps = it.item.targetReps,
                 muscleGroup = it.exercise.muscleGroup,
                 isCardio = it.exercise.type == ExerciseType.CARDIO,
+                isTimed = it.exercise.isTimed,
             )
         },
     lastUsedAt = lastUsedAtMillis?.let(Instant::ofEpochMilli),
@@ -117,6 +119,7 @@ fun WorkoutWithExercises.toSession(
                     exercise = row.exercise.toDomain(),
                     sets = row.sets.sortedWith(compareBy({ it.setNumber }, { it.id }))
                         .map { it.toDomain(isCardio = row.exercise.type == ExerciseType.CARDIO) },
+                    targetReps = row.item.targetReps,
                     previousSets = previousByItem[row.item.id].orEmpty()
                         .sortedBy { it.setNumber }
                         .map { PreviousSet(weightKg = it.weightKg, reps = it.reps, durationSec = it.durationSec) },

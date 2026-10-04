@@ -233,7 +233,7 @@ fun TemplateEditorScreen(
     }
 }
 
-/** "Bench Press (Barbell) / Chest", then "− 3 sets +" (cardio: "Time & distance") and ⋮. */
+/** "Bench Press (Barbell) / Chest", then "− 3 sets +" over "− 8 reps +" (cardio: "Time & distance") and ⋮. */
 @Composable
 private fun TemplateExerciseRow(
     exercise: TemplateEditorExercise,
@@ -255,15 +255,18 @@ private fun TemplateExerciseRow(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 } else {
-                    SetwiseStepper(
-                        value = exercise.targetSets,
-                        label = pluralStringResource(R.plurals.set_count, exercise.targetSets, exercise.targetSets),
-                        onDecrease = { onAction(TemplateEditorAction.OnSetsChange(exercise.exerciseId, -1)) },
-                        onIncrease = { onAction(TemplateEditorAction.OnSetsChange(exercise.exerciseId, +1)) },
-                        decreaseDescription = stringResource(R.string.fewer_sets, exercise.name),
-                        increaseDescription = stringResource(R.string.more_sets, exercise.name),
-                        range = TemplateEditorUiState.SET_RANGE,
-                    )
+                    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        SetwiseStepper(
+                            value = exercise.targetSets,
+                            label = pluralStringResource(R.plurals.set_count, exercise.targetSets, exercise.targetSets),
+                            onDecrease = { onAction(TemplateEditorAction.OnSetsChange(exercise.exerciseId, -1)) },
+                            onIncrease = { onAction(TemplateEditorAction.OnSetsChange(exercise.exerciseId, +1)) },
+                            decreaseDescription = stringResource(R.string.fewer_sets, exercise.name),
+                            increaseDescription = stringResource(R.string.more_sets, exercise.name),
+                            range = TemplateEditorUiState.SET_RANGE,
+                        )
+                        TargetRepsStepper(exercise, onAction)
+                    }
                 }
                 SetwiseOverflowMenu(
                     contentDescription = stringResource(R.string.exercise_options),
@@ -283,6 +286,27 @@ private fun TemplateExerciseRow(
         },
         contentPadding = PaddingValues(start = 14.dp, top = 10.dp, end = 0.dp, bottom = 10.dp),
         modifier = modifier.fillMaxWidth(),
+    )
+}
+
+/** "− 8 reps +" (timed: "− 45 s +"); "Any reps" when none is set. */
+@Composable
+private fun TargetRepsStepper(exercise: TemplateEditorExercise, onAction: (TemplateEditorAction) -> Unit) {
+    val target = exercise.targetReps
+    SetwiseStepper(
+        // Value 0 = none: − is disabled there, + sets a first target.
+        value = target ?: 0,
+        label = when {
+            target == null && exercise.isTimed -> stringResource(R.string.target_any_time)
+            target == null -> stringResource(R.string.target_any_reps)
+            exercise.isTimed -> stringResource(R.string.target_seconds, target)
+            else -> pluralStringResource(R.plurals.target_reps, target, target)
+        },
+        onDecrease = { onAction(TemplateEditorAction.OnRepsChange(exercise.exerciseId, -1)) },
+        onIncrease = { onAction(TemplateEditorAction.OnRepsChange(exercise.exerciseId, +1)) },
+        decreaseDescription = stringResource(R.string.fewer_reps, exercise.name),
+        increaseDescription = stringResource(R.string.more_reps, exercise.name),
+        range = 0..if (exercise.isTimed) TemplateEditorUiState.SECONDS_RANGE.last else TemplateEditorUiState.REP_RANGE.last,
     )
 }
 
