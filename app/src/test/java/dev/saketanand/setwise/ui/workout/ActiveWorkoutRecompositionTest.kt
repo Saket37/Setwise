@@ -1,13 +1,16 @@
 package dev.saketanand.setwise.ui.workout
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.test.junit4.createComposeRule
 import dev.saketanand.setwise.testing.RecompositionCounter
+import dev.saketanand.setwise.ui.LocalWallClock
 import dev.saketanand.setwise.ui.designsystem.theme.SetwiseTheme
 import java.time.LocalTime
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -17,9 +20,10 @@ import org.robolectric.RobolectricTestRunner
 
 /**
  * How much of the workout screen recomposes when one thing changes: the screen stays open for a
- * whole workout, with a clock and a rest timer ticking. Ceilings are what was measured plus
- * headroom; a change that blows one (e.g. set rows recomposing on every tick) fails here. To see
- * the numbers, print [RecompositionCounter.scopes]; failures print them too.
+ * whole workout, with a clock and a rest timer ticking. The clock runs on the test's time
+ * ([LocalWallClock]), so the counts are the same on every machine. Ceilings are the measured
+ * counts plus a little room for Compose updates; a change that blows one (e.g. set rows
+ * recomposing on every tick) fails here, and the failure prints the count.
  */
 @RunWith(RobolectricTestRunner::class)
 class ActiveWorkoutRecompositionTest {
@@ -34,19 +38,22 @@ class ActiveWorkoutRecompositionTest {
     fun setUp() {
         compose.mainClock.autoAdvance = false
         compose.setContent {
-            counter.Observe { SetwiseTheme { ActiveWorkoutScreen(uiState = uiState, onAction = {}) } }
+            // The workout clock ticks on the test's clock, not the real one.
+            CompositionLocalProvider(LocalWallClock provides { NOW + compose.mainClock.currentTime }) {
+                counter.Observe { SetwiseTheme { ActiveWorkoutScreen(uiState = uiState, onAction = {}) } }
+            }
         }
-        // Let the first layout and effects settle (slower on CI) before anything is counted.
-        compose.mainClock.advanceTimeBy(2_000)
+        // Let the first layout and effects settle, and stop half a second off a clock tick, so a
+        // change's frames don't also run a tick.
+        compose.mainClock.advanceTimeBy(2_500)
     }
 
     @Test
     fun `the workout clock ticking recomposes only the clock`() {
         counter.reset()
         compose.mainClock.advanceTimeBy(3_000)
-        // Measured: 5 over 3 seconds (a tick is ~2 scopes; the clock follows wall time, so a
-        // second can tick twice). Set rows recomposing on each tick would cost 50+ a tick.
-        assertAtMost(12, "3 s of the clock")
+        // Measured: 9 (3 ticks of 3 scopes). Set rows recomposing on each tick would cost 50+ a tick.
+        assertAtMost(10, "3 s of the clock")
     }
 
     @Test
@@ -54,8 +61,8 @@ class ActiveWorkoutRecompositionTest {
         change { it.copy(rest = RestUi(endsAtElapsed = 60_000, totalMillis = 90_000, nextSetNumber = 3, nextExerciseName = null)) }
         counter.reset()
         compose.mainClock.advanceTimeBy(1_000)
-        // Measured: 9 for a second of rest bar (ticking 10× a second) and clock.
-        assertAtMost(15, "1 s of rest")
+        // Measured: 8 for a second of the rest bar (ticking 10× a second) and the clock.
+        assertAtMost(10, "1 s of rest")
     }
 
     @Test
@@ -65,23 +72,22 @@ class ActiveWorkoutRecompositionTest {
         change { editSets(it, exercise = 0) { _, set -> set.copy(reps = "7") } }
         val allSets = counter.scopes
 
-        // Measured: 74 for one set, 131 for all four (≈ 55 for the card, ≈ 19 a row).
-        assertTrue("One set recomposed $oneSet scopes", oneSet <= 95)
+        // Measured: 71 for one set, 129 for all four (≈ 52 for the card, ≈ 19 a row).
+        assertTrue("One set recomposed $oneSet scopes", oneSet <= 80)
         assertTrue("One set ($oneSet) should cost well under all four ($allSets)", oneSet + 2 * ROW_SCOPES <= allSets)
     }
 
     @Test
     fun `a set in a collapsed card recomposes only that card`() {
         change { editSets(it, exercise = 1) { index, set -> if (index == 0) set.copy(reps = "5") else set } }
-        // Measured: 26.
-        assertAtMost(35, "a collapsed card's set")
+        // Measured: 23.
+        assertAtMost(26, "a collapsed card's set")
     }
 
     @Test
     fun `an equal state recomposes nothing`() {
         change { s -> s.copy(exercises = s.exercises.map { e -> e.copy(sets = e.sets.map { it.copy() }) }) }
-        // Measured: 0. The clock follows wall time, so one of its ticks (2 scopes) can land in these frames.
-        assertAtMost(3, "an equal state")
+        assertEquals(0, counter.scopes)
     }
 
     /** Resets the count, changes the state (as the ViewModel would) and runs the frames it needs. */
@@ -102,13 +108,16 @@ class ActiveWorkoutRecompositionTest {
         )
 
     private companion object {
+        /** The test's wall clock starts here (any fixed time). */
+        const val NOW = 1_790_000_000_000L
+
         /** Roughly what one set row costs to recompose (measured ≈ 19). */
         const val ROW_SCOPES = 12
 
         val state = ActiveWorkoutUiState(
             isLoading = false,
             name = "Push Day",
-            startedAtMillis = System.currentTimeMillis() - 38 * 60_000,
+            startedAtMillis = NOW - 38 * 60_000,
             startTime = LocalTime.of(18, 42),
             expandedExerciseId = 1,
             exercises = listOf(
