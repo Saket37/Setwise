@@ -7,6 +7,8 @@ import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.Goal
 import dev.saketanand.setwise.domain.model.GoalPlanner
 import dev.saketanand.setwise.domain.model.PlannedTemplate
+import dev.saketanand.setwise.domain.model.Slot
+import java.util.Locale
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 
@@ -15,6 +17,8 @@ import kotlinx.serialization.Serializable
  * for each planned exercise, among the slot's best few library exercises: so what the goal says
  * beyond what code reads ("my knees hurt", "I love split squats") can count. The model only
  * picks option numbers; anything else (a wrong count, a number out of range) keeps code's choice.
+ * A choice is used only for a slot the goal talks about ([isMentioned]: a body part it works, or
+ * one of its exercises by name): on a Pixel, Nano also swapped lifts nothing in the goal asked about.
  */
 class GoalPlanAssistant(private val model: OnDeviceModel) {
 
@@ -53,8 +57,9 @@ class GoalPlanAssistant(private val model: OnDeviceModel) {
         }
         Log.d(TAG, "Model picks: $picks")
         val chosen = accept(picks, slots) ?: return Plan(byCode, byModel = false)
-        val byModel = GoalPlanner.plan(goal, library, doneIds) { day, position, _, candidates ->
-            chosen[day to position]?.takeIf { it in candidates }
+        val text = goalText.lowercase(Locale.ROOT)
+        val byModel = GoalPlanner.plan(goal, library, doneIds) { day, position, slot, candidates ->
+            chosen[day to position]?.takeIf { it in candidates && isMentioned(text, slot, slots.getValue(day to position)) }
         }
         return Plan(byModel, byModel = byModel != byCode)
     }
@@ -62,6 +67,31 @@ class GoalPlanAssistant(private val model: OnDeviceModel) {
     companion object {
         private const val TAG = "GoalPlanAssistant"
         private const val MAX_OPTIONS = 4
+
+        /** Body parts and words that make a goal about a slot ("my knees" → squats and lunges). */
+        private val SLOT_WORDS: Map<Slot, List<String>> = mapOf(
+            Slot.Squat to listOf("knee", "squat"),
+            Slot.SingleLeg to listOf("knee", "lunge", "balance"),
+            Slot.LegCurl to listOf("knee", "hamstring"),
+            Slot.Hinge to listOf("back", "deadlift", "hamstring", "hinge"),
+            Slot.HorizontalPull to listOf("back", "row"),
+            Slot.VerticalPull to listOf("pull-up", "pullup", "pull up", "chin", "lat"),
+            Slot.HorizontalPush to listOf("shoulder", "chest", "bench", "wrist"),
+            Slot.InclinePush to listOf("shoulder", "chest", "incline"),
+            Slot.ChestFly to listOf("shoulder", "chest", "fly"),
+            Slot.VerticalPush to listOf("shoulder", "overhead"),
+            Slot.LateralRaise to listOf("shoulder"),
+            Slot.RearDelt to listOf("shoulder", "posture"),
+            Slot.Biceps to listOf("elbow", "bicep", "curl", "arm"),
+            Slot.Triceps to listOf("elbow", "tricep", "arm"),
+            Slot.Core to listOf("back", "abs", "core"),
+            Slot.Calves to listOf("ankle", "calf", "calves"),
+        )
+
+        /** The goal talks about [slot]: a word for what it works, or one of [options] by name ("goblet squat"). */
+        fun isMentioned(goalText: String, slot: Slot, options: List<Exercise>): Boolean =
+            SLOT_WORDS[slot].orEmpty().any { it in goalText } ||
+                options.any { it.name.substringBefore(" (").lowercase(Locale.ROOT) in goalText }
 
         /** The model's picks as an exercise per slot, if they're one valid option number for each slot. */
         fun accept(picks: ModelGoalPicks?, slots: Map<Pair<Int, Int>, List<Exercise>>): Map<Pair<Int, Int>, Exercise>? {

@@ -54,6 +54,22 @@ class GoalPlanAssistantTest {
     }
 
     @Test
+    fun `only slots the goal talks about take the model's choice`() = runTest {
+        assistant.plan(text, goal, library, emptySet())
+        val count = slotCount()
+        model.requests.clear()
+        model.answer = { """{"picks": [${List(count) { 2 }.joinToString()}]}""" } // option 2 everywhere
+
+        val plan = assistant.plan(text, goal, library, emptySet())
+
+        // "knees … squats": the squat and lunge slots change; presses and pulls (not mentioned) don't.
+        val changed = plan.templates.zip(byCode).flatMap { (a, b) -> a.exercises.zip(b.exercises) }.filter { (a, b) -> a.exercise != b.exercise }
+        assertTrue(changed.isNotEmpty())
+        assertTrue(changed.all { (_, code) -> code.exercise.muscleGroup in setOf("Quads", "Hamstrings", "Glutes") })
+        assertEquals(byCode[0].exercises, plan.templates[0].exercises) // the upper day is untouched
+    }
+
+    @Test
     fun `a wrong count or an out-of-range number keeps code's plan`() = runTest {
         model.answer = { """{"picks": [1, 2]}""" }
         assertEquals(GoalPlanAssistant.Plan(byCode, byModel = false), assistant.plan(text, goal, library, emptySet()))
