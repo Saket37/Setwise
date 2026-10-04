@@ -75,39 +75,39 @@ object LogTextParser {
         return LocalDateTime.of(day, time(lower))
     }
 
-    private fun date(text: String): LocalDate? {
-        Regex("\\b(20\\d{2})-(\\d{1,2})-(\\d{1,2})\\b").find(text)?.let { m ->
-            return runCatching { LocalDate.of(m.groupValues[1].toInt(), m.groupValues[2].toInt(), m.groupValues[3].toInt()) }.getOrNull()
-        }
-        Regex("\\b(\\d{1,2})[/.](\\d{1,2})[/.](20\\d{2})\\b").find(text)?.let { m ->
-            return runCatching { LocalDate.of(m.groupValues[3].toInt(), m.groupValues[2].toInt(), m.groupValues[1].toInt()) }.getOrNull()
-        }
-        Regex("\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+([a-z]{3,9})\\.?,?\\s+(20\\d{2})\\b").find(text)?.let { m ->
-            val month = month(m.groupValues[2]) ?: return@let
-            return runCatching { LocalDate.of(m.groupValues[3].toInt(), month, m.groupValues[1].toInt()) }.getOrNull()
-        }
-        Regex("\\b([a-z]{3,9})\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(20\\d{2})\\b").find(text)?.let { m ->
-            val month = month(m.groupValues[1]) ?: return@let
-            return runCatching { LocalDate.of(m.groupValues[3].toInt(), month, m.groupValues[2].toInt()) }.getOrNull()
-        }
-        return null
+    /** The first date written in one of [DATE_FORMS]. */
+    private fun date(text: String): LocalDate? = DATE_FORMS.firstNotNullOfOrNull { (form, namedMonth) ->
+        val m = form.find(text) ?: return@firstNotNullOfOrNull null
+        fun group(name: String) = m.groups[name]?.value
+        val month = group("month")?.let { if (namedMonth) month(it) else it.toIntOrNull() } ?: return@firstNotNullOfOrNull null
+        val year = group("year")?.toIntOrNull() ?: return@firstNotNullOfOrNull null
+        val day = group("day")?.toIntOrNull() ?: return@firstNotNullOfOrNull null
+        runCatching { LocalDate.of(year, month, day) }.getOrNull()
     }
 
-    private fun month(word: String): Month? =
-        Month.entries.firstOrNull { it.name.lowercase(Locale.ROOT).startsWith(word.take(3)) && word.length >= 3 }
+    /** Each with year, month and day groups; true where the month is a name ("Oct", "October"). */
+    private val DATE_FORMS = listOf(
+        Regex("\\b(?<year>20\\d{2})-(?<month>\\d{1,2})-(?<day>\\d{1,2})\\b") to false,
+        Regex("\\b(?<day>\\d{1,2})[/.](?<month>\\d{1,2})[/.](?<year>20\\d{2})\\b") to false,
+        Regex("\\b(?<day>\\d{1,2})(?:st|nd|rd|th)?\\s+(?<month>[a-z]{3,9})\\.?,?\\s+(?<year>20\\d{2})\\b") to true,
+        Regex("\\b(?<month>[a-z]{3,9})\\.?\\s+(?<day>\\d{1,2})(?:st|nd|rd|th)?,?\\s+(?<year>20\\d{2})\\b") to true,
+    )
+
+    private fun month(word: String): Int? =
+        Month.entries.firstOrNull { it.name.lowercase(Locale.ROOT).startsWith(word.take(MONTH_ABBREVIATION)) }?.value
 
     /** "18:30", "6pm", "6:30 pm", "morning", "evening"; else noon. */
     private fun time(text: String): LocalTime {
-        Regex("\\b(\\d{1,2})(?::(\\d{2}))?\\s*(am|pm)\\b").find(text)?.let { m ->
-            var hour = m.groupValues[1].toInt() % 12
-            if (m.groupValues[3] == "pm") hour += 12
-            return LocalTime.of(hour, m.groupValues[2].toIntOrNull() ?: 0)
+        TWELVE_HOUR.find(text)?.let { m ->
+            val hour = m.groups["hour"]?.value?.toIntOrNull() ?: return@let
+            val time = LocalTime.of(hour % HALF_DAY, m.groups["minute"]?.value?.toIntOrNull() ?: 0)
+            return if (m.groups["pm"] != null) time.plusHours(HALF_DAY.toLong()) else time
         }
-        Regex("\\b([01]?\\d|2[0-3]):([0-5]\\d)\\b").find(text)?.let { m -> return LocalTime.of(m.groupValues[1].toInt(), m.groupValues[2].toInt()) }
+        TWENTY_FOUR_HOUR.find(text)?.let { m -> return LocalTime.parse(m.value.padStart(TIME_LENGTH, '0')) }
         return when {
-            "morning" in text -> LocalTime.of(8, 0)
-            "evening" in text || "night" in text -> LocalTime.of(19, 0)
-            "afternoon" in text -> LocalTime.of(15, 0)
+            "morning" in text -> MORNING
+            "evening" in text || "night" in text -> EVENING
+            "afternoon" in text -> AFTERNOON
             else -> LocalTime.NOON
         }
     }
@@ -129,4 +129,14 @@ object LogTextParser {
     }
 
     private const val MAX_BARE_REPS = 100
+    private const val HALF_DAY = 12
+    private const val MONTH_ABBREVIATION = 3 // "oct"
+    private const val TIME_LENGTH = 5 // "08:30"
+    private val TWELVE_HOUR = Regex("\\b(?<hour>\\d{1,2})(?::(?<minute>\\d{2}))?\\s*(?:am|(?<pm>pm))\\b")
+    private val TWENTY_FOUR_HOUR = Regex("\\b([01]?\\d|2[0-3]):[0-5]\\d\\b")
+
+    /** Times for a log that only says when in the day. */
+    private val MORNING = LocalTime.of(8, 0)
+    private val AFTERNOON = LocalTime.of(15, 0)
+    private val EVENING = LocalTime.of(19, 0)
 }

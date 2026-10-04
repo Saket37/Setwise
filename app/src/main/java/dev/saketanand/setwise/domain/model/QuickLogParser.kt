@@ -29,6 +29,12 @@ data class QuickLogParse(
  */
 object QuickLogParser {
 
+    /** "5 5 4" → [5, 5, 4]; null if any isn't a believable rep count. */
+    private fun repsList(text: String): List<Int>? =
+        text.trim().split(" ").map { it.toInt() }.takeIf { reps -> reps.all { it in 1..MAX_REPS } }
+
+    // One ordered pass of patterns (the order decides which reading wins); splitting it would scatter that order.
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     fun parse(text: String): QuickLogParse {
         var rest = " " + normalize(text) + " "
         val found = mutableListOf<Pair<Int, List<SetFact>>>() // position → sets, to keep their order
@@ -71,13 +77,7 @@ object QuickLogParser {
         }
         // "40 for 6 x 3" before the plain "a x b" forms read "6 x 3" as sets × reps.
         // "100kg 5,5,5", "80 kg x 8, 8, 7", "22kg - 10, 9, 8": one weight, then each set's reps.
-        take(WEIGHT_THEN_REPS) { m ->
-            val reps = m.groupValues[2].trim().split(" ").map { it.toInt() }
-            reps.all { it in 1..MAX_REPS } && run {
-                found += m.range.first to reps.map { SetFact(num(m, 1), it, null) }
-                true
-            }
-        }
+        take(WEIGHT_THEN_REPS) { m -> repsList(m.groupValues[2])?.also { found += m.range.first to it.map { r -> SetFact(num(m, 1), r, null) } } != null }
         take(WEIGHT_FOR_REPS) { m ->
             val count = int(m, 3) ?: int(m, 4) ?: int(m, 5) ?: if (m.groups[6] != null) 2 else 1
             sets(m, count, num(m, 1), int(m, 2), null)

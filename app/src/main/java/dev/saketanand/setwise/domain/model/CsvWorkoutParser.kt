@@ -27,30 +27,7 @@ object CsvWorkoutParser {
         val separator = if (lines[0].count { it == ';' } > lines[0].count { it == ',' }) ';' else ','
         val header = split(lines[0], separator).map { normalize(it) }
         val columns = Columns.of(header) ?: return null
-        val poundsByHeader = header.getOrNull(columns.weight ?: -1)?.let { "lb" in it } == true
-
-        data class Row(val start: LocalDateTime, val name: String, val duration: Duration?, val exercise: String, val set: SharedSet)
-        val rows = lines.drop(1).mapNotNull { line ->
-            val cells = split(line, separator)
-            fun cell(index: Int?) = index?.let { cells.getOrNull(it)?.trim() }?.takeIf { it.isNotEmpty() }
-            val start = cell(columns.date)?.let(::dateTime) ?: return@mapNotNull null
-            val exercise = cell(columns.exercise) ?: return@mapNotNull null
-            val pounds = poundsByHeader || cell(columns.weightUnit)?.lowercase(Locale.ROOT)?.startsWith("lb") == true
-            val miles = cell(columns.distanceUnit)?.lowercase(Locale.ROOT)?.startsWith("mi") == true ||
-                header.getOrNull(columns.distance ?: -1)?.contains("mi") == true
-            val weight = cell(columns.weight)?.let(::number)?.let { if (pounds) it * LB_TO_KG else it }
-            val set = SharedSet(
-                weightKg = weight?.takeIf { it > 0 }?.let { (it * 10).roundToInt() / 10.0 },
-                reps = cell(columns.reps)?.let(::number)?.toInt()?.takeIf { it > 0 },
-                seconds = cell(columns.seconds)?.let(::seconds)?.takeIf { it > 0 },
-                distanceKm = cell(columns.distance)?.let(::number)?.let { if (miles) it * MI_TO_KM else it }?.takeIf { it > 0 }
-                    ?.let { (it * 100).roundToInt() / 100.0 },
-            )
-            if (set.reps == null && set.seconds == null && set.distanceKm == null) return@mapNotNull null
-            val end = cell(columns.end)?.let(::dateTime)
-            val duration = end?.let { Duration.between(start, it).takeIf { d -> !d.isNegative } } ?: cell(columns.duration)?.let(::duration)
-            Row(start, cell(columns.name) ?: DEFAULT_NAME, duration, exercise, set)
-        }
+        val rows = lines.drop(1).mapNotNull { row(split(it, separator), columns, header) }
         if (rows.isEmpty()) return null
         // A workout: its start and name, in the order they come; its exercises in first-seen order.
         return rows.groupBy { it.start to it.name }.map { (key, workoutRows) ->
@@ -61,6 +38,39 @@ object CsvWorkoutParser {
                 duration = workoutRows.firstNotNullOfOrNull { it.duration },
             )
         }
+    }
+
+    private data class Row(val start: LocalDateTime, val name: String, val duration: Duration?, val exercise: String, val set: SharedSet)
+
+    /** One line's cells; blank ones read as missing. */
+    private class Cells(private val cells: List<String>) {
+        operator fun get(index: Int?): String? = index?.let { cells.getOrNull(it)?.trim() }?.takeIf { it.isNotEmpty() }
+    }
+
+    /** One set's row; null without a date, an exercise, or anything done. */
+    private fun row(values: List<String>, columns: Columns, header: List<String>): Row? {
+        val cell = Cells(values)
+        val start = cell[columns.date]?.let(::dateTime) ?: return null
+        val exercise = cell[columns.exercise] ?: return null
+        val set = set(cell, columns, header) ?: return null
+        val end = cell[columns.end]?.let(::dateTime)
+        val duration = end?.let { Duration.between(start, it).takeIf { d -> !d.isNegative } } ?: cell[columns.duration]?.let(::duration)
+        return Row(start, cell[columns.name] ?: DEFAULT_NAME, duration, exercise, set)
+    }
+
+    /** The set in kg and km (from lb and miles by the header or a unit column); null if it has no reps, time or distance. */
+    private fun set(cell: Cells, columns: Columns, header: List<String>): SharedSet? {
+        fun unit(column: Int?, unitColumn: Int?, prefix: String) =
+            header.getOrNull(column ?: -1)?.contains(prefix) == true || cell[unitColumn]?.lowercase(Locale.ROOT)?.startsWith(prefix) == true
+        val kgPerUnit = if (unit(columns.weight, columns.weightUnit, "lb")) LB_TO_KG else 1.0
+        val kmPerUnit = if (unit(columns.distance, columns.distanceUnit, "mi")) MI_TO_KM else 1.0
+        val set = SharedSet(
+            weightKg = cell[columns.weight]?.let(::number)?.times(kgPerUnit)?.takeIf { it > 0 }?.let { (it * 10).roundToInt() / 10.0 },
+            reps = cell[columns.reps]?.let(::number)?.toInt()?.takeIf { it > 0 },
+            seconds = cell[columns.seconds]?.let(::seconds)?.takeIf { it > 0 },
+            distanceKm = cell[columns.distance]?.let(::number)?.times(kmPerUnit)?.takeIf { it > 0 }?.let { (it * 100).roundToInt() / 100.0 },
+        )
+        return set.takeIf { it.reps != null || it.seconds != null || it.distanceKm != null }
     }
 
     private data class Columns(
@@ -131,7 +141,7 @@ object CsvWorkoutParser {
     /** "90", "1:30", "00:01:30". */
     private fun seconds(text: String): Int? {
         val parts = text.split(':').map { it.trim().toIntOrNull() ?: return number(text)?.toInt() }
-        return parts.fold(0) { total, part -> total * 60 + part }
+        return parts.fold(0) { total, part -> total * SIXTY + part }
     }
 
     /** Strong: "1h 5m", "48m", "1h"; or seconds; or "1:05:00". */
@@ -139,7 +149,7 @@ object CsvWorkoutParser {
         Regex("(?:(\\d+)\\s*h)?\\s*(?:(\\d+)\\s*m(?:in)?)?").matchEntire(text.trim())?.let { m ->
             val hours = m.groupValues[1].toLongOrNull() ?: 0
             val minutes = m.groupValues[2].toLongOrNull() ?: 0
-            if (hours + minutes > 0) return Duration.ofMinutes(hours * 60 + minutes)
+            if (hours + minutes > 0) return Duration.ofHours(hours).plusMinutes(minutes)
         }
         return seconds(text)?.takeIf { it > 0 }?.let { Duration.ofSeconds(it.toLong()) }
     }
@@ -167,4 +177,7 @@ object CsvWorkoutParser {
     private const val DEFAULT_NAME = "Workout"
     private const val LB_TO_KG = 0.45359237
     private const val MI_TO_KM = 1.609344
+
+    /** "1:30" and "1:05:00": each part is base 60. */
+    private const val SIXTY = 60
 }
