@@ -5,6 +5,7 @@ import dev.saketanand.setwise.domain.model.DayStatus
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.time.Duration
+import dev.saketanand.setwise.domain.model.WeekFacts
 
 /**
  * Everything the Workout tab (Home) shows. Design artboards:
@@ -132,36 +133,15 @@ data class TemplateUi(
     val lastUsedDaysAgo: Int?,
 )
 
-/** Recap of the previous week (artboard 13). */
+/** Recap of the previous week (artboard 13): its facts (worked out in code) and the recap in words. */
 @Immutable
 data class WeeklySummaryUi(
-    val weekStart: LocalDate,
-    val weekEnd: LocalDate,
-    val workouts: Int,
-    val timeTrained: Duration,
-    val prs: Int,
-    /** Volume change vs the week before, e.g. 8 for "+8%". Null if there's no previous week. */
-    val volumeChangePercent: Int?,
-    /** On-device LLM recap. Null while generating, or if the LLM isn't available. */
+    val facts: WeekFacts,
+    /** Written on-device; null: the template from the same facts. */
     val recap: String?,
-    /** True while the LLM is writing the recap; show a placeholder line. */
+    /** The model is writing the recap: a placeholder line. */
     val isGeneratingRecap: Boolean,
-    val highlights: List<WeeklyHighlightUi>,
-    /** Exercise to link to ("See overhead press plan"); null if no plateau was found. */
-    val plateauExercise: PlateauExerciseUi?,
 )
-
-@Immutable
-data class WeeklyHighlightUi(
-    /** "Back Squat best set" */
-    val label: String,
-    /** "100 × 5", "+18%", "flat 4 wks" */
-    val value: String,
-    val kind: HighlightKind,
-)
-
-/** Decides the highlight's dot colour: PR = Ember, improvement = Volt, neutral = grey. */
-enum class HighlightKind { PR, IMPROVEMENT, NEUTRAL }
 
 /**
  * "Discard Pull Day?" dialog. Captures the running workout's id when the dialog opens, so
@@ -187,10 +167,4 @@ data class CheckInDayUi(
     val date: LocalDate,
     /** Rest / Missed once answered; null = not yet. */
     val status: DayStatus?,
-)
-
-@Immutable
-data class PlateauExerciseUi(
-    val exerciseId: Long,
-    val name: String,
 )

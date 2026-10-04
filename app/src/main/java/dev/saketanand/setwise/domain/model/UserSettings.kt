@@ -15,9 +15,16 @@ data class UserSettings(
     val onboardingDone: Boolean = false,
     /** The day the check-in was last shown (it's shown at most once a day). */
     val checkInLastAskedOn: LocalDate? = null,
+    /** Monday of the week whose summary card was closed: it stays closed. */
+    val weeklySummaryDismissedWeek: LocalDate? = null,
+    /** The on-device recap of a week (Monday), written once and kept. */
+    val weeklyRecap: WeeklyRecap? = null,
 ) {
     companion object {
         /** A plausible body weight; anything outside is a typo. */
         val BODY_WEIGHT_RANGE_KG = 20.0..400.0
     }
 }
+
+/** The weekly summary's recap in words, for the week starting [weekStart]. */
+data class WeeklyRecap(val weekStart: LocalDate, val text: String)

@@ -45,6 +45,7 @@ import dev.saketanand.setwise.domain.ai.CalorieEstimator
 import dev.saketanand.setwise.domain.ai.WorkoutInsightWriter
 import dev.saketanand.setwise.domain.ai.ExerciseAssistant
 import dev.saketanand.setwise.domain.ai.HistoryAssistant
+import dev.saketanand.setwise.domain.ai.WeeklyRecapWriter
 import dev.saketanand.setwise.domain.ai.PlateauNoteWriter
 import dev.saketanand.setwise.domain.ai.QuickLogInterpreter
 import dev.saketanand.setwise.domain.ai.ModelDownloader
@@ -74,6 +75,7 @@ val appModule = module {
     singleOf(::QuickLogInterpreter)
     singleOf(::PlateauNoteWriter)
     singleOf(::HistoryAssistant)
+    singleOf(::WeeklyRecapWriter)
     single { ModelDownloader(get(), get(ApplicationScope)) }
     factoryOf(::AiCheck) // debug launch extra only (MainActivity)
     singleOf(::CalorieSync)

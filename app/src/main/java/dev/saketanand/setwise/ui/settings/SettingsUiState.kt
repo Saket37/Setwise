@@ -12,6 +12,8 @@ data class SettingsUiState(
     val bodyWeightKg: Double? = null,
     val trainingDays: Set<DayOfWeek> = emptySet(),
     val askAboutUnloggedDays: Boolean = true,
+    /** Last week's summary was closed on Home: it can be shown again. */
+    val isWeeklySummaryClosed: Boolean = false,
     /** The editor dialog that's open, if any. */
     val editor: SettingsEditor? = null,
     val ai: AiStatusUi = AiStatusUi(),

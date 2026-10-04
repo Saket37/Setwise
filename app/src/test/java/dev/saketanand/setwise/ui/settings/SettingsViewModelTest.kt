@@ -23,6 +23,13 @@ import dev.saketanand.setwise.domain.ai.DownloadFailure
 import dev.saketanand.setwise.domain.ai.DownloadState
 import dev.saketanand.setwise.domain.ai.ModelDownload
 import dev.saketanand.setwise.domain.ai.ModelDownloader
+import dev.saketanand.setwise.util.DateProvider
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import org.junit.Assert.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
@@ -35,7 +42,7 @@ class SettingsViewModelTest {
 
     private val model = FakeOnDeviceModel(ModelAvailability.Downloadable)
 
-    private fun TestScope.viewModel() = SettingsViewModel(settings, model, ModelDownloader(model, backgroundScope)).also { vm ->
+    private fun TestScope.viewModel() = SettingsViewModel(settings, model, ModelDownloader(model, backgroundScope), FixedDates).also { vm ->
         backgroundScope.launch { vm.state.collect {} }
     }
 
@@ -140,5 +147,24 @@ class SettingsViewModelTest {
         vm.onAction(SettingsAction.OnAskAboutUnloggedDaysChange(false))
 
         assertFalse(vm.state.value.askAboutUnloggedDays)
+    }
+
+    @Test
+    fun `a closed weekly summary can be shown again`() = runTest(dispatcher) {
+        settings.settings.value = settings.settings.value.copy(weeklySummaryDismissedWeek = LocalDate.of(2026, 9, 28))
+        val vm = viewModel()
+        assertTrue(vm.state.value.isWeeklySummaryClosed)
+
+        vm.onAction(SettingsAction.OnShowWeeklySummary)
+
+        assertEquals(null, settings.settings.value.weeklySummaryDismissedWeek)
+        assertEquals(false, vm.state.value.isWeeklySummaryClosed)
+    }
+
+    /** Today: Mon 5 Oct 2026, so last week starts 28 Sep. */
+    private object FixedDates : DateProvider {
+        override val zone: ZoneId = ZoneId.of("Asia/Kolkata")
+        override fun now(): Instant = LocalDate.of(2026, 10, 5).atTime(9, 0).atZone(zone).toInstant()
+        override fun today(): Flow<LocalDate> = flowOf(LocalDate.of(2026, 10, 5))
     }
 }

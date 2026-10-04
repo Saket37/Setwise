@@ -17,12 +17,15 @@ import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.domain.ai.OnDeviceModel
 import dev.saketanand.setwise.domain.ai.DownloadState
 import dev.saketanand.setwise.domain.ai.ModelDownloader
+import dev.saketanand.setwise.domain.model.WeeklySummaryRules
+import dev.saketanand.setwise.util.DateProvider
 
 /** Screen: [SettingsScreenRoot]. Shows and edits what onboarding asked (all optional). */
 class SettingsViewModel(
     private val userSettings: UserSettingsRepository,
     private val model: OnDeviceModel,
     private val downloader: ModelDownloader,
+    private val dateProvider: DateProvider,
 ) : ViewModel() {
 
     private val editor = MutableStateFlow<SettingsEditor?>(null)
@@ -35,6 +38,8 @@ class SettingsViewModel(
             bodyWeightKg = settings.bodyWeightKg,
             trainingDays = settings.trainingDays,
             askAboutUnloggedDays = settings.askAboutUnloggedDays,
+            isWeeklySummaryClosed = settings.weeklySummaryDismissedWeek != null &&
+                settings.weeklySummaryDismissedWeek == WeeklySummaryRules.lastWeekStart(dateProvider.now().atZone(dateProvider.zone).toLocalDate()),
             editor = editor,
             ai = ai,
         )
@@ -47,6 +52,7 @@ class SettingsViewModel(
 
     fun onAction(action: SettingsAction) {
         when (action) {
+            SettingsAction.OnShowWeeklySummary -> viewModelScope.launch { userSettings.setWeeklySummaryDismissed(null) }
             SettingsAction.OnBodyWeightClick -> editor.value = SettingsEditor.BodyWeight()
             is SettingsAction.OnSaveBodyWeight -> saveBodyWeight(action.text)
             SettingsAction.OnRemoveBodyWeight -> {

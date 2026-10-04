@@ -13,6 +13,8 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import androidx.datastore.preferences.core.stringPreferencesKey
+import dev.saketanand.setwise.domain.model.WeeklyRecap
 
 /**
  * [UserSettingsRepository] in the app's DataStore (the same file as the seed version).
@@ -31,6 +33,8 @@ class DataStoreUserSettingsRepository(
             askAboutUnloggedDays = prefs[ASK_ABOUT_UNLOGGED_DAYS] ?: true,
             onboardingDone = prefs[ONBOARDING_DONE] ?: false,
             checkInLastAskedOn = prefs[CHECK_IN_LAST_ASKED_ON]?.let(LocalDate::ofEpochDay),
+            weeklySummaryDismissedWeek = prefs[WEEKLY_SUMMARY_DISMISSED]?.let(LocalDate::ofEpochDay),
+            weeklyRecap = prefs[WEEKLY_RECAP_WEEK]?.let { week -> prefs[WEEKLY_RECAP_TEXT]?.let { WeeklyRecap(LocalDate.ofEpochDay(week), it) } },
         )
     }
 
@@ -56,11 +60,25 @@ class DataStoreUserSettingsRepository(
         dataStore.edit { it[CHECK_IN_LAST_ASKED_ON] = day.toEpochDay() }
     }
 
+    override suspend fun setWeeklySummaryDismissed(weekStart: LocalDate?) {
+        dataStore.edit { if (weekStart != null) it[WEEKLY_SUMMARY_DISMISSED] = weekStart.toEpochDay() else it.remove(WEEKLY_SUMMARY_DISMISSED) }
+    }
+
+    override suspend fun setWeeklyRecap(recap: WeeklyRecap) {
+        dataStore.edit {
+            it[WEEKLY_RECAP_WEEK] = recap.weekStart.toEpochDay()
+            it[WEEKLY_RECAP_TEXT] = recap.text
+        }
+    }
+
     private companion object {
         val BODY_WEIGHT_KG = doublePreferencesKey("body_weight_kg")
         val TRAINING_DAYS = stringSetPreferencesKey("training_days")
         val ASK_ABOUT_UNLOGGED_DAYS = booleanPreferencesKey("ask_about_unlogged_days")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val CHECK_IN_LAST_ASKED_ON = longPreferencesKey("check_in_last_asked_on")
+        val WEEKLY_SUMMARY_DISMISSED = longPreferencesKey("weekly_summary_dismissed_week")
+        val WEEKLY_RECAP_WEEK = longPreferencesKey("weekly_recap_week")
+        val WEEKLY_RECAP_TEXT = stringPreferencesKey("weekly_recap_text")
     }
 }

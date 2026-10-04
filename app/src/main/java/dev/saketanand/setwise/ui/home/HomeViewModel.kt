@@ -28,6 +28,14 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dev.saketanand.setwise.domain.ai.WeeklyRecapWriter
+import dev.saketanand.setwise.domain.model.WeeklyRecap
+import dev.saketanand.setwise.domain.model.WeeklySummaryRules
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 /** Screen: [HomeScreenRoot]. */
 @OptIn(ExperimentalCoroutinesApi::class) // flatMapLatest
@@ -38,6 +46,7 @@ class HomeViewModel(
     private val dayMarkRepository: DayMarkRepository,
     private val userSettingsRepository: UserSettingsRepository,
     private val dateProvider: DateProvider,
+    private val weeklyRecapWriter: WeeklyRecapWriter,
 ) : ViewModel() {
 
     private val zone: ZoneId get() = dateProvider.zone
@@ -75,7 +84,6 @@ class HomeViewModel(
                             weekStats = weekStats.toUi(),
                             templates = templates.map { template -> template.toUi(today, zone) },
                             exerciseCount = exerciseCount,
-                            // TODO (milestone 14): weeklySummary from the LLM recap.
                         )
                     }
                 }
@@ -89,6 +97,53 @@ class HomeViewModel(
             .launchIn(viewModelScope)
 
         observeCheckIn()
+        observeWeeklySummary()
+    }
+
+    /**
+     * Last week's summary card (artboard 13), all this week until closed: its facts from the
+     * training log, and the recap written on-device once and kept (else the card's template).
+     */
+    private fun observeWeeklySummary() {
+        combine(
+            dateProvider.today(),
+            workoutRepository.observeHistory(),
+            userSettingsRepository.settings.map { it.weeklySummaryDismissedWeek }.distinctUntilChanged(),
+        ) { today, history, dismissed -> Triple(today, history, dismissed) }
+            .collectLatestIn { (today, history, dismissed) ->
+                val week = WeeklySummaryRules.lastWeekStart(today)
+                val facts = if (dismissed == week) {
+                    null
+                } else {
+                    val library = exerciseRepository.observeExercises("", null).first()
+                    WeeklySummaryRules.facts(week, workoutRepository.getTrainingLog(), history, library, zone)
+                }
+                if (facts == null) {
+                    _state.update { it.copy(weeklySummary = null) }
+                    return@collectLatestIn
+                }
+                val kept = userSettingsRepository.settings.first().weeklyRecap?.takeIf { it.weekStart == week }?.text
+                val writing = kept == null && weeklyRecapWriter.canWrite()
+                _state.update { it.copy(weeklySummary = WeeklySummaryUi(facts, kept, isGeneratingRecap = writing)) }
+                if (writing) {
+                    val recap = weeklyRecapWriter.write(facts)
+                    recap?.let { userSettingsRepository.setWeeklyRecap(WeeklyRecap(week, it)) }
+                    _state.update { it.copy(weeklySummary = WeeklySummaryUi(facts, recap, isGeneratingRecap = false)) }
+                }
+            }
+    }
+
+    /** collectLatest in viewModelScope; a failure is logged, not thrown. */
+    private fun <T> Flow<T>.collectLatestIn(block: suspend (T) -> Unit) {
+        viewModelScope.launch {
+            try {
+                collectLatest(block)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "The weekly summary failed", e)
+            }
+        }
     }
 
     /**
@@ -153,9 +208,11 @@ class HomeViewModel(
 
             is HomeAction.OnSaveLastWorkoutAsTemplate -> saveWorkoutAsTemplate(action.workoutId)
 
-            HomeAction.OnWeeklySummaryDismiss ->
-                // TODO (milestone 14): remember the dismissal (DataStore) so it stays hidden.
+            HomeAction.OnWeeklySummaryDismiss -> {
+                val week = _state.value.weeklySummary?.facts?.weekStart ?: return
                 _state.update { it.copy(weeklySummary = null) }
+                viewModelScope.launch { userSettingsRepository.setWeeklySummaryDismissed(week) }
+            }
 
             is HomeAction.OnCheckInMark -> mark(listOf(action.date), action.status)
 
