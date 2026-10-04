@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.test.junit4.createComposeRule
 import dev.saketanand.setwise.testing.RecompositionCounter
+import dev.saketanand.setwise.ui.LocalBootClock
 import dev.saketanand.setwise.ui.LocalWallClock
 import dev.saketanand.setwise.ui.designsystem.theme.SetwiseTheme
 import java.time.LocalTime
@@ -20,8 +21,8 @@ import org.robolectric.RobolectricTestRunner
 
 /**
  * How much of the workout screen recomposes when one thing changes: the screen stays open for a
- * whole workout, with a clock and a rest timer ticking. The clock runs on the test's time
- * ([LocalWallClock]), so the counts are the same on every machine. Ceilings are the measured
+ * whole workout, with a clock and a rest timer ticking. Both run on the test's time
+ * ([LocalWallClock], [LocalBootClock]), so the counts are the same on every machine. Ceilings are the measured
  * counts plus a little room for Compose updates; a change that blows one (e.g. set rows
  * recomposing on every tick) fails here, and the failure prints the count.
  */
@@ -38,8 +39,11 @@ class ActiveWorkoutRecompositionTest {
     fun setUp() {
         compose.mainClock.autoAdvance = false
         compose.setContent {
-            // The workout clock ticks on the test's clock, not the real one.
-            CompositionLocalProvider(LocalWallClock provides { NOW + compose.mainClock.currentTime }) {
+            // The workout clock and the rest countdown run on the test's clock, not the real ones.
+            CompositionLocalProvider(
+                LocalWallClock provides { NOW + compose.mainClock.currentTime },
+                LocalBootClock provides { compose.mainClock.currentTime },
+            ) {
                 counter.Observe { SetwiseTheme { ActiveWorkoutScreen(uiState = uiState, onAction = {}) } }
             }
         }
@@ -58,11 +62,12 @@ class ActiveWorkoutRecompositionTest {
 
     @Test
     fun `the rest timer ticking recomposes only the rest bar`() {
-        change { it.copy(rest = RestUi(endsAtElapsed = 60_000, totalMillis = 90_000, nextSetNumber = 3, nextExerciseName = null)) }
+        change { it.copy(rest = RestUi(endsAtElapsed = compose.mainClock.currentTime + 60_000, totalMillis = 90_000, nextSetNumber = 3, nextExerciseName = null)) }
         counter.reset()
         compose.mainClock.advanceTimeBy(1_000)
-        // Measured: 8 for a second of the rest bar (ticking 10× a second) and the clock.
-        assertAtMost(10, "1 s of rest")
+        // Measured: 89 for a second of rest: the whole bar recomposes on each of its 10 updates
+        // a second (#77); fixing that should bring this to a few scopes.
+        assertAtMost(95, "1 s of rest")
     }
 
     @Test
