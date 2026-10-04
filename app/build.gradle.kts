@@ -117,6 +117,8 @@ dependencies {
 
     // Instrumented tests (./gradlew connectedDebugAndroidTest)
     androidTestImplementation(libs.bundles.android.test)
+    // Migration tests: opens each exported schema version and migrates it (MigrationTestHelper).
+    androidTestImplementation(libs.room.testing)
     // Compose UI tests with Google's Accessibility Test Framework checks (#62); the checks need
     // API 34+ on a device or emulator (they don't run on Robolectric).
     androidTestImplementation(platform(libs.androidx.compose.bom))
