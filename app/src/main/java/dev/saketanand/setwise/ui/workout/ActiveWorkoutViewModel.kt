@@ -38,7 +38,6 @@ import kotlinx.coroutines.flow.first
 import dev.saketanand.setwise.domain.ai.Heard
 import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.domain.ai.SpeechInput
-import dev.saketanand.setwise.domain.ai.SpokenTextFixer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -68,7 +67,6 @@ class ActiveWorkoutViewModel(
     private val quickLogInterpreter: QuickLogInterpreter,
     private val exerciseRepository: ExerciseRepository,
     private val speechInput: SpeechInput,
-    private val spokenTextFixer: SpokenTextFixer,
 ) : ViewModel() {
 
     /** On-device listening in progress, if any. */
@@ -351,29 +349,13 @@ class ActiveWorkoutViewModel(
 
     // Quick log
 
-    /**
-     * @param spoken heard by speech recognition: if it can't be used as heard, proofreading (for
-     *   words that sound alike) gets one try, kept only if the quick log then understands it.
-     */
-    private fun readQuickLog(text: String, spoken: Boolean = false) {
+    private fun readQuickLog(text: String) {
         val current = session ?: return
         if (text.isBlank() || overlays.value.quickLog.isReading) return
         readLine = text.trim()
         overlays.update { it.copy(quickLog = QuickLogUi(isReading = true)) }
         viewModelScope.launch {
-            var result = interpret(text.trim(), current)
-            if (spoken && result is QuickLogResult.NotUnderstood && spokenTextFixer.availability() == ModelAvailability.Ready) {
-                val fixed = spokenTextFixer.fix(text.trim())?.trim()
-                if (!fixed.isNullOrBlank() && fixed != text.trim()) {
-                    val fixedResult = interpret(fixed, current)
-                    Log.d(TAG, "Proofread '$text' → '$fixed': ${fixedResult::class.simpleName}")
-                    if (fixedResult !is QuickLogResult.NotUnderstood) {
-                        result = fixedResult
-                        readLine = fixed
-                        eventChannel.trySend(ActiveWorkoutEvent.QuickLogHeard(fixed))
-                    }
-                }
-            }
+            val result = interpret(text.trim(), current)
             pendingQuickLog = result
             overlays.update { it.copy(quickLog = result.toUi()) }
         }
@@ -441,7 +423,7 @@ class ActiveWorkoutViewModel(
             }
             if (text.isNotEmpty()) {
                 eventChannel.trySend(ActiveWorkoutEvent.QuickLogHeard(text))
-                readQuickLog(text, spoken = true)
+                readQuickLog(text)
             }
         }
     }

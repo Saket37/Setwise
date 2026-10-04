@@ -9,7 +9,7 @@ import dev.saketanand.setwise.domain.ai.ModelDownload
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-/** Shared by the ML Kit GenAI features (prompt, speech recognition, proofreading). */
+/** Shared by the ML Kit GenAI features (prompt, speech recognition). */
 
 fun Int.toModelAvailability(): ModelAvailability = when (this) {
     FeatureStatus.AVAILABLE -> ModelAvailability.Ready

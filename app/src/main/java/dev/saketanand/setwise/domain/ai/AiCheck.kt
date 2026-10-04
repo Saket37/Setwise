@@ -41,7 +41,6 @@ class AiCheck(
     private val context: Context,
     private val model: OnDeviceModel,
     private val speechInput: SpeechInput,
-    private val spokenTextFixer: SpokenTextFixer,
     private val estimator: CalorieEstimator,
     private val insightWriter: WorkoutInsightWriter,
     private val exerciseAssistant: ExerciseAssistant,
@@ -87,12 +86,11 @@ class AiCheck(
 
     /**
      * Spoken quick-log lines (debug assets: text-to-speech clips, US and Indian English): what
-     * on-device speech recognition heard, what proofreading made of it, and what the quick log
-     * understands from each. Downloads the speech and proofreading models if they're missing.
+     * on-device speech recognition heard and what the quick log
+     * understands from each. Downloads the speech model if it's missing.
      */
     private suspend fun checkSpeech() {
         if (!ensureReady("Speech recognition", { speechInput.availability() }, { speechInput.download() })) return
-        val proofreading = ensureReady("Proofreading", { spokenTextFixer.availability() }, { spokenTextFixer.download() })
         val recent = exerciseRepository.observeRecentExercises(50).first().map { it.exercise }
         val library = exerciseRepository.observeExercises("", null).first()
         val empty = WorkoutSession(0, "", null, Instant.EPOCH, null, emptyList())
@@ -114,10 +112,8 @@ class AiCheck(
                 file.delete()
             }
             val ms = (System.nanoTime() - startedAt) / 1_000_000
-            val fixed = if (proofreading) spokenTextFixer.fix(heard) else null
             Log.i(TAG, "Said (${clip.getString("voice")}): '${clip.getString("said")}'")
             Log.i(TAG, "  heard in $ms ms: '$heard' → ${understood(heard, empty, recent, library)}")
-            if (fixed != null && fixed != heard) Log.i(TAG, "  proofread: '$fixed' → ${understood(fixed, empty, recent, library)}")
         }
     }
 

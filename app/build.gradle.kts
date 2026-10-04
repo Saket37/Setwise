@@ -85,9 +85,6 @@ dependencies {
     // On-device LLM: Gemini Nano via ML Kit Prompt API (AICore)
     implementation(libs.mlkit.genai.prompt)
     implementation(libs.mlkit.genai.speech.recognition)
-    implementation(libs.mlkit.genai.proofreading)
-    // ListenableFuture.await() for the ML Kit APIs that return futures (proofreading)
-    implementation(libs.androidx.concurrent.futures.ktx)
     // Structured output: @Generable answer classes; KSP generates their schemas.
     implementation(libs.mlkit.genai.schema)
     ksp(libs.mlkit.genai.schema.compiler)

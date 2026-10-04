@@ -32,15 +32,3 @@ interface SpeechInput {
     /** Stops listening; what was heard still arrives. */
     suspend fun stop()
 }
-
-/**
- * Corrects what speech-to-text wrote (ML Kit GenAI Proofreading, voice input): null when it
- * isn't available or fails.
- */
-interface SpokenTextFixer {
-    suspend fun availability(): ModelAvailability
-
-    fun download(): Flow<ModelDownload>
-
-    suspend fun fix(text: String): String?
-}

@@ -49,7 +49,6 @@ import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import dev.saketanand.setwise.domain.ai.Heard
 import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.testing.FakeSpeechInput
-import dev.saketanand.setwise.testing.FakeSpokenTextFixer
 import kotlinx.coroutines.test.advanceTimeBy
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -65,7 +64,6 @@ class ActiveWorkoutViewModelTest {
 
     private val model = FakeOnDeviceModel()
     private val speech = FakeSpeechInput(availability = ModelAvailability.Unavailable)
-    private val fixer = FakeSpokenTextFixer()
 
     private fun TestScope.viewModel() =
         ActiveWorkoutViewModel(
@@ -76,7 +74,6 @@ class ActiveWorkoutViewModelTest {
             quickLogInterpreter = QuickLogInterpreter(model, ExerciseAssistant(model)),
             exerciseRepository = FakeLibrary,
             speechInput = speech,
-            spokenTextFixer = fixer,
         ).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
         }
@@ -458,24 +455,6 @@ class ActiveWorkoutViewModelTest {
         assertEquals(1, speech.stops)
         assertEquals(List(3) { SetFact(60.0, 8, null) }, vm.state.value.quickLog.preview?.sets)
         assertTrue(ActiveWorkoutEvent.QuickLogHeard("bench three sets of eight at sixty") in events)
-        assertTrue(fixer.asked.isEmpty()) // understood as heard: no proofreading
-    }
-
-    @Test
-    fun `a line not understood as heard is proofread once, and kept if it then is`() = runTest(dispatcher) {
-        speech.availability = ModelAvailability.Ready
-        speech.script = listOf(Heard.Final("bench tree sets of ate at sixty"))
-        fixer.fixes = mapOf("bench tree sets of ate at sixty" to "bench three sets of eight at sixty")
-        val vm = viewModel()
-        val events = mutableListOf<ActiveWorkoutEvent>()
-        backgroundScope.launch { vm.events.collect { events += it } }
-
-        vm.onAction(ActiveWorkoutAction.OnStartListening)
-        advanceTimeBy(2_000)
-
-        assertEquals(listOf("bench tree sets of ate at sixty"), fixer.asked)
-        assertEquals(3, vm.state.value.quickLog.preview?.sets?.size)
-        assertEquals(ActiveWorkoutEvent.QuickLogHeard("bench three sets of eight at sixty"), events.last())
     }
 
     @Test

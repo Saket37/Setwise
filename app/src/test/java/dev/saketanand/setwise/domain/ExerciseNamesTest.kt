@@ -48,6 +48,7 @@ class ExerciseNamesTest {
         // Known words stay; a word with no single close one stays too.
         assertEquals("bench press", ExerciseNames.soundAlikeFixed("bench press", names))
         assertEquals("left pull down", ExerciseNames.soundAlikeFixed("left pull down", names))
+        assertEquals("lat pull down", ExerciseNames.soundAlikeFixed("LAD pulled down", names))
     }
 
     @Test

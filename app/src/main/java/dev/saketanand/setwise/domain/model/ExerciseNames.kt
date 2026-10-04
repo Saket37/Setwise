@@ -79,7 +79,9 @@ object ExerciseNames {
             val allowed = if (word.length > 5) 2 else 1
             val closest = vocabulary.map { it to editDistance(word, it) }.filter { (_, d) -> d <= allowed }
             val best = closest.minOfOrNull { it.second } ?: return@joinToString word
-            closest.filter { it.second == best }.singleOrNull()?.first ?: word
+            val tied = closest.filter { it.second == best }.map { it.first }
+            // A tie goes to the word it starts with: the same word with an ending ("pulled" → pull).
+            tied.singleOrNull() ?: tied.filter { word.startsWith(it) }.singleOrNull() ?: word
         }
     }
 

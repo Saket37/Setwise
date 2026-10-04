@@ -4,7 +4,6 @@ import dev.saketanand.setwise.domain.ai.Heard
 import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.domain.ai.ModelDownload
 import dev.saketanand.setwise.domain.ai.SpeechInput
-import dev.saketanand.setwise.domain.ai.SpokenTextFixer
 import java.io.File
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
@@ -43,22 +42,5 @@ class FakeSpeechInput(
     override suspend fun stop() {
         stops++
         stopped.complete(Unit)
-    }
-}
-
-/** Proofreading that answers with [fixes] (null: no fix). */
-class FakeSpokenTextFixer(
-    var availability: ModelAvailability = ModelAvailability.Ready,
-    var fixes: Map<String, String> = emptyMap(),
-) : SpokenTextFixer {
-    val asked = mutableListOf<String>()
-
-    override suspend fun availability() = availability
-
-    override fun download(): Flow<ModelDownload> = flowOf(ModelDownload.Done)
-
-    override suspend fun fix(text: String): String? {
-        asked += text
-        return fixes[text]
     }
 }
