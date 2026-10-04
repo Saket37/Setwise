@@ -1,22 +1,25 @@
 package dev.saketanand.setwise.domain
 
+import dev.saketanand.setwise.domain.ai.CalorieEstimator
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.model.BodyMeasurement
 import dev.saketanand.setwise.domain.model.CalorieEstimate
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
-import dev.saketanand.setwise.domain.model.BodyMeasurement
 import dev.saketanand.setwise.domain.model.Intensity
-import dev.saketanand.setwise.domain.model.Sex
 import dev.saketanand.setwise.domain.model.SessionExercise
+import dev.saketanand.setwise.domain.model.Sex
 import dev.saketanand.setwise.domain.model.UserSettings
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutSet
-import dev.saketanand.setwise.domain.ai.CalorieEstimator
-import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.testing.FakeBodyRepository
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 import dev.saketanand.setwise.testing.StubWorkoutRepository
+import dev.saketanand.setwise.util.DateProvider
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,9 +32,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import dev.saketanand.setwise.util.DateProvider
-import java.time.LocalDate
-import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CalorieSyncTest {

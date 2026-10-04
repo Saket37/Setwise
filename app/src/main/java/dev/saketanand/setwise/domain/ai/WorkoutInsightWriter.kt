@@ -18,9 +18,10 @@ import kotlinx.coroutines.CancellationException
  */
 class WorkoutInsightWriter(private val model: OnDeviceModel) {
 
-    suspend fun write(facts: WorkoutFacts): String? {
+    /** @param person the profile's name, to address them. */
+    suspend fun write(facts: WorkoutFacts, person: PersonFacts = PersonFacts()): String? {
         if (model.availability() != ModelAvailability.Ready) return null
-        val factLines = factLines(facts)
+        val factLines = factLines(facts, person)
         val startedAt = System.nanoTime()
         val answer = try {
             model.generate(prompt(factLines))
@@ -56,7 +57,8 @@ class WorkoutInsightWriter(private val model: OnDeviceModel) {
         )
 
         /** One fact per line, numbers written once and exactly. */
-        fun factLines(facts: WorkoutFacts): String = buildList {
+        fun factLines(facts: WorkoutFacts, person: PersonFacts = PersonFacts()): String = buildList {
+            person.nameLine()?.let(::add)
             add(
                 listOfNotNull(
                     "Workout: ${facts.workoutName}, ${facts.minutes} min",
@@ -131,7 +133,8 @@ class WorkoutInsightWriter(private val model: OnDeviceModel) {
             "You write a short recap of one gym workout for the person who did it. " +
                 "Use only the facts given, with numbers exactly as written. " +
                 "2 short sentences, under 35 words, plain text. Don't say when it happened. " +
-                "No greetings, advice, lists or emoji."
+                "Write to them as \"you\". If a name is given, you may address them by it once (\"Sam, you...\"); " +
+                "never write about them by name. No greetings, advice, lists or emoji."
 
         private val EXAMPLE = """
             <facts>
