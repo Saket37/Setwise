@@ -19,7 +19,17 @@ data class UserSettings(
     val weeklySummaryDismissedWeek: LocalDate? = null,
     /** The on-device recap of a week (Monday), written once and kept. */
     val weeklyRecap: WeeklyRecap? = null,
+    /** What to call them; null = not given. */
+    val name: String? = null,
+    /** Stored as a birth year, so the age stays right; null = not given. */
+    val birthYear: Int? = null,
+    /** For the BMR formula only; null = not given. */
+    val sex: Sex? = null,
+    val heightCm: Double? = null,
 ) {
+    /** Age this year (from the birth year). */
+    fun ageOn(today: LocalDate): Int? = birthYear?.let { today.year - it }
+
     companion object {
         /** A plausible body weight; anything outside is a typo. */
         val BODY_WEIGHT_RANGE_KG = 20.0..400.0

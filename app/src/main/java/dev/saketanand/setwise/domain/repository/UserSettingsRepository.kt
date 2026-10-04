@@ -5,6 +5,7 @@ import dev.saketanand.setwise.domain.model.WeeklyRecap
 import java.time.DayOfWeek
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
+import dev.saketanand.setwise.domain.model.Sex
 
 /** The user's settings, stored on the phone. */
 interface UserSettingsRepository {
@@ -14,6 +15,17 @@ interface UserSettingsRepository {
 
     /** Null clears it. Values outside [UserSettings.BODY_WEIGHT_RANGE_KG] are rejected (false). */
     suspend fun setBodyWeightKg(kg: Double?): Boolean
+
+    /** Blank clears it. */
+    suspend fun setName(name: String?)
+
+    /** False (nothing saved) if the age is implausible. */
+    suspend fun setAge(age: Int?, today: java.time.LocalDate): Boolean
+
+    suspend fun setSex(sex: Sex?)
+
+    /** False (nothing saved) if the height is implausible. */
+    suspend fun setHeightCm(cm: Double?): Boolean
 
     suspend fun setTrainingDays(days: Set<DayOfWeek>)
 

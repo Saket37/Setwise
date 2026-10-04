@@ -384,6 +384,58 @@
     <string name="plateau_source_rules">Detected from your logs</string>
     <string name="flat_since">flat since %1$s</string>
 
+    <!-- Profile and body composition -->
+    <string name="profile_name">Name</string>
+    <string name="profile_name_hint">What should Setwise call you?</string>
+    <string name="profile_age">Age</string>
+    <string name="profile_age_invalid">Enter an age between 10 and 100.</string>
+    <string name="profile_sex">Sex</string>
+    <string name="profile_sex_detail">Only for working out your BMR when there\'s no report. Optional.</string>
+    <string name="sex_male">Male</string>
+    <string name="sex_female">Female</string>
+    <string name="profile_height">Height</string>
+    <string name="profile_height_invalid">Enter a height between 90 and 250 cm.</string>
+    <string name="height_cm">%1$s cm</string>
+    <string name="unit_cm">cm</string>
+    <string name="unit_years">years</string>
+    <string name="body_composition">Body composition</string>
+    <string name="body_composition_add">Add</string>
+    <string name="body_composition_detail">Body fat, muscle and BMR: typed in or read from a report</string>
+    <string name="bmr_kcal">BMR %1$s kcal</string>
+
+    <string name="body_scan_detail">Scan a body composition report (InBody, smart scale…): it\'s read on this phone, and you check it before it\'s saved. The photo isn\'t kept.</string>
+    <string name="body_take_photo">Take a photo</string>
+    <string name="body_choose_photo">Choose a photo</string>
+    <string name="body_add_manually">Add manually</string>
+    <string name="body_reading">Reading your report on-device…</string>
+    <string name="body_read_failed">Couldn\'t find report values in that photo. Try a sharper, flat photo, or add them manually.</string>
+    <string name="body_weight_trend">Weight · last checks</string>
+    <string name="body_fat_trend">Body fat · last checks</string>
+    <string name="body_history">Checks</string>
+    <string name="body_weight_kg_label">kg</string>
+    <string name="body_fat_label" formatted="false">% fat</string>
+    <string name="body_muscle_label">kg muscle</string>
+    <string name="body_visceral_label">visceral</string>
+    <string name="body_bmr_unknown">BMR not known yet</string>
+    <string name="body_bmr_from_report">From your latest report</string>
+    <string name="body_bmr_from_fat">Worked out from your weight and body fat</string>
+    <string name="body_bmr_from_profile">Worked out from your weight, height, age and sex</string>
+    <string name="body_bmr_how">Scan a report, add body fat, or set height, age and sex in your profile</string>
+    <string name="body_source_report">report</string>
+    <string name="body_delete_check">Delete this check</string>
+    <string name="body_read_title">Read from your report</string>
+    <string name="body_add_title">Add a body check</string>
+    <string name="body_read_on_device">Read on this phone · check before saving</string>
+    <string name="body_read_by_model">Read on this phone with Gemini Nano\'s help · check before saving</string>
+    <string name="body_weight_field">Weight</string>
+    <string name="body_fat_field">Body fat</string>
+    <string name="body_muscle_field">Muscle mass</string>
+    <string name="body_bmr_field">BMR</string>
+    <string name="body_visceral_field">Visceral fat level</string>
+    <string name="body_profile_age">age %1$d</string>
+    <string name="body_fills_profile">Also fills your profile: %1$s</string>
+    <string name="body_invalid">Check the values: one isn\'t believable, or none is filled in.</string>
+
     <!-- Weekly summary (Home) -->
     <string name="settings_weekly_summary">Last week\'s summary</string>
     <string name="settings_weekly_summary_show">Show again</string>

@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.settings
 
 import java.time.DayOfWeek
+import dev.saketanand.setwise.domain.model.Sex
 
 /** What the user can do on [SettingsScreen]. */
 sealed interface SettingsAction {
@@ -25,4 +26,19 @@ sealed interface SettingsAction {
 
     /** "Show again": last week's summary back on Home. */
     data object OnShowWeeklySummary : SettingsAction
+
+    data object OnNameClick : SettingsAction
+    data class OnSaveName(val text: String) : SettingsAction
+    data object OnAgeClick : SettingsAction
+    data class OnSaveAge(val text: String) : SettingsAction
+    data object OnSexClick : SettingsAction
+    data class OnSaveSex(val sex: Sex?) : SettingsAction
+    data object OnHeightClick : SettingsAction
+    data class OnSaveHeight(val text: String) : SettingsAction
+
+    /** A profile value's Remove: cleared. */
+    data class OnRemoveProfileValue(val editor: SettingsEditor) : SettingsAction
+
+    /** Opens Body composition (handled in SettingsScreenRoot). */
+    data object OnBodyCompositionClick : SettingsAction
 }

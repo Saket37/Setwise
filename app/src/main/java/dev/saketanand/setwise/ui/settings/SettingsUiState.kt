@@ -4,12 +4,21 @@ import androidx.compose.runtime.Immutable
 import java.time.DayOfWeek
 import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.domain.ai.DownloadState
+import dev.saketanand.setwise.domain.model.BmrEstimate
+import dev.saketanand.setwise.domain.model.Sex
 
 /** Everything [SettingsScreen] draws. */
 @Immutable
 data class SettingsUiState(
     val isLoading: Boolean = true,
+    val name: String? = null,
+    val age: Int? = null,
+    val sex: Sex? = null,
+    val heightCm: Double? = null,
     val bodyWeightKg: Double? = null,
+    /** "Body composition" row: BMR (and where it's from), the newest body fat. */
+    val bmr: BmrEstimate? = null,
+    val bodyFatPercent: Double? = null,
     val trainingDays: Set<DayOfWeek> = emptySet(),
     val askAboutUnloggedDays: Boolean = true,
     /** Last week's summary was closed on Home: it can be shown again. */
@@ -39,4 +48,12 @@ sealed interface SettingsEditor {
 
     /** Days picked so far (saved on Save). */
     data class TrainingDays(val selected: Set<DayOfWeek>) : SettingsEditor
+
+    data object Name : SettingsEditor
+
+    data class Age(val isInvalid: Boolean = false) : SettingsEditor
+
+    data class Height(val isInvalid: Boolean = false) : SettingsEditor
+
+    data object SexChoice : SettingsEditor
 }
