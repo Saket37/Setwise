@@ -156,15 +156,7 @@ private fun HomeScreenFirstRunPreview() = SetwiseScreenPreview {
 @ScreenPreviews
 @Composable
 private fun HomeScreenDashboardPreview() = SetwiseScreenPreview {
-    HomeScreen(
-        uiState = HomeUiState(
-            isLoading = false,
-            lastWorkout = previewLastWorkout,
-            weekStats = WeekStatsUi(workouts = 3, timeTrained = 204.minutes, newPrs = 2),
-            templates = previewTemplates,
-        ),
-        onAction = {},
-    )
+    HomeScreen(uiState = SampleHomeState, onAction = {})
 }
 
 @ScreenPreviews
@@ -197,6 +189,16 @@ private fun HomeScreenResumePreview() = SetwiseScreenPreview {
             templates = previewTemplates,
         ),
         onAction = {},
+    )
+}
+
+/** The dashboard with a week's stats and templates: previews and UI tests. */
+internal val SampleHomeState by lazy {
+    HomeUiState(
+        isLoading = false,
+        lastWorkout = previewLastWorkout,
+        weekStats = WeekStatsUi(workouts = 3, timeTrained = 204.minutes, newPrs = 2),
+        templates = previewTemplates,
     )
 }
 

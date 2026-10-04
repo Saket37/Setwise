@@ -276,16 +276,17 @@ private fun SummaryButtons(uiState: WorkoutSummaryUiState, onAction: (WorkoutSum
 @ScreenPreviews
 @Composable
 private fun WorkoutSummaryScreenPreview() = SetwiseScreenPreview {
-    WorkoutSummaryScreen(uiState = previewState, onAction = {})
+    WorkoutSummaryScreen(uiState = SampleWorkoutSummaryState, onAction = {})
 }
 
 @ScreenPreviews
 @Composable
 private fun WorkoutSummaryFromTemplatePreview() = SetwiseScreenPreview {
-    WorkoutSummaryScreen(uiState = previewState.copy(canSaveAsTemplate = false, records = emptyList()), onAction = {})
+    WorkoutSummaryScreen(uiState = SampleWorkoutSummaryState.copy(canSaveAsTemplate = false, records = emptyList()), onAction = {})
 }
 
-private val previewState = WorkoutSummaryUiState(
+/** A finished workout with records: previews and UI tests. */
+internal val SampleWorkoutSummaryState = WorkoutSummaryUiState(
     isLoading = false,
     name = "Push Day",
     date = LocalDate.of(2026, 10, 2),

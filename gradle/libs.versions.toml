@@ -23,6 +23,11 @@ playServicesTextRecognition = "19.0.1"
 mlkitGenaiSchema = "1.0.0-alpha1"
 # Not used directly: ML Kit GenAI brings Guava 31.0.1-jre (advisories, #83); this is the floor.
 guava = "33.7.2-android"
+# Not used directly: the Accessibility Test Framework (instrumented tests) brings 3.19.1, which has
+# advisories; this is the floor (checked: the framework still reports findings on 4.x).
+protobufJavalite = "4.36.2"
+# Not used directly: the Accessibility Test Framework brings jsoup 1.15.1 (advisories); the floor.
+jsoup = "1.23.2"
 
 # Code checks
 kover = "0.9.11"
@@ -79,6 +84,8 @@ mlkit-text-recognition = { group = "com.google.android.gms", name = "play-servic
 mlkit-genai-speech-recognition = { group = "com.google.mlkit", name = "genai-speech-recognition", version.ref = "mlkitGenaiSpeech" }
 mlkit-genai-schema = { group = "com.google.mlkit", name = "genai-schema", version.ref = "mlkitGenaiSchema" }
 guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
+jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
+protobuf-javalite = { group = "com.google.protobuf", name = "protobuf-javalite", version.ref = "protobufJavalite" }
 mlkit-genai-schema-compiler = { group = "com.google.mlkit", name = "genai-schema-compiler", version.ref = "mlkitGenaiSchema" }
 
 # Code checks (detekt rule sets)
@@ -92,6 +99,7 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-compose-ui-test-junit4-accessibility = { group = "androidx.compose.ui", name = "ui-test-junit4-accessibility" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
 
