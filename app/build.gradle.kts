@@ -99,6 +99,11 @@ dependencies {
     // Structured output: @Generable answer classes; KSP generates their schemas.
     implementation(libs.mlkit.genai.schema)
     ksp(libs.mlkit.genai.schema.compiler)
+    constraints {
+        // ML Kit GenAI brings Guava 31.0.1-jre (via kotlinx-coroutines-guava), which has two
+        // advisories: use the Android build at a fixed version instead (#83).
+        implementation(libs.guava) { because("GHSA-7g45-4rm6-3mm3, GHSA-5mg8-w23w-74h3") }
+    }
 
     // Unit tests
     testImplementation(libs.bundles.test)
