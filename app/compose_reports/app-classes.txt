@@ -1,0 +1,2716 @@
+unstable class dev.saketanand.setwise.data.local.SetwiseDatabase_Impl {
+  unstable val _exerciseDao: Lazy<ExerciseDao>
+  unstable val _workoutDao: Lazy<WorkoutDao>
+  unstable val _templateDao: Lazy<TemplateDao>
+  unstable val _dayMarkDao: Lazy<DayMarkDao>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.local.dao.DayMarkDao_Impl {
+  unstable val __db: RoomDatabase
+  unstable val __upsertAdapterOfDayMarkEntity: EntityUpsertAdapter<DayMarkEntity>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.local.dao.ExerciseDao_Impl {
+  unstable val __db: RoomDatabase
+  unstable val __insertAdapterOfExerciseEntity: EntityInsertAdapter<ExerciseEntity>
+  stable val __converters: Converters
+  unstable val __insertAdapterOfExerciseEntity_1: EntityInsertAdapter<ExerciseEntity>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.local.dao.TemplateDao_Impl {
+  unstable val __db: RoomDatabase
+  unstable val __insertAdapterOfTemplateEntity: EntityInsertAdapter<TemplateEntity>
+  unstable val __insertAdapterOfTemplateExerciseEntity: EntityInsertAdapter<TemplateExerciseEntity>
+  stable val __converters: Converters
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.local.dao.WorkoutDao_Impl {
+  unstable val __db: RoomDatabase
+  unstable val __insertAdapterOfWorkoutEntity: EntityInsertAdapter<WorkoutEntity>
+  unstable val __insertAdapterOfWorkoutExerciseEntity: EntityInsertAdapter<WorkoutExerciseEntity>
+  unstable val __insertAdapterOfSetEntity: EntityInsertAdapter<SetEntity>
+  stable val __converters: Converters
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelBodyReport_GeneratedProvider {
+  unstable val targetClass: KClass<*>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelCalorieAnswer_GeneratedProvider {
+  unstable val targetClass: KClass<*>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelExerciseDetails_GeneratedProvider {
+  unstable val targetClass: KClass<*>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelHistoryPick_GeneratedProvider {
+  unstable val targetClass: KClass<*>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelLoggedSet_GeneratedProvider {
+  unstable val targetClass: KClass<*>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelMatchAnswer_GeneratedProvider {
+  unstable val targetClass: KClass<*>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelQuickLog_GeneratedProvider {
+  unstable val targetClass: KClass<*>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.MainActivity {
+  unstable val viewModel$delegate: Lazy<MainViewModel>
+  unstable val appLinks: Channel<AppLink>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.MainViewModel {
+  unstable val _startDestination: MutableStateFlow<Route?>
+  unstable val startDestination: StateFlow<Route?>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.SetwiseApp {
+  unstable val appScope: CoroutineScope
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.dev.DevDataSeeder {
+  unstable val database: SetwiseDatabase
+  runtime val exerciseDao: ExerciseDao
+  runtime val templateDao: TemplateDao
+  runtime val workoutDao: WorkoutDao
+  runtime val workoutRepository: WorkoutRepository
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.data.local.Converters {
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.data.local.SetwiseDatabase {
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.data.local.entity.DayMarkEntity {
+  stable val epochDay: Long
+  stable val status: String
+  stable val markedAt: Long
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.data.local.entity.ExerciseEntity {
+  stable val id: Long
+  stable val name: String
+  stable val type: ExerciseType
+  stable val muscleGroup: String
+  stable val equipment: String
+  stable val defaultRestSec: Int
+  stable val isTimed: Boolean
+  stable val isCustom: Boolean
+  unstable val metrics: List<CardioMetric>?
+  stable val calorieMethod: CalorieMethod?
+  stable val met: Double?
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.data.local.entity.SetEntity {
+  stable val id: Long
+  stable val workoutExerciseId: Long
+  stable val setNumber: Int
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val durationSec: Int?
+  stable val inclinePct: Double?
+  stable val speedMinKmh: Double?
+  stable val speedMaxKmh: Double?
+  stable val distanceKm: Double?
+  stable val level: Int?
+  stable val isCompleted: Boolean
+  stable val completedAt: Long?
+  stable val isPr: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.data.local.entity.TemplateEntity {
+  stable val id: Long
+  stable val name: String
+  stable val category: String?
+  stable val createdAt: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.data.local.entity.TemplateExerciseEntity {
+  stable val id: Long
+  stable val templateId: Long
+  stable val exerciseId: Long
+  stable val position: Int
+  stable val targetSets: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.data.local.entity.WorkoutEntity {
+  stable val id: Long
+  stable val name: String
+  stable val templateId: Long?
+  stable val startedAt: Long
+  stable val endedAt: Long?
+  stable val calories: Int?
+  stable val caloriesSource: String?
+  stable val intensity: String?
+  stable val summary: String?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity {
+  stable val id: Long
+  stable val workoutId: Long
+  stable val exerciseId: Long
+  stable val position: Int
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.data.local.relation.RecentExerciseRow {
+  unstable val exercise: ExerciseEntity
+  stable val lastUsedAt: Long
+  stable val lastWeightKg: Double?
+  stable val lastReps: Int?
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.local.relation.TemplateWithExercises {
+  stable val template: TemplateEntity
+  unstable val items: List<TemplateExerciseWithExercise>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.local.relation.TemplateExerciseWithExercise {
+  stable val item: TemplateExerciseEntity
+  unstable val exercise: ExerciseEntity
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.data.local.relation.ActiveWorkoutRow {
+  stable val id: Long
+  stable val name: String
+  stable val startedAt: Long
+  stable val completedSets: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.data.local.relation.WorkoutStatsRow {
+  stable val workouts: Int
+  stable val totalMillis: Long
+  stable val prs: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.data.local.relation.TemplateLastUsedRow {
+  stable val templateId: Long
+  stable val lastStartedAt: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.data.local.relation.PreviousSetRow {
+  stable val workoutExerciseId: Long
+  stable val setNumber: Int
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val durationSec: Int?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.data.local.relation.ExerciseHistorySetRow {
+  stable val exerciseId: Long
+  stable val workoutId: Long
+  stable val startedAt: Long
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val durationSec: Int?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.data.local.relation.WorkoutHistoryRow {
+  stable val id: Long
+  stable val name: String
+  stable val startedAt: Long
+  stable val endedAt: Long
+  stable val calories: Int?
+  stable val completedSets: Int
+  stable val volumeKg: Double
+  stable val distanceKm: Double
+  stable val personalRecords: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.data.local.relation.ExerciseLogRow {
+  stable val workoutId: Long
+  stable val startedAt: Long
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val durationSec: Int?
+  stable val distanceKm: Double?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.data.local.relation.TrainingLogRow {
+  stable val workoutId: Long
+  stable val workoutName: String
+  stable val startedAt: Long
+  stable val exerciseId: Long
+  stable val exerciseName: String
+  stable val muscleGroup: String
+  stable val setNumber: Int
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val durationSec: Int?
+  stable val distanceKm: Double?
+  stable val isPr: Boolean
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.data.local.relation.WorkoutWithExercises {
+  stable val workout: WorkoutEntity
+  unstable val items: List<WorkoutExerciseWithSets>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.local.relation.WorkoutExerciseWithSets {
+  stable val item: WorkoutExerciseEntity
+  unstable val exercise: ExerciseEntity
+  unstable val sets: List<SetEntity>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.prefs.DataStoreBodyRepository.Stored.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.prefs.DataStoreBodyRepository {
+  unstable val dataStore: DataStore<Preferences>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.prefs.DataStoreUserSettingsRepository {
+  unstable val dataStore: DataStore<Preferences>
+  unstable val settings: Flow<UserSettings>
+  <runtime stability> = Unstable
+}
+runtime class dev.saketanand.setwise.data.repository.DayMarkRepositoryImpl {
+  runtime val dayMarkDao: DayMarkDao
+  <runtime stability> = Uncertain(DayMarkDao)
+}
+runtime class dev.saketanand.setwise.data.repository.ExerciseRepositoryImpl {
+  runtime val exerciseDao: ExerciseDao
+  <runtime stability> = Uncertain(ExerciseDao)
+}
+unstable class dev.saketanand.setwise.data.repository.TemplateRepositoryImpl {
+  unstable val database: SetwiseDatabase
+  runtime val templateDao: TemplateDao
+  runtime val workoutDao: WorkoutDao
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl {
+  unstable val database: SetwiseDatabase
+  runtime val workoutDao: WorkoutDao
+  runtime val templateDao: TemplateDao
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.seed.ExerciseSeedFile.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.seed.ExerciseSeedFile {
+  stable val version: Int
+  unstable val exercises: List<ExerciseSeedDto>
+  unstable val renames: List<ExerciseRenameDto>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.seed.ExerciseRenameDto.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.data.seed.ExerciseRenameDto {
+  stable val from: String
+  stable val to: String
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.data.seed.ExerciseSeedDto.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.seed.ExerciseSeedDto {
+  stable val name: String
+  stable val type: String
+  stable val muscleGroup: String
+  stable val equipment: String
+  stable val defaultRestSec: Int
+  stable val timed: Boolean
+  unstable val metrics: List<String>?
+  stable val calorieMethod: String?
+  stable val met: Double?
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.seed.ExerciseSeeder {
+  unstable val context: Context
+  runtime val exerciseDao: ExerciseDao
+  unstable val seedPreferences: SeedPreferences
+  unstable val json: Json
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.data.seed.SeedPreferences {
+  unstable val dataStore: DataStore<Preferences>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.CalorieSync {
+  runtime val workoutRepository: WorkoutRepository
+  runtime val userSettingsRepository: UserSettingsRepository
+  runtime val estimator: CalorieEstimator
+  runtime val dateProvider: DateProvider
+  <runtime stability> = 
+}
+unstable class dev.saketanand.setwise.domain.ai.AiCheck {
+  unstable val context: Context
+  runtime val model: OnDeviceModel
+  runtime val speechInput: SpeechInput
+  runtime val estimator: CalorieEstimator
+  runtime val insightWriter: WorkoutInsightWriter
+  runtime val exerciseAssistant: ExerciseAssistant
+  runtime val quickLogInterpreter: QuickLogInterpreter
+  unstable val plateauNotes: PlateauNoteWriter
+  runtime val historyAssistant: HistoryAssistant
+  runtime val exerciseRepository: ExerciseRepository
+  runtime val workoutRepository: WorkoutRepository
+  runtime val userSettingsRepository: UserSettingsRepository
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.ai.BodyReportReader.Result.Read {
+  stable val values: ReportValues
+  stable val byModel: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.BodyReportReader.Result.NothingFound {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.BodyReportReader {
+  runtime val textReader: TextReader
+  runtime val model: OnDeviceModel
+  <runtime stability> = 
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelBodyReport.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.ai.ModelBodyReport {
+  stable val weightKg: Double
+  stable val bodyFatPercent: Double
+  stable val muscleMassKg: Double
+  stable val bmrKcal: Int
+  stable val visceralFat: Double
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.SourcedCalorieEstimate {
+  stable val estimate: CalorieEstimate
+  stable val source: String
+  stable val modelFailed: Boolean
+  <runtime stability> = Stable
+}
+runtime class dev.saketanand.setwise.domain.ai.CalorieEstimator {
+  runtime val model: OnDeviceModel
+  <runtime stability> = Uncertain(OnDeviceModel)
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelMatchAnswer.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.ai.ModelMatchAnswer {
+  stable val choice: Int
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelExerciseDetails.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.ai.ModelExerciseDetails {
+  stable val muscleGroup: String
+  stable val logging: String
+  stable val equipment: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.ExerciseSuggestion {
+  stable val guess: ExerciseGuess
+  stable val source: SuggestionSource
+  <runtime stability> = Stable
+}
+runtime class dev.saketanand.setwise.domain.ai.ExerciseAssistant {
+  runtime val model: OnDeviceModel
+  <runtime stability> = Uncertain(OnDeviceModel)
+}
+runtime class dev.saketanand.setwise.domain.ai.HistoryReply.Answered {
+  runtime val answer: HistoryAnswer
+  stable val byModel: Boolean
+  <runtime stability> = Uncertain(HistoryAnswer)
+}
+stable class dev.saketanand.setwise.domain.ai.HistoryReply.UnknownExercise {
+  stable val words: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.HistoryReply.NotUnderstood {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.HistoryAssistant {
+  runtime val model: OnDeviceModel
+  runtime val exercises: ExerciseAssistant
+  <runtime stability> = 
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelHistoryPick.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.ai.ModelHistoryPick {
+  stable val lookup: String
+  stable val period: String
+  stable val kg: Double
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelCalorieAnswer.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.ai.ModelCalorieAnswer {
+  stable val kcal: Int
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelDownloader {
+  runtime val model: OnDeviceModel
+  unstable val scope: CoroutineScope
+  unstable val _state: MutableStateFlow<DownloadState>
+  unstable val state: StateFlow<DownloadState>
+  unstable var job: Job?
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.ai.DownloadState.Idle {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.DownloadState.WaitingToStart {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.DownloadState.Downloading {
+  stable val percent: Int?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.DownloadState.Done {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.DownloadState.Failed {
+  stable val kind: DownloadFailure
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelJson {
+  unstable val json: Json
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelOutput {
+  unstable val type: KClass<T>
+  unstable val json: DeserializationStrategy<T>
+  stable val textFormat: String
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.ai.ModelDownload.Progress {
+  stable val bytesDownloaded: Long
+  stable val totalBytes: Long?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.ModelDownload.Done {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.ModelDownload.Failed {
+  stable val reason: String?
+  stable val kind: DownloadFailure
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.ModelRequest {
+  stable val system: String
+  stable val prompt: String
+  stable val temperature: Float
+  stable val maxOutputTokens: Int
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.ai.PlateauNoteWriter {
+  runtime val model: OnDeviceModel
+  unstable val written: <no name provided>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.QuickLogTarget {
+  unstable val exercise: Exercise
+  stable val workoutExerciseId: Long?
+  stable val matchedFrom: String?
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.QuickLogResult.Sets {
+  unstable val target: QuickLogTarget
+  unstable val sets: List<SetFact>
+  stable val source: SuggestionSource
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.QuickLogResult.Cardio {
+  unstable val target: QuickLogTarget
+  stable val values: CardioValues
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.ai.QuickLogResult.NotUnderstood {
+  stable val reason: Reason
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.QuickLogInterpreter {
+  runtime val model: OnDeviceModel
+  runtime val assistant: ExerciseAssistant
+  <runtime stability> = 
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelQuickLog.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelQuickLog {
+  unstable val sets: List<ModelLoggedSet>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.ModelLoggedSet.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.ai.ModelLoggedSet {
+  stable val weightKg: Double
+  stable val reps: Int
+  stable val seconds: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.Heard.Partial {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.Heard.Final {
+  stable val text: String
+  <runtime stability> = Stable
+}
+runtime class dev.saketanand.setwise.domain.ai.WeeklyRecapWriter {
+  runtime val model: OnDeviceModel
+  <runtime stability> = Uncertain(OnDeviceModel)
+}
+unstable class dev.saketanand.setwise.domain.ai.WorkoutImporter.Plan {
+  unstable val workouts: List<PlannedWorkout>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.WorkoutImporter.PlannedWorkout {
+  unstable val shared: SharedWorkout
+  unstable val exercises: List<PlannedExercise>
+  stable val alreadyImported: Boolean
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.ai.WorkoutImporter.PlannedExercise {
+  unstable val shared: SharedExercise
+  unstable val match: Exercise?
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.ai.WorkoutImporter.Result {
+  stable val workouts: Int
+  stable val sets: Int
+  stable val newExercises: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.ai.WorkoutImporter {
+  runtime val exercises: ExerciseAssistant
+  runtime val exerciseRepository: ExerciseRepository
+  runtime val workoutRepository: WorkoutRepository
+  <runtime stability> = 
+}
+runtime class dev.saketanand.setwise.domain.ai.WorkoutInsightWriter {
+  runtime val model: OnDeviceModel
+  <runtime stability> = Uncertain(OnDeviceModel)
+}
+stable class dev.saketanand.setwise.domain.model.BodyMeasurement {
+  stable val id: Long
+  stable val measuredOn: LocalDate
+  stable val weightKg: Double?
+  stable val bodyFatPercent: Double?
+  stable val muscleMassKg: Double?
+  stable val bmrKcal: Int?
+  stable val visceralFat: Double?
+  stable val source: Source
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.BmrEstimate {
+  stable val kcal: Int
+  stable val source: Source
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.BodyRules {
+  stable val WEIGHT_KG: ClosedFloatingPointRange<Double>
+  stable val BODY_FAT_PERCENT: ClosedFloatingPointRange<Double>
+  stable val MUSCLE_KG: ClosedFloatingPointRange<Double>
+  unstable val BMR_KCAL: IntRange
+  stable val VISCERAL: ClosedFloatingPointRange<Double>
+  stable val HEIGHT_CM: ClosedFloatingPointRange<Double>
+  unstable val AGE_YEARS: IntRange
+  stable val REPORT_VALID_DAYS: Long
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.OcrLine {
+  stable val text: String
+  stable val left: Int
+  stable val top: Int
+  stable val right: Int
+  stable val bottom: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.ReportValues {
+  stable val measuredOn: LocalDate?
+  stable val weightKg: Double?
+  stable val bodyFatPercent: Double?
+  stable val muscleMassKg: Double?
+  stable val bmrKcal: Int?
+  stable val visceralFat: Double?
+  stable val heightCm: Double?
+  stable val age: Int?
+  stable val sex: Sex?
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.BodyReportParser {
+  unstable val WEIGHT: Label
+  unstable val BODY_FAT: Label
+  unstable val MUSCLE: Label
+  unstable val BMR: Label
+  unstable val VISCERAL: Label
+  unstable val HEIGHT: Label
+  unstable val AGE: Label
+  unstable val ANY_LABEL: List<Label>
+  stable val LB_TO_KG: Double
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.CalorieEstimate {
+  stable val kcal: Int
+  stable val intensity: Intensity
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.CalorieFormula {
+  stable val SOURCE: String
+  stable val RUN_FROM_KMH: Double
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.CardioValues {
+  stable val durationSec: Int?
+  stable val inclinePct: Double?
+  stable val speedMinKmh: Double?
+  stable val speedMaxKmh: Double?
+  stable val distanceKm: Double?
+  stable val level: Int?
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.CardioEntry {
+  stable val workoutId: Long
+  unstable val exercise: Exercise
+  stable val logged: CardioValues?
+  stable val lastTime: CardioValues?
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.DayCheckIn {
+  stable val LOOKBACK_DAYS: Int
+  stable val BACKFILL_START_TIME: LocalTime
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.Exercise {
+  stable val id: Long
+  stable val name: String
+  stable val type: ExerciseType
+  stable val muscleGroup: String
+  stable val equipment: String
+  stable val defaultRestSec: Int
+  stable val isTimed: Boolean
+  stable val isCustom: Boolean
+  unstable val metrics: List<CardioMetric>?
+  stable val calorieMethod: CalorieMethod?
+  stable val met: Double?
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.ExerciseGuess {
+  stable val muscleGroup: String?
+  stable val type: ExerciseType?
+  stable val isTimed: Boolean
+  stable val equipment: String?
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.ExerciseCatalog {
+  unstable val MUSCLE_GROUPS: List<String>
+  unstable val EQUIPMENT: List<String>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.ExerciseKeywords {
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.ExerciseNames {
+  stable val CLOSE_MATCH: Double
+  unstable val SHORTHAND: Map<String, String>
+  unstable val SYNONYMS: Map<String, String>
+  unstable val USUAL_VARIANTS$delegate: Lazy<Map<List<String>, String>>
+  unstable val FILLER: Set<String>
+  unstable val EQUIPMENT_WORDS: Set<String>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.model.ExerciseSession {
+  stable val workoutId: Long
+  stable val startedAt: Instant
+  unstable val sets: List<LoggedSet>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.LoggedSet {
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val durationSec: Int?
+  stable val distanceKm: Double?
+  <runtime stability> = Stable
+}
+runtime class dev.saketanand.setwise.domain.model.Period {
+  stable val start: LocalDate?
+  stable val end: LocalDate?
+  runtime val name: PeriodName
+  <runtime stability> = Uncertain(PeriodName)
+}
+stable class dev.saketanand.setwise.domain.model.PeriodName.AllTime {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.PeriodName.ThisWeek {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.PeriodName.LastWeek {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.PeriodName.ThisMonth {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.PeriodName.LastMonth {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.PeriodName.ThisYear {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.PeriodName.InMonth {
+  stable val month: YearMonth
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.HistoryQuestion.BestSet {
+  unstable val exercise: Exercise
+  runtime val period: Period
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.model.HistoryQuestion.LastLifted {
+  unstable val exercise: Exercise
+  stable val atLeastKg: Double?
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.model.HistoryQuestion.Volume {
+  runtime val period: Period
+  unstable val muscles: MuscleWords?
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.model.HistoryQuestion.Sessions {
+  runtime val period: Period
+  unstable val exercise: Exercise?
+  unstable val muscles: MuscleWords?
+  <runtime stability> = Unstable
+}
+runtime class dev.saketanand.setwise.domain.model.HistoryQuestion.PrWorkouts {
+  runtime val period: Period
+  <runtime stability> = Uncertain(PeriodName)
+}
+unstable class dev.saketanand.setwise.domain.model.MuscleWords {
+  stable val asked: String
+  unstable val groups: Set<String>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.AnsweredSet {
+  stable val exerciseName: String
+  stable val setNumber: Int
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val seconds: Int?
+  stable val isPr: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.AnsweredWorkout {
+  stable val id: Long
+  stable val name: String
+  stable val date: LocalDate
+  stable val highlight: AnsweredSet?
+  <runtime stability> = Stable
+}
+runtime class dev.saketanand.setwise.domain.model.HistoryAnswer.Lifted {
+  runtime val question: HistoryQuestion
+  stable val workout: AnsweredWorkout
+  stable val set: AnsweredSet
+  stable val isBest: Boolean
+  <runtime stability> = Uncertain(HistoryQuestion)
+}
+runtime class dev.saketanand.setwise.domain.model.HistoryAnswer.Total {
+  runtime val question: HistoryQuestion
+  stable val volumeKg: Double
+  stable val workouts: Int
+  <runtime stability> = Uncertain(HistoryQuestion)
+}
+unstable class dev.saketanand.setwise.domain.model.HistoryAnswer.Count {
+  runtime val question: HistoryQuestion
+  stable val count: Int
+  unstable val workouts: List<AnsweredWorkout>
+  <runtime stability> = Unstable
+}
+runtime class dev.saketanand.setwise.domain.model.HistoryAnswer.NoneFound {
+  runtime val question: HistoryQuestion
+  <runtime stability> = Uncertain(HistoryQuestion)
+}
+unstable class dev.saketanand.setwise.domain.model.HistoryQuestionReader.Read {
+  stable val kind: Kind?
+  runtime val period: PeriodName?
+  stable val kg: Double?
+  unstable val muscles: MuscleWords?
+  stable val exerciseWords: String
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.model.HistoryQuestionReader {
+  unstable val KEEP_AS_IS: Set<String>
+  unstable val MUSCLES: Map<String, Set<String>>
+  unstable val MONTHS: Map<String, Month>
+  unstable val PERIOD_PHRASES: List<String>
+  unstable val QUESTION_WORDS: Set<String>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.HistoryAnswerer {
+  stable val MAX_LISTED: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.NewExercise {
+  stable val name: String
+  stable val type: ExerciseType
+  stable val isTimed: Boolean
+  stable val muscleGroup: String
+  stable val equipment: String
+  stable val restSec: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.CreateExerciseResult.Created {
+  stable val exerciseId: Long
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.CreateExerciseResult.NameTaken {
+  unstable val existing: Exercise
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.PersonalRecords {
+  stable val EPSILON: Double
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.PersonalBests {
+  stable val heaviest: PreviousSet?
+  stable val bestEstimatedOneRepMax: PreviousSet?
+  stable val mostReps: PreviousSet?
+  stable val longestHold: PreviousSet?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.PersonalRecord {
+  stable val kind: PrKind
+  stable val set: WorkoutSet
+  stable val previousBest: PreviousSet
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.NextSession {
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val seconds: Int?
+  stable val sets: Int
+  stable val rule: ProgressionRule
+  stable val done: SetFact
+  stable val stepKg: Double?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.Plateau {
+  stable val since: Instant
+  stable val weeks: Int
+  stable val sessions: Int
+  stable val best: Double
+  stable val measure: Measure
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.Progression {
+  stable val TIME_STEP_SEC: Int
+  stable val DELOAD: Double
+  stable val DELOAD_EXTRA_REPS: Int
+  stable val MIN_STEP_KG: Double
+  stable val MAX_STEP_KG: Double
+  unstable val LOWER_BODY: Set<String>
+  stable val WINDOW_DAYS: Long
+  stable val STILL_TRAINING_DAYS: Long
+  stable val MIN_SESSIONS: Int
+  stable val MIN_WEEKS: Long
+  stable val FLAT_TOLERANCE: Double
+  stable val EPSILON: Double
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.model.QuickLogParse {
+  stable val exercisePhrase: String?
+  unstable val sets: List<SetFact>
+  stable val cardio: CardioValues?
+  stable val sameAsLastTime: Boolean
+  unstable val leftover: List<String>
+  unstable val bare: List<Int>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.model.QuickLogParser {
+  stable val N: String
+  stable val I: String
+  unstable val SAME: Regex
+  unstable val LAST_SET: Regex
+  unstable val SPEED: Regex
+  unstable val DISTANCE: Regex
+  unstable val MINUTES: Regex
+  unstable val INCLINE: Regex
+  unstable val LEVEL: Regex
+  unstable val SETS_OF: Regex
+  unstable val WEIGHT_X_REPS_X_SETS: Regex
+  unstable val SETS_X_REPS_AT_WEIGHT: Regex
+  unstable val SETS_X_SECONDS: Regex
+  unstable val WEIGHT_X_REPS: Regex
+  unstable val WEIGHT_FOR_REPS: Regex
+  unstable val REPS_AT_WEIGHT: Regex
+  unstable val REPS_KG: Regex
+  unstable val LEADING_COUNT: Regex
+  unstable val WEIGHT_KG_REPS: Regex
+  unstable val X_REPS: Regex
+  unstable val SECONDS: Regex
+  unstable val REPS: Regex
+  unstable val WEIGHT_ONLY: Regex
+  unstable val FILLER: Set<String>
+  unstable val UNITS: Map<String, Int>
+  unstable val TENS: Map<String, Int>
+  unstable val NUMBER_CONTEXT: Set<String>
+  unstable val NOT_A_COUNT: Set<String>
+  stable val MAX_SETS: Int
+  stable val MAX_REPS: Int
+  stable val MAX_SECONDS: Int
+  stable val MAX_KG: Double
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.model.RecentExercise {
+  unstable val exercise: Exercise
+  stable val lastSet: PreviousSet?
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.PreviousSet {
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val durationSec: Int?
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.SharedWorkout {
+  stable val name: String
+  stable val startedAt: LocalDateTime
+  unstable val exercises: List<SharedExercise>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.model.SharedExercise {
+  stable val name: String
+  unstable val sets: List<SharedSet>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.SharedSet {
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val seconds: Int?
+  stable val distanceKm: Double?
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.StrongShareParser {
+  unstable val SET_LINE: Regex
+  unstable val DATE: Regex
+  stable val LB_TO_KG: Double
+  stable val MI_TO_KM: Double
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.model.Template {
+  stable val id: Long
+  stable val name: String
+  stable val category: String?
+  unstable val exercises: List<TemplateExercise>
+  stable val lastUsedAt: Instant?
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.TemplateExercise {
+  stable val exerciseId: Long
+  stable val name: String
+  stable val targetSets: Int
+  stable val restSec: Int
+  stable val muscleGroup: String
+  stable val isCardio: Boolean
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.TemplateDraft {
+  stable val id: Long
+  stable val name: String
+  stable val category: String?
+  unstable val exercises: List<TemplateDraftExercise>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.TemplateDraftExercise {
+  stable val exerciseId: Long
+  stable val targetSets: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.LoggedSetRecord {
+  stable val workoutId: Long
+  stable val workoutName: String
+  stable val startedAt: Instant
+  stable val exerciseId: Long
+  stable val exerciseName: String
+  stable val muscleGroup: String
+  stable val setNumber: Int
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val durationSec: Int?
+  stable val distanceKm: Double?
+  stable val isPr: Boolean
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.UserSettings {
+  stable val bodyWeightKg: Double?
+  unstable val trainingDays: Set<DayOfWeek>
+  stable val askAboutUnloggedDays: Boolean
+  stable val onboardingDone: Boolean
+  stable val checkInLastAskedOn: LocalDate?
+  stable val weeklySummaryDismissedWeek: LocalDate?
+  stable val weeklyRecap: WeeklyRecap?
+  stable val name: String?
+  stable val birthYear: Int?
+  stable val sex: Sex?
+  stable val heightCm: Double?
+  stable val restSecOverride: Int?
+  stable val restSound: Boolean
+  stable val restVibrate: Boolean
+  stable val workoutNotification: Boolean
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.WeeklyRecap {
+  stable val weekStart: LocalDate
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.WeekFacts {
+  stable val weekStart: LocalDate
+  stable val workouts: Int
+  stable val timeTrained: Duration
+  stable val prs: Int
+  stable val volumeKg: Double
+  stable val volumeChangePercent: Int?
+  stable val bestSet: BestSetFact?
+  stable val bodyPartChange: BodyPartChange?
+  stable val plateau: PlateauFact?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.BestSetFact {
+  stable val exerciseName: String
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val seconds: Int?
+  stable val isPr: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.BodyPartChange {
+  stable val part: BodyPart
+  stable val percent: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.PlateauFact {
+  stable val exerciseId: Long
+  stable val exerciseName: String
+  stable val weeks: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.WeeklySummaryRules {
+  stable val MIN_CHANGE_PERCENT: Int
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.WorkoutFacts {
+  stable val workoutName: String
+  stable val minutes: Long
+  stable val intensity: Intensity?
+  stable val medianRestSec: Long?
+  unstable val changes: List<ExerciseChange>
+  unstable val records: List<RecordFact>
+  stable val volumeKg: Double
+  stable val previous: PreviousWorkout?
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.SetFact {
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val seconds: Int?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.ExerciseChange {
+  stable val exercise: String
+  stable val measure: Measure
+  stable val now: SetFact
+  stable val before: SetFact
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.RecordFact {
+  stable val exercise: String
+  stable val kind: PrKind
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.PreviousWorkout {
+  stable val name: String
+  stable val volumeKg: Double
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.FinishedWorkout {
+  stable val id: Long
+  stable val name: String
+  stable val startedAt: Instant
+  stable val endedAt: Instant
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.ActiveWorkout {
+  stable val id: Long
+  stable val name: String
+  stable val startedAt: Instant
+  stable val completedSets: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.WorkoutHistoryItem {
+  stable val id: Long
+  stable val name: String
+  stable val startedAt: Instant
+  stable val endedAt: Instant
+  stable val completedSets: Int
+  stable val volumeKg: Double
+  stable val distanceKm: Double
+  stable val personalRecords: Int
+  stable val calories: Int?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.domain.model.WorkoutStats {
+  stable val workouts: Int
+  stable val timeTrained: Duration
+  stable val prs: Int
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.domain.model.WorkoutSession {
+  stable val id: Long
+  stable val name: String
+  stable val templateId: Long?
+  stable val startedAt: Instant
+  stable val endedAt: Instant?
+  unstable val exercises: List<SessionExercise>
+  stable val calories: Int?
+  stable val intensity: Intensity?
+  stable val insight: String?
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.domain.model.SessionExercise {
+  stable val id: Long
+  unstable val exercise: Exercise
+  unstable val sets: List<WorkoutSet>
+  unstable val previousSets: List<PreviousSet>
+  stable val bestsBefore: PersonalBests
+  unstable val history: List<ExerciseSession>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.domain.model.WorkoutSet {
+  stable val id: Long
+  stable val setNumber: Int
+  stable val weightKg: Double?
+  stable val reps: Int?
+  stable val durationSec: Int?
+  stable val isCompleted: Boolean
+  stable val isPr: Boolean
+  stable val cardio: CardioValues?
+  stable val completedAt: Instant?
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.llm.GeminiNanoModel {
+  unstable val lock: Any
+  unstable var client: GenerativeModel?
+  stable var users: Int
+  stable var inBackground: Boolean
+  stable var supportsSystemInstruction: Boolean?
+  stable var supportsStructuredOutput: Boolean?
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.llm.GenAiSpeechInput {
+  stable var mode: Int?
+  unstable var listening: SpeechRecognizer?
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.llm.MlKitTextReader {
+  unstable val context: Context
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.service.WorkoutTimerService {
+  unstable val restTimer$delegate: Lazy<RestTimer>
+  unstable val coordinator$delegate: Lazy<RestTimerCoordinator>
+  unstable val clock$delegate: Lazy<ElapsedClock>
+  unstable var wakeLock: WakeLock?
+  stable var isObserving: Boolean
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.timer.DefaultRestTimer {
+  unstable val scope: CoroutineScope
+  runtime val clock: ElapsedClock
+  unstable val _state: MutableStateFlow<RestTimerState?>
+  unstable val state: StateFlow<RestTimerState?>
+  unstable val _finished: MutableSharedFlow<RestTimerState>
+  unstable val finished: SharedFlow<RestTimerState>
+  unstable var countdown: Job?
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.timer.AndroidNotificationPermission {
+  unstable val context: Context
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.timer.RestAlert {
+  unstable val context: Context
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.timer.RestNotifications {
+  stable val CHANNEL_REST: String
+  stable val CHANNEL_REST_OVER: String
+  stable val CHANNEL_REST_OVER_VIBRATE: String
+  stable val CHANNEL_REST_OVER_QUIET: String
+  stable val CHANNEL_WORKOUT: String
+  stable val ID_COUNTDOWN: Int
+  stable val ID_REST_OVER: Int
+  <runtime stability> = Stable
+}
+runtime class dev.saketanand.setwise.timer.RestTimerState {
+  stable val workoutId: Long
+  stable val endsAtElapsed: Long
+  stable val totalMillis: Long
+  runtime val next: NextUp
+  <runtime stability> = Uncertain(NextUp)
+}
+stable class dev.saketanand.setwise.timer.NextUp.Set {
+  stable val number: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.timer.NextUp.Exercise {
+  stable val name: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.timer.NextUp.Nothing {
+  <runtime stability> = Stable
+}
+runtime class dev.saketanand.setwise.timer.Ongoing.Rest {
+  runtime val rest: RestTimerState
+  <runtime stability> = Uncertain(NextUp)
+}
+stable class dev.saketanand.setwise.timer.Ongoing.Workout {
+  stable val workout: ActiveWorkout
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.timer.RestTimerCoordinator {
+  unstable val context: Context
+  runtime val restTimer: RestTimer
+  unstable val restAlert: RestAlert
+  runtime val dateProvider: DateProvider
+  unstable val scope: CoroutineScope
+  unstable val settings: StateFlow<UserSettings>
+  unstable val activeWorkout: Flow<ActiveWorkout?>
+  unstable val ongoing: StateFlow<Ongoing?>
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.ui.RecognizeSpeech {
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.body.BodyAction.OnBack {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.body.BodyAction.OnAddManually {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.body.BodyAction.OnReportPhoto {
+  stable val uri: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.body.BodyAction.OnDayChange {
+  stable val day: LocalDate
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.body.BodyAction.OnSave {
+  stable val weight: String
+  stable val bodyFat: String
+  stable val muscle: String
+  stable val bmr: String
+  stable val visceral: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.body.BodyAction.OnDismissEditor {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.body.BodyAction.OnDelete {
+  stable val id: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.body.BodyUiState {
+  stable val isLoading: Boolean
+  unstable val history: List<BodyMeasurement>
+  stable val bmr: BmrEstimate?
+  stable val latest: LatestBody
+  unstable val weightTrend: List<Double?>
+  unstable val bodyFatTrend: List<Double?>
+  stable val isReading: Boolean
+  stable val readFailed: Boolean
+  stable val editor: BodyEditor?
+}
+stable class dev.saketanand.setwise.ui.body.LatestBody {
+  stable val weightKg: Double?
+  stable val bodyFatPercent: Double?
+  stable val muscleMassKg: Double?
+  stable val visceralFat: Double?
+}
+stable class dev.saketanand.setwise.ui.body.BodyEditor {
+  stable val key: Long
+  stable val day: LocalDate
+  stable val weightKg: Double?
+  stable val bodyFatPercent: Double?
+  stable val muscleMassKg: Double?
+  stable val bmrKcal: Int?
+  stable val visceralFat: Double?
+  stable val fromReport: Boolean
+  stable val profileHeightCm: Double?
+  stable val profileAge: Int?
+  stable val profileSex: Sex?
+  stable val byModel: Boolean
+  stable val isInvalid: Boolean
+}
+unstable class dev.saketanand.setwise.ui.body.BodyViewModel {
+  runtime val bodyRepository: BodyRepository
+  runtime val userSettings: UserSettingsRepository
+  runtime val reportReader: BodyReportReader
+  runtime val dateProvider: DateProvider
+  unstable val screen: MutableStateFlow<Screen>
+  unstable val state: StateFlow<BodyUiState>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.RoutineCardColors {
+  stable val containerColor: Color
+  stable val borderColor: Color
+  stable val iconContainerColor: Color
+  stable val iconColor: Color
+  stable val titleColor: Color
+  stable val descriptionColor: Color
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.RoutineCardDefaults {
+  stable val MinHeight: Dp
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonColors {
+  stable val containerColor: Color
+  stable val contentColor: Color
+  stable val borderColor: Color?
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonDefaults {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseHintBannerDefaults {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButtonColors {
+  stable val containerColor: Color
+  stable val contentColor: Color
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButtonDefaults {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardColors {
+  stable val containerColor: Color
+  stable val contentColor: Color
+  stable val supportingColor: Color
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardOutline.None {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardOutline.Solid {
+  stable val color: Color
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardOutline.Dashed {
+  stable val color: Color
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardDefaults {
+  stable val ContentPadding: PaddingValues
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseMenuItem {
+  stable val label: String
+  stable val onClick: Function0<Unit>
+  stable val isDestructive: Boolean
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseTagStyle {
+  stable val containerColor: Color
+  stable val contentColor: Color
+  stable val borderColor: Color?
+  stable val shape: Shape
+  stable val contentPadding: PaddingValues
+  stable val textStyle: TextStyle
+  stable val iconSize: Dp
+}
+stable class dev.saketanand.setwise.ui.designsystem.components.SetwiseTagDefaults {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.designsystem.theme.Spacing {
+  stable val xxs: Dp
+  stable val xs: Dp
+  stable val sm: Dp
+  stable val md: Dp
+  stable val lg: Dp
+  stable val xl: Dp
+  stable val screenHorizontal: Dp
+  stable val minTouchTarget: Dp
+  stable val buttonHeight: Dp
+}
+stable class dev.saketanand.setwise.ui.exercises.CreateExerciseAction.OnNameChange {
+  stable val name: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.CreateExerciseAction.OnKindClick {
+  stable val kind: ExerciseKindOption
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.CreateExerciseAction.OnMuscleGroupClick {
+  stable val muscleGroup: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.CreateExerciseAction.OnEquipmentClick {
+  stable val equipment: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.CreateExerciseAction.OnRestChange {
+  stable val steps: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.CreateExerciseAction.OnUseMatchClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.CreateExerciseAction.OnCreateClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.CreateExerciseAction.OnCloseClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.CreateExerciseEvent.Done {
+  stable val exerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.CreateExerciseEvent.SaveFailed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.CreateExerciseUiState {
+  stable val name: String
+  stable val kind: ExerciseKindOption
+  stable val muscleGroup: String?
+  stable val equipment: String
+  stable val restSec: Int
+  unstable val muscleGroups: List<String>
+  unstable val match: Exercise?
+  stable val isNameTaken: Boolean
+  stable val isSaving: Boolean
+  stable val suggestionSource: SuggestionSource?
+}
+unstable class dev.saketanand.setwise.ui.exercises.CreateExerciseViewModel {
+  runtime val exerciseRepository: ExerciseRepository
+  runtime val assistant: ExerciseAssistant
+  unstable val savedStateHandle: SavedStateHandle
+  unstable val form: MutableStateFlow<Form>
+  unstable val typedName: Flow<String>
+  unstable val isSaving: MutableStateFlow<Boolean>
+  unstable val eventChannel: Channel<CreateExerciseEvent>
+  unstable val events: Flow<CreateExerciseEvent>
+  unstable val match: Flow<Exercise?>
+  unstable val suggestion: MutableStateFlow<ExerciseSuggestion?>
+  unstable val state: StateFlow<CreateExerciseUiState>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.exercises.ExerciseDetailUiState {
+  stable val isLoading: Boolean
+  stable val isMissing: Boolean
+  stable val name: String
+  stable val muscleGroup: String
+  stable val equipment: String
+  stable val kind: SetKind
+  stable val progress: ProgressUi?
+  stable val plateau: PlateauUi?
+  stable val nextSession: NextSession?
+  unstable val sessions: List<ExerciseSessionUi>
+}
+stable class dev.saketanand.setwise.ui.exercises.ProgressUi {
+  stable val metric: ProgressMetric
+  unstable val weeks: List<Double?>
+  stable val firstWeek: LocalDate
+  stable val latest: Double?
+}
+stable class dev.saketanand.setwise.ui.exercises.ExerciseSessionUi {
+  stable val workoutId: Long
+  stable val date: LocalDate
+  unstable val sets: List<LoggedSet>
+}
+stable class dev.saketanand.setwise.ui.exercises.PlateauUi {
+  stable val weeks: Int
+  stable val sessions: Int
+  stable val since: LocalDate
+  stable val best: Int
+  stable val metric: ProgressMetric
+  stable val note: String?
+  stable val isWriting: Boolean
+}
+unstable class dev.saketanand.setwise.ui.exercises.ExerciseDetailViewModel {
+  stable val exerciseId: Long
+  runtime val dateProvider: DateProvider
+  unstable val plateauNotes: PlateauNoteWriter
+  unstable val data: SharedFlow<Triple<Exercise?, List<ExerciseSession>, LocalDate>>
+  unstable val note: Flow<Note>
+  unstable val state: StateFlow<ExerciseDetailUiState>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.exercises.ExercisePickerAction.OnQueryChange {
+  stable val query: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.ExercisePickerAction.OnMuscleGroupClick {
+  stable val muscleGroup: String?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.ExercisePickerAction.OnExerciseToggle {
+  stable val exerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.ExercisePickerAction.OnAddClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.ExercisePickerAction.OnExerciseCreated {
+  stable val exerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.ExercisePickerAction.OnCreateNewClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.ExercisePickerAction.OnBackClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.exercises.ExercisePickerUiState {
+  stable val isLoading: Boolean
+  stable val query: String
+  unstable val muscleGroups: List<String>
+  stable val selectedMuscleGroup: String?
+  unstable val recent: List<ExerciseRowUi>
+  unstable val exercises: List<ExerciseRowUi>
+  stable val listFilter: String
+  unstable val selectedIds: List<Long>
+}
+stable class dev.saketanand.setwise.ui.exercises.ExerciseRowUi {
+  stable val id: Long
+  stable val name: String
+  stable val initials: String
+  stable val muscleGroup: String
+  stable val equipment: String?
+  stable val lastSet: LastSetUi?
+  stable val isSelected: Boolean
+}
+stable class dev.saketanand.setwise.ui.exercises.LastSetUi {
+  stable val weight: String?
+  stable val reps: Int?
+}
+unstable class dev.saketanand.setwise.ui.exercises.ExercisePickerViewModel {
+  runtime val exerciseRepository: ExerciseRepository
+  unstable val savedStateHandle: SavedStateHandle
+  unstable val query: StateFlow<String>
+  unstable val selectedMuscleGroup: StateFlow<String?>
+  unstable val selectedIds: StateFlow<LongArray>
+  unstable val filteredExercises: Flow<FilteredExercises>
+  unstable val library: Flow<Library>
+  unstable val state: StateFlow<ExercisePickerUiState>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.history.HistoryAction.OnDayClick {
+  stable val date: LocalDate
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.history.HistoryAction.OnCalendarDayClick {
+  stable val date: LocalDate
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.history.HistoryAction.OnWorkoutClick {
+  stable val workoutId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.history.HistoryAction.OnLogWorkoutClick {
+  stable val date: LocalDate
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.history.HistoryAction.OnMarkDay {
+  stable val date: LocalDate
+  stable val status: DayStatus?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.history.HistoryAction.OnAsk {
+  stable val question: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.history.HistoryAction.OnAskClosed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.history.HistoryEvent.WorkoutStarted {
+  stable val workoutId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.history.HistoryEvent.WorkoutAlreadyRunning {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.history.HistoryEvent.SaveFailed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.history.HistoryUiState {
+  stable val isLoading: Boolean
+  unstable val days: List<DayUi>
+  unstable val months: List<HistoryMonthUi>
+  stable val selectedDate: LocalDate?
+  stable val today: LocalDate?
+  stable val ask: AskUi
+}
+stable class dev.saketanand.setwise.ui.history.MonthSummaryUi {
+  stable val workouts: Int
+  stable val restDays: Int
+  stable val missedDays: Int
+}
+stable class dev.saketanand.setwise.ui.history.DayUi {
+  stable val date: LocalDate
+  stable val isToday: Boolean
+  stable val state: DayState
+  stable val isSelected: Boolean
+}
+stable class dev.saketanand.setwise.ui.history.HistoryMonthUi {
+  stable val month: YearMonth
+  unstable val workouts: List<HistoryWorkoutUi>
+}
+stable class dev.saketanand.setwise.ui.history.HistoryWorkoutUi {
+  stable val id: Long
+  stable val name: String
+  stable val date: LocalDate
+  stable val duration: Duration
+  stable val volumeKg: Double
+  stable val distanceKm: Double
+  stable val calories: Int?
+  stable val personalRecords: Int
+}
+stable class dev.saketanand.setwise.ui.history.AskUi {
+  stable val question: String
+  stable val isLooking: Boolean
+  runtime val reply: HistoryReply?
+}
+unstable class dev.saketanand.setwise.ui.history.HistoryViewModel {
+  runtime val workoutRepository: WorkoutRepository
+  runtime val dayMarkRepository: DayMarkRepository
+  runtime val dateProvider: DateProvider
+  unstable val savedStateHandle: SavedStateHandle
+  runtime val historyAssistant: HistoryAssistant
+  runtime val exerciseRepository: ExerciseRepository
+  unstable val ask: MutableStateFlow<AskUi>
+  unstable var asking: Job?
+  unstable val selectedEpochDay: StateFlow<Long?>
+  stable var isStartingWorkout: Boolean
+  unstable val eventChannel: Channel<HistoryEvent>
+  unstable val events: Flow<HistoryEvent>
+  unstable val state: StateFlow<HistoryUiState>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnStartWorkoutClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnStartSheetDismiss {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnStartEmptyWorkout {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnStartFromTemplate {
+  stable val templateId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnStartTimeChange {
+  stable val startTime: LocalTime?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnResumeWorkout {
+  stable val workoutId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnTemplateClick {
+  stable val templateId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnCreateTemplateClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnCreateTemplateFromGoalClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnSaveLastWorkoutAsTemplate {
+  stable val workoutId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnConfirmDiscardAndStart {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnDismissDiscardDialog {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnPlateauExerciseClick {
+  stable val exerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnWeeklySummaryDismiss {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnCheckInMark {
+  stable val date: LocalDate
+  stable val status: DayStatus?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnCheckInMarkAllRest {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnCheckInLogWorkout {
+  stable val date: LocalDate
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeAction.OnCheckInDismiss {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeEvent.WorkoutStarted {
+  stable val workoutId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeEvent.StartWorkoutFailed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeEvent.TemplateCreated {
+  stable val templateId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeEvent.SaveTemplateFailed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.home.HomeUiState {
+  stable val isLoading: Boolean
+  stable val today: LocalDate
+  stable val lastWorkout: LastWorkoutUi?
+  stable val activeWorkout: ActiveWorkoutUi?
+  stable val weekStats: WeekStatsUi
+  stable val weeklySummary: WeeklySummaryUi?
+  unstable val templates: List<TemplateUi>
+  stable val isStartSheetVisible: Boolean
+  stable val customStartTime: LocalTime?
+  stable val isStartingWorkout: Boolean
+  stable val exerciseCount: Int
+  stable val discardDialog: DiscardDialogUi?
+  stable val checkIn: CheckInUi?
+}
+stable class dev.saketanand.setwise.ui.home.LastWorkoutUi {
+  stable val workoutId: Long
+  stable val name: String
+  stable val daysAgo: Int
+}
+stable class dev.saketanand.setwise.ui.home.ActiveWorkoutUi {
+  stable val workoutId: Long
+  stable val name: String
+  stable val startedAtMillis: Long
+  stable val completedSets: Int
+}
+stable class dev.saketanand.setwise.ui.home.WeekStatsUi {
+  stable val workouts: Int
+  stable val timeTrained: Duration
+  stable val newPrs: Int
+}
+stable class dev.saketanand.setwise.ui.home.TemplateUi {
+  stable val id: Long
+  stable val name: String
+  stable val category: String?
+  unstable val exercisePreview: List<String>
+  stable val moreExerciseCount: Int
+  stable val exerciseCount: Int
+  stable val setCount: Int
+  stable val estimatedMinutes: Int?
+  stable val lastUsedDaysAgo: Int?
+}
+stable class dev.saketanand.setwise.ui.home.WeeklySummaryUi {
+  stable val facts: WeekFacts
+  stable val recap: String?
+  stable val isGeneratingRecap: Boolean
+}
+stable class dev.saketanand.setwise.ui.home.DiscardDialogUi {
+  stable val runningWorkoutId: Long
+  stable val runningWorkoutName: String
+  stable val runningCompletedSets: Int
+  stable val templateIdToStart: Long?
+}
+stable class dev.saketanand.setwise.ui.home.CheckInUi {
+  unstable val days: List<CheckInDayUi>
+}
+stable class dev.saketanand.setwise.ui.home.CheckInDayUi {
+  stable val date: LocalDate
+  stable val status: DayStatus?
+}
+unstable class dev.saketanand.setwise.ui.home.HomeViewModel {
+  runtime val exerciseRepository: ExerciseRepository
+  runtime val workoutRepository: WorkoutRepository
+  runtime val templateRepository: TemplateRepository
+  runtime val dayMarkRepository: DayMarkRepository
+  runtime val userSettingsRepository: UserSettingsRepository
+  runtime val dateProvider: DateProvider
+  runtime val weeklyRecapWriter: WeeklyRecapWriter
+  unstable val _state: MutableStateFlow<HomeUiState>
+  unstable val state: StateFlow<HomeUiState>
+  unstable val eventChannel: Channel<HomeEvent>
+  unstable val events: Flow<HomeEvent>
+  stable var isSavingTemplate: Boolean
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.importing.ImportUiState {
+  stable val isReading: Boolean
+  unstable val plan: Plan?
+  stable val nothingFound: Boolean
+  stable val isImporting: Boolean
+  stable val result: Result?
+  stable val failed: Boolean
+}
+unstable class dev.saketanand.setwise.ui.importing.ImportViewModel {
+  runtime val importer: WorkoutImporter
+  runtime val exerciseRepository: ExerciseRepository
+  runtime val dateProvider: DateProvider
+  unstable val _state: MutableStateFlow<ImportUiState>
+  unstable val state: StateFlow<ImportUiState>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.navigation.AppLink.Workout {
+  stable val workoutId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.navigation.AppLink.SharedText {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.navigation.AppLinks {
+  stable val EXTRA_WORKOUT_ID: String
+  stable val MAX_SHARED_TEXT: Int
+  stable val NONE: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.Onboarding {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.Home {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.History {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.Settings {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.Body {
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.ui.navigation.Route.ImportWorkouts.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.ImportWorkouts {
+  stable val sharedText: String
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.ui.navigation.Route.ActiveWorkout.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.ActiveWorkout {
+  stable val workoutId: Long
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.ui.navigation.Route.CardioEntry.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.CardioEntry {
+  stable val workoutExerciseId: Long
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.ui.navigation.Route.WorkoutSummary.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.WorkoutSummary {
+  stable val workoutId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.ExercisePicker {
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.ui.navigation.Route.CreateExercise.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.CreateExercise {
+  stable val initialName: String
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.ui.navigation.Route.ExerciseDetail.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.ExerciseDetail {
+  stable val exerciseId: Long
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.ui.navigation.Route.TemplateEditor.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.TemplateEditor {
+  stable val templateId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.navigation.Route.TemplateFromGoal {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.onboarding.OnboardingAction.OnContinue {
+  stable val bodyWeightText: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.onboarding.OnboardingAction.OnSkipStep {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.onboarding.OnboardingAction.OnSkipAll {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.onboarding.OnboardingAction.OnBack {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.onboarding.OnboardingAction.OnDayToggle {
+  stable val day: DayOfWeek
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.onboarding.OnboardingAction.OnAskToggle {
+  stable val ask: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.onboarding.OnboardingAction.OnBodyWeightEdited {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.onboarding.OnboardingAction.OnNotificationsAnswered {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.onboarding.OnboardingUiState {
+  stable val step: OnboardingStep
+  unstable val steps: List<OnboardingStep>
+  unstable val trainingDays: Set<DayOfWeek>
+  stable val askAboutUnloggedDays: Boolean
+  stable val isBodyWeightInvalid: Boolean
+  stable val isFinishing: Boolean
+}
+unstable class dev.saketanand.setwise.ui.onboarding.OnboardingViewModel {
+  runtime val userSettings: UserSettingsRepository
+  unstable val savedStateHandle: SavedStateHandle
+  unstable val steps: List<OnboardingStep>
+  unstable val _state: MutableStateFlow<OnboardingUiState>
+  unstable val state: StateFlow<OnboardingUiState>
+  unstable val finished: Channel<Unit>
+  unstable val onFinished: Flow<Unit>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnBodyWeightClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnSaveBodyWeight {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnRemoveBodyWeight {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnTrainingDaysClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnDayToggle {
+  stable val day: DayOfWeek
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnSaveTrainingDays {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnAskAboutUnloggedDaysChange {
+  stable val ask: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnDownloadModelClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnScreenResumed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnDismissEditor {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnShowWeeklySummary {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnNameClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnSaveName {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnAgeClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnSaveAge {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnSexClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnSaveSex {
+  stable val sex: Sex?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnHeightClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnSaveHeight {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnRemoveProfileValue {
+  stable val editor: SettingsEditor
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnBodyCompositionClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnDefaultRestClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnSaveDefaultRest {
+  stable val seconds: Int?
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnRestSoundChange {
+  stable val on: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnRestVibrateChange {
+  stable val on: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnWorkoutNotificationChange {
+  stable val on: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsAction.OnImportClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsUiState {
+  stable val isLoading: Boolean
+  stable val name: String?
+  stable val age: Int?
+  stable val sex: Sex?
+  stable val heightCm: Double?
+  stable val bodyWeightKg: Double?
+  stable val bmr: BmrEstimate?
+  stable val bodyFatPercent: Double?
+  unstable val trainingDays: Set<DayOfWeek>
+  stable val askAboutUnloggedDays: Boolean
+  stable val restSecOverride: Int?
+  stable val restSound: Boolean
+  stable val restVibrate: Boolean
+  stable val workoutNotification: Boolean
+  stable val isWeeklySummaryClosed: Boolean
+  stable val editor: SettingsEditor?
+  stable val ai: AiStatusUi
+}
+stable class dev.saketanand.setwise.ui.settings.AiStatusUi {
+  stable val availability: ModelAvailability?
+  runtime val download: DownloadState
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsEditor.BodyWeight {
+  stable val isInvalid: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsEditor.TrainingDays {
+  unstable val selected: Set<DayOfWeek>
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsEditor.Name {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsEditor.Age {
+  stable val isInvalid: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsEditor.Height {
+  stable val isInvalid: Boolean
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsEditor.SexChoice {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.settings.SettingsEditor.DefaultRest {
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.ui.settings.SettingsViewModel {
+  runtime val userSettings: UserSettingsRepository
+  runtime val model: OnDeviceModel
+  unstable val downloader: ModelDownloader
+  runtime val dateProvider: DateProvider
+  unstable val editor: MutableStateFlow<SettingsEditor?>
+  unstable val availability: MutableStateFlow<ModelAvailability?>
+  unstable val ai: Flow<AiStatusUi>
+  unstable val state: StateFlow<SettingsUiState>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnSaveAsTemplateClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnEditTimesClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnPickTime {
+  stable val field: TimeField
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnTimePicked {
+  stable val time: LocalTime
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnTimePickerDismiss {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnSaveTimes {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnEditTimesDismiss {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnDoneClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnAddBodyWeightClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnSaveBodyWeight {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnBodyWeightDismiss {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnRenameClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnRenameConfirm {
+  stable val name: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnRenameDismiss {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnDeleteClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnConfirmDelete {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnDeleteDismiss {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryAction.OnExerciseClick {
+  stable val exerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryEvent.TemplateSaved {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryEvent.SaveFailed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryEvent.Closed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.summary.WorkoutSummaryUiState {
+  stable val isLoading: Boolean
+  stable val name: String
+  stable val date: LocalDate?
+  stable val startTime: LocalTime?
+  stable val endTime: LocalTime?
+  stable val duration: Duration
+  stable val volumeKg: Double
+  stable val completedSets: Int
+  stable val exerciseCount: Int
+  stable val caloriesKcal: Int?
+  stable val insight: InsightUi?
+  stable val needsBodyWeight: Boolean
+  stable val bodyWeightDialog: BodyWeightDialogUi?
+  unstable val records: List<RecordUi>
+  unstable val exercises: List<SummaryExerciseUi>
+  stable val canSaveAsTemplate: Boolean
+  stable val isTemplateSaved: Boolean
+  stable val editTimes: EditTimesUi?
+  stable val isRenaming: Boolean
+  stable val isConfirmingDelete: Boolean
+}
+stable class dev.saketanand.setwise.ui.summary.RecordUi {
+  stable val exerciseName: String
+  stable val kind: PrKind
+  stable val setKind: SetKind
+  stable val achieved: PreviousSet
+  stable val previousBest: PreviousSet
+}
+stable class dev.saketanand.setwise.ui.summary.SummaryExerciseUi {
+  stable val id: Long
+  stable val exerciseId: Long
+  stable val name: String
+  stable val setCount: Int
+  stable val best: String?
+  stable val cardio: CardioValues?
+}
+stable class dev.saketanand.setwise.ui.summary.EditTimesUi {
+  stable val start: LocalTime
+  stable val end: LocalTime
+  stable val picking: TimeField?
+  stable val isInvalid: Boolean
+}
+stable class dev.saketanand.setwise.ui.summary.BodyWeightDialogUi {
+  stable val isInvalid: Boolean
+}
+stable class dev.saketanand.setwise.ui.summary.InsightUi {
+  unstable val facts: WorkoutFacts
+  stable val modelText: String?
+}
+unstable class dev.saketanand.setwise.ui.summary.WorkoutSummaryViewModel {
+  stable val workoutId: Long
+  runtime val workoutRepository: WorkoutRepository
+  runtime val templateRepository: TemplateRepository
+  runtime val userSettingsRepository: UserSettingsRepository
+  runtime val insightWriter: WorkoutInsightWriter
+  runtime val dateProvider: DateProvider
+  stable var insightRequested: Boolean
+  unstable val overlays: MutableStateFlow<Overlays>
+  stable var isClosing: Boolean
+  unstable val eventChannel: Channel<WorkoutSummaryEvent>
+  unstable val events: Flow<WorkoutSummaryEvent>
+  unstable val state: StateFlow<WorkoutSummaryUiState>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnNameChange {
+  stable val name: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnCategoryClick {
+  stable val category: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnSetsChange {
+  stable val exerciseId: Long
+  stable val delta: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnMoveUp {
+  stable val exerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnMoveDown {
+  stable val exerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnRemoveExercise {
+  stable val exerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnAddExercisesClick {
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnExercisesPicked {
+  unstable val exerciseIds: List<Long>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnSaveClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnBackClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnConfirmDiscard {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnDeleteClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnConfirmDelete {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorAction.OnDialogDismiss {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorEvent.Saved {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorEvent.Closed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorEvent.SaveFailed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorUiState {
+  stable val isLoading: Boolean
+  stable val isNew: Boolean
+  stable val draft: TemplateEditorDraft
+  stable val hasChanges: Boolean
+  stable val isSaving: Boolean
+  stable val dialog: TemplateEditorDialog?
+}
+unstable class dev.saketanand.setwise.ui.templates.TemplateEditorDraft.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorDraft {
+  stable val name: String
+  stable val category: String?
+  unstable val exercises: List<TemplateEditorExercise>
+}
+unstable class dev.saketanand.setwise.ui.templates.TemplateEditorExercise.$serializer {
+  unstable val descriptor: SerialDescriptor
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.templates.TemplateEditorExercise {
+  stable val exerciseId: Long
+  stable val name: String
+  stable val muscleGroup: String
+  stable val targetSets: Int
+  stable val isCardio: Boolean
+}
+unstable class dev.saketanand.setwise.ui.templates.TemplateEditorViewModel {
+  stable val templateId: Long
+  runtime val templateRepository: TemplateRepository
+  runtime val exerciseRepository: ExerciseRepository
+  runtime val dateProvider: DateProvider
+  unstable val savedStateHandle: SavedStateHandle
+  stable val isNew: Boolean
+  unstable val _state: MutableStateFlow<TemplateEditorUiState>
+  unstable val state: StateFlow<TemplateEditorUiState>
+  unstable val eventChannel: Channel<TemplateEditorEvent>
+  unstable val events: Flow<TemplateEditorEvent>
+  stable var original: TemplateEditorDraft
+  <runtime stability> = Unstable
+}
+unstable class dev.saketanand.setwise.ui.templates.TemplateFromGoalViewModel {
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnFinishClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnStartTimeClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnStartTimeChange {
+  stable val time: LocalTime
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnStartTimePickerDismiss {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnConfirmFinish {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnDiscardWorkoutClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnConfirmDiscard {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnConfirmRemoveExercise {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnDismissDialog {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnRenameClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnRenameConfirm {
+  stable val name: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnExerciseHeaderClick {
+  stable val workoutExerciseId: Long
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnExercisesPicked {
+  unstable val exerciseIds: List<Long>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnRemoveExerciseClick {
+  stable val workoutExerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnExerciseHistoryClick {
+  stable val exerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnAddSetClick {
+  stable val workoutExerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnSetValuesChange {
+  stable val setId: Long
+  stable val weight: String
+  stable val reps: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnSetDoneToggle {
+  stable val setId: Long
+  stable val weight: String
+  stable val reps: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnDeleteSet {
+  stable val setId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnRestAdjust {
+  stable val deltaSec: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnRestSkip {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnNotificationsAllowed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnMinimizeClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnAddExerciseClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnLogCardioClick {
+  stable val workoutExerciseId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnQuickLogSubmit {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnQuickLogConfirm {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnQuickLogEdit {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnQuickLogEdited {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnStartListening {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnStopListening {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutAction.OnPhoneSpeechUsed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutEvent.Finished {
+  stable val workoutId: Long
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutEvent.Closed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutEvent.SaveFailed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutEvent.QuickLogAdded {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutEvent.QuickLogHeard {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutUiState {
+  stable val isLoading: Boolean
+  stable val name: String
+  stable val startedAtMillis: Long
+  stable val startTime: LocalTime?
+  stable val pastDay: LocalDate?
+  unstable val exercises: List<WorkoutExerciseUi>
+  stable val expandedExerciseId: Long?
+  stable val dialog: ActiveWorkoutDialog?
+  stable val isStartTimePickerVisible: Boolean
+  stable val isFinishing: Boolean
+  stable val rest: RestUi?
+  stable val quickLog: QuickLogUi
+  stable val onDeviceSpeech: Boolean
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutDialog.FinishWithIncompleteSets {
+  stable val incompleteSets: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutDialog.NothingLogged {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutDialog.ConfirmDiscard {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutDialog.Rename {
+  stable val currentName: String
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.ActiveWorkoutDialog.RemoveExercise {
+  stable val workoutExerciseId: Long
+  stable val exerciseName: String
+  stable val completedSets: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.RestUi {
+  stable val endsAtElapsed: Long
+  stable val totalMillis: Long
+  stable val nextSetNumber: Int?
+  stable val nextExerciseName: String?
+}
+stable class dev.saketanand.setwise.ui.workout.WorkoutExerciseUi {
+  stable val id: Long
+  stable val exerciseId: Long
+  stable val name: String
+  stable val kind: SetKind
+  stable val restSec: Int
+  unstable val sets: List<SetUi>
+  stable val lastTime: String?
+  stable val cardio: CardioValues?
+  stable val nextSession: NextSession?
+}
+stable class dev.saketanand.setwise.ui.workout.SetUi {
+  stable val id: Long
+  stable val number: Int
+  stable val previous: String?
+  stable val weight: String
+  stable val reps: String
+  stable val weightHint: String
+  stable val repsHint: String
+  stable val isCompleted: Boolean
+  stable val isPr: Boolean
+}
+stable class dev.saketanand.setwise.ui.workout.QuickLogUi {
+  stable val isReading: Boolean
+  stable val preview: QuickLogPreview?
+  stable val problem: Reason?
+  stable val isListening: Boolean
+  stable val heard: String
+  stable val micProblem: MicProblem?
+}
+stable class dev.saketanand.setwise.ui.workout.QuickLogPreview {
+  stable val exerciseName: String
+  stable val matchedFrom: String?
+  stable val isInWorkout: Boolean
+  stable val kind: SetKind
+  unstable val sets: List<SetFact>
+  stable val cardio: CardioValues?
+  stable val byModel: Boolean
+}
+unstable class dev.saketanand.setwise.ui.workout.ActiveWorkoutViewModel {
+  stable val workoutId: Long
+  runtime val workoutRepository: WorkoutRepository
+  runtime val dateProvider: DateProvider
+  unstable val savedStateHandle: SavedStateHandle
+  unstable val writeScope: CoroutineScope
+  runtime val restTimer: RestTimer
+  runtime val restNotifications: RestNotificationRefresher
+  runtime val quickLogInterpreter: QuickLogInterpreter
+  runtime val exerciseRepository: ExerciseRepository
+  runtime val speechInput: SpeechInput
+  stable var restSecOverride: Int?
+  unstable var listening: Job?
+  stable var speechDownloadStarted: Boolean
+  runtime var pendingQuickLog: QuickLogResult?
+  stable var readLine: String?
+  unstable val expandedChoice: StateFlow<Long?>
+  unstable val overlays: MutableStateFlow<Overlays>
+  unstable var session: WorkoutSession?
+  stable var isClosing: Boolean
+  unstable val eventChannel: Channel<ActiveWorkoutEvent>
+  unstable val events: Flow<ActiveWorkoutEvent>
+  unstable val writes: Channel<SuspendFunction0<Unit>>
+  unstable val state: StateFlow<ActiveWorkoutUiState>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioEntryAction.OnInclineChange {
+  stable val steps: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioEntryAction.OnLevelChange {
+  stable val delta: Int
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioEntryAction.OnInputEdited {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioEntryAction.OnLogClick {
+  stable val inputs: CardioInputs
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioEntryAction.OnBackClick {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioEntryEvent.Logged {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioEntryEvent.Closed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioEntryEvent.SaveFailed {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioParseResult.Valid {
+  stable val values: CardioValues
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioParseResult.Invalid {
+  stable val error: CardioInputError
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioFields {
+  stable val minutes: TextFieldState
+  stable val seconds: TextFieldState
+  stable val speedFrom: TextFieldState
+  stable val speedTo: TextFieldState
+  stable val distance: TextFieldState
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.ui.workout.CardioEntryUiState {
+  stable val isLoading: Boolean
+  stable val name: String
+  unstable val metrics: Set<CardioMetric>
+  stable val logged: CardioValues?
+  stable val lastTime: CardioValues?
+  stable val inclinePct: Double
+  stable val level: Int
+  stable val error: CardioInputError?
+  stable val isSaving: Boolean
+}
+stable class dev.saketanand.setwise.ui.workout.CardioInputs {
+  stable val minutes: String
+  stable val seconds: String
+  stable val speedFrom: String
+  stable val speedTo: String
+  stable val distance: String
+  <runtime stability> = Stable
+}
+unstable class dev.saketanand.setwise.ui.workout.CardioEntryViewModel {
+  stable val workoutExerciseId: Long
+  runtime val workoutRepository: WorkoutRepository
+  runtime val dateProvider: DateProvider
+  unstable val savedStateHandle: SavedStateHandle
+  unstable val _state: MutableStateFlow<CardioEntryUiState>
+  unstable val state: StateFlow<CardioEntryUiState>
+  unstable val eventChannel: Channel<CardioEntryEvent>
+  unstable val events: Flow<CardioEntryEvent>
+  <runtime stability> = Unstable
+}
+stable class dev.saketanand.setwise.util.SystemDateProvider {
+  <runtime stability> = Stable
+}
+stable class dev.saketanand.setwise.util.SystemElapsedClock {
+  <runtime stability> = Stable
+}

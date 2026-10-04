@@ -1,0 +1,27 @@
+# Weekly pull requests for dependency updates: Gradle (libs.versions.toml, plugins) and the
+# GitHub Actions used by the workflows. Related updates come grouped in one PR.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      androidx-compose:
+        patterns: ["androidx.compose*", "androidx.activity*", "androidx.lifecycle*", "androidx.navigation*"]
+      kotlin:
+        patterns: ["org.jetbrains.kotlin*", "com.google.devtools.ksp*", "org.jetbrains.kotlinx*"]
+      mlkit:
+        patterns: ["com.google.mlkit*", "com.google.android.gms*"]
+      code-checks:
+        patterns: ["dev.detekt*", "io.nlopez.compose.rules*", "org.jetbrains.kotlinx.kover*", "com.joetr.compose.guard*"]
+      testing:
+        patterns: ["junit*", "org.robolectric*", "app.cash.turbine*", "androidx.test*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

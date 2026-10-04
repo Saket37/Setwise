@@ -4,6 +4,9 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.kover)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.compose.guard)
 }
 
 android {
@@ -42,10 +45,16 @@ android {
         // BuildConfig.DEBUG gates debug-only code such as the fake-data seeder.
         buildConfig = true
     }
+    lint {
+        // For GitHub code scanning: findings show on the PR's changed lines.
+        sarifReport = true
+    }
     testOptions {
         // JVM unit tests run against stub Android classes: make calls like Log.e() no-ops
         // instead of throwing "not mocked", so error paths can be tested.
         unitTests.isReturnDefaultValues = true
+        // Robolectric (Compose UI tests on the JVM) needs the app's resources.
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -93,7 +102,54 @@ dependencies {
 
     // Unit tests
     testImplementation(libs.bundles.test)
+    // Compose UI on the JVM (Robolectric): recomposition tests
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.robolectric)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Instrumented tests (./gradlew connectedDebugAndroidTest)
     androidTestImplementation(libs.bundles.android.test)
+}
+
+detekt {
+    // Kotlin best practices, Compose rules and ktlint formatting; config/detekt/detekt.yml
+    // switches rules on top of detekt's defaults.
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    // Findings already in the code when detekt was added; new code must not add more.
+    baseline = file("detekt-baseline.xml")
+    parallel = true
+    // Its type analysis doesn't see BuildConfig or kotlinx.serialization's generated serializer();
+    // it reports those as compiler errors, which only blunt checks at those lines.
+}
+
+composeGuardCheck {
+    // Strong skipping (default) skips composables with unstable parameters by instance
+    // equality, so only a composable that can't skip at all is a regression worth failing on.
+    ignoreUnstableParamsOnSkippableComposables = true
+}
+
+dependencies {
+    detektPlugins(libs.detekt.compose.rules)
+    detektPlugins(libs.detekt.ktlint.wrapper)
+}
+
+kover {
+    reports {
+        verify {
+            rule("Line coverage") {
+                // About 62% when this was added; raise it as coverage grows, never lower it.
+                minBound(60)
+            }
+        }
+        filters {
+            excludes {
+                // Generated code: Room, KSP schema providers, BuildConfig, Compose singletons.
+                classes("*_Impl", "*_Impl\$*", "*_GeneratedProvider", "*.BuildConfig", "*ComposableSingletons*")
+                // Composables are checked on a device, not by JVM unit tests.
+                annotatedBy("androidx.compose.runtime.Composable", "androidx.compose.ui.tooling.preview.Preview")
+            }
+        }
+    }
 }

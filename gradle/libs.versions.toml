@@ -22,10 +22,17 @@ mlkitGenaiSpeech = "1.0.0-alpha1"
 playServicesTextRecognition = "19.0.1"
 mlkitGenaiSchema = "1.0.0-alpha1"
 
+# Code checks
+kover = "0.9.11"
+detekt = "2.0.0-alpha.6"
+composeRules = "0.6.7"
+composeGuard = "2.6.0"
+
 # Testing
 junit = "4.13.2"
 coroutinesTest = "1.10.2"
 turbine = "1.2.1"
+robolectric = "4.17"
 androidxTestExtJunit = "1.3.0"
 androidxTestRunner = "1.7.0"
 
@@ -68,10 +75,17 @@ mlkit-genai-speech-recognition = { group = "com.google.mlkit", name = "genai-spe
 mlkit-genai-schema = { group = "com.google.mlkit", name = "genai-schema", version.ref = "mlkitGenaiSchema" }
 mlkit-genai-schema-compiler = { group = "com.google.mlkit", name = "genai-schema-compiler", version.ref = "mlkitGenaiSchema" }
 
+# Code checks (detekt rule sets)
+detekt-compose-rules = { group = "io.nlopez.compose.rules", name = "detekt", version.ref = "composeRules" }
+detekt-ktlint-wrapper = { group = "dev.detekt", name = "detekt-rules-ktlint-wrapper", version.ref = "detekt" }
+
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
 
@@ -99,3 +113,6 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
+compose-guard = { id = "com.joetr.compose.guard", version.ref = "composeGuard" }
