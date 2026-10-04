@@ -61,6 +61,22 @@ object ExerciseNames {
         return same.filter { exercise -> words(exercise.name).filter { it in EQUIPMENT_WORDS }.toSet() == gear }.singleOrNull()
     }
 
+    /**
+     * A name that doesn't say its variant means the usual one: "Lat Pulldown (Cable)" → Lat
+     * Pulldown (Wide Grip), "seated row" → Seated Cable Row (V-Bar). Unless the typed equipment
+     * rules it out ("Preacher Curl (Dumbbell)" isn't the barbell one).
+     */
+    fun usualVariant(typed: String, library: List<Exercise>): Exercise? {
+        val typedWords = words(typed)
+        val core = typedWords.filter { it !in EQUIPMENT_WORDS }.sorted()
+        val gear = typedWords.filter { it in EQUIPMENT_WORDS }.toSet()
+        // All the words first ("cable curl"), then without equipment ("Lat Pulldown (Cable)").
+        val usual = USUAL_VARIANTS[typedWords.sorted()] ?: USUAL_VARIANTS[core] ?: return null
+        val exercise = library.firstOrNull { it.name == usual } ?: return null
+        val usualGear = words(exercise.name).filter { it in EQUIPMENT_WORDS }.toSet()
+        return exercise.takeIf { gear.isEmpty() || usualGear.isEmpty() || usualGear.any { it in gear } }
+    }
+
     /** Every typed word that isn't equipment is in [name]: nothing that tells them apart is dropped ("preacher"). */
     fun coversCore(typed: String, name: String): Boolean {
         val nameWords = words(name).toSet()
@@ -139,6 +155,54 @@ object ExerciseNames {
         "squats" to "squat", "lunges" to "lunge", "flyes" to "fly", "flys" to "fly",
         "extensions" to "extension", "deadlifts" to "deadlift", "ups" to "up",
     )
+
+    /** The library's usual variant of a name said without one (the names it had before it named variants). */
+    private val USUAL_VARIANTS: Map<List<String>, String> by lazy { usualVariants() }
+
+    private fun usualVariants(): Map<List<String>, String> = listOf(
+        "Lat Pulldown" to "Lat Pulldown (Wide Grip)",
+        "Seated Row" to "Seated Cable Row (V-Bar)",
+        "Seated Cable Row" to "Seated Cable Row (V-Bar)",
+        "Cable Row" to "Seated Cable Row (V-Bar)",
+        "Straight-arm Pulldown" to "Straight-arm Pulldown (Bar)",
+        "Triceps Pushdown" to "Triceps Pushdown (Cable - Straight Bar)",
+        "Overhead Triceps Extension" to "Overhead Triceps Extension (Dumbbell)",
+        "Triceps Kickback" to "Triceps Kickback (Dumbbell)",
+        "Skull Crusher" to "Skull Crusher (EZ Bar)",
+        "Bicep Curl" to "Bicep Curl (Barbell)",
+        "Preacher Curl" to "Preacher Curl (Barbell)",
+        "Hammer Curl" to "Hammer Curl (Dumbbell)",
+        "Concentration Curl" to "Concentration Curl (Dumbbell)",
+        "Incline Curl" to "Incline Curl (Dumbbell)",
+        "Face Pull" to "Face Pull (Rope)",
+        "Upright Row" to "Upright Row (Barbell)",
+        "Arnold Press" to "Arnold Press (Dumbbell)",
+        "Lateral Raise" to "Lateral Raise (Dumbbell)",
+        "Front Raise" to "Front Raise (Dumbbell)",
+        "Rear Delt Fly" to "Rear Delt Fly (Dumbbell)",
+        "Chest Fly" to "Chest Fly (Dumbbell)",
+        "Incline Chest Fly" to "Incline Chest Fly (Dumbbell)",
+        "Single-arm Row" to "Single-arm Row (Dumbbell)",
+        "Wrist Curl" to "Wrist Curl (Dumbbell)",
+        "Goblet Squat" to "Goblet Squat (Dumbbell)",
+        "Bulgarian Split Squat" to "Bulgarian Split Squat (Dumbbell)",
+        "Reverse Lunge" to "Reverse Lunge (Dumbbell)",
+        "Walking Lunge" to "Walking Lunge (Dumbbell)",
+        "Step-up" to "Step-up (Dumbbell)",
+        "Stiff-leg Deadlift" to "Stiff-leg Deadlift (Barbell)",
+        "Good Morning" to "Good Morning (Barbell)",
+        "Sumo Deadlift" to "Sumo Deadlift (Barbell)",
+        "Seated Calf Raise" to "Seated Calf Raise (Machine)",
+        "Glute Kickback" to "Glute Kickback (Cable)",
+        // Names the library had before, other words for the same exercise.
+        "Cable Curl" to "Bicep Curl (Cable - Straight Bar)",
+        "Cable Crossover" to "Chest Fly (Cable)",
+        "Pec Deck" to "Chest Fly (Machine)",
+        "Reverse Pec Deck" to "Rear Delt Fly (Machine)",
+        "One-arm Dumbbell Row" to "Single-arm Row (Dumbbell)",
+        "Seated Dumbbell Shoulder Press" to "Overhead Press (Dumbbell)",
+        "Dumbbell Shoulder Press" to "Overhead Press (Dumbbell)",
+    ).associate { (said, usual) -> words(said).sorted() to usual }
 
     /** Words that don't tell exercises apart ("Bicep Curl" is a curl). */
     private val FILLER = setOf("the", "a", "with", "on", "and", "bicep", "biceps")
