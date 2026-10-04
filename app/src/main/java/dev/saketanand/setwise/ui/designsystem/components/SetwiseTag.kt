@@ -50,7 +50,7 @@ fun SetwiseTag(
         if (icon != null) {
             Icon(painterResource(icon), contentDescription = null, tint = style.contentColor, modifier = Modifier.size(style.iconSize))
         }
-        Text(text = text.uppercase(), style = style.textStyle, color = style.contentColor)
+        Text(text = if (style.uppercase) text.uppercase() else text, style = style.textStyle, color = style.contentColor)
     }
 }
 
@@ -64,6 +64,8 @@ data class SetwiseTagStyle(
     val contentPadding: PaddingValues,
     val textStyle: TextStyle,
     val iconSize: Dp,
+    /** Tags read as labels in capitals; a sentence-like one (e.g. "3 days / week") keeps its case. */
+    val uppercase: Boolean = true,
 )
 
 object SetwiseTagDefaults {
@@ -78,6 +80,19 @@ object SetwiseTagDefaults {
         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 1.dp),
         textStyle = MaterialTheme.typography.labelSmall,
         iconSize = 12.dp,
+    )
+
+    /** What something was understood as (e.g. a goal's "45 min"): the accent's container. */
+    @Composable
+    fun accent() = SetwiseTagStyle(
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        borderColor = null,
+        shape = RoundedCornerShape(18.dp),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 9.dp),
+        textStyle = MaterialTheme.typography.labelMedium,
+        iconSize = 14.dp,
+        uppercase = false,
     )
 
     /** Personal record: Ember fill. Only for PRs, so the colour keeps its meaning. */
