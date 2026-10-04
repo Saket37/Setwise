@@ -143,16 +143,21 @@ fun SetwiseNavHost(
             val route = entry.toRoute<Route.ActiveWorkout>()
             val pickedExerciseIds = entry.pickedExerciseIds()
             ActiveWorkoutScreenRoot(
-                viewModel = koinViewModel { parametersOf(route.workoutId) },
+                viewModel = koinViewModel { parametersOf(route.workoutId, route.editingFinished) },
                 pickedExerciseIds = pickedExerciseIds,
                 onPickedExercisesConsumed = { entry.clearPickedExerciseIds() },
                 onAddExercises = { navController.navigate(Route.ExercisePicker) },
                 onOpenCardioEntry = { id -> navController.navigate(Route.CardioEntry(id)) },
                 onOpenExercise = { exerciseId -> navController.navigate(Route.ExerciseDetail(exerciseId)) },
                 onFinished = { workoutId ->
-                    // Replace the active workout with its summary, so Back doesn't return to it.
-                    navController.navigate(Route.WorkoutSummary(workoutId)) {
-                        popUpTo<Route.ActiveWorkout> { inclusive = true }
+                    if (route.editingFinished) {
+                        // Back to the summary it was opened from, which shows the edits.
+                        navController.popBackStack()
+                    } else {
+                        // Replace the active workout with its summary, so Back doesn't return to it.
+                        navController.navigate(Route.WorkoutSummary(workoutId)) {
+                            popUpTo<Route.ActiveWorkout> { inclusive = true }
+                        }
                     }
                 },
                 onMinimize = { navController.popBackStack() },
@@ -172,6 +177,7 @@ fun SetwiseNavHost(
             WorkoutSummaryScreenRoot(
                 viewModel = koinViewModel { parametersOf(route.workoutId) },
                 onOpenExercise = { exerciseId -> navController.navigate(Route.ExerciseDetail(exerciseId)) },
+                onEditSets = { navController.navigate(Route.ActiveWorkout(route.workoutId, editingFinished = true)) },
                 onDone = { navController.popBackStack() },
             )
         }

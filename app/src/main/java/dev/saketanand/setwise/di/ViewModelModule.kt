@@ -43,7 +43,8 @@ val viewModelModule = module {
     // Route argument passed by SetwiseNavHost: koinViewModel { parametersOf(route.workoutId) }.
     viewModel { params ->
         ActiveWorkoutViewModel(
-            workoutId = params.get(),
+            workoutId = params[0],
+            isEditingFinished = params.getOrNull<Boolean>() ?: false,
             workoutRepository = get(),
             dateProvider = get(),
             savedStateHandle = get(),

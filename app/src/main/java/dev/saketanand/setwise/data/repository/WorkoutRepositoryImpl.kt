@@ -193,6 +193,17 @@ class WorkoutRepositoryImpl(
             updated
         }
 
+    override suspend fun finishEditing(workoutId: Long, exerciseIds: Collection<Long>): Boolean =
+        database.withTransaction {
+            if (workoutDao.clearEstimates(workoutId) == 0) return@withTransaction false
+            workoutDao.deleteIncompleteSets(workoutId)
+            workoutDao.deleteExercisesWithoutSets(workoutId)
+            workoutDao.workoutExerciseIds(workoutId).forEach { renumberSets(it) }
+            // Exercises removed while editing count too: later workouts' records were measured against them.
+            markRecordsFrom((exerciseIds + workoutDao.exerciseIdsOf(workoutId)).distinct(), workoutDao.startedAtOf(workoutId) ?: 0)
+            true
+        }
+
     override suspend fun refreshPersonalRecords(workoutId: Long) {
         database.withTransaction { markPersonalRecords(workoutId) }
     }

@@ -37,8 +37,8 @@ sealed interface Route {
 
     // Workout flow
 
-    /** Live workout with sets, rest timer and quick-log. */
-    @Serializable data class ActiveWorkout(val workoutId: Long) : Route
+    /** Live workout with sets, rest timer and quick-log; [editingFinished]: a finished one opened from its summary to edit its sets. */
+    @Serializable data class ActiveWorkout(val workoutId: Long, val editingFinished: Boolean = false) : Route
 
     /** Treadmill / cardio inputs for one exercise in the active workout. */
     @Serializable data class CardioEntry(val workoutExerciseId: Long) : Route

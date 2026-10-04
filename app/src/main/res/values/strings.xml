@@ -230,6 +230,8 @@
     <string name="end">End</string>
     <string name="end_time">End time</string>
     <string name="save">Save</string>
+    <string name="edit_sets">Edit sets</string>
+    <string name="editing_sets">Editing sets · finished workout</string>
     <string name="workout_times_invalid">The end has to be after the start.</string>
 
     <!-- Onboarding (first launch; every step skippable, all editable in Settings) -->
