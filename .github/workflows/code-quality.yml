@@ -3,6 +3,7 @@
 #  - Kotlin checks: detekt with the Compose rules and ktlint formatting (config/detekt/).
 #  - Compose stability: Compose Guard fails when a composable stops being skippable or gains
 #    unstable parameters, compared with the golden reports in app/compose_reports/.
+#  - Workflows: actionlint checks these workflow files (expressions, keys, shell scripts).
 # Lint and detekt findings also go to GitHub code scanning, so they show on the PR's lines.
 name: Code quality
 
@@ -105,3 +106,16 @@ jobs:
       # change, regenerate them: ./gradlew debugComposeCompilerGenerate
       - name: Compose Guard
         run: ./gradlew debugComposeCompilerCheck --stacktrace
+
+  actionlint:
+    name: Workflows (actionlint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      # Pinned release; also runs shellcheck on the run: scripts.
+      - name: actionlint
+        run: |
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12
+          ./actionlint -color
