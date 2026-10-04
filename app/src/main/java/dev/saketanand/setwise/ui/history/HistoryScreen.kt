@@ -77,6 +77,12 @@ import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.math.roundToLong
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalFocusManager
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseInputBar
 
 /**
  * Destination: [Route.History].
@@ -119,6 +125,16 @@ fun HistoryScreen(
     modifier: Modifier = Modifier,
 ) {
     var showCalendar by rememberSaveable { mutableStateOf(false) }
+    val askField = rememberTextFieldState()
+    var isAskFocused by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    val ask = uiState.ask
+    // The ask panel (or, while typing a question, what can be asked) instead of the history.
+    val showAsk = ask.isOpen || (isAskFocused && askField.text.isEmpty())
+    val send = {
+        onAction(HistoryAction.OnAsk(askField.text.toString()))
+        focusManager.clearFocus()
+    }
     if (showCalendar) {
         HistoryCalendarSheet(
             uiState = uiState,
@@ -158,7 +174,40 @@ fun HistoryScreen(
                     )
                 }
             }
-            if (uiState.days.isNotEmpty()) {
+            if (!uiState.isEmpty || ask.isOpen) {
+                SetwiseInputBar(
+                    state = askField,
+                    placeholder = stringResource(R.string.ask_placeholder),
+                    onSubmit = send,
+                    leadingIcon = R.drawable.ic_ai_sparkle,
+                    onFocusChange = { isAskFocused = it },
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                ) {
+                    if (ask.isOpen) {
+                        SetwiseIconButton(
+                            icon = R.drawable.ic_close,
+                            contentDescription = stringResource(R.string.ask_close),
+                            onClick = {
+                                askField.clearText()
+                                focusManager.clearFocus()
+                                onAction(HistoryAction.OnAskClosed)
+                            },
+                            size = 44.dp,
+                            iconSize = 20.dp,
+                            colors = SetwiseIconButtonDefaults.plainColors(MaterialTheme.colorScheme.onSurfaceVariant),
+                        )
+                    }
+                    SetwiseIconButton(
+                        icon = R.drawable.ic_send,
+                        contentDescription = stringResource(R.string.ask_send),
+                        onClick = send,
+                        enabled = askField.text.isNotBlank(),
+                        size = 44.dp,
+                        iconSize = 20.dp,
+                    )
+                }
+            }
+            if (uiState.days.isNotEmpty() && !showAsk) {
                 DayStrip(
                     days = uiState.days,
                     selectedDate = uiState.selectedDate,
@@ -166,7 +215,7 @@ fun HistoryScreen(
                 )
             }
             val selected = uiState.selectedDate
-            if (selected != null && uiState.isSelectedDayEmpty) {
+            if (selected != null && uiState.isSelectedDayEmpty && !showAsk) {
                 EmptyDayCard(
                     date = selected,
                     state = uiState.selectedDayState,
@@ -176,6 +225,19 @@ fun HistoryScreen(
             }
         }
         when {
+            ask.isOpen -> AskPanel(ask = ask, onAction = { action ->
+                // A suggested question goes in the bar too.
+                if (action is HistoryAction.OnAsk) askField.setTextAndPlaceCursorAtEnd(action.question)
+                onAction(action)
+            })
+            showAsk -> Suggestions(
+                onAsk = { question ->
+                    askField.setTextAndPlaceCursorAtEnd(question)
+                    focusManager.clearFocus()
+                    onAction(HistoryAction.OnAsk(question))
+                },
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
             uiState.isLoading -> Unit
             uiState.isEmpty -> SetwiseEmptyState(
                 title = stringResource(R.string.no_workouts_yet),

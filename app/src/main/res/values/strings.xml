@@ -384,6 +384,55 @@
     <string name="plateau_source_rules">Detected from your logs</string>
     <string name="flat_since">flat since %1$s</string>
 
+    <!-- Ask about your training (History) -->
+    <string name="ask_placeholder">Ask about your training</string>
+    <string name="ask_send">Ask</string>
+    <string name="ask_close">Close the answer</string>
+    <string name="ask_looking">Looking through your workouts…</string>
+    <string name="ask_looked_up">Looked up:</string>
+    <string name="ask_picked_on_device">picked on-device</string>
+    <string name="ask_you_can_also_ask">You can also ask</string>
+    <string name="ask_suggestion_best">What’s my best bench press?</string>
+    <string name="ask_suggestion_volume">How much volume did I do last month?</string>
+    <string name="ask_suggestion_count">How many times did I train legs this month?</string>
+    <string name="ask_suggestion_prs">Show workouts where I hit a PR</string>
+    <string name="ask_last_lifted_kg">Your last %1$s %2$s was %3$s: %4$s on set %5$d.</string>
+    <string name="ask_last_lifted">Your last %1$s was %2$s: %3$s on set %4$d.</string>
+    <string name="ask_also_best">That’s also your best %1$s set.</string>
+    <string name="ask_best_set">Your best %1$s set%2$s is %3$s, on %4$s.</string>
+    <string name="ask_volume">You lifted %1$s%2$s, over %3$s.</string>
+    <string name="ask_volume_muscles">Your %1$s volume was %2$s%3$s, over %4$s.</string>
+    <string name="ask_count_any">You did %1$s%2$s.</string>
+    <string name="ask_count_of">You trained %1$s %2$s%3$s.</string>
+    <string name="ask_count_prs">You hit records in %1$s%2$s.</string>
+    <string name="ask_none_found">Nothing in your log for that%1$s.</string>
+    <string name="ask_unknown_exercise">No exercise like “%1$s” in your log or the library.</string>
+    <string name="ask_not_understood">That isn’t one I can look up yet. Try one of these:</string>
+    <string name="ask_for_reps">%1$s for %2$d reps</string>
+    <string name="ask_weight_kg">%1$s kg</string>
+    <string name="ask_volume_kg">%1$s kg</string>
+    <plurals name="ask_workouts">
+        <item quantity="one">%d workout</item>
+        <item quantity="other">%d workouts</item>
+    </plurals>
+    <plurals name="ask_times">
+        <item quantity="one">%d time</item>
+        <item quantity="other">%d times</item>
+    </plurals>
+    <string name="ask_period_this_week">this week</string>
+    <string name="ask_period_last_week">last week</string>
+    <string name="ask_period_this_month">this month</string>
+    <string name="ask_period_last_month">last month</string>
+    <string name="ask_period_this_year">this year</string>
+    <string name="ask_period_in">in %1$s</string>
+    <string name="ask_lookup_last">last time lifted</string>
+    <string name="ask_lookup_best">best set</string>
+    <string name="ask_lookup_volume">volume</string>
+    <string name="ask_lookup_count">workouts</string>
+    <string name="ask_lookup_prs">workouts with PRs</string>
+    <string name="ask_lookup_all_time">all time</string>
+    <string name="ask_pr">PR</string>
+
     <!-- Quick log (workout screen) -->
     <string name="quick_log_placeholder">Quick log: bench 3x8 at 60</string>
     <string name="quick_log_send">Read it</string>

@@ -26,6 +26,19 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import dev.saketanand.setwise.domain.ai.ExerciseAssistant
+import dev.saketanand.setwise.domain.ai.HistoryAssistant
+import dev.saketanand.setwise.domain.ai.HistoryReply
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
+import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.HistoryAnswer
+import dev.saketanand.setwise.domain.model.LoggedSetRecord
+import dev.saketanand.setwise.domain.model.NewExercise
+import dev.saketanand.setwise.domain.model.RecentExercise
+import dev.saketanand.setwise.domain.repository.ExerciseRepository
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
+import org.junit.Assert.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModelTest {
@@ -40,9 +53,44 @@ class HistoryViewModelTest {
         workouts: StubWorkoutRepository = StubWorkoutRepository(),
         marks: FakeDayMarkRepository = FakeDayMarkRepository(),
     ) =
-        HistoryViewModel(workouts, marks, FakeUserSettingsRepository(), FixedDateProvider, handle).also { vm ->
+        HistoryViewModel(
+            workouts, marks, FakeUserSettingsRepository(), FixedDateProvider, handle,
+            HistoryAssistant(model, ExerciseAssistant(model)), Library,
+        ).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
         }
+
+    private val model = FakeOnDeviceModel()
+
+    @Test
+    fun `a question is looked up in the training log, and closing it goes back`() = runTest(dispatcher) {
+        val day = LocalDate.of(2026, 9, 28).atTime(18, 0).atZone(FixedDateProvider.zone).toInstant()
+        val logged = object : StubWorkoutRepository() {
+            override suspend fun getTrainingLog() = listOf(
+                LoggedSetRecord(10, "Leg Day", day, SQUAT.id, SQUAT.name, "Quads", 1, 100.0, 5, null, null, isPr = true),
+            )
+        }
+        val vm = viewModel(workouts = logged)
+
+        vm.onAction(HistoryAction.OnAsk("When did I last squat 100 kg?"))
+
+        val reply = vm.state.value.ask.reply as HistoryReply.Answered
+        assertEquals(10L, (reply.answer as HistoryAnswer.Lifted).workout.id)
+        assertTrue(vm.state.value.ask.isOpen)
+
+        vm.onAction(HistoryAction.OnAskClosed)
+        assertEquals(AskUi(), vm.state.value.ask)
+    }
+
+    private object Library : ExerciseRepository {
+        override fun observeExercises(query: String, muscleGroup: String?): Flow<List<Exercise>> = flowOf(listOf(SQUAT))
+        override fun observeMuscleGroups(): Flow<List<String>> = flowOf(emptyList())
+        override fun observeRecentExercises(limit: Int): Flow<List<RecentExercise>> = flowOf(emptyList())
+        override fun observeExerciseCount(): Flow<Int> = flowOf(1)
+        override suspend fun createExercise(exercise: NewExercise): CreateExerciseResult = CreateExerciseResult.Created(0)
+        override suspend fun getExercises(ids: List<Long>): List<Exercise> = emptyList()
+        override fun observeExercise(id: Long): Flow<Exercise?> = flowOf(null)
+    }
 
     @Test
     fun `tapping a day selects it, tapping it again clears it`() = runTest(dispatcher) {
@@ -125,6 +173,10 @@ class HistoryViewModelTest {
     private var started: Instant? = null
 
     /** Saturday 3 Oct 2026. */
+    private companion object {
+        val SQUAT = Exercise(1, "Back Squat (Barbell)", ExerciseType.STRENGTH, "Quads", "Barbell", 120, false, false, null, null, null)
+    }
+
     private object FixedDateProvider : DateProvider {
         override val zone: ZoneId = ZoneId.of("Asia/Kolkata")
         override fun now(): Instant = LocalDate.of(2026, 10, 3).atTime(18, 30).atZone(zone).toInstant()

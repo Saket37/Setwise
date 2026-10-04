@@ -46,6 +46,7 @@ class AiCheck(
     private val exerciseAssistant: ExerciseAssistant,
     private val quickLogInterpreter: QuickLogInterpreter,
     private val plateauNotes: PlateauNoteWriter,
+    private val historyAssistant: HistoryAssistant,
     private val exerciseRepository: ExerciseRepository,
     private val workoutRepository: WorkoutRepository,
     private val userSettingsRepository: UserSettingsRepository,
@@ -62,6 +63,7 @@ class AiCheck(
                 ONLY_PLATEAU -> checkPlateauNotes()
                 ONLY_CLIENT -> checkClientReopen()
                 ONLY_SPEECH -> checkSpeech()
+                ONLY_ASK -> checkAsk()
                 else -> checkAll(workouts)
             }
             Log.i(TAG, "Done")
@@ -82,6 +84,18 @@ class AiCheck(
         checkExerciseNames()
         checkQuickLog()
         checkPlateauNotes()
+    }
+
+    /** History questions over the real log: the reply, and whether the model picked the lookup. */
+    private suspend fun checkAsk() {
+        val log = workoutRepository.getTrainingLog()
+        val library = exerciseRepository.observeExercises("", null).first()
+        val zone = java.time.ZoneId.systemDefault()
+        SAMPLE_QUESTIONS.forEach { question ->
+            val startedAt = System.nanoTime()
+            val reply = historyAssistant.ask(question, log, library, java.time.LocalDate.now(zone), zone)
+            Log.i(TAG, "'$question' (${(System.nanoTime() - startedAt) / 1_000_000} ms) → $reply")
+        }
     }
 
     /**
@@ -241,6 +255,21 @@ class AiCheck(
         const val ONLY_PLATEAU = "plateau"
         const val ONLY_CLIENT = "client"
         const val ONLY_SPEECH = "speech"
+        const val ONLY_ASK = "ask"
+
+        /** The first five the code reads; the rest need the model to pick a lookup (or "none"). */
+        private val SAMPLE_QUESTIONS = listOf(
+            "When did I last squat 100 kg?",
+            "What's my best bench press?",
+            "How much volume did I do last month?",
+            "How many times did I train legs this month?",
+            "Show workouts where I hit a PR",
+            "what's the heaviest I've deadlifted",
+            "did I do any chest work this week",
+            "how strong is my overhead press these days",
+            "total kilos moved in September",
+            "should I eat more protein",
+        )
 
         private val SAMPLE_PLATEAUS: List<Triple<String, Plateau, ExerciseSession>> = run {
             val since = Instant.parse("2026-09-07T12:00:00Z")
