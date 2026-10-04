@@ -175,6 +175,14 @@
     <string name="channel_rest_timer">Rest timer</string>
     <string name="channel_rest_timer_description">The countdown between sets</string>
     <string name="channel_rest_over">Rest over</string>
+    <string name="channel_rest_over_vibrate">Rest over (vibrate only)</string>
+    <string name="channel_rest_over_quiet">Rest over (silent)</string>
+    <string name="channel_workout">Workout in progress</string>
+    <string name="channel_workout_description">Your workout\'s time and sets while you train</string>
+    <plurals name="workout_notification_sets">
+        <item quantity="one">%d set done · tap to go back</item>
+        <item quantity="other">%d sets done · tap to go back</item>
+    </plurals>
     <string name="channel_rest_over_description">Tells you when it\'s time for the next set</string>
     <string name="rest_notification_text">Tap to go back to your workout</string>
     <string name="rest_notification_add">+15s</string>
@@ -383,6 +391,16 @@
     <string name="plateau_source_model">Written on-device · detected from your logs</string>
     <string name="plateau_source_rules">Detected from your logs</string>
     <string name="flat_since">flat since %1$s</string>
+
+    <!-- Rest timer settings -->
+    <string name="settings_rest_timer">Rest timer</string>
+    <string name="default_rest">Default rest</string>
+    <string name="default_rest_detail">After every set. Per exercise uses each exercise\'s own rest (longer for heavy lifts).</string>
+    <string name="rest_per_exercise">Per exercise</string>
+    <string name="rest_sound">Sound when rest ends</string>
+    <string name="rest_vibrate">Vibrate</string>
+    <string name="workout_notification">Workout notification</string>
+    <string name="workout_notification_detail">Time and sets done while you train, and the rest countdown</string>
 
     <!-- Profile and body composition -->
     <string name="profile_name">Name</string>

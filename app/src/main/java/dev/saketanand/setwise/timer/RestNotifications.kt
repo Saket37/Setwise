@@ -13,6 +13,7 @@ import dev.saketanand.setwise.R
 import dev.saketanand.setwise.service.WorkoutTimerService
 import dev.saketanand.setwise.ui.navigation.AppLink
 import dev.saketanand.setwise.ui.navigation.AppLinks
+import dev.saketanand.setwise.domain.model.ActiveWorkout
 
 /**
  * The rest timer's notification channels and notifications, in one place.
@@ -21,12 +22,19 @@ import dev.saketanand.setwise.ui.navigation.AppLinks
  *   notifications (Low would file it under "Silent", collapsed, hiding +15s / Skip), but with
  *   no sound or vibration of its own.
  * - [CHANNEL_REST_OVER]: "Rest over". High importance: sound + vibration + pop-up, as the user
- *   set the channel up (and respecting Do Not Disturb).
+ *   set the channel up (and respecting Do Not Disturb). A channel's sound and vibration can't
+ *   change once made, so Settings' choices pick one of three: this, [CHANNEL_REST_OVER_VIBRATE]
+ *   (no sound) or [CHANNEL_REST_OVER_QUIET] (neither).
+ * - [CHANNEL_WORKOUT]: the workout in progress (time, sets done). Low importance: no sound, out
+ *   of the way. The rest countdown takes its place, same id, while resting.
  */
 object RestNotifications {
 
     const val CHANNEL_REST = "rest_countdown"
     const val CHANNEL_REST_OVER = "rest_over"
+    const val CHANNEL_REST_OVER_VIBRATE = "rest_over_vibrate"
+    const val CHANNEL_REST_OVER_QUIET = "rest_over_quiet"
+    const val CHANNEL_WORKOUT = "workout_in_progress"
     const val ID_COUNTDOWN = 1
     const val ID_REST_OVER = 2
 
@@ -45,6 +53,26 @@ object RestNotifications {
             NotificationChannel(CHANNEL_REST_OVER, context.getString(R.string.channel_rest_over), NotificationManager.IMPORTANCE_HIGH).apply {
                 description = context.getString(R.string.channel_rest_over_description)
                 enableVibration(true)
+            }
+        )
+        manager.createNotificationChannel(
+            NotificationChannel(CHANNEL_REST_OVER_VIBRATE, context.getString(R.string.channel_rest_over_vibrate), NotificationManager.IMPORTANCE_HIGH).apply {
+                description = context.getString(R.string.channel_rest_over_description)
+                setSound(null, null)
+                enableVibration(true)
+            }
+        )
+        manager.createNotificationChannel(
+            NotificationChannel(CHANNEL_REST_OVER_QUIET, context.getString(R.string.channel_rest_over_quiet), NotificationManager.IMPORTANCE_HIGH).apply {
+                description = context.getString(R.string.channel_rest_over_description)
+                setSound(null, null)
+                enableVibration(false)
+            }
+        )
+        manager.createNotificationChannel(
+            NotificationChannel(CHANNEL_WORKOUT, context.getString(R.string.channel_workout), NotificationManager.IMPORTANCE_LOW).apply {
+                description = context.getString(R.string.channel_workout_description)
+                setShowBadge(false)
             }
         )
     }
@@ -72,8 +100,15 @@ object RestNotifications {
             .build()
 
     /** "Rest over · Time for set 3". Disappears by itself after a minute. */
-    fun restOver(context: Context, rest: RestTimerState): Notification =
-        NotificationCompat.Builder(context, CHANNEL_REST_OVER)
+    fun restOver(context: Context, rest: RestTimerState, sound: Boolean = true, vibrate: Boolean = true): Notification =
+        NotificationCompat.Builder(
+            context,
+            when {
+                sound -> CHANNEL_REST_OVER
+                vibrate -> CHANNEL_REST_OVER_VIBRATE
+                else -> CHANNEL_REST_OVER_QUIET
+            },
+        )
             .setSmallIcon(R.drawable.ic_stat_setwise)
             .setColor(ContextCompat.getColor(context, R.color.notification_accent))
             .setContentTitle(context.getString(R.string.rest_over))
@@ -90,6 +125,24 @@ object RestNotifications {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .build()
+
+    /** "Push Day · 0:23:15 · 8 sets done", the clock counting up by itself; opens the workout. */
+    fun workout(context: Context, workout: ActiveWorkout): Notification =
+        NotificationCompat.Builder(context, CHANNEL_WORKOUT)
+            .setSmallIcon(R.drawable.ic_stat_setwise)
+            .setColor(ContextCompat.getColor(context, R.color.notification_accent))
+            .setContentTitle(workout.name)
+            .setContentText(context.resources.getQuantityString(R.plurals.workout_notification_sets, workout.completedSets, workout.completedSets))
+            .setContentIntent(openWorkout(context, workout.id))
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setShowWhen(true)
+            .setUsesChronometer(true)
+            .setWhen(workout.startedAt.toEpochMilli())
             .build()
 
     private fun label(context: Context, next: NextUp): String = when (next) {

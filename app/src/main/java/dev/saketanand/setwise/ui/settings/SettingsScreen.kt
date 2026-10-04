@@ -54,6 +54,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseValueDialog
 import dev.saketanand.setwise.ui.designsystem.components.ValueKind
 import java.text.NumberFormat
 import androidx.lifecycle.compose.dropUnlessResumed
+import dev.saketanand.setwise.domain.model.UserSettings
 
 /** Destination: [Route.Settings]. */
 @Composable
@@ -157,6 +158,30 @@ fun SettingsScreen(
                 showDivider = false,
             )
         }
+        SetwiseSettingsGroup(title = stringResource(R.string.settings_rest_timer)) {
+            SetwiseSettingsRow(
+                label = stringResource(R.string.default_rest),
+                value = uiState.restSecOverride?.let { restLabel(it) } ?: stringResource(R.string.rest_per_exercise),
+                onClick = { onAction(SettingsAction.OnDefaultRestClick) },
+            )
+            SetwiseSwitchRow(
+                label = stringResource(R.string.rest_sound),
+                checked = uiState.restSound,
+                onCheckedChange = { onAction(SettingsAction.OnRestSoundChange(it)) },
+            )
+            SetwiseSwitchRow(
+                label = stringResource(R.string.rest_vibrate),
+                checked = uiState.restVibrate,
+                onCheckedChange = { onAction(SettingsAction.OnRestVibrateChange(it)) },
+            )
+            SetwiseSwitchRow(
+                label = stringResource(R.string.workout_notification),
+                supporting = stringResource(R.string.workout_notification_detail),
+                checked = uiState.workoutNotification,
+                onCheckedChange = { onAction(SettingsAction.OnWorkoutNotificationChange(it)) },
+                showDivider = false,
+            )
+        }
         SetwiseSettingsGroup(title = stringResource(R.string.settings_ai)) {
             AiRow(ai = uiState.ai, onDownload = { onAction(SettingsAction.OnDownloadModelClick) })
         }
@@ -205,6 +230,15 @@ fun SettingsScreen(
             onSave = { onAction(SettingsAction.OnSaveHeight(it)) },
             onDismiss = { onAction(SettingsAction.OnDismissEditor) },
             onRemove = uiState.heightCm?.let { { onAction(SettingsAction.OnRemoveProfileValue(editor)) } },
+        )
+        SettingsEditor.DefaultRest -> SetwiseChoiceDialog(
+            title = stringResource(R.string.default_rest),
+            message = stringResource(R.string.default_rest_detail),
+            options = listOf<Pair<Int?, String>>(null to stringResource(R.string.rest_per_exercise)) +
+                UserSettings.REST_CHOICES.map { it to restLabel(it) },
+            selected = uiState.restSecOverride,
+            onSelect = { onAction(SettingsAction.OnSaveDefaultRest(it)) },
+            onDismiss = { onAction(SettingsAction.OnDismissEditor) },
         )
         SettingsEditor.SexChoice -> SetwiseChoiceDialog(
             title = stringResource(R.string.profile_sex),
@@ -306,3 +340,6 @@ private fun Sex.labelRes() = when (this) {
     Sex.Male -> R.string.sex_male
     Sex.Female -> R.string.sex_female
 }
+
+/** "1:30". */
+private fun restLabel(seconds: Int) = "%d:%02d".format(seconds / 60, seconds % 60)

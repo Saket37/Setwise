@@ -21,6 +21,11 @@ data class SettingsUiState(
     val bodyFatPercent: Double? = null,
     val trainingDays: Set<DayOfWeek> = emptySet(),
     val askAboutUnloggedDays: Boolean = true,
+    /** Rest timer: null = each exercise's own. */
+    val restSecOverride: Int? = null,
+    val restSound: Boolean = true,
+    val restVibrate: Boolean = true,
+    val workoutNotification: Boolean = true,
     /** Last week's summary was closed on Home: it can be shown again. */
     val isWeeklySummaryClosed: Boolean = false,
     /** The editor dialog that's open, if any. */
@@ -56,4 +61,6 @@ sealed interface SettingsEditor {
     data class Height(val isInvalid: Boolean = false) : SettingsEditor
 
     data object SexChoice : SettingsEditor
+
+    data object DefaultRest : SettingsEditor
 }

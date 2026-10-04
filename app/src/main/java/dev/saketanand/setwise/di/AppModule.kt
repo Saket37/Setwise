@@ -87,7 +87,7 @@ val appModule = module {
     factoryOf(::AiCheck) // debug launch extra only (MainActivity)
     singleOf(::CalorieSync)
     single<NotificationPermission> { AndroidNotificationPermission(androidContext()) }
-    single { RestTimerCoordinator(androidContext(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)) } bind
+    single { RestTimerCoordinator(androidContext(), get(), get(), get(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)) } bind
         RestNotificationRefresher::class
 
     // Shared JSON parser. ignoreUnknownKeys: new fields in exercises.json won't crash older builds.

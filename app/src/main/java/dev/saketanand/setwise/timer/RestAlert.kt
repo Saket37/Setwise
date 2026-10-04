@@ -12,15 +12,17 @@ import android.util.Log
 
 /**
  * "Rest over" while the app is open (no notification needed): a short double buzz and the
- * phone's notification sound. Follows the ringer: silent = nothing, vibrate = buzz only.
+ * phone's notification sound, each as Settings say. Follows the ringer: silent = nothing,
+ * vibrate = buzz only.
  */
 class RestAlert(private val context: Context) {
 
-    fun play() {
+    /** [sound] and [vibrate]: Settings' choices (the ringer still wins). */
+    fun play(sound: Boolean = true, vibrate: Boolean = true) {
         val ringerMode = context.getSystemService(AudioManager::class.java)?.ringerMode ?: AudioManager.RINGER_MODE_NORMAL
         if (ringerMode == AudioManager.RINGER_MODE_SILENT) return
-        vibrate()
-        if (ringerMode == AudioManager.RINGER_MODE_NORMAL) playSound()
+        if (vibrate) vibrate()
+        if (sound && ringerMode == AudioManager.RINGER_MODE_NORMAL) playSound()
     }
 
     private fun vibrate() {
