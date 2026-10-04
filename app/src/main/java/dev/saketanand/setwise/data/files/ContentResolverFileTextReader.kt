@@ -1,7 +1,7 @@
 package dev.saketanand.setwise.data.files
 
 import android.content.ContentResolver
-import android.net.Uri
+import androidx.core.net.toUri
 import dev.saketanand.setwise.domain.ai.FileTextReader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -14,7 +14,7 @@ class ContentResolverFileTextReader(
 ) : FileTextReader {
 
     override suspend fun read(uri: String, maxChars: Int): String = withContext(ioDispatcher) {
-        val stream = contentResolver.openInputStream(Uri.parse(uri)) ?: error("Couldn't open $uri")
+        val stream = contentResolver.openInputStream(uri.toUri()) ?: error("Couldn't open $uri")
         stream.bufferedReader().use { reader ->
             val buffer = CharArray(maxChars)
             var length = 0
