@@ -7,7 +7,9 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
 import dev.saketanand.setwise.data.local.SetwiseDatabase
 import dev.saketanand.setwise.data.dev.DevDataSeeder
+import dev.saketanand.setwise.data.prefs.DataStoreBodyRepository
 import dev.saketanand.setwise.data.prefs.DataStoreUserSettingsRepository
+import dev.saketanand.setwise.domain.repository.BodyRepository
 import dev.saketanand.setwise.data.repository.DayMarkRepositoryImpl
 import dev.saketanand.setwise.data.repository.ExerciseRepositoryImpl
 import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
@@ -53,6 +55,9 @@ import dev.saketanand.setwise.domain.ai.AiCheck
 import org.koin.core.module.dsl.factoryOf
 import dev.saketanand.setwise.domain.ai.SpeechInput
 import dev.saketanand.setwise.llm.GenAiSpeechInput
+import dev.saketanand.setwise.llm.MlKitTextReader
+import dev.saketanand.setwise.domain.ai.TextReader
+import dev.saketanand.setwise.domain.ai.BodyReportReader
 
 val appModule = module {
     // The app's clock ("now", today + midnight rollover); swapped for a fixed date in tests.
@@ -69,6 +74,8 @@ val appModule = module {
     // On-device model (Gemini Nano). Features take OnDeviceModel, so tests use a fake.
     single<OnDeviceModel> { GeminiNanoModel() }
     single<SpeechInput> { GenAiSpeechInput() }
+    single<TextReader> { MlKitTextReader(androidContext()) }
+    singleOf(::BodyReportReader)
     singleOf(::CalorieEstimator)
     singleOf(::WorkoutInsightWriter)
     singleOf(::ExerciseAssistant)
@@ -103,6 +110,7 @@ val appModule = module {
     singleOf(::SeedPreferences)
     // Body weight, training days, check-in switch, onboarding done (Settings / onboarding).
     singleOf(::DataStoreUserSettingsRepository) bind UserSettingsRepository::class
+    singleOf(::DataStoreBodyRepository) bind BodyRepository::class
 
     singleOf(::ExerciseSeeder)
 

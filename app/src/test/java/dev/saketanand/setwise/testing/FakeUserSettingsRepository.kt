@@ -7,6 +7,8 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import dev.saketanand.setwise.domain.model.BodyRules
+import dev.saketanand.setwise.domain.model.Sex
 
 /** In-memory settings, with the same validation as the real one. */
 class FakeUserSettingsRepository(initial: UserSettings = UserSettings()) : UserSettingsRepository {
@@ -24,4 +26,16 @@ class FakeUserSettingsRepository(initial: UserSettings = UserSettings()) : UserS
     override suspend fun setCheckInLastAskedOn(day: LocalDate) = settings.update { it.copy(checkInLastAskedOn = day) }
     override suspend fun setWeeklySummaryDismissed(weekStart: LocalDate?) = settings.update { it.copy(weeklySummaryDismissedWeek = weekStart) }
     override suspend fun setWeeklyRecap(recap: WeeklyRecap) = settings.update { it.copy(weeklyRecap = recap) }
+    override suspend fun setName(name: String?) = settings.update { it.copy(name = name?.trim()?.takeIf { n -> n.isNotEmpty() }) }
+    override suspend fun setAge(age: Int?, today: LocalDate): Boolean {
+        if (age != null && age !in BodyRules.AGE_YEARS) return false
+        settings.update { it.copy(birthYear = age?.let { a -> today.year - a }) }
+        return true
+    }
+    override suspend fun setSex(sex: Sex?) = settings.update { it.copy(sex = sex) }
+    override suspend fun setHeightCm(cm: Double?): Boolean {
+        if (cm != null && cm !in BodyRules.HEIGHT_CM) return false
+        settings.update { it.copy(heightCm = cm) }
+        return true
+    }
 }

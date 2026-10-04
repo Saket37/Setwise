@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.saketanand.setwise.domain.model.WeeklyRecap
+import dev.saketanand.setwise.domain.model.BodyRules
+import dev.saketanand.setwise.domain.model.Sex
 
 /**
  * [UserSettingsRepository] in the app's DataStore (the same file as the seed version).
@@ -26,6 +28,10 @@ class DataStoreUserSettingsRepository(
 
     override val settings: Flow<UserSettings> = dataStore.data.map { prefs ->
         UserSettings(
+            name = prefs[NAME],
+            birthYear = prefs[BIRTH_YEAR]?.toInt(),
+            sex = prefs[SEX]?.let { name -> Sex.entries.firstOrNull { it.name == name } },
+            heightCm = prefs[HEIGHT_CM],
             bodyWeightKg = prefs[BODY_WEIGHT_KG],
             trainingDays = prefs[TRAINING_DAYS].orEmpty()
                 .mapNotNull { name -> DayOfWeek.entries.firstOrNull { it.name == name } }
@@ -71,7 +77,33 @@ class DataStoreUserSettingsRepository(
         }
     }
 
+    override suspend fun setName(name: String?) {
+        val trimmed = name?.trim()?.take(MAX_NAME)
+        dataStore.edit { if (trimmed.isNullOrEmpty()) it.remove(NAME) else it[NAME] = trimmed }
+    }
+
+    override suspend fun setAge(age: Int?, today: LocalDate): Boolean {
+        if (age != null && age !in BodyRules.AGE_YEARS) return false
+        dataStore.edit { if (age == null) it.remove(BIRTH_YEAR) else it[BIRTH_YEAR] = (today.year - age).toLong() }
+        return true
+    }
+
+    override suspend fun setSex(sex: Sex?) {
+        dataStore.edit { if (sex == null) it.remove(SEX) else it[SEX] = sex.name }
+    }
+
+    override suspend fun setHeightCm(cm: Double?): Boolean {
+        if (cm != null && cm !in BodyRules.HEIGHT_CM) return false
+        dataStore.edit { if (cm == null) it.remove(HEIGHT_CM) else it[HEIGHT_CM] = cm }
+        return true
+    }
+
     private companion object {
+        const val MAX_NAME = 40
+        val NAME = stringPreferencesKey("name")
+        val BIRTH_YEAR = longPreferencesKey("birth_year")
+        val SEX = stringPreferencesKey("sex")
+        val HEIGHT_CM = doublePreferencesKey("height_cm")
         val BODY_WEIGHT_KG = doublePreferencesKey("body_weight_kg")
         val TRAINING_DAYS = stringSetPreferencesKey("training_days")
         val ASK_ABOUT_UNLOGGED_DAYS = booleanPreferencesKey("ask_about_unlogged_days")
