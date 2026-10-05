@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,6 +35,8 @@ import dev.saketanand.setwise.ui.templates.TemplateEditorScreenRoot
 import dev.saketanand.setwise.ui.templates.TemplateFromGoalScreenRoot
 import dev.saketanand.setwise.ui.workout.ActiveWorkoutScreenRoot
 import dev.saketanand.setwise.ui.workout.CardioEntryScreenRoot
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -253,10 +256,11 @@ fun SetwiseNavHost(
 
 /** Exercise ids the picker returned to this destination, or null if there are none. */
 @Composable
-private fun NavBackStackEntry.pickedExerciseIds(): List<Long>? {
+private fun NavBackStackEntry.pickedExerciseIds(): ImmutableList<Long>? {
     val ids by savedStateHandle.getStateFlow<LongArray?>(PICKED_EXERCISE_IDS, null)
         .collectAsStateWithLifecycle()
-    return ids?.toList()
+    // One list per result, not one per recomposition.
+    return remember(ids) { ids?.asList()?.toImmutableList() }
 }
 
 private fun NavBackStackEntry.clearPickedExerciseIds() {

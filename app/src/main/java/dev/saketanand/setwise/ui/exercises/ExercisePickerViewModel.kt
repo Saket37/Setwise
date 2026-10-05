@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -78,7 +79,7 @@ class ExercisePickerViewModel(
         ExercisePickerUiState(
             isLoading = false,
             query = text,
-            muscleGroups = library.muscleGroups,
+            muscleGroups = library.muscleGroups.toImmutableList(),
             selectedMuscleGroup = muscleGroup,
             recent = library.recent.map { it.exercise.toRowUi(isSelected = it.exercise.id in selected, lastSet = it.lastSet) },
             exercises = filtered.exercises.map { it.toRowUi(isSelected = it.id in selected) },

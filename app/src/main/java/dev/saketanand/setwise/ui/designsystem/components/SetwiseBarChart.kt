@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Equal-width bars, oldest left. A null value is an empty slot (a short stub keeps the rhythm).
@@ -27,7 +29,7 @@ import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
  */
 @Composable
 fun SetwiseBarChart(
-    values: List<Double?>,
+    values: ImmutableList<Double?>,
     contentDescription: String,
     modifier: Modifier = Modifier,
     height: Dp = 110.dp,
@@ -83,5 +85,5 @@ fun barFractions(values: List<Double?>): List<Float?> {
 @ComponentPreviews
 @Composable
 private fun SetwiseBarChartPreview() = SetwisePreview {
-    SetwiseBarChart(values = listOf(40.0, 42.0, null, 47.5, 48.0, 48.0, 47.5, 48.0), contentDescription = "")
+    SetwiseBarChart(values = persistentListOf(40.0, 42.0, null, 47.5, 48.0, 48.0, 47.5, 48.0), contentDescription = "")
 }

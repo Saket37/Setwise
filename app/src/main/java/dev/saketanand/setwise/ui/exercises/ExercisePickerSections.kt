@@ -42,6 +42,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseSelectionIndicat
 import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
+import kotlinx.collections.immutable.ImmutableList
 
 /** Side margin of the picker's content (design: 20). */
 internal val PickerHorizontalPadding = 20.dp
@@ -49,7 +50,7 @@ internal val PickerHorizontalPadding = 20.dp
 /** "All" + one chip per muscle group, scrolling sideways. */
 @Composable
 fun MuscleGroupChips(
-    muscleGroups: List<String>,
+    muscleGroups: ImmutableList<String>,
     selected: String?,
     onClick: (muscleGroup: String?) -> Unit,
     modifier: Modifier = Modifier,

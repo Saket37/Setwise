@@ -39,6 +39,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
+import kotlinx.collections.immutable.persistentListOf
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -218,7 +219,7 @@ private fun ExercisePickerNoResultsPreview() = SetwiseScreenPreview {
     )
 }
 
-private val previewMuscleGroups = listOf("Back", "Chest", "Shoulders", "Quads", "Core", "Cardio")
+private val previewMuscleGroups = persistentListOf("Back", "Chest", "Shoulders", "Quads", "Core", "Cardio")
 
 private val previewRecent = listOf(
     ExerciseRowUi(1, "Bench Press (Barbell)", "BP", "Chest", "Barbell", LastSetUi("60", 8), isSelected = true),

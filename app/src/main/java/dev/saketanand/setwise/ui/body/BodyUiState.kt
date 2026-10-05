@@ -4,6 +4,8 @@ import androidx.compose.runtime.Immutable
 import dev.saketanand.setwise.domain.model.BmrEstimate
 import dev.saketanand.setwise.domain.model.BodyMeasurement
 import java.time.LocalDate
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /** Everything [BodyScreen] draws. */
 @Immutable
@@ -15,8 +17,8 @@ data class BodyUiState(
     /** The newest value of each, from any check. */
     val latest: LatestBody = LatestBody(),
     /** Up to the last [CHART_POINTS] checks with a value, oldest first. */
-    val weightTrend: List<Double?> = emptyList(),
-    val bodyFatTrend: List<Double?> = emptyList(),
+    val weightTrend: ImmutableList<Double?> = persistentListOf(),
+    val bodyFatTrend: ImmutableList<Double?> = persistentListOf(),
     /** A photo is being read. */
     val isReading: Boolean = false,
     /** The last photo had nothing that looked like a report. */

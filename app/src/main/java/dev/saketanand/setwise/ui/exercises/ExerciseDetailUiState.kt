@@ -2,9 +2,10 @@ package dev.saketanand.setwise.ui.exercises
 
 import androidx.compose.runtime.Immutable
 import dev.saketanand.setwise.domain.model.LoggedSet
+import dev.saketanand.setwise.domain.model.NextSession
 import dev.saketanand.setwise.ui.workout.SetKind
 import java.time.LocalDate
-import dev.saketanand.setwise.domain.model.NextSession
+import kotlinx.collections.immutable.ImmutableList
 
 /** Everything [ExerciseDetailScreen] draws. */
 @Immutable
@@ -49,7 +50,7 @@ enum class ProgressMetric {
 data class ProgressUi(
     val metric: ProgressMetric,
     /** One per week, oldest first; null = not done that week. */
-    val weeks: List<Double?>,
+    val weeks: ImmutableList<Double?>,
     /** Monday of the first bar's week. */
     val firstWeek: LocalDate,
     /** The newest week's value; null if not done in these weeks. */

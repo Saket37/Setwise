@@ -1,11 +1,12 @@
 package dev.saketanand.setwise.ui.settings
 
 import androidx.compose.runtime.Immutable
-import java.time.DayOfWeek
-import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.domain.ai.DownloadState
+import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.domain.model.BmrEstimate
 import dev.saketanand.setwise.domain.model.Sex
+import java.time.DayOfWeek
+import kotlinx.collections.immutable.ImmutableSet
 
 /** Everything [SettingsScreen] draws. */
 @Immutable
@@ -52,7 +53,7 @@ sealed interface SettingsEditor {
     data class BodyWeight(val isInvalid: Boolean = false) : SettingsEditor
 
     /** Days picked so far (saved on Save). */
-    data class TrainingDays(val selected: Set<DayOfWeek>) : SettingsEditor
+    data class TrainingDays(val selected: ImmutableSet<DayOfWeek>) : SettingsEditor
 
     data object Name : SettingsEditor
 

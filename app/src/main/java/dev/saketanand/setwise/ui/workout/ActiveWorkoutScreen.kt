@@ -78,6 +78,7 @@ import dev.saketanand.setwise.util.toShortDayLabel
 import dev.saketanand.setwise.util.toShortTimeLabel
 import java.time.LocalDate
 import java.time.LocalTime
+import kotlinx.collections.immutable.ImmutableList
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -91,7 +92,7 @@ import org.koin.androidx.compose.koinViewModel
  */
 @Composable
 fun ActiveWorkoutScreenRoot(
-    pickedExerciseIds: List<Long>?,
+    pickedExerciseIds: ImmutableList<Long>?,
     onPickedExercisesConsumed: () -> Unit,
     onAddExercises: () -> Unit,
     onOpenCardioEntry: (workoutExerciseId: Long) -> Unit,

@@ -2,32 +2,7 @@ package dev.saketanand.setwise.ui.history
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.material3.Icon
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import dev.saketanand.setwise.domain.model.DayState
-import dev.saketanand.setwise.domain.model.DayStatus
-import dev.saketanand.setwise.ui.ObserveAsEvents
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseDayChoices
 import androidx.compose.foundation.border
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.semantics.selected
-import dev.saketanand.setwise.ui.designsystem.components.IconTile
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButton
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButtonDefaults
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardDefaults
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardOutline
-import dev.saketanand.setwise.util.toShortDayLabel
-import java.time.LocalDate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,49 +15,75 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.domain.model.DayState
+import dev.saketanand.setwise.domain.model.DayStatus
+import dev.saketanand.setwise.ui.ObserveAsEvents
 import dev.saketanand.setwise.ui.currentLocale
+import dev.saketanand.setwise.ui.designsystem.components.IconTile
 import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseDayChoices
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseEmptyState
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButton
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButtonDefaults
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseInputBar
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCard
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardDefaults
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCardOutline
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTag
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTagDefaults
 import dev.saketanand.setwise.ui.designsystem.theme.numberLarge
 import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 import dev.saketanand.setwise.ui.navigation.Route
+import dev.saketanand.setwise.util.toShortDayLabel
 import dev.saketanand.setwise.util.toShortDurationLabel
 import java.text.NumberFormat
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.math.roundToLong
+import kotlinx.collections.immutable.ImmutableList
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.foundation.text.input.clearText
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalFocusManager
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseInputBar
 
 /**
  * Destination: [Route.History].
@@ -287,7 +288,7 @@ private fun WorkoutList(uiState: HistoryUiState, onAction: (HistoryAction) -> Un
  * month ("OCT") instead of the weekday, for orientation while scrolling.
  */
 @Composable
-private fun DayStrip(days: List<DayUi>, selectedDate: LocalDate?, onDayClick: (LocalDate) -> Unit) {
+private fun DayStrip(days: ImmutableList<DayUi>, selectedDate: LocalDate?, onDayClick: (LocalDate) -> Unit) {
     val stripState = rememberLazyListState()
     // A day picked in the calendar may be scrolled out of the strip: bring it into view.
     LaunchedEffect(selectedDate) {

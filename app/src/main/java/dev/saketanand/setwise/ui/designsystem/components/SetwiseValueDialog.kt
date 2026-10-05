@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
+import kotlinx.collections.immutable.ImmutableList
 
 /** What a [SetwiseValueDialog] takes: a name, or a whole or decimal number with its unit. */
 enum class ValueKind { Text, Integer, Decimal }
@@ -81,7 +82,7 @@ fun SetwiseValueDialog(
 fun <T> SetwiseChoiceDialog(
     title: String,
     message: String?,
-    options: List<Pair<T, String>>,
+    options: ImmutableList<Pair<T, String>>,
     selected: T?,
     onSelect: (T) -> Unit,
     onDismiss: () -> Unit,

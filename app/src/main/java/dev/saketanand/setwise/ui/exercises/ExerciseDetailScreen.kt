@@ -57,6 +57,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
+import kotlinx.collections.immutable.persistentListOf
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -397,7 +398,7 @@ internal val SampleExerciseDetailState = ExerciseDetailUiState(
     equipment = "Barbell",
     progress = ProgressUi(
         metric = ProgressMetric.EstimatedOneRepMax,
-        weeks = listOf(40.0, 42.0, 44.5, null, 48.0, 48.0, 47.5, 48.0),
+        weeks = persistentListOf(40.0, 42.0, 44.5, null, 48.0, 48.0, 47.5, 48.0),
         firstWeek = LocalDate.of(2026, 8, 10),
         latest = 48.0,
     ),

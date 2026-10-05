@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -44,7 +45,7 @@ import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toShortTimeLabel
 import java.text.NumberFormat
 import kotlin.math.roundToLong
-import androidx.compose.ui.draw.clip
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * 2 × 2 tiles: Duration, Volume, Sets, and Calories: the estimate, "Add your weight" (tap)
@@ -113,7 +114,7 @@ private fun SummaryTile(label: String, value: String, modifier: Modifier, unit: 
 
 /** "🏆 2 personal records" and one outlined row per record. */
 @Composable
-fun PersonalRecordsSection(records: List<RecordUi>, modifier: Modifier = Modifier) {
+fun PersonalRecordsSection(records: ImmutableList<RecordUi>, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(
@@ -175,7 +176,7 @@ private fun PrKind.labelRes(): Int = when (this) {
 
 /** "Exercises", then "Bench Press (Barbell)   4 sets · best 62.5 × 8" per row; a row opens its detail. */
 @Composable
-fun ExercisesSection(exercises: List<SummaryExerciseUi>, onExerciseClick: (exerciseId: Long) -> Unit, modifier: Modifier = Modifier) {
+fun ExercisesSection(exercises: ImmutableList<SummaryExerciseUi>, onExerciseClick: (exerciseId: Long) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Text(
             text = stringResource(R.string.exercises),

@@ -4,15 +4,16 @@ import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.domain.model.PersonalRecords
+import dev.saketanand.setwise.domain.model.Plateau
+import dev.saketanand.setwise.domain.model.Progression
 import dev.saketanand.setwise.ui.workout.SetKind
 import dev.saketanand.setwise.ui.workout.setKind
 import dev.saketanand.setwise.util.mondayOfWeek
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import dev.saketanand.setwise.domain.model.Plateau
-import dev.saketanand.setwise.domain.model.Progression
-import java.time.Instant
 import kotlin.math.roundToInt
+import kotlinx.collections.immutable.toImmutableList
 
 /** Domain → UI for Exercise detail. Plain functions, unit-tested without Android. */
 
@@ -61,7 +62,7 @@ private fun progress(kind: SetKind, sessions: List<ExerciseSessionUi>, today: Lo
         val sets = byWeek[firstWeek.plusWeeks(offset)].orEmpty().flatMap { it.sets }
         weekValue(metric, sets)
     }
-    return ProgressUi(metric, weeks, firstWeek, latest = weeks.lastOrNull { it != null })
+    return ProgressUi(metric, weeks.toImmutableList(), firstWeek, latest = weeks.lastOrNull { it != null })
 }
 
 /** A week's bar: its best set (strength), or its total (cardio); null if nothing counts. */

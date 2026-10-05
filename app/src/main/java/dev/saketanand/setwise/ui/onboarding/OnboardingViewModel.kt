@@ -1,6 +1,5 @@
 package dev.saketanand.setwise.ui.onboarding
 
-import dev.saketanand.setwise.util.parseWeight
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -8,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import dev.saketanand.setwise.domain.model.UserSettings
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.timer.NotificationPermission
+import dev.saketanand.setwise.ui.toggled
+import dev.saketanand.setwise.util.parseWeight
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,7 +55,7 @@ class OnboardingViewModel(
             OnboardingAction.OnSkipAll -> finish()
             OnboardingAction.OnBack -> goTo(_state.value.stepIndex - 1)
             is OnboardingAction.OnDayToggle -> _state.update {
-                it.copy(trainingDays = if (action.day in it.trainingDays) it.trainingDays - action.day else it.trainingDays + action.day)
+                it.copy(trainingDays = it.trainingDays.toggled(action.day))
             }
             is OnboardingAction.OnAskToggle -> _state.update { it.copy(askAboutUnloggedDays = action.ask) }
             OnboardingAction.OnBodyWeightEdited -> _state.update { it.copy(isBodyWeightInvalid = false) }

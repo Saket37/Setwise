@@ -56,6 +56,8 @@ import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.toImmutableList
 import org.koin.androidx.compose.koinViewModel
 
 /** Destination: [Route.Settings]. */
@@ -253,8 +255,10 @@ fun SettingsScreen(
         SettingsEditor.DefaultRest -> SetwiseChoiceDialog(
             title = stringResource(R.string.default_rest),
             message = stringResource(R.string.default_rest_detail),
-            options = listOf<Pair<Int?, String>>(null to stringResource(R.string.rest_per_exercise)) +
-                UserSettings.REST_CHOICES.map { it to restLabel(it) },
+            options = (
+                listOf<Pair<Int?, String>>(null to stringResource(R.string.rest_per_exercise)) +
+                    UserSettings.REST_CHOICES.map { it to restLabel(it) }
+                ).toImmutableList(),
             selected = uiState.restSecOverride,
             onSelect = { onAction(SettingsAction.OnSaveDefaultRest(it)) },
             onDismiss = { onAction(SettingsAction.OnDismissEditor) },
@@ -262,7 +266,7 @@ fun SettingsScreen(
         SettingsEditor.SexChoice -> SetwiseChoiceDialog(
             title = stringResource(R.string.profile_sex),
             message = stringResource(R.string.profile_sex_detail),
-            options = Sex.entries.map { it to stringResource(it.labelRes()) },
+            options = Sex.entries.map { it to stringResource(it.labelRes()) }.toImmutableList(),
             selected = uiState.sex,
             onSelect = { onAction(SettingsAction.OnSaveSex(it)) },
             onDismiss = { onAction(SettingsAction.OnDismissEditor) },
@@ -318,7 +322,7 @@ private fun trainingDaysLabel(days: Set<DayOfWeek>): String {
 }
 
 @Composable
-private fun TrainingDaysDialog(selected: Set<DayOfWeek>, onAction: (SettingsAction) -> Unit) {
+private fun TrainingDaysDialog(selected: ImmutableSet<DayOfWeek>, onAction: (SettingsAction) -> Unit) {
     AlertDialog(
         onDismissRequest = { onAction(SettingsAction.OnDismissEditor) },
         title = { Text(stringResource(R.string.training_days)) },
