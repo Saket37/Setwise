@@ -197,12 +197,13 @@ private fun SummaryHeader(uiState: WorkoutSummaryUiState, onAction: (WorkoutSumm
                         isDestructive = true,
                     ),
                 ),
+                size = 48.dp, // side by side: smaller buttons' touch areas would overlap
             )
             SetwiseIconButton(
                 icon = R.drawable.ic_close,
                 contentDescription = stringResource(R.string.close),
                 onClick = { onAction(WorkoutSummaryAction.OnDoneClick) },
-                size = 44.dp,
+                size = 48.dp,
                 iconSize = 20.dp,
                 colors = SetwiseIconButtonDefaults.plainColors(),
             )

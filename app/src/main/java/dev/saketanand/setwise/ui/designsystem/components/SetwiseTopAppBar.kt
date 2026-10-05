@@ -78,11 +78,15 @@ fun SetwiseTopAppBar(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 // Lets screen-reader users jump straight to the screen title.
-                // A tappable title is at least 32dp tall to touch (with a subtitle under it, 48 won't fit the bar).
+                // A tappable title is a full 48dp touch target. Over a subtitle, the extra height goes
+                // above the text, so the two still read as one block.
                 modifier = Modifier
                     .then(
                         if (onTitleClick != null) {
-                            Modifier.clickable(onClickLabel = titleClickLabel, onClick = onTitleClick).heightIn(min = 32.dp).wrapContentHeight()
+                            Modifier
+                                .clickable(onClickLabel = titleClickLabel, onClick = onTitleClick)
+                                .heightIn(min = 48.dp)
+                                .wrapContentHeight(if (subtitle != null) Alignment.Bottom else Alignment.CenterVertically)
                         } else {
                             Modifier
                         },
