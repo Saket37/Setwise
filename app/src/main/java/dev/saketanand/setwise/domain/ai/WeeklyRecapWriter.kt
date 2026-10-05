@@ -50,7 +50,7 @@ class WeeklyRecapWriter(private val model: OnDeviceModel) {
             val hours = facts.timeTrained.toHours()
             val minutes = facts.timeTrained.toMinutes() % 60
             add("Week: ${facts.workouts} workouts, ${if (hours > 0) "$hours h $minutes min" else "$minutes min"} trained, ${facts.prs} personal records")
-            add("Volume: ${facts.volumeKg.toLong()} kg" + (facts.volumeChangePercent?.let { ", ${it.signed()}% on the week before" } ?: ""))
+            add("Volume: ${facts.volumeKg.toLong()} kg" + facts.volumeChangePercent?.let { ", ${it.signed()}% on the week before" }.orEmpty())
             facts.bestSet?.let { set ->
                 val what = when {
                     set.weightKg != null && set.reps != null -> "${set.weightKg.kg()} kg x ${set.reps}"

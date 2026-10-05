@@ -79,8 +79,9 @@ class ExerciseDetailUiMappersTest {
         val ui = exerciseDetailUi(exercise(ExerciseType.STRENGTH), sessions, today, zone, now)
 
         assertEquals(PlateauUi(weeks = 3, sessions = 7, since = LocalDate.of(2026, 9, 9), best = 48, metric = ProgressMetric.EstimatedOneRepMax), ui.plateau)
-        assertEquals(ProgressionRule.Lighter, ui.nextSession!!.rule)
-        assertEquals(37.5 to 8, ui.nextSession!!.weightKg to ui.nextSession!!.reps)
+        val next = checkNotNull(ui.nextSession)
+        assertEquals(ProgressionRule.Lighter, next.rule)
+        assertEquals(37.5 to 8, next.weightKg to next.reps)
     }
 
     @Test
@@ -94,8 +95,9 @@ class ExerciseDetailUiMappersTest {
             zone,
             now,
         )
-        assertNull(old.progress!!.latest)
-        assertEquals(List(8) { null }, old.progress!!.weeks)
+        val progress = checkNotNull(old.progress)
+        assertNull(progress.latest)
+        assertEquals(List(8) { null }, progress.weeks)
     }
 
     private fun exercise(type: ExerciseType, isTimed: Boolean = false) =

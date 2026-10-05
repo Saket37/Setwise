@@ -279,10 +279,10 @@ class HomeViewModel(
         viewModelScope.launch {
             // Given (a past day from the check-in); else "Change" in the sheet back-dates the
             // start to that time today; otherwise now.
-            val startedAt = startedAt
+            val start = startedAt
                 ?: _state.value.customStartTime?.atDate(_state.value.today)?.atZone(zone)?.toInstant()
                 ?: dateProvider.now()
-            runCatching { workoutRepository.startWorkout(templateId, startedAt, discardRunningWorkoutId) }
+            runCatching { workoutRepository.startWorkout(templateId, start, discardRunningWorkoutId) }
                 .onSuccess { id -> eventChannel.send(HomeEvent.WorkoutStarted(id)) }
                 .onFailure { eventChannel.send(HomeEvent.StartWorkoutFailed) }
             _state.update {

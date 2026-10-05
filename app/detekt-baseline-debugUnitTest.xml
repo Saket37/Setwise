@@ -10,8 +10,5 @@
     <ID>MaxLineLength:ExerciseDetailViewModelTest.kt:ExerciseDetailViewModelTest.Companion$const val NOTE = "Your overhead press has held at about 48 kg for 3 weeks, even with 2 sessions a week. A lighter week, or 8 to 10 reps a set for a month, often gets it moving again."</ID>
     <ID>MaxLineLength:HomeViewModelTest.kt:HomeViewModelTest$LoggedSetRecord(1, "Push Day", LocalDate.of(2026, 9, 22).atTime(18, 0).atZone(FixedDateProvider.zone).toInstant(), 5, "Bench Press (Barbell)", "Chest", 1, 60.0, 8, null, null, isPr = false)</ID>
     <ID>MaxLineLength:PlateauNoteWriterTest.kt:PlateauNoteWriterTest$val note = "Your overhead press has held at about 48 kg for 4 weeks, even with 2 sessions a week. A lighter week, or 8 to 10 reps a set for a month, often gets it moving again."</ID>
-    <ID>UnnecessaryNotNullOperator:ExerciseDetailUiMappersTest.kt:ExerciseDetailUiMappersTest$old.progress!!</ID>
-    <ID>UnnecessaryNotNullOperator:ExerciseDetailUiMappersTest.kt:ExerciseDetailUiMappersTest$ui.nextSession!!</ID>
-    <ID>UseCheckOrError:ModelDownloaderTest.kt:ModelDownloaderTest.&lt;no name provided&gt;$throw IllegalStateException("AICore not ready")</ID>
   </CurrentIssues>
 </SmellBaseline>

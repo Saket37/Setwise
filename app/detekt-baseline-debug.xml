@@ -31,7 +31,6 @@
     <ID>CyclomaticComplexMethod:TemplateEditorViewModel.kt:TemplateEditorViewModel$fun onAction</ID>
     <ID>CyclomaticComplexMethod:WorkoutImporter.kt:WorkoutImporter$private suspend fun createExercise: Long?</ID>
     <ID>CyclomaticComplexMethod:WorkoutSummaryViewModel.kt:WorkoutSummaryViewModel$fun onAction</ID>
-    <ID>ExplicitItLambdaMultipleParameters:TemplateEditorScreen.kt:{ _, it -&gt; it.exerciseId }</ID>
     <ID>Filename:CardioEntryInputs.kt:dev.saketanand.setwise.ui.workout.CardioEntryInputs.kt</ID>
     <ID>Filename:ExerciseQueryResults.kt:dev.saketanand.setwise.data.local.relation.ExerciseQueryResults.kt</ID>
     <ID>Filename:TrainingLog.kt:dev.saketanand.setwise.domain.model.TrainingLog.kt</ID>
@@ -43,11 +42,6 @@
     <ID>ForbiddenComment:HomeScreen.kt:// TODO: replace with a snackbar once the screen has a SnackbarHost.</ID>
     <ID>ForbiddenComment:TemplateEditorScreen.kt:// TODO: replace with a snackbar once the screen has a SnackbarHost.</ID>
     <ID>ForbiddenComment:WorkoutSummaryScreen.kt:// TODO: replace with a snackbar once the screen has a SnackbarHost.</ID>
-    <ID>ImplicitDefaultLocale:CardioEntryScreen.kt:"%02d".format(it % 60)</ID>
-    <ID>ImplicitDefaultLocale:CardioEntryScreen.kt:CardioFields$"%02d".format(it % 60)</ID>
-    <ID>ImplicitDefaultLocale:DurationFormatting.kt:"%d:%02d".format(minutes, seconds)</ID>
-    <ID>ImplicitDefaultLocale:DurationFormatting.kt:"%d:%02d:%02d".format(hours, minutes, seconds)</ID>
-    <ID>ImplicitDefaultLocale:SettingsScreen.kt:"%d:%02d".format(seconds / 60, seconds % 60)</ID>
     <ID>Kdoc:CardioEntryInputs.kt:/** Cardio screen input rules. Plain functions, unit-tested without Android. */</ID>
     <ID>Kdoc:DevDataSeeder.kt:DevDataSeeder.Companion$/** Exercises whose latest session gets a PR (top set). */</ID>
     <ID>Kdoc:ExerciseDetailUiMappers.kt:/** Domain → UI for Exercise detail. Plain functions, unit-tested without Android. */</ID>
@@ -173,9 +167,6 @@
     <ID>MaxLineLength:HistoryAsk.kt:stringResource(R.string.ask_last_lifted_kg, stringResource(R.string.ask_weight_kg, question.atLeastKg.toWeightLabel(locale)), name, day, set.long(locale), set.setNumber)</ID>
     <ID>MaxLineLength:WeeklySummaryCard.kt:add(Triple(stringResource(R.string.weekly_best_set, set.exerciseName), set.short(locale), if (set.isPr) MaterialTheme.colorScheme.pr else MaterialTheme.colorScheme.primary))</ID>
     <ID>MaxLineLength:WeeklySummaryCard.kt:add(Triple(stringResource(R.string.weekly_plateau, plateau.exerciseName), pluralStringResource(R.plurals.weekly_flat_weeks, plateau.weeks, plateau.weeks), MaterialTheme.colorScheme.onSurfaceVariant))</ID>
-    <ID>NoNameShadowing:ExerciseNames.kt:ExerciseNames${ it in gear }</ID>
-    <ID>NoNameShadowing:HomeViewModel.kt:HomeViewModel$startedAt</ID>
-    <ID>NoNameShadowing:WorkoutSummaryViewModel.kt:WorkoutSummaryViewModel${ it.copy(isTemplateSaved = true, isSavingTemplate = false) }</ID>
     <ID>ParameterNaming:ActiveWorkoutScreen.kt:onFinished: (workoutId: Long) -&gt; Unit</ID>
     <ID>ParameterNaming:ActiveWorkoutScreen.kt:onPickedExercisesConsumed: () -&gt; Unit</ID>
     <ID>ParameterNaming:CreateExerciseScreen.kt:onExerciseCreated: (exerciseId: Long) -&gt; Unit</ID>
@@ -188,7 +179,6 @@
     <ID>ParameterNaming:TemplateFromGoalScreen.kt:onDraftCreated: (templateId: Long) -&gt; Unit</ID>
     <ID>PropertyName:Type.kt:/** Tabular figures keep ticking timers and set values from shifting sideways. */ private const val TabularNumbers = "tnum"</ID>
     <ID>SpreadOperator:CardioEntryScreen.kt:(*fields.all.map { field -&gt; snapshotFlow { field.text.toString() }.drop(1) }.toTypedArray())</ID>
-    <ID>ThrowingExceptionsWithoutMessageOrCause:BodyViewModel.kt:BodyViewModel$IllegalArgumentException()</ID>
     <ID>TooGenericExceptionCaught:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$e: Exception</ID>
     <ID>TooGenericExceptionCaught:AiCheck.kt:AiCheck$e: Exception</ID>
     <ID>TooGenericExceptionCaught:BodyReportReader.kt:BodyReportReader$e: Exception</ID>
@@ -221,12 +211,8 @@
     <ID>TooManyFunctions:WorkoutDao.kt:WorkoutDao</ID>
     <ID>TooManyFunctions:WorkoutRepository.kt:WorkoutRepository</ID>
     <ID>TooManyFunctions:WorkoutRepositoryImpl.kt:WorkoutRepositoryImpl : WorkoutRepository</ID>
-    <ID>UnnecessaryFilter:ExerciseNames.kt:ExerciseNames$filter { exercise -&gt; words(exercise.name).filter { it in EQUIPMENT_WORDS }.toSet() == gear }</ID>
-    <ID>UnnecessaryFilter:ExerciseNames.kt:ExerciseNames$filter { word.startsWith(it) }</ID>
-    <ID>UnnecessaryFilter:ExerciseNames.kt:ExerciseNames$filter { words(it.name).containsAll(typedWords) }</ID>
     <ID>UnusedParameter:TemplateFromGoalScreen.kt:onBack: () -&gt; Unit</ID>
     <ID>UnusedParameter:TemplateFromGoalScreen.kt:onDraftCreated: (templateId: Long) -&gt; Unit</ID>
     <ID>UnusedParameter:TemplateFromGoalScreen.kt:viewModel: TemplateFromGoalViewModel = koinViewModel()</ID>
-    <ID>UseOrEmpty:WeeklyRecapWriter.kt:WeeklyRecapWriter.Companion$facts.volumeChangePercent?.let { ", ${it.signed()}% on the week before" } ?: ""</ID>
   </CurrentIssues>
 </SmellBaseline>

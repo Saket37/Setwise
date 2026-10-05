@@ -59,7 +59,7 @@ class ModelDownloaderTest {
     @Test
     fun `a download that throws shows as failed instead of crashing`() = runTest(UnconfinedTestDispatcher()) {
         val model = object : OnDeviceModel by FakeOnDeviceModel() {
-            override fun download(): Flow<ModelDownload> = throw IllegalStateException("AICore not ready")
+            override fun download(): Flow<ModelDownload> = error("AICore not ready")
         }
         val downloader = ModelDownloader(model, backgroundScope)
 
