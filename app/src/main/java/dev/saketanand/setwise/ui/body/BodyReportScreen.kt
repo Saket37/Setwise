@@ -214,7 +214,7 @@ internal val SampleBodyReportState = BodyReportUiState(
                 BodyMetric.FatMass to NormalRange(8.0, 16.0), BodyMetric.BodyWater to NormalRange(40.1, 49.0),
                 BodyMetric.FatFreeMass to NormalRange(54.6, 66.7), BodyMetric.Bmi to NormalRange(18.5, 25.0),
                 BodyMetric.BodyFat to NormalRange(10.0, 20.0), BodyMetric.WaistHip to NormalRange(0.8, 0.9),
-                BodyMetric.Visceral to NormalRange(null, 10.0), BodyMetric.Bmr to NormalRange(1669.0, 1957.0),
+                BodyMetric.Visceral to NormalRange(null, 10.0), BodyMetric.Bmr to NormalRange(1600.0, 1900.0),
             ),
             segments = listOf(
                 SegmentValues(BodySegment.RightArm, 3.62, Rating.Normal, 17.9, 0.8, Rating.Normal),
