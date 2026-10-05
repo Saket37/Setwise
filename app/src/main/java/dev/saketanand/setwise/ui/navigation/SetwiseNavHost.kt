@@ -143,7 +143,7 @@ fun SetwiseNavHost(
             val route = entry.toRoute<Route.ActiveWorkout>()
             val pickedExerciseIds = entry.pickedExerciseIds()
             ActiveWorkoutScreenRoot(
-                viewModel = koinViewModel { parametersOf(route.workoutId, route.editingFinished) },
+                viewModel = koinViewModel { parametersOf(route) },
                 pickedExerciseIds = pickedExerciseIds,
                 onPickedExercisesConsumed = { entry.clearPickedExerciseIds() },
                 onAddExercises = { navController.navigate(Route.ExercisePicker) },

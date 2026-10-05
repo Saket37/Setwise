@@ -70,5 +70,8 @@ sealed interface Route {
 
     companion object {
         const val NEW_TEMPLATE_ID = 0L
+
+        /** No workout has this id (Room's start at 1): its screen finds nothing and closes. */
+        const val NO_WORKOUT_ID = -1L
     }
 }
