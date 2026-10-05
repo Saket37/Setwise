@@ -8,6 +8,7 @@ import dev.saketanand.setwise.domain.model.LogTextParser
 import dev.saketanand.setwise.domain.model.SharedExercise
 import dev.saketanand.setwise.domain.model.SharedSet
 import dev.saketanand.setwise.domain.model.SharedWorkout
+import dev.saketanand.setwise.domain.model.StrongScreenParser
 import dev.saketanand.setwise.domain.model.StrongShareParser
 import dev.saketanand.setwise.util.DateProvider
 import java.time.LocalDate
@@ -56,12 +57,16 @@ class ImportReader(
     suspend fun fromFile(uri: String): Read = fromText(fileReader.read(uri, MAX_FILE_CHARS))
 
     /**
-     * Screenshots: their text read on the phone. A screenshot of Strong-style text with no workout
-     * header of its own continues the workout of a neighbouring one (whichever order they were
-     * picked in); otherwise all of them together are read as [fromText].
+     * Screenshots: their text read on the phone. Strong's workout screen is read by where its lines
+     * are ([StrongScreenParser]: sets, the 1RM column, badges, the length). Else, a screenshot of
+     * Strong-style text with no workout header of its own continues the workout of a neighbouring
+     * one (whichever order they were picked in); otherwise all of them together are read as
+     * [fromText].
      */
     suspend fun fromImages(uris: List<String>): Read {
-        val texts = uris.map { uri -> textReader.read(uri).sortedWith(compareBy({ it.top }, { it.left })).joinToString("\n") { it.text } }
+        val lines = uris.map { uri -> textReader.read(uri) }
+        StrongScreenParser.parse(lines).takeIf { it.isNotEmpty() }?.let { return Read(it, Source.StrongShare) }
+        val texts = lines.map { shot -> shot.sortedWith(compareBy({ it.top }, { it.left })).joinToString("\n") { it.text } }
         val headed = texts.map { StrongShareParser.parse(it) }
         if (headed.any { it.isNotEmpty() }) {
             val workouts = headed.flatten().toMutableList()
