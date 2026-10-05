@@ -527,7 +527,9 @@
     <string name="body_visceral_field">Visceral fat level</string>
     <string name="body_profile_age">age %1$d</string>
     <string name="body_fills_profile">Also fills your profile: %1$s</string>
-    <string name="body_invalid">Check the values: one isn\'t believable, or none is filled in.</string>
+    <!-- Under a body check's field whose value can't be right -->
+    <string name="body_value_invalid">Not a believable value</string>
+    <string name="body_nothing_filled">Fill in at least one value.</string>
 
     <!-- Weekly summary (Home) -->
     <string name="settings_weekly_summary">Last week\'s summary</string>
