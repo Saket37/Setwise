@@ -5,7 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import dev.saketanand.setwise.testing.RecompositionCounter
 import dev.saketanand.setwise.ui.LocalBootClock
 import dev.saketanand.setwise.ui.LocalWallClock
