@@ -2,6 +2,7 @@ package dev.saketanand.setwise.ui.designsystem.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -111,7 +112,10 @@ fun SetwiseTheme(
             colorScheme = if (darkTheme) DarkColors else LightColors,
             typography = SetwiseTypography,
             shapes = SetwiseShapes,
-            content = content,
-        )
+        ) {
+            // Text and icons outside a Surface (most screens draw on a plain background) default
+            // to the theme's on-background colour, not Material's black.
+            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground, content = content)
+        }
     }
 }
