@@ -95,6 +95,20 @@ class BodyViewModelTest {
         assertTrue(vm.state.value.readFailed)
     }
 
+    @Test
+    fun `a reading can't be for a day that hasn't happened`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAction(BodyAction.OnAddManually)
+        assertEquals(LocalDate.of(2026, 10, 5), vm.state.value.editor!!.latestDay)
+
+        vm.onAction(BodyAction.OnDayChange(LocalDate.of(2026, 10, 6))) // tomorrow: ignored (#128)
+        assertEquals(LocalDate.of(2026, 10, 5), vm.state.value.editor!!.day)
+        vm.onAction(BodyAction.OnDayChange(LocalDate.of(2026, 10, 1)))
+        vm.onAction(BodyAction.OnSave("81.2", "", "", "", ""))
+
+        assertEquals(LocalDate.of(2026, 10, 1), body.saved.single().measuredOn)
+    }
+
     private fun line(text: String, row: Int) = OcrLine(text, 20, row * 40, 20 + text.length * 12, row * 40 + 30)
 
     private class FakeBody : BodyRepository {
