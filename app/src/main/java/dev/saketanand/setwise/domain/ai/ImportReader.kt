@@ -128,7 +128,8 @@ class ImportReader(
             // lines itself, its sets count, so a real number the model put in the wrong field
             // ("3 sets of 10 with 60" as 60 kg × 3) doesn't (#43).
             val exercises = sets.groupBy({ it.first }, { it.second }).map { (name, exerciseSets) ->
-                SharedExercise(name, setsReadInCode(name, text) ?: exerciseSets)
+                val byCode = setsReadInCode(name, text)
+                SharedExercise(name, byCode ?: exerciseSets, readByModel = byCode == null)
             }
             return SharedWorkout(workout.name.trim().ifEmpty { "Workout" }, LocalDateTime.of(day, time), exercises)
         }

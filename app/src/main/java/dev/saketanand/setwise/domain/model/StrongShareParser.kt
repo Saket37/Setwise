@@ -18,7 +18,8 @@ data class SharedWorkout(
     val setCount: Int get() = exercises.sumOf { it.sets.size }
 }
 
-data class SharedExercise(val name: String, val sets: List<SharedSet>)
+/** [readByModel]: its sets came from the on-device model, not from Setwise's own readers: worth checking. */
+data class SharedExercise(val name: String, val sets: List<SharedSet>, val readByModel: Boolean = false)
 
 /** One set: weight × reps, reps, a hold, or cardio (distance and/or time). */
 data class SharedSet(

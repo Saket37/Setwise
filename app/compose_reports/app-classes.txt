@@ -502,6 +502,7 @@ stable class dev.saketanand.setwise.domain.ai.ImportReader {
   runtime val textReader: TextReader
   runtime val fileReader: FileTextReader
   runtime val model: OnDeviceModel
+  runtime val dateProvider: DateProvider
   <runtime stability> = 
 }
 stable class dev.saketanand.setwise.domain.ai.ModelImportedWorkout.$serializer {
@@ -1026,6 +1027,9 @@ runtime class dev.saketanand.setwise.domain.model.LogTextParser.Result {
 }
 stable class dev.saketanand.setwise.domain.model.LogTextParser {
   runtime val DATE_FORMS: List<Pair<Regex, Boolean>>
+  runtime val YEARLESS_FORMS: List<Regex>
+  runtime val MONTH_WORDS: Map<String, Int>
+  stable val MONTH_PATTERN: String
   stable val MAX_BARE_REPS: Int
   stable val HALF_DAY: Int
   stable val MONTH_ABBREVIATION: Int
@@ -1170,6 +1174,7 @@ runtime class dev.saketanand.setwise.domain.model.SharedWorkout {
 runtime class dev.saketanand.setwise.domain.model.SharedExercise {
   stable val name: String
   runtime val sets: List<SharedSet>
+  stable val readByModel: Boolean
   <runtime stability> = Uncertain(List)
 }
 stable class dev.saketanand.setwise.domain.model.SharedSet {
