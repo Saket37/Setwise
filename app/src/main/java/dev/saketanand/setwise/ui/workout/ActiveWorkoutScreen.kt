@@ -3,7 +3,6 @@ package dev.saketanand.setwise.ui.workout
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,12 +35,17 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -78,7 +82,9 @@ import dev.saketanand.setwise.util.toShortDayLabel
 import dev.saketanand.setwise.util.toShortTimeLabel
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.Locale
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -155,14 +161,28 @@ fun ActiveWorkoutScreenRoot(
         }
     }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarScope = rememberCoroutineScope()
+    val saveFailed = stringResource(R.string.save_failed)
+    val setRemoved = stringResource(R.string.set_removed)
+    val undo = stringResource(R.string.undo)
+
     // Events navigate directly (not through dropUnlessResumed): they're delivered from STARTED,
     // where dropUnlessResumed would silently ignore them, and the ViewModel sends each only once.
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
             is ActiveWorkoutEvent.Finished -> onFinished(event.workoutId)
             ActiveWorkoutEvent.Closed -> onMinimize()
-            // TODO: replace with a snackbar once the screen has a SnackbarHost.
-            ActiveWorkoutEvent.SaveFailed -> Toast.makeText(context, R.string.save_failed, Toast.LENGTH_SHORT).show()
+            ActiveWorkoutEvent.SaveFailed -> snackbarScope.launch { snackbarHostState.showSnackbar(saveFailed) }
+            is ActiveWorkoutEvent.SetRemoved -> snackbarScope.launch {
+                snackbarHostState.currentSnackbarData?.dismiss() // one at a time: the newest removal
+                val result = snackbarHostState.showSnackbar(
+                    message = setRemoved.format(Locale.ROOT, event.set.setNumber), // Latin digits, like the set rows
+                    actionLabel = undo,
+                    duration = SnackbarDuration.Long, // ~10 s: time to notice what was removed
+                )
+                if (result == SnackbarResult.ActionPerformed) viewModel.onAction(ActiveWorkoutAction.OnUndoRemoveSet(event.set))
+            }
             is ActiveWorkoutEvent.QuickLogHeard -> quickLogField.setTextAndPlaceCursorAtEnd(event.text)
             ActiveWorkoutEvent.QuickLogAdded -> {
                 quickLogField.clearText()
@@ -199,6 +219,7 @@ fun ActiveWorkoutScreenRoot(
 
     ActiveWorkoutScreen(
         uiState = uiState,
+        snackbarHostState = snackbarHostState,
         quickLogField = quickLogField,
         onSpeak = onSpeak,
         onAction = { action ->
@@ -226,6 +247,8 @@ fun ActiveWorkoutScreen(
     quickLogField: TextFieldState = rememberTextFieldState(),
     /** The quick-log mic; null hides it. */
     onSpeak: (() -> Unit)? = null,
+    /** "Set 2 removed · Undo", save errors: shown above the rest bar. */
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     var isQuickLogFocused by remember { mutableStateOf(false) }
     val quickLogFocus = remember { FocusRequester() }
@@ -242,6 +265,8 @@ fun ActiveWorkoutScreen(
         if (!uiState.isLoading) {
             ExerciseCards(uiState = uiState, onAction = onAction, modifier = Modifier.weight(1f))
         }
+
+        SnackbarHost(snackbarHostState)
 
         // Keeps showing the last rest while the bar slides away.
         var lastRest by remember { mutableStateOf(uiState.rest) }

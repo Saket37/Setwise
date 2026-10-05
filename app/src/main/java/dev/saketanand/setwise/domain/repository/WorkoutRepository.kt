@@ -7,6 +7,7 @@ import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.LoggedSetRecord
+import dev.saketanand.setwise.domain.model.RemovedSet
 import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.SharedSet
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
@@ -69,8 +70,14 @@ interface WorkoutRepository {
      */
     suspend fun setCompleted(setId: Long, completedAt: Instant?, weightKg: Double?, reps: Int?, durationSec: Int?)
 
-    /** Deletes a set; the sets after it are renumbered so there are no gaps. */
-    suspend fun deleteSet(setId: Long)
+    /**
+     * Deletes a set; the sets after it are renumbered so there are no gaps. Returns what it was,
+     * to put it back with [restoreSet] (null: no such set).
+     */
+    suspend fun deleteSet(setId: Long): RemovedSet?
+
+    /** A deleted set back where it was, with its values (Undo). */
+    suspend fun restoreSet(set: RemovedSet)
 
     suspend fun updateStartTime(workoutId: Long, startedAt: Instant)
 
