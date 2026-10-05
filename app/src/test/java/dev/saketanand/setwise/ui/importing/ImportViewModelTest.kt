@@ -71,6 +71,7 @@ class ImportViewModelTest {
             textReader = object : TextReader { override suspend fun read(uri: String) = screenshots.getValue(uri) },
             fileReader = object : FileTextReader { override suspend fun read(uri: String, maxChars: Int) = files.getValue(uri)() },
             model = model,
+            dateProvider = Dates,
         ),
         importer = WorkoutImporter(ExerciseAssistant(model), Library, workouts),
         exerciseRepository = Library,

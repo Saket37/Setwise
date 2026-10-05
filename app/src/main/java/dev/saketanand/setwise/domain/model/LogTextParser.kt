@@ -4,6 +4,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.Month
+import java.time.MonthDay
 import java.util.Locale
 
 /**
@@ -17,7 +18,11 @@ object LogTextParser {
 
     data class Result(val workouts: List<SharedWorkout>, val unreadLines: Int)
 
-    fun parse(text: String): Result {
+    /**
+     * @param today when given, a date without a year ("30 Sep") is read as its last time on or
+     *   before today; without it, such lines aren't dates.
+     */
+    fun parse(text: String, today: LocalDate? = null): Result {
         val workouts = mutableListOf<SharedWorkout>()
         var unread = 0
         var current: SharedWorkout? = null
@@ -26,7 +31,7 @@ object LogTextParser {
             current = null
         }
         text.lines().map { it.trim() }.filter { it.isNotEmpty() }.forEach { line ->
-            val start = dateTime(line)
+            val start = dateTime(line, today)
             if (start != null) {
                 close()
                 current = SharedWorkout(name(line), start, emptyList())
@@ -68,11 +73,30 @@ object LogTextParser {
         return SharedExercise(name, sets.map { SharedSet(it.weightKg, it.reps, it.seconds) })
     }
 
-    /** A date in the line ("29/09/2026", "2026-09-29", "2 Oct 2026", "3rd October 2026", "Oct 2, 2026"), with its time if any. */
-    fun dateTime(line: String): LocalDateTime? {
+    /**
+     * A date in the line ("29/09/2026", "2026-09-29", "2 Oct 2026", "3rd October 2026", "Oct 2, 2026"), with its time if any.
+     * With [today], also a named month without a year ("30 Sep", "Sep 30"), on a line that isn't an exercise.
+     */
+    fun dateTime(line: String, today: LocalDate? = null): LocalDateTime? {
         val lower = line.lowercase(Locale.ROOT)
-        val day = date(lower) ?: return null
+        val day = date(lower) ?: today?.let { yearless(lower, line, it) } ?: return null
         return LocalDateTime.of(day, time(lower))
+    }
+
+    /**
+     * "30 Sep", "Sep 30", "3rd October": the last such day on or before [today]. Only a whole
+     * month name or its abbreviation counts ("3 decline" isn't 3 December), and only if the rest
+     * of the line isn't an exercise ("bench 3x8 at 60, sep 30" isn't a workout's date).
+     */
+    private fun yearless(lower: String, line: String, today: LocalDate): LocalDate? {
+        val monthDay = YEARLESS_FORMS.asSequence().flatMap { it.findAll(lower) }.firstNotNullOfOrNull { m ->
+            val month = MONTH_WORDS[m.groups["month"]?.value] ?: return@firstNotNullOfOrNull null
+            val day = m.groups["day"]?.value?.toIntOrNull() ?: return@firstNotNullOfOrNull null
+            // The rest of the line mustn't be an exercise ("bench 3x8 at 60, sep 30").
+            if (exercise(line.removeRange(m.range)) != null) return@firstNotNullOfOrNull null
+            runCatching { MonthDay.of(month, day) }.getOrNull()
+        } ?: return null
+        return monthDay.atYear(today.year).let { if (it.isAfter(today)) monthDay.atYear(today.year - 1) else it }
     }
 
     /** The first date written in one of [DATE_FORMS]. */
@@ -92,6 +116,18 @@ object LogTextParser {
         Regex("\\b(?<day>\\d{1,2})(?:st|nd|rd|th)?\\s+(?<month>[a-z]{3,9})\\.?,?\\s+(?<year>20\\d{2})\\b") to true,
         Regex("\\b(?<month>[a-z]{3,9})\\.?\\s+(?<day>\\d{1,2})(?:st|nd|rd|th)?,?\\s+(?<year>20\\d{2})\\b") to true,
     )
+
+    /** A day and a month name, no year. */
+    private val YEARLESS_FORMS = listOf(
+        Regex("\\b(?<day>\\d{1,2})(?:st|nd|rd|th)?\\s+(?<month>[a-z]{3,9})\\b\\.?"),
+        Regex("\\b(?<month>[a-z]{3,9})\\.?\\s+(?<day>\\d{1,2})(?:st|nd|rd|th)?\\b"),
+    )
+
+    /** Month names and their usual abbreviations ("sep", "sept", "september"), nothing looser. */
+    private val MONTH_WORDS: Map<String, Int> = Month.entries.flatMap { month ->
+        val name = month.name.lowercase(Locale.ROOT)
+        listOf(name to month.value, name.take(MONTH_ABBREVIATION) to month.value)
+    }.toMap() + ("sept" to Month.SEPTEMBER.value)
 
     private fun month(word: String): Int? =
         Month.entries.firstOrNull { it.name.lowercase(Locale.ROOT).startsWith(word.take(MONTH_ABBREVIATION)) }?.value
@@ -119,6 +155,9 @@ object LogTextParser {
             .replace(Regex("\\b\\d{1,2}[/.]\\d{1,2}[/.]20\\d{2}\\b"), " ")
             .replace(Regex("\\b\\d{1,2}(?:st|nd|rd|th)?\\s+[A-Za-z]{3,9}\\.?,?\\s+20\\d{2}\\b"), " ")
             .replace(Regex("\\b[A-Za-z]{3,9}\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?,?\\s+20\\d{2}\\b"), " ")
+            // No year ("30 Sep"): only with a real month name, so other words stay.
+            .replace(Regex("\\b\\d{1,2}(?:st|nd|rd|th)?\\s+(?:${MONTH_PATTERN})\\b\\.?", RegexOption.IGNORE_CASE), " ")
+            .replace(Regex("\\b(?:${MONTH_PATTERN})\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?\\b", RegexOption.IGNORE_CASE), " ")
             .replace(Regex("\\b\\d{1,2}(?::\\d{2})?\\s*(?:am|pm)\\b", RegexOption.IGNORE_CASE), " ")
             .replace(Regex("\\b\\d{1,2}:\\d{2}\\b"), " ")
             .replace(Regex("\\b(mon|tue|wed|thu|fri|sat|sun)[a-z]*\\b|\\b(at|on|morning|evening|afternoon|night)\\b", RegexOption.IGNORE_CASE), " ")
@@ -128,6 +167,7 @@ object LogTextParser {
         return cleaned.replaceFirstChar { it.titlecase(Locale.ROOT) }.ifEmpty { "Workout" }
     }
 
+    private val MONTH_PATTERN = MONTH_WORDS.keys.sortedByDescending { it.length }.joinToString("|")
     private const val MAX_BARE_REPS = 100
     private const val HALF_DAY = 12
     private const val MONTH_ABBREVIATION = 3 // "oct"
