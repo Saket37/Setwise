@@ -5,6 +5,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import dev.saketanand.setwise.data.dev.DevDataSeeder
+import dev.saketanand.setwise.data.prefs.LegacyBodyMeasurements
 import dev.saketanand.setwise.data.seed.ExerciseSeeder
 import dev.saketanand.setwise.di.IoDispatcher
 import dev.saketanand.setwise.di.appModule
@@ -54,6 +55,8 @@ class SetwiseApp : Application() {
         // Load the built-in exercise library on first launch (no-op afterwards).
         val exerciseSeeder: ExerciseSeeder = get()
         appScope.launch {
+            // Older builds kept body measurements in DataStore: into the database, once.
+            get<LegacyBodyMeasurements>().moveToDatabase()
             exerciseSeeder.seedIfNeeded()
             // Debug builds only: fake templates + history, after the exercises exist.
             if (BuildConfig.DEBUG && DevDataSeeder.ENABLED) {

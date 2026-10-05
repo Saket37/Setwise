@@ -24,6 +24,8 @@ data class ReportValues(
     val heightCm: Double? = null,
     val age: Int? = null,
     val sex: Sex? = null,
+    /** Everything else the report prints: segments, body water, ranges… */
+    val details: ReportDetails = ReportDetails(),
 ) {
     val found: Int get() = listOfNotNull(weightKg, bodyFatPercent, muscleMassKg, bmrKcal, visceralFat).size
 
@@ -38,6 +40,7 @@ data class ReportValues(
         heightCm ?: other.heightCm,
         age ?: other.age,
         sex ?: other.sex,
+        details.takeUnless { it.isEmpty } ?: other.details,
     )
 }
 
@@ -50,18 +53,20 @@ object BodyReportParser {
 
     fun parse(unordered: List<OcrLine>): ReportValues {
         // Top to bottom, then left to right: the first of a label is the summary's (InBody's
-        // "PBF 31.6 %" before the Segmental Fat table's "PBF(%)" column).
-        val lines = unordered.sortedWith(compareBy({ it.top }, { it.left }))
+        // "PBF 24.3 %" before the Segmental Fat table's "PBF(%)" column).
+        // Letters read for digits put right first ("1llevel" is 11).
+        val lines = unordered.map { it.copy(text = cleanOcr(it.text)) }.sortedWith(compareBy({ it.top }, { it.left }))
         val pounds = lines.any { Regex("\\blbs?\\b", RegexOption.IGNORE_CASE).containsMatchIn(it.text) } &&
             lines.none { Regex("\\bkg\\b", RegexOption.IGNORE_CASE).containsMatchIn(it.text) }
         fun kg(value: Double?) = value?.let { if (pounds) it * LB_TO_KG else it }
         return ReportValues(
             measuredOn = lines.firstNotNullOfOrNull { dateIn(it.text) },
-            weightKg = kg(valueFor(lines, WEIGHT))?.takeIf { it in BodyRules.WEIGHT_KG }?.round1(),
-            bodyFatPercent = valueFor(lines, BODY_FAT)?.takeIf { it in BodyRules.BODY_FAT_PERCENT }?.round1(),
-            muscleMassKg = kg(valueFor(lines, MUSCLE))?.takeIf { it in BodyRules.MUSCLE_KG }?.round1(),
+            // A lost decimal point ("812" kg) is put back when that makes the value believable.
+            weightKg = kg(valueFor(lines, WEIGHT))?.let { fit(it, BodyRules.WEIGHT_KG) }?.round1(),
+            bodyFatPercent = valueFor(lines, BODY_FAT)?.let { fit(it, BodyRules.BODY_FAT_PERCENT) }?.round1(),
+            muscleMassKg = kg(valueFor(lines, MUSCLE))?.let { fit(it, BodyRules.MUSCLE_KG) }?.round1(),
             bmrKcal = valueFor(lines, BMR)?.roundToInt()?.takeIf { it in BodyRules.BMR_KCAL },
-            visceralFat = valueFor(lines, VISCERAL)?.takeIf { it in BodyRules.VISCERAL }?.round1(),
+            visceralFat = valueFor(lines, VISCERAL)?.let { fit(it, BodyRules.VISCERAL) }?.round1(),
             heightCm = valueFor(lines, HEIGHT)?.takeIf { it in BodyRules.HEIGHT_CM }?.round1(),
             age = valueFor(lines, AGE)?.toInt()?.takeIf { it in BodyRules.AGE_YEARS },
             sex = lines.firstNotNullOfOrNull { line ->
@@ -71,11 +76,21 @@ object BodyReportParser {
                     else -> null
                 }
             },
+            details = BodyReportDetailsParser.parse(
+                lines,
+                rangeLabels = mapOf(
+                    BodyMetric.Weight to WEIGHT,
+                    BodyMetric.Muscle to MUSCLE,
+                    BodyMetric.BodyFat to BODY_FAT,
+                    BodyMetric.Visceral to VISCERAL,
+                    BodyMetric.Bmr to BMR,
+                ),
+            ),
         )
     }
 
     /** The first number after a label: in its own line, else the nearest to its right on the same row, else just below. */
-    private fun valueFor(lines: List<OcrLine>, label: Label): Double? {
+    private fun valueFor(lines: List<OcrLine>, label: ReportLabel): Double? {
         for (line in lines) {
             val match = label.find(line.text) ?: continue
             numberIn(line.text.substring(match.range.last + 1))?.let { return it }
@@ -106,7 +121,11 @@ object BodyReportParser {
             // Day first (the usual outside the US); a first part over 12 can only be a day anyway.
             return runCatching { LocalDate.of(m.groupValues[3].toInt(), m.groupValues[2].toInt(), m.groupValues[1].toInt()) }.getOrNull()
         }
-        // "24/07/26" (InBody): day, month, two-digit year.
+        // "12 08/26 18:40" (InBody's, its first slash not read): day, month, two-digit year, time.
+        Regex("\\b(\\d{1,2})[ ./-](\\d{1,2})[./-](\\d{2})\\s+\\d{1,2}:\\d{2}\\b").find(text)?.let { m ->
+            return runCatching { LocalDate.of(2000 + m.groupValues[3].toInt(), m.groupValues[2].toInt(), m.groupValues[1].toInt()) }.getOrNull()
+        }
+        // "12/08/26" (InBody): day, month, two-digit year.
         Regex("\\b(\\d{1,2})[-./](\\d{1,2})[-./](\\d{2})\\b").find(text)?.let { m ->
             return runCatching { LocalDate.of(2000 + m.groupValues[3].toInt(), m.groupValues[2].toInt(), m.groupValues[1].toInt()) }.getOrNull()
         }
@@ -119,22 +138,15 @@ object BodyReportParser {
 
     private fun Double.round1() = (this * 10).roundToInt() / 10.0
 
-    /** A label: matches [pattern] and none of [unless] ("Body Fat Mass" isn't body fat %). */
-    private class Label(pattern: String, unless: String? = null) {
-        private val regex = Regex(pattern, RegexOption.IGNORE_CASE)
-        private val unlessRegex = unless?.let { Regex(it, RegexOption.IGNORE_CASE) }
-        fun find(text: String): MatchResult? = if (unlessRegex?.containsMatchIn(text) == true) null else regex.find(text)
-    }
-
-    private val WEIGHT = Label("\\b(body ?weight|weight)\\b", unless = "ideal|target|control|fat.?free|lean|standard|muscle")
+    private val WEIGHT = ReportLabel("\\b(body ?weight|weight)\\b", unless = "ideal|target|control|fat.?free|lean|standard|muscle")
 
     // "PBF" is often read as "PBE" or "P8F".
-    private val BODY_FAT = Label("(percent body fat|body fat percentage|body fat ?%|\\bp[b8][fe]\\b|fat ?%|\\bbf ?%)", unless = "mass|visceral")
-    private val MUSCLE = Label("(skeletal muscle mass|\\bsmm\\b|muscle mass|^\\s*muscle\\b)", unless = "fat|control|lean")
-    private val BMR = Label("(basal metabolic rate|\\bbmr\\b)")
-    private val VISCERAL = Label("visceral fat( level| rating| area)?")
-    private val HEIGHT = Label("\\bheight\\b")
-    private val AGE = Label("\\bage\\b")
+    private val BODY_FAT = ReportLabel("(percent body fat|body fat percentage|body fat ?%|\\bp[b8][fe]\\b|fat ?%|\\bbf ?%)", unless = "mass|visceral")
+    private val MUSCLE = ReportLabel("(skeletal muscle mass|\\bsmm\\b|muscle mass|^\\s*muscle\\b)", unless = "fat|control|lean")
+    private val BMR = ReportLabel("(basal metabolic rate|\\bbmr\\b)")
+    private val VISCERAL = ReportLabel("visceral fat( level| rating| area)?")
+    private val HEIGHT = ReportLabel("\\bheight\\b")
+    private val AGE = ReportLabel("\\bage\\b")
     private val ANY_LABEL = listOf(WEIGHT, BODY_FAT, MUSCLE, BMR, VISCERAL, HEIGHT, AGE)
 
     private const val LB_TO_KG = 0.45359237

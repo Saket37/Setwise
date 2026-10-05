@@ -17,6 +17,8 @@ data class BodyMeasurement(
     val bmrKcal: Int? = null,
     val visceralFat: Double? = null,
     val source: Source = Source.Manual,
+    /** What else its report said (segments, body water, ranges…); empty when typed in. */
+    val details: ReportDetails = ReportDetails(),
 ) {
     enum class Source { Manual, Report }
 

@@ -4,7 +4,10 @@ import dev.saketanand.setwise.domain.ai.BodyReportReader
 import dev.saketanand.setwise.domain.ai.TextReader
 import dev.saketanand.setwise.domain.model.BmrEstimate
 import dev.saketanand.setwise.domain.model.BodyMeasurement
+import dev.saketanand.setwise.domain.model.BodySegment
 import dev.saketanand.setwise.domain.model.OcrLine
+import dev.saketanand.setwise.domain.model.Rating
+import dev.saketanand.setwise.domain.model.SegmentValues
 import dev.saketanand.setwise.domain.model.Sex
 import dev.saketanand.setwise.domain.repository.BodyRepository
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
@@ -51,25 +54,29 @@ class BodyViewModelTest {
     @Test
     fun `a scanned report is checked, saved, and fills the empty profile`() = runTest(dispatcher) {
         ocr = listOf(
-            line("InBody170 24/07/26 09:05", 0), line("Gender: Male  Age :26", 1), line("Height : 169.0 cm", 2),
-            line("Weight 78.6 kg (53.4~72.2)", 3), line("PBF 31.6 %", 4), line("BMR 1531 kcal", 5),
+            line("InBody170 12/08/26 18:40", 0), line("Gender: Male  Age :31", 1), line("Height : 174.0 cm", 2),
+            line("Weight 81.2 kg (56.0~75.8)", 3), line("PBF 24.3 %", 4), line("BMR 1702 kcal", 5),
+            line("Segmental Lean", 6), line("Right Arm 3.72 Normal", 7), line("Fitness Score 71 Points", 8),
         )
         val vm = viewModel()
 
         vm.onAction(BodyAction.OnReportPhoto("content://report"))
         val editor = vm.state.value.editor!!
-        assertEquals(LocalDate.of(2026, 7, 24), editor.day)
-        assertEquals(78.6, editor.weightKg)
+        assertEquals(LocalDate.of(2026, 8, 12), editor.day)
+        assertEquals(81.2, editor.weightKg)
         assertTrue(editor.fromReport)
         assertTrue(body.saved.isEmpty()) // nothing until checked
 
-        vm.onAction(BodyAction.OnSave("78.6", "31.6", "", "1531", ""))
+        vm.onAction(BodyAction.OnSave("81.2", "24.3", "", "1702", ""))
 
         val saved = body.saved.single()
         assertEquals(BodyMeasurement.Source.Report, saved.source)
-        assertEquals(1531, saved.bmrKcal)
-        assertEquals(BmrEstimate(1531, BmrEstimate.Source.Report), vm.state.value.bmr)
-        assertEquals(169.0, settings.settings.value.heightCm)
+        assertEquals(1702, saved.bmrKcal)
+        // The rest of the report is kept with it, though the sheet doesn't edit it.
+        assertEquals(71, saved.details.fitnessScore)
+        assertEquals(SegmentValues(BodySegment.RightArm, 3.72, Rating.Normal), saved.details.segments.single())
+        assertEquals(BmrEstimate(1702, BmrEstimate.Source.Report), vm.state.value.bmr)
+        assertEquals(174.0, settings.settings.value.heightCm)
         assertEquals(Sex.Male, settings.settings.value.sex)
         assertNull(vm.state.value.editor)
     }
@@ -78,7 +85,7 @@ class BodyViewModelTest {
     fun `an unbelievable value keeps the sheet open, and a photo with no report says so`() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onAction(BodyAction.OnAddManually)
-        vm.onAction(BodyAction.OnSave("78.6", "92", "", "", ""))
+        vm.onAction(BodyAction.OnSave("81.2", "92", "", "", ""))
         assertTrue(vm.state.value.editor!!.isInvalid)
         assertTrue(body.saved.isEmpty())
 
