@@ -69,6 +69,8 @@ class ActiveWorkoutViewModel(
     private val exerciseRepository: ExerciseRepository,
     private val speechInput: SpeechInput,
     userSettings: UserSettingsRepository,
+    /** A finished workout opened from its summary to edit its sets. */
+    private val isEditingFinished: Boolean = false,
 ) : ViewModel() {
 
     /** Settings' default rest; null: each exercise's own. */
@@ -93,6 +95,7 @@ class ActiveWorkoutViewModel(
     /** Latest data from the database, for actions that need the stored values. */
     private var session: WorkoutSession? = null
     private var isClosing = false
+    private var exerciseIdsAtStart: List<Long>? = null
 
     private val eventChannel = Channel<ActiveWorkoutEvent>(Channel.BUFFERED)
     val events: Flow<ActiveWorkoutEvent> = eventChannel.receiveAsFlow()
@@ -102,8 +105,10 @@ class ActiveWorkoutViewModel(
     val state: StateFlow<ActiveWorkoutUiState> = combine(
         workoutRepository.observeSession(workoutId).onEach { session ->
             this.session = session
-            // Deleted (discarded) or already finished: nothing to edit here.
-            if (session == null || session.endedAt != null) close()
+            // Deleted (discarded), or finished while it was running here: nothing to edit.
+            if (session == null || (session.endedAt != null && !isEditingFinished)) close()
+            // What it had when editing began: records of later workouts may depend on those.
+            if (session != null && exerciseIdsAtStart == null) exerciseIdsAtStart = session.exercises.map { it.exercise.id }
         },
         expandedChoice,
         overlays,
@@ -112,8 +117,8 @@ class ActiveWorkoutViewModel(
     ) { session, expandedChoice, overlays, rest ->
         if (session == null) return@combine ActiveWorkoutUiState(isLoading = false)
         val loggedAfterwards = isLoggedAfterwards(session.startedAt, dateProvider.now())
-        // Progression hints are for the session at hand, not one logged afterwards.
-        val exercises = session.exercises.map { it.toUi(hintsAt = session.startedAt.takeUnless { loggedAfterwards }) }
+        // Progression hints are for the session at hand, not one logged afterwards or being edited.
+        val exercises = session.exercises.map { it.toUi(hintsAt = session.startedAt.takeUnless { loggedAfterwards || isEditingFinished }) }
         val startedAt = session.startedAt.atZone(dateProvider.zone)
         ActiveWorkoutUiState(
             isLoading = false,
@@ -130,6 +135,7 @@ class ActiveWorkoutViewModel(
             rest = rest?.toUi(),
             quickLog = overlays.quickLog,
             onDeviceSpeech = overlays.onDeviceSpeech,
+            isEditingFinished = isEditingFinished,
         )
     }
         .catch { e ->
@@ -262,7 +268,7 @@ class ActiveWorkoutViewModel(
         // Logged afterwards (a past day): nobody is resting now, so no timer, notification or
         // notification-permission prompt.
         val startedAt = session?.startedAt
-        if (startedAt != null && isLoggedAfterwards(startedAt, dateProvider.now())) return
+        if (isEditingFinished || (startedAt != null && isLoggedAfterwards(startedAt, dateProvider.now()))) return
         // Rest before the next set (a new rest replaces a running one).
         // Settings' default rest, if set, for everything that rests (cardio doesn't).
         val restSec = restSecOverride?.takeIf { exercise.restSec > 0 } ?: exercise.restSec
@@ -300,6 +306,8 @@ class ActiveWorkoutViewModel(
         val state = state.value
         when {
             state.isFinishing -> Unit
+            isEditingFinished && state.incompleteSets > 0 -> showDialog(ActiveWorkoutDialog.FinishWithIncompleteSets(state.incompleteSets))
+            isEditingFinished -> finish()
             state.completedSets == 0 -> showDialog(ActiveWorkoutDialog.NothingLogged)
             state.incompleteSets > 0 -> showDialog(ActiveWorkoutDialog.FinishWithIncompleteSets(state.incompleteSets))
             else -> finish()
@@ -307,6 +315,7 @@ class ActiveWorkoutViewModel(
     }
 
     private fun finish() {
+        if (isEditingFinished) return saveEdits()
         if (overlays.value.isFinishing) return
         overlays.update { it.copy(dialog = null, isFinishing = true) }
         // Set before the workout is marked finished, so seeing it finished doesn't also "close".
@@ -321,6 +330,26 @@ class ActiveWorkoutViewModel(
             if (finished) {
                 restTimer.cancel(workoutId)
                 // Stays "finishing" (Finish disabled) until the summary opens.
+                eventChannel.trySend(ActiveWorkoutEvent.Finished(workoutId))
+            } else {
+                isClosing = false
+                overlays.update { it.copy(isFinishing = false) }
+                eventChannel.trySend(ActiveWorkoutEvent.SaveFailed)
+            }
+        }
+    }
+
+    /** Editing a finished workout: tidy its sets, recheck records, and go back to its summary. */
+    private fun saveEdits() {
+        if (overlays.value.isFinishing) return
+        overlays.update { it.copy(dialog = null, isFinishing = true) }
+        isClosing = true
+        write {
+            val exerciseIds = exerciseIdsAtStart.orEmpty()
+            val saved = runCatching { workoutRepository.finishEditing(workoutId, exerciseIds) }
+                .onFailure { e -> Log.e(TAG, "Saving the edits of workout $workoutId failed", e) }
+                .getOrDefault(false)
+            if (saved) {
                 eventChannel.trySend(ActiveWorkoutEvent.Finished(workoutId))
             } else {
                 isClosing = false

@@ -54,4 +54,5 @@ open class StubWorkoutRepository : WorkoutRepository {
     override suspend fun getTrainingLog(): List<LoggedSetRecord> = emptyList()
     override suspend fun importWorkout(name: String, startedAt: Instant, endedAt: Instant, exercises: List<Pair<Long, List<SharedSet>>>): Long = 0
     override suspend fun hasWorkoutStartedAt(startedAt: Instant): Boolean = false
+    override suspend fun finishEditing(workoutId: Long, exerciseIds: Collection<Long>): Boolean = true
 }
