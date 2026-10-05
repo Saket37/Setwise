@@ -3,6 +3,12 @@ package dev.saketanand.setwise.data.repository
 import androidx.room.Room
 import dev.saketanand.setwise.data.local.SetwiseDatabase
 import dev.saketanand.setwise.domain.model.BodyMeasurement
+import dev.saketanand.setwise.domain.model.BodyMetric
+import dev.saketanand.setwise.domain.model.BodySegment
+import dev.saketanand.setwise.domain.model.NormalRange
+import dev.saketanand.setwise.domain.model.Rating
+import dev.saketanand.setwise.domain.model.ReportDetails
+import dev.saketanand.setwise.domain.model.SegmentValues
 import dev.saketanand.setwise.domain.model.UserSettings
 import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 import java.time.LocalDate
@@ -63,5 +69,30 @@ class BodyRepositoryImplTest {
     fun `a check without a weight leaves the profile's weight as it is`() = runTest {
         body.add(BodyMeasurement(1, on(1), bodyFatPercent = 18.0))
         assertEquals(82.0, settings.settings.value.bodyWeightKg)
+    }
+
+    @Test
+    fun `a report's details and segments are kept, replaced on edit, and go with it on delete`() = runTest {
+        val details = ReportDetails(
+            fatMassKg = 19.7, fatFreeMassKg = 61.5, bodyWaterL = 44.6, bmi = 26.8, waistHipRatio = 0.92, fitnessScore = 71,
+            muscleControlKg = 0.0, fatControlKg = -9.6,
+            ranges = mapOf(BodyMetric.Weight to NormalRange(56.0, 75.8), BodyMetric.Visceral to NormalRange(null, 10.0)),
+            segments = listOf(
+                SegmentValues(BodySegment.RightArm, 3.72, Rating.Normal, 24.1, 1.4, Rating.Over),
+                SegmentValues(BodySegment.LeftLeg, 9.05, Rating.Under, 21.9, 2.6, Rating.Normal),
+            ),
+        )
+        val report = BodyMeasurement(1, on(5), weightKg = 81.2, source = BodyMeasurement.Source.Report, details = details)
+
+        body.add(report)
+        assertEquals(report, body.observeMeasurements().first().single())
+
+        val edited = report.copy(details = details.copy(segments = details.segments.take(1)))
+        body.add(edited)
+        assertEquals(edited, body.observeMeasurements().first().single())
+
+        body.delete(1)
+        assertTrue(body.observeMeasurements().first().isEmpty())
+        assertEquals(0, db.query("SELECT COUNT(*) FROM body_segments", null).use { it.moveToFirst(); it.getInt(0) })
     }
 }

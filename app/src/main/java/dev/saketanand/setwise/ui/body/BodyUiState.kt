@@ -3,6 +3,7 @@ package dev.saketanand.setwise.ui.body
 import androidx.compose.runtime.Immutable
 import dev.saketanand.setwise.domain.model.BmrEstimate
 import dev.saketanand.setwise.domain.model.BodyMeasurement
+import dev.saketanand.setwise.domain.model.ReportDetails
 import java.time.LocalDate
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -53,6 +54,8 @@ data class BodyEditor(
     val profileSex: dev.saketanand.setwise.domain.model.Sex? = null,
     /** The on-device model filled some values. */
     val byModel: Boolean = false,
+    /** What else the report said (segments, body water, ranges…): saved with the check, not edited here. */
+    val details: ReportDetails = ReportDetails(),
     /** The last Save had a value that isn't believable, or nothing at all. */
     val isInvalid: Boolean = false,
 )

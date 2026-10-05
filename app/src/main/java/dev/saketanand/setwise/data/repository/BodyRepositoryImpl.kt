@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.data.repository
 
 import dev.saketanand.setwise.data.local.dao.BodyMeasurementDao
+import dev.saketanand.setwise.data.mapper.segmentEntities
 import dev.saketanand.setwise.data.mapper.toDomain
 import dev.saketanand.setwise.data.mapper.toEntity
 import dev.saketanand.setwise.domain.model.BodyMeasurement
@@ -19,7 +20,7 @@ class BodyRepositoryImpl(
         bodyMeasurementDao.observeAll().map { rows -> rows.map { it.toDomain() } }
 
     override suspend fun add(measurement: BodyMeasurement) {
-        bodyMeasurementDao.upsert(measurement.toEntity())
+        bodyMeasurementDao.save(measurement.toEntity(), measurement.segmentEntities())
         // The newest weight is the profile's (calorie estimates use it).
         bodyMeasurementDao.newestWeightKg()?.let { userSettings.setBodyWeightKg(it) }
     }

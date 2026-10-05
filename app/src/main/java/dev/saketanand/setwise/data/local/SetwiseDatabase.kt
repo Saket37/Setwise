@@ -10,6 +10,7 @@ import dev.saketanand.setwise.data.local.dao.ExerciseDao
 import dev.saketanand.setwise.data.local.dao.TemplateDao
 import dev.saketanand.setwise.data.local.dao.WorkoutDao
 import dev.saketanand.setwise.data.local.entity.BodyMeasurementEntity
+import dev.saketanand.setwise.data.local.entity.BodySegmentEntity
 import dev.saketanand.setwise.data.local.entity.DayMarkEntity
 import dev.saketanand.setwise.data.local.entity.ExerciseEntity
 import dev.saketanand.setwise.data.local.entity.SetEntity
@@ -36,13 +37,15 @@ import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
         TemplateExerciseEntity::class,
         DayMarkEntity::class,
         BodyMeasurementEntity::class,
+        BodySegmentEntity::class,
     ],
     version = 3,
     exportSchema = true,
     autoMigrations = [
         // 2: target reps on template and workout exercises (nullable columns).
         AutoMigration(from = 1, to = 2),
-        // 3: body measurements move here from DataStore (a new table; LegacyBodyMeasurements copies them).
+        // 3: body measurements move here from DataStore, with a full report's details and its
+        // segments (new tables; LegacyBodyMeasurements copies the old ones).
         AutoMigration(from = 2, to = 3),
     ],
 )

@@ -97,6 +97,7 @@ class BodyViewModel(
                                 visceralFat = values.visceralFat,
                                 fromReport = true,
                                 byModel = result.byModel,
+                                details = values.details,
                                 // Only what the profile doesn't have yet.
                                 profileHeightCm = values.heightCm?.takeIf { profile.heightCm == null },
                                 profileAge = values.age?.takeIf { profile.birthYear == null },
@@ -137,6 +138,7 @@ class BodyViewModel(
                 bmrKcal = bmr.getOrNull(),
                 visceralFat = visceral.getOrNull(),
                 source = if (editor.fromReport) BodyMeasurement.Source.Report else BodyMeasurement.Source.Manual,
+                details = editor.details,
             ).takeUnless { it.isEmpty }
         }
         if (measurement == null) {

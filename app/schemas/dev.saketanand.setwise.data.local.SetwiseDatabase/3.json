@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "2a3edd535f3a51fcdebb70bbb89b13ad",
+    "identityHash": "d21625556c6cfe7505f4791467f019a5",
     "entities": [
       {
         "tableName": "exercises",
@@ -515,7 +515,7 @@
       },
       {
         "tableName": "body_measurements",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `measuredOn` INTEGER NOT NULL, `weightKg` REAL, `bodyFatPercent` REAL, `muscleMassKg` REAL, `bmrKcal` INTEGER, `visceralFat` REAL, `source` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `measuredOn` INTEGER NOT NULL, `weightKg` REAL, `bodyFatPercent` REAL, `muscleMassKg` REAL, `bmrKcal` INTEGER, `visceralFat` REAL, `source` TEXT NOT NULL, `fatMassKg` REAL, `fatFreeMassKg` REAL, `bodyWaterL` REAL, `bmi` REAL, `waistHipRatio` REAL, `fitnessScore` INTEGER, `muscleControlKg` REAL, `fatControlKg` REAL, `ranges` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -559,6 +559,51 @@
             "columnName": "source",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "fatMassKg",
+            "columnName": "fatMassKg",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "fatFreeMassKg",
+            "columnName": "fatFreeMassKg",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "bodyWaterL",
+            "columnName": "bodyWaterL",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "bmi",
+            "columnName": "bmi",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "waistHipRatio",
+            "columnName": "waistHipRatio",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "fitnessScore",
+            "columnName": "fitnessScore",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "muscleControlKg",
+            "columnName": "muscleControlKg",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "fatControlKg",
+            "columnName": "fatControlKg",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "ranges",
+            "columnName": "ranges",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -578,11 +623,74 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_body_measurements_measuredOn` ON `${TABLE_NAME}` (`measuredOn`)"
           }
         ]
+      },
+      {
+        "tableName": "body_segments",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`measurementId` INTEGER NOT NULL, `segment` TEXT NOT NULL, `leanKg` REAL, `leanRating` TEXT, `fatPercent` REAL, `fatKg` REAL, `fatRating` TEXT, PRIMARY KEY(`measurementId`, `segment`), FOREIGN KEY(`measurementId`) REFERENCES `body_measurements`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "measurementId",
+            "columnName": "measurementId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "segment",
+            "columnName": "segment",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "leanKg",
+            "columnName": "leanKg",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "leanRating",
+            "columnName": "leanRating",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fatPercent",
+            "columnName": "fatPercent",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "fatKg",
+            "columnName": "fatKg",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "fatRating",
+            "columnName": "fatRating",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "measurementId",
+            "segment"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "body_measurements",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "measurementId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2a3edd535f3a51fcdebb70bbb89b13ad')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd21625556c6cfe7505f4791467f019a5')"
     ]
   }
 }

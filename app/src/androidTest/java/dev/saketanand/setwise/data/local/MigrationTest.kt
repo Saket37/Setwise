@@ -5,6 +5,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.saketanand.setwise.data.local.entity.BodyMeasurementEntity
+import dev.saketanand.setwise.data.local.entity.BodySegmentEntity
 import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
 import dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl
 import kotlinx.coroutines.flow.first
@@ -77,8 +78,12 @@ class MigrationTest {
         try {
             val dao = database.bodyMeasurementDao()
             assertEquals(emptyList<BodyMeasurementEntity>(), dao.observeAll().first()) // the new table, empty
-            dao.upsert(BodyMeasurementEntity(1, 20_000, 80.0, null, null, null, null, "Manual"))
+            dao.save(
+                BodyMeasurementEntity(1, 20_000, 80.0, null, null, null, null, "Report", fitnessScore = 70),
+                listOf(BodySegmentEntity(1, "Trunk", 28.0, "Normal", 27.0, 11.2, "Over")), // and the segments table
+            )
             assertEquals(80.0, dao.newestWeightKg()!!, 0.0)
+            assertEquals("Trunk", dao.observeAll().first().single().segments.single().segment)
             assertEquals("Legs", WorkoutRepositoryImpl(database, database.workoutDao(), database.templateDao()).observeSession(1).first()?.name) // kept
         } finally {
             database.close()
