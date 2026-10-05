@@ -22,39 +22,41 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.domain.ai.DownloadFailure
+import dev.saketanand.setwise.domain.ai.DownloadState
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.model.Sex
+import dev.saketanand.setwise.domain.model.UserSettings
 import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.NumberKind
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseBodyWeightDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseChoiceDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseDayPicker
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseNumberField
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseSettingsGroup
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseSettingsRow
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseSwitchRow
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseValueDialog
+import dev.saketanand.setwise.ui.designsystem.components.ValueKind
 import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
+import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toWeightInput
 import dev.saketanand.setwise.util.toWeightLabel
+import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.format.TextStyle
+import kotlin.time.Duration.Companion.seconds
 import org.koin.androidx.compose.koinViewModel
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseBodyWeightDialog
-import dev.saketanand.setwise.domain.ai.ModelAvailability
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import dev.saketanand.setwise.domain.ai.DownloadFailure
-import dev.saketanand.setwise.domain.ai.DownloadState
-import dev.saketanand.setwise.domain.model.Sex
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseChoiceDialog
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseValueDialog
-import dev.saketanand.setwise.ui.designsystem.components.ValueKind
-import java.text.NumberFormat
-import androidx.lifecycle.compose.dropUnlessResumed
-import dev.saketanand.setwise.domain.model.UserSettings
 
 /** Destination: [Route.Settings]. */
 @Composable
@@ -359,4 +361,4 @@ private fun Sex.labelRes() = when (this) {
 }
 
 /** "1:30". */
-private fun restLabel(seconds: Int) = "%d:%02d".format(seconds / 60, seconds % 60)
+private fun restLabel(seconds: Int) = seconds.seconds.toClockLabel()

@@ -131,10 +131,6 @@
     <ID>Kdoc:Type.kt:/** Top-bar titles ("Add exercise", "Treadmill"). */</ID>
     <ID>Kdoc:Type.kt:/** UPPERCASE captions: "PREVIOUS", "REST", "TEMPLATES". */</ID>
     <ID>Kdoc:Type.kt:/** Workout name on the Summary screen. */</ID>
-    <ID>LambdaParameterInRestartableEffect:ActiveWorkoutScreen.kt:onPickedExercisesConsumed: () -&gt; Unit</ID>
-    <ID>LambdaParameterInRestartableEffect:ExerciseDetailScreen.kt:onBack: () -&gt; Unit</ID>
-    <ID>LambdaParameterInRestartableEffect:ExercisePickerScreen.kt:onCreatedExerciseConsumed: () -&gt; Unit</ID>
-    <ID>LambdaParameterInRestartableEffect:TemplateEditorScreen.kt:onPickedExercisesConsumed: () -&gt; Unit</ID>
     <ID>LongMethod:SettingsViewModel.kt:SettingsViewModel$fun onAction</ID>
     <ID>LongParameterList:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel</ID>
     <ID>LongParameterList:AiCheck.kt:AiCheck</ID>
@@ -331,28 +327,6 @@
     <ID>UnnecessaryFilter:ExerciseNames.kt:ExerciseNames$filter { exercise -&gt; words(exercise.name).filter { it in EQUIPMENT_WORDS }.toSet() == gear }</ID>
     <ID>UnnecessaryFilter:ExerciseNames.kt:ExerciseNames$filter { word.startsWith(it) }</ID>
     <ID>UnnecessaryFilter:ExerciseNames.kt:ExerciseNames$filter { words(it.name).containsAll(typedWords) }</ID>
-    <ID>UnsafeCallOnNullableType:Body.kt:BodyRules$it.bmrKcal!!</ID>
-    <ID>UnsafeCallOnNullableType:CalorieEstimator.kt:CalorieEstimator$bodyWeightKg!!</ID>
-    <ID>UnsafeCallOnNullableType:HistoryUiState.kt:HistoryUiState$selectedDate!!</ID>
-    <ID>UnsafeCallOnNullableType:InsightCard.kt:previous!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalBests.Companion$PersonalRecords.estimatedOneRepMax(it.weightKg, it.reps)!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalBests.Companion$it.durationSec!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalBests.Companion$it.reps!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalRecords$best.durationSec!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalRecords$best.reps!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalRecords$best.weightKg!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalRecords$estimatedOneRepMax(best.weightKg, best.reps)!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalRecords$estimatedOneRepMax(it.weightKg, it.reps)!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalRecords$estimatedOneRepMax(previous.weightKg, previous.reps)!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalRecords$it.durationSec!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalRecords$it.reps!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalRecords$previous.durationSec!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalRecords$previous.reps!!</ID>
-    <ID>UnsafeCallOnNullableType:PersonalRecords.kt:PersonalRecords$previous.weightKg!!</ID>
-    <ID>UnsafeCallOnNullableType:Progression.kt:Progression$amount(it, measure)!!</ID>
-    <ID>UnsafeCallOnNullableType:Progression.kt:Progression$last.weightKg!!</ID>
-    <ID>UnsafeCallOnNullableType:StrongShareParser.kt:StrongShareParser$SET_LINE.find(lines[i])!!</ID>
-    <ID>UnsafeCallOnNullableType:WorkoutInsightWriter.kt:WorkoutInsightWriter.Companion$facts.previous!!</ID>
     <ID>UnusedParameter:TemplateFromGoalScreen.kt:onBack: () -&gt; Unit</ID>
     <ID>UnusedParameter:TemplateFromGoalScreen.kt:onDraftCreated: (templateId: Long) -&gt; Unit</ID>
     <ID>UnusedParameter:TemplateFromGoalScreen.kt:viewModel: TemplateFromGoalViewModel = koinViewModel()</ID>
