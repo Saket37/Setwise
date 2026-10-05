@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -77,6 +78,7 @@ fun ImportScreenRoot(shared: SharedImport, onBack: () -> Unit, onOpenHistory: ()
         onChooseFile = { chooseFile.launch(arrayOf("text/csv", "text/comma-separated-values", "application/csv", "text/plain", "application/vnd.ms-excel")) },
         onChooseScreenshots = { chooseScreenshots.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
         onImport = viewModel::import,
+        onImportMore = viewModel::importMore,
         onBack = dropUnlessResumed(block = onBack),
         onOpenHistory = dropUnlessResumed(block = onOpenHistory),
     )
@@ -97,6 +99,7 @@ fun ImportScreen(
     onBack: () -> Unit,
     onOpenHistory: () -> Unit,
     modifier: Modifier = Modifier,
+    onImportMore: () -> Unit = {},
 ) {
     val text = rememberTextFieldState(initialText)
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -117,6 +120,15 @@ fun ImportScreen(
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         SetwiseButton(text = stringResource(R.string.import_see_history), onClick = onOpenHistory, modifier = Modifier.fillMaxWidth())
+                        SetwiseButton(
+                            text = stringResource(R.string.import_more),
+                            onClick = {
+                                text.clearText() // what was imported, not to read twice
+                                onImportMore()
+                            },
+                            style = SetwiseButtonStyle.Outlined,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
                 }
                 return@LazyColumn
