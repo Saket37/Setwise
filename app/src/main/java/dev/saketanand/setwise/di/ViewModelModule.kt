@@ -36,7 +36,7 @@ val viewModelModule = module {
     viewModelOf(::BodyProgressViewModel)
     // The route, read by type (as the active workout's); without one the screen finds nothing and closes.
     viewModel { params ->
-        BodyReportViewModel(params.getOrNull<Route.BodyReport>()?.measurementId ?: Route.NO_WORKOUT_ID, get())
+        BodyReportViewModel(params.getOrNull<Route.BodyReport>()?.measurementId ?: Route.NO_WORKOUT_ID, get(), get())
     }
     viewModel { params ->
         ImportViewModel(

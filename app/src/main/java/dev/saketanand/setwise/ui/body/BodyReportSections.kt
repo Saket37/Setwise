@@ -160,7 +160,7 @@ private val LAYOUT = listOf(
 
 @Composable
 internal fun SegmentCell(segment: BodySegment, values: SegmentValues, fat: Boolean, locale: Locale, modifier: Modifier = Modifier) {
-    val value = if (fat) values.fatPercent?.let { measureValue(ProgressMeasure.BodyFat, it, locale) } else values.leanKg?.let { measureValue(ProgressMeasure.Muscle, it, locale) }
+    val value = if (fat) values.fatPercent?.let { measureValue(ProgressMeasure.BodyFat, it, locale) } else values.leanKg?.let { segmentLeanValue(it, locale) }
     val rating = if (fat) values.fatRating else values.leanRating
     Column(
         modifier = modifier

@@ -33,6 +33,9 @@ data class BodyUiState(
 
 @Immutable
 data class LatestBody(
+    /** The newest check's day and whether it came from a report ("Latest · Tue, 6 Oct · From a report"). */
+    val measuredOn: LocalDate? = null,
+    val fromReport: Boolean = false,
     val weightKg: Double? = null,
     val bodyFatPercent: Double? = null,
     val muscleMassKg: Double? = null,

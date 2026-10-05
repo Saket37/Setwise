@@ -73,6 +73,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseLineChart
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseNumberField
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.theme.numberLarge
+import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
 import dev.saketanand.setwise.util.toShortDayLabel
 import dev.saketanand.setwise.util.toWeightInput
@@ -216,8 +217,32 @@ private fun LatestCard(uiState: BodyUiState, locale: Locale, onOpenCheck: (Long)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        // Design 14: "LATEST · TUE, 6 OCT   From a report", the weight large, then fat, muscle, visceral.
+        latest.measuredOn?.let { day ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.body_latest, day.toShortDayLabel(locale)).uppercase(locale),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = stringResource(if (latest.fromReport) R.string.body_latest_from_report else R.string.body_latest_typed),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.semantics(mergeDescendants = true) {}) {
+            Text(latest.weightKg?.toWeightLabel(locale) ?: "–", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.onSurface)
+            Text(
+                text = " " + stringResource(R.string.body_weight_kg_label),
+                style = MaterialTheme.typography.numberMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 6.dp),
+            )
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Value(latest.weightKg?.toWeightLabel(locale), stringResource(R.string.body_weight_kg_label), Modifier.weight(1f))
             Value(latest.bodyFatPercent?.toWeightLabel(locale), stringResource(R.string.body_fat_label), Modifier.weight(1f))
             Value(latest.muscleMassKg?.toWeightLabel(locale), stringResource(R.string.body_muscle_label), Modifier.weight(1f))
             Value(latest.visceralFat?.toWeightLabel(locale), stringResource(R.string.body_visceral_label), Modifier.weight(1f))
@@ -230,15 +255,17 @@ private fun LatestCard(uiState: BodyUiState, locale: Locale, onOpenCheck: (Long)
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
+            val source = stringResource(
+                when (bmr?.source) {
+                    BmrEstimate.Source.Report -> R.string.body_bmr_from_report
+                    BmrEstimate.Source.BodyFat -> R.string.body_bmr_from_fat
+                    BmrEstimate.Source.Profile -> R.string.body_bmr_from_profile
+                    null -> R.string.body_bmr_how
+                },
+            )
+            val score = uiState.latestReport?.details?.fitnessScore
             Text(
-                text = stringResource(
-                    when (bmr?.source) {
-                        BmrEstimate.Source.Report -> R.string.body_bmr_from_report
-                        BmrEstimate.Source.BodyFat -> R.string.body_bmr_from_fat
-                        BmrEstimate.Source.Profile -> R.string.body_bmr_from_profile
-                        null -> R.string.body_bmr_how
-                    },
-                ),
+                text = if (score != null) stringResource(R.string.body_bmr_source_with_score, source, score) else source,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -254,7 +281,7 @@ private fun LatestCard(uiState: BodyUiState, locale: Locale, onOpenCheck: (Long)
                     .clickable(onClickLabel = stringResource(R.string.body_full_report)) { onOpenCheck(report.id) },
             ) {
                 Text(
-                    text = report.details.fitnessScore?.let { stringResource(R.string.body_full_report_with_score, it) } ?: stringResource(R.string.body_full_report),
+                    text = stringResource(R.string.body_full_report),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
@@ -295,7 +322,7 @@ private fun ProgressCard(progress: RecentProgress, locale: Locale, onOpen: () ->
         val changes = listOfNotNull(
             progress.weightChange?.let { measureChange(ProgressMeasure.Weight, it, locale) to stringResource(R.string.measure_weight) },
             progress.fatChange?.let { measureChange(ProgressMeasure.BodyFat, it, locale) to stringResource(R.string.measure_body_fat) },
-            progress.muscleChange?.let { measureChange(ProgressMeasure.Muscle, it, locale) to stringResource(R.string.body_muscle_label) },
+            progress.muscleChange?.let { measureChange(ProgressMeasure.Muscle, it, locale) to stringResource(R.string.body_change_muscle) },
         )
         if (changes.isNotEmpty()) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

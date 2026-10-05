@@ -44,7 +44,7 @@ private fun number(value: Double, decimals: Int, locale: Locale): String =
         maximumFractionDigits = decimals
     }.format(value)
 
-/** "78.4 kg", "18.5%", "Level 6", "1,750 kcal", "46.6 ℓ", "0.88", "78". */
+/** "78.4 kg", "18.5%", "Level 6", "1,750 kcal", "46.6 L", "0.88", "78". */
 @Composable
 @ReadOnlyComposable
 fun measureValue(measure: ProgressMeasure, value: Double, locale: Locale): String {
@@ -58,6 +58,14 @@ fun measureValue(measure: ProgressMeasure, value: Double, locale: Locale): Strin
         ProgressMeasure.WaistHip, ProgressMeasure.FitnessScore, ProgressMeasure.Bmi -> n
     }
 }
+
+/** A segment's lean mass as reports print it: "3.62 kg" for an arm or leg, "28.0 kg" for the trunk. */
+@Composable
+@ReadOnlyComposable
+fun segmentLeanValue(value: Double, locale: Locale): String =
+    stringResource(R.string.value_kg, number(value, if (value < SEGMENT_TWO_DECIMALS_BELOW) 2 else 1, locale))
+
+private const val SEGMENT_TWO_DECIMALS_BELOW = 10.0
 
 /** "−2.1 kg", "+0.5 kg", "−1.2 pts" (body fat changes in points, not %), "±0". */
 @Composable

@@ -28,6 +28,7 @@ import dev.saketanand.setwise.R
 import dev.saketanand.setwise.domain.model.BodyMeasurement
 import dev.saketanand.setwise.domain.model.BodyMetric
 import dev.saketanand.setwise.domain.model.BodySegment
+import dev.saketanand.setwise.domain.model.BodyTip
 import dev.saketanand.setwise.domain.model.NormalRange
 import dev.saketanand.setwise.domain.model.ProgressMeasure
 import dev.saketanand.setwise.domain.model.Rating
@@ -36,6 +37,7 @@ import dev.saketanand.setwise.domain.model.SegmentValues
 import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseConfirmDialog
@@ -95,12 +97,14 @@ fun BodyReportScreen(
             val markers = markerRows(check)
             if (markers.isNotEmpty()) item(key = "markers") { Group(stringResource(R.string.body_report_markers), markers, details.ranges, locale) }
             if (details.segments.isNotEmpty()) item(key = "segments") { Segments(details.segments, locale) }
+            if (uiState.tips.isNotEmpty()) item(key = "tips") { SuggestionsCard(uiState.tips, uiState.modelTips, locale) }
             if (details.muscleControlKg != null || details.fatControlKg != null) item(key = "control") { ControlCard(details, locale) }
             item(key = "delete") {
                 SetwiseButton(
                     text = stringResource(R.string.body_delete_check),
                     onClick = onDeleteClick,
                     style = SetwiseButtonStyle.Outlined,
+                    colors = SetwiseButtonDefaults.destructiveColors(SetwiseButtonStyle.Outlined),
                     size = SetwiseButtonSize.Medium,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -224,6 +228,11 @@ internal val SampleBodyReportState = BodyReportUiState(
                 SegmentValues(BodySegment.LeftLeg, 9.31, Rating.Under, 16.4, 2.0, Rating.Normal),
             ),
         ),
+    ),
+    tips = listOf(
+        BodyTip.Uneven(BodySegment.LeftLeg, BodySegment.RightLeg),
+        BodyTip.SinceLast(LocalDate.of(2026, 9, 21), fatKg = -0.4, muscleKg = 0.2),
+        BodyTip.FatOver(listOf(BodySegment.Trunk), trunkPercent = 20.3),
     ),
 )
 

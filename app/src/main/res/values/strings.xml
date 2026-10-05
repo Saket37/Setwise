@@ -497,6 +497,25 @@
     <string name="body_bmr_how">Scan a report, add body fat, or set height, age and sex in your profile</string>
     <string name="body_source_report">report</string>
     <string name="body_delete_check">Delete this check</string>
+    <string name="body_tips_title">Suggestions</string>
+    <string name="body_tips_footer">From this report and your last one · not medical advice</string>
+    <string name="body_tips_footer_by_model">Written on this phone by Gemini Nano · not medical advice</string>
+    <!-- %1$s = the weaker side ("left leg"), %2$s = the other side -->
+    <string name="body_tip_uneven_legs">Your %1$s is rated Under while your %2$s isn\'t: single-leg work like split squats or step-ups helps even them out.</string>
+    <string name="body_tip_uneven_arms">Your %1$s is rated Under while your %2$s isn\'t: single-arm work like one-arm dumbbell rows and presses helps even them out.</string>
+    <!-- %1$s = the last report's day, then changes like "−0.4 kg" -->
+    <string name="body_tip_since_fat_muscle">Since %1$s, fat mass is %2$s and muscle %3$s.</string>
+    <string name="body_tip_since_fat">Since %1$s, fat mass is %2$s.</string>
+    <string name="body_tip_since_muscle">Since %1$s, muscle is %2$s.</string>
+    <!-- A change in a sentence: "fat mass is down 0.4 kg" -->
+    <string name="body_tip_down">down %1$s</string>
+    <string name="body_tip_up">up %1$s</string>
+    <string name="body_tip_unchanged">unchanged</string>
+    <string name="body_tip_keep_going">Keep the current training and eating.</string>
+    <!-- %1$s = trunk fat, e.g. "20.3%" -->
+    <string name="body_tip_fat_over_trunk">Trunk fat is the one segment rated Over (%1$s); steady overall fat loss brings it down with the rest.</string>
+    <!-- %1$s = segments, e.g. "trunk, right leg" -->
+    <string name="body_tip_fat_over">Fat is rated Over in your %1$s; steady overall fat loss brings it down.</string>
     <string name="body_read_title">Read from your report</string>
     <string name="body_add_title">Add a body check</string>
     <string name="body_read_on_device">Read on this phone · check before saving</string>
@@ -797,7 +816,7 @@
     <string name="value_points">%1$s pts</string>
     <string name="value_level">Level %1$s</string>
     <string name="value_kcal">%1$s kcal</string>
-    <string name="value_litres">%1$s ℓ</string>
+    <string name="value_litres">%1$s L</string>
     <string name="range_between">%1$s–%2$s</string>
     <string name="range_below">below %1$s</string>
     <string name="range_above">above %1$s</string>
@@ -828,7 +847,14 @@
     <string name="body_delete_check_title">Delete this check?</string>
     <string name="body_delete_check_message">Its values and report details are removed. This can\'t be undone.</string>
     <string name="body_full_report">Full report: segments, body water, ranges</string>
-    <string name="body_full_report_with_score">Fitness score %1$d · full report</string>
+    <!-- %1$s = day, e.g. "Tue, 6 Oct"; shown in capitals -->
+    <string name="body_latest">Latest · %1$s</string>
+    <string name="body_latest_from_report">From a report</string>
+    <string name="body_latest_typed">Typed in</string>
+    <!-- %1$s = where the BMR comes from, %2$d = the report's fitness score -->
+    <string name="body_bmr_source_with_score">%1$s · fitness score %2$d</string>
+    <!-- Under a change in muscle mass, e.g. "+0.5 kg" -->
+    <string name="body_change_muscle">muscle</string>
     <string name="body_progress_card">Progress</string>
     <string name="body_progress_card_since">Last 3 months · since %1$s</string>
     <string name="body_progress_card_empty">Add checks over time to see what changes</string>
