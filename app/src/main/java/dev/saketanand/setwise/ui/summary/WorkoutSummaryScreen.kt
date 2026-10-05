@@ -60,12 +60,14 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseBodyWeightDialog
 @Composable
 fun WorkoutSummaryScreenRoot(
     onOpenExercise: (exerciseId: Long) -> Unit,
+    onEditSets: () -> Unit,
     onDone: () -> Unit,
     viewModel: WorkoutSummaryViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val done = dropUnlessResumed(block = onDone)
+    val editSets = dropUnlessResumed(block = onEditSets)
     val lifecycleOwner = LocalLifecycleOwner.current
     // Like dropUnlessResumed, for a click that carries an id: no double navigation.
     val openExercise: (Long) -> Unit = { id ->
@@ -88,6 +90,7 @@ fun WorkoutSummaryScreenRoot(
             when (action) {
                 WorkoutSummaryAction.OnDoneClick -> done()
                 is WorkoutSummaryAction.OnExerciseClick -> openExercise(action.exerciseId)
+                WorkoutSummaryAction.OnEditSetsClick -> editSets()
                 else -> viewModel.onAction(action)
             }
         },
@@ -191,6 +194,7 @@ private fun SummaryHeader(uiState: WorkoutSummaryUiState, onAction: (WorkoutSumm
                 contentDescription = stringResource(R.string.workout_options),
                 items = listOf(
                     SetwiseMenuItem(stringResource(R.string.rename_workout), { onAction(WorkoutSummaryAction.OnRenameClick) }),
+                    SetwiseMenuItem(stringResource(R.string.edit_sets), { onAction(WorkoutSummaryAction.OnEditSetsClick) }),
                     SetwiseMenuItem(
                         label = stringResource(R.string.delete_workout),
                         onClick = { onAction(WorkoutSummaryAction.OnDeleteClick) },

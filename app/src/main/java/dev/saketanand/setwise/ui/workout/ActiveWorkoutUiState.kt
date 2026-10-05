@@ -31,6 +31,8 @@ data class ActiveWorkoutUiState(
     val rest: RestUi? = null,
     /** The quick-log bar's state: reading, the "Understood as" card, or why it wasn't understood. */
     val quickLog: QuickLogUi = QuickLogUi(),
+    /** A finished workout opened to edit its sets: no clock or rest timer; Save instead of Finish. */
+    val isEditingFinished: Boolean = false,
     /** The mic listens on-device (needs the microphone permission); else the phone's recognizer is used. */
     val onDeviceSpeech: Boolean = false,
 ) {
