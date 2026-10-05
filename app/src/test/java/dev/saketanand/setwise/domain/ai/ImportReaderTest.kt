@@ -4,6 +4,7 @@ import dev.saketanand.setwise.domain.model.OcrLine
 import dev.saketanand.setwise.domain.model.SharedSet
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import dev.saketanand.setwise.util.DateProvider
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -104,6 +105,26 @@ class ImportReaderTest {
         assertEquals(ImportReader.Source.Log, read.source)
         assertEquals(1, read.unreadLines)
         assertTrue(model.requests.isEmpty())
+    }
+
+    @Test
+    fun `a screenshot of Strong's workout screen is read by its layout, with its length`() = runTest {
+        screenshots = mapOf(
+            "shot" to listOf(
+                OcrLine("Evening Workout", 49, 420, 703, 504), OcrLine("Thursday, 1 October 2026 at 7:50 pm", 43, 605, 666, 640),
+                OcrLine("Bench Press (Barbell)", 44, 693, 400, 732), OcrLine("1RM", 875, 699, 946, 726),
+                OcrLine("1 60 kg x 8", 59, 768, 269, 804), OcrLine("75", 874, 771, 914, 798),
+                OcrLine("1h 3m", 139, 2048, 230, 2084), OcrLine("5 PRS", 623, 2052, 717, 2079),
+            ),
+        )
+
+        val read = reader.fromImages(listOf("shot"))
+
+        val workout = read.workouts.single()
+        assertEquals(ImportReader.Source.StrongShare, read.source)
+        assertEquals(listOf("Bench Press (Barbell)"), workout.exercises.map { it.name }) // not "1RM", "h m", "prs" (#126)
+        assertEquals(SharedSet(60.0, 8), workout.exercises.single().sets.single())
+        assertEquals(Duration.ofMinutes(63), workout.duration)
     }
 
     @Test

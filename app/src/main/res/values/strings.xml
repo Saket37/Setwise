@@ -421,6 +421,7 @@
     <string name="import_new_exercise">→ new exercise (added to your library)</string>
     <string name="import_duration_note">Where the source has no workout length, it\'s set to about 2½ minutes a set. Records are worked out by Setwise\'s own rules.</string>
     <string name="import_nothing_new">Already imported</string>
+    <string name="import_more">Import more</string>
     <string name="import_see_history">See them in History</string>
     <plurals name="import_button">
         <item quantity="one">Import %d workout</item>
@@ -756,4 +757,6 @@
     <string name="not_now">Not now</string>
     <string name="mark_all_as_rest">Mark all as rest</string>
     <string name="check_in_settings_hint">You can turn these questions off in Settings.</string>
+    <string name="set_removed">Set %1$d removed</string>
+    <string name="undo">Undo</string>
 </resources>

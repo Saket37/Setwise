@@ -95,6 +95,27 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun aDeletedSetCanBePutBackWhereItWas() = runTest {
+        val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(1_000))
+        repository.addExercises(current, listOf(squat)) // 3 sets
+        val sets = repository.observeSession(current).first()!!.exercises.single().sets
+        repository.setCompleted(sets[1].id, Instant.ofEpochMilli(2_000), weightKg = 100.0, reps = 5, durationSec = null)
+
+        val removed = repository.deleteSet(sets[1].id)!!
+        assertEquals(2, removed.setNumber)
+        assertEquals(listOf(1, 2), repository.observeSession(current).first()!!.exercises.single().sets.map { it.setNumber })
+
+        repository.restoreSet(removed)
+
+        val after = repository.observeSession(current).first()!!.exercises.single().sets
+        assertEquals(listOf(1, 2, 3), after.map { it.setNumber })
+        assertEquals(sets[0].id, after[0].id) // the others kept their places
+        assertEquals(sets[2].id, after[2].id)
+        assertEquals(listOf(100.0, 5, true), listOf(after[1].weightKg, after[1].reps, after[1].isCompleted)) // as it was
+        assertNull(repository.deleteSet(9_999)) // nothing to remove
+    }
+
+    @Test
     fun finishDropsOpenSetsAndEmptyExercisesAndRenumbers() = runTest {
         val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(1_000))
         repository.addExercises(current, listOf(bench, squat)) // 3 sets each

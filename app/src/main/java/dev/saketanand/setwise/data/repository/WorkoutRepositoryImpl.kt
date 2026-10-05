@@ -20,6 +20,7 @@ import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.domain.model.LoggedSetRecord
+import dev.saketanand.setwise.domain.model.RemovedSet
 import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.SharedSet
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
@@ -160,11 +161,18 @@ class WorkoutRepositoryImpl(
         durationSec = durationSec,
     )
 
-    override suspend fun deleteSet(setId: Long) {
+    override suspend fun deleteSet(setId: Long): RemovedSet? = database.withTransaction {
+        val set = workoutDao.getSet(setId) ?: return@withTransaction null
+        workoutDao.deleteSet(setId)
+        renumberSets(set.workoutExerciseId)
+        set.toRemoved()
+    }
+
+    override suspend fun restoreSet(set: RemovedSet) {
         database.withTransaction {
-            val workoutExerciseId = workoutDao.workoutExerciseIdOfSet(setId) ?: return@withTransaction
-            workoutDao.deleteSet(setId)
-            renumberSets(workoutExerciseId)
+            workoutDao.shiftSetNumbers(set.workoutExerciseId, set.setNumber)
+            workoutDao.insertSet(set.toEntity())
+            renumberSets(set.workoutExerciseId) // in case sets were added or removed meanwhile
         }
     }
 
@@ -379,3 +387,13 @@ class WorkoutRepositoryImpl(
         return workoutDao.findWorkoutStartedBetween(minute, minute + 60_000) != null
     }
 }
+
+private fun SetEntity.toRemoved() = RemovedSet(
+    workoutExerciseId, setNumber, weightKg, reps, durationSec, inclinePct, speedMinKmh, speedMaxKmh, distanceKm, level, isCompleted, completedAt, isPr,
+)
+
+private fun RemovedSet.toEntity() = SetEntity(
+    workoutExerciseId = workoutExerciseId, setNumber = setNumber, weightKg = weightKg, reps = reps, durationSec = durationSec,
+    inclinePct = inclinePct, speedMinKmh = speedMinKmh, speedMaxKmh = speedMaxKmh, distanceKm = distanceKm, level = level,
+    isCompleted = isCompleted, completedAt = completedAt, isPr = isPr,
+)

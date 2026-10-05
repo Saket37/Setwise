@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -53,8 +54,10 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTag
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
+import dev.saketanand.setwise.util.toShortDurationLabel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.time.toKotlinDuration
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -75,6 +78,7 @@ fun ImportScreenRoot(shared: SharedImport, onBack: () -> Unit, onOpenHistory: ()
         onChooseFile = { chooseFile.launch(arrayOf("text/csv", "text/comma-separated-values", "application/csv", "text/plain", "application/vnd.ms-excel")) },
         onChooseScreenshots = { chooseScreenshots.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
         onImport = viewModel::import,
+        onImportMore = viewModel::importMore,
         onBack = dropUnlessResumed(block = onBack),
         onOpenHistory = dropUnlessResumed(block = onOpenHistory),
     )
@@ -95,6 +99,7 @@ fun ImportScreen(
     onBack: () -> Unit,
     onOpenHistory: () -> Unit,
     modifier: Modifier = Modifier,
+    onImportMore: () -> Unit = {},
 ) {
     val text = rememberTextFieldState(initialText)
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -115,6 +120,15 @@ fun ImportScreen(
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         SetwiseButton(text = stringResource(R.string.import_see_history), onClick = onOpenHistory, modifier = Modifier.fillMaxWidth())
+                        SetwiseButton(
+                            text = stringResource(R.string.import_more),
+                            onClick = {
+                                text.clearText() // what was imported, not to read twice
+                                onImportMore()
+                            },
+                            style = SetwiseButtonStyle.Outlined,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
                 }
                 return@LazyColumn
@@ -210,6 +224,8 @@ private fun PlannedWorkoutCard(workout: WorkoutImporter.PlannedWorkout) {
         }
         Text(
             text = workout.shared.startedAt.format(DateTimeFormatter.ofPattern("EEE d MMM yyyy, h:mm a", locale)) + " · " +
+                // The length, when the source says (CSV, Strong's workout screen); else it's estimated.
+                workout.shared.duration?.let { it.toKotlinDuration().toShortDurationLabel() + " · " }.orEmpty() +
                 pluralStringResource(R.plurals.import_exercises, workout.exercises.size, workout.exercises.size) + ", " +
                 pluralStringResource(R.plurals.import_sets, workout.shared.setCount, workout.shared.setCount),
             style = MaterialTheme.typography.bodySmall,
