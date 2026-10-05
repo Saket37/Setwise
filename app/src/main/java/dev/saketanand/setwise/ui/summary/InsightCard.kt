@@ -77,11 +77,12 @@ private fun templateInsight(facts: WorkoutFacts): String {
         }
     }
     val previous = facts.previous
-    facts.volumeChangePercent?.let { percent ->
+    val percent = facts.volumeChangePercent
+    if (previous != null && percent != null) {
         sentences += when {
-            percent > 0 -> stringResource(R.string.insight_volume_up, percent, previous!!.name)
-            percent < 0 -> stringResource(R.string.insight_volume_down, abs(percent), previous!!.name)
-            else -> stringResource(R.string.insight_volume_same, previous!!.name)
+            percent > 0 -> stringResource(R.string.insight_volume_up, percent, previous.name)
+            percent < 0 -> stringResource(R.string.insight_volume_down, abs(percent), previous.name)
+            else -> stringResource(R.string.insight_volume_same, previous.name)
         }
     }
     facts.intensity?.let { intensity ->
