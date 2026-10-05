@@ -39,6 +39,7 @@ import dev.saketanand.setwise.ui.workout.SampleActiveWorkoutState
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.time.Duration.Companion.minutes
+import kotlinx.collections.immutable.toImmutableList
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Rule
 import org.junit.Test
@@ -138,7 +139,7 @@ class ScreenAccessibilityTest {
                     val date = today.minusDays(back)
                     val state = if (workouts.any { it.date == date }) DayState.Trained else DayState.Rest
                     DayUi(date = date, isToday = back == 0L, state = state, isSelected = false)
-                },
+                }.toImmutableList(),
                 months = listOf(HistoryMonthUi(YearMonth.from(today), workouts)),
                 today = today,
             )

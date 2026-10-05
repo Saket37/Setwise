@@ -23,8 +23,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
@@ -50,18 +50,19 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseCheckButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseConfirmDialog
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseHintBanner
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseListCard
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseMenuItem
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseNumberField
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseOverflowMenu
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
 import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 import dev.saketanand.setwise.ui.designsystem.theme.pr
-import kotlinx.coroutines.flow.drop
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseHintBanner
 import dev.saketanand.setwise.ui.exercises.hint
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.drop
 
 /*
  * Pieces of the active workout screen: exercise cards, the set table and its rows, dialogs.
@@ -208,7 +209,7 @@ private fun ExerciseCardHeader(exercise: WorkoutExerciseUi, onAction: (ActiveWor
         )
         SetwiseOverflowMenu(
             contentDescription = stringResource(R.string.exercise_options),
-            items = listOf(
+            items = persistentListOf(
                 SetwiseMenuItem(
                     label = stringResource(R.string.exercise_history_and_progress),
                     onClick = { onAction(ActiveWorkoutAction.OnExerciseHistoryClick(exercise.exerciseId)) },

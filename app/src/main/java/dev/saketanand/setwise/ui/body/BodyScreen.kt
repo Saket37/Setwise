@@ -73,6 +73,7 @@ import java.text.NumberFormat
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.Locale
+import kotlinx.collections.immutable.ImmutableList
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -230,7 +231,7 @@ private fun Value(value: String?, label: String, modifier: Modifier = Modifier) 
 }
 
 @Composable
-private fun TrendCard(title: String, values: List<Double?>, unit: String, locale: Locale) {
+private fun TrendCard(title: String, values: ImmutableList<Double?>, unit: String, locale: Locale) {
     Column(
         modifier = Modifier
             .fillMaxWidth()

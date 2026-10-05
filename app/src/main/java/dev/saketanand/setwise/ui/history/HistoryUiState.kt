@@ -1,18 +1,20 @@
 package dev.saketanand.setwise.ui.history
 
 import androidx.compose.runtime.Immutable
+import dev.saketanand.setwise.domain.ai.HistoryReply
 import dev.saketanand.setwise.domain.model.DayState
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.time.Duration
-import dev.saketanand.setwise.domain.ai.HistoryReply
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /** Everything [HistoryScreen] draws. */
 @Immutable
 data class HistoryUiState(
     val isLoading: Boolean = true,
     /** The day strip, newest (today) first: back to the first workout, at least four weeks. */
-    val days: List<DayUi> = emptyList(),
+    val days: ImmutableList<DayUi> = persistentListOf(),
     /** Newest month first; each with its workouts newest first. */
     val months: List<HistoryMonthUi> = emptyList(),
     /** Day tapped in the strip: the list jumps there and outlines its workouts. */

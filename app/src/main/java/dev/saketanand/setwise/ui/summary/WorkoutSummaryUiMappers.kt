@@ -14,6 +14,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import kotlin.time.toKotlinDuration
+import kotlinx.collections.immutable.toImmutableList
 
 /** Domain → UI for the summary. Plain functions, unit-tested without Android. */
 
@@ -43,8 +44,8 @@ fun WorkoutSession.toSummaryUi(zone: ZoneId): WorkoutSummaryUiState {
                     previousBest = record.previousBest,
                 )
             }
-        },
-        exercises = done.map { (exercise, sets) -> exercise.toSummaryUi(sets) },
+        }.toImmutableList(),
+        exercises = done.map { (exercise, sets) -> exercise.toSummaryUi(sets) }.toImmutableList(),
         canSaveAsTemplate = templateId == null && done.isNotEmpty(),
     )
 }

@@ -4,7 +4,6 @@ import android.Manifest
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import dev.saketanand.setwise.ui.designsystem.components.IconTile
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -49,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.ObserveAsEvents
+import dev.saketanand.setwise.ui.designsystem.components.IconTile
 import dev.saketanand.setwise.ui.designsystem.components.NumberKind
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
@@ -61,6 +61,7 @@ import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
 import java.time.DayOfWeek
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.flow.drop
 import org.koin.androidx.compose.koinViewModel
 
@@ -358,7 +359,7 @@ private fun OnboardingWelcomePreview() = SetwiseScreenPreview {
 @Composable
 private fun OnboardingDaysPreview() = SetwiseScreenPreview {
     OnboardingScreen(
-        uiState = OnboardingUiState(step = OnboardingStep.TrainingDays, trainingDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)),
+        uiState = OnboardingUiState(step = OnboardingStep.TrainingDays, trainingDays = persistentSetOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)),
         bodyWeight = rememberTextFieldState(),
         onAction = {},
     )

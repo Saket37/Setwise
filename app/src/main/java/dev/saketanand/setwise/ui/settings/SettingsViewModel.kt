@@ -3,8 +3,18 @@ package dev.saketanand.setwise.ui.settings
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.saketanand.setwise.domain.ai.DownloadState
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.ModelDownloader
+import dev.saketanand.setwise.domain.ai.OnDeviceModel
+import dev.saketanand.setwise.domain.model.BodyRules
+import dev.saketanand.setwise.domain.model.WeeklySummaryRules
+import dev.saketanand.setwise.domain.repository.BodyRepository
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
+import dev.saketanand.setwise.ui.toggled
+import dev.saketanand.setwise.util.DateProvider
 import dev.saketanand.setwise.util.parseWeight
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -13,14 +23,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import dev.saketanand.setwise.domain.ai.ModelAvailability
-import dev.saketanand.setwise.domain.ai.OnDeviceModel
-import dev.saketanand.setwise.domain.ai.DownloadState
-import dev.saketanand.setwise.domain.ai.ModelDownloader
-import dev.saketanand.setwise.domain.model.WeeklySummaryRules
-import dev.saketanand.setwise.util.DateProvider
-import dev.saketanand.setwise.domain.model.BodyRules
-import dev.saketanand.setwise.domain.repository.BodyRepository
 
 /** Screen: [SettingsScreenRoot]. Shows and edits what onboarding asked (all optional). */
 class SettingsViewModel(
@@ -113,10 +115,10 @@ class SettingsViewModel(
                 save { userSettings.setBodyWeightKg(null) }
             }
 
-            SettingsAction.OnTrainingDaysClick -> editor.value = SettingsEditor.TrainingDays(state.value.trainingDays)
+            SettingsAction.OnTrainingDaysClick -> editor.value = SettingsEditor.TrainingDays(state.value.trainingDays.toImmutableSet())
             is SettingsAction.OnDayToggle -> editor.update { current ->
                 (current as? SettingsEditor.TrainingDays)?.let {
-                    it.copy(selected = if (action.day in it.selected) it.selected - action.day else it.selected + action.day)
+                    it.copy(selected = it.selected.toggled(action.day))
                 } ?: current
             }
             SettingsAction.OnSaveTrainingDays -> {

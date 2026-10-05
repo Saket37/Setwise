@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.exercises
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,9 +10,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,8 +22,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -28,8 +35,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.domain.model.LoggedSet
+import dev.saketanand.setwise.domain.model.NextSession
 import dev.saketanand.setwise.domain.model.PreviousSet
+import dev.saketanand.setwise.domain.model.ProgressionRule
+import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.ui.currentLocale
+import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseBarChart
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseEmptyState
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
@@ -45,18 +56,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
+import kotlinx.collections.immutable.persistentListOf
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
-import dev.saketanand.setwise.domain.model.NextSession
-import dev.saketanand.setwise.domain.model.ProgressionRule
-import dev.saketanand.setwise.domain.model.SetFact
-import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
 
 /**
  * Destination: [Route.ExerciseDetail].
@@ -394,7 +395,7 @@ internal val SampleExerciseDetailState = ExerciseDetailUiState(
     equipment = "Barbell",
     progress = ProgressUi(
         metric = ProgressMetric.EstimatedOneRepMax,
-        weeks = listOf(40.0, 42.0, 44.5, null, 48.0, 48.0, 47.5, 48.0),
+        weeks = persistentListOf(40.0, 42.0, 44.5, null, 48.0, 48.0, 47.5, 48.0),
         firstWeek = LocalDate.of(2026, 8, 10),
         latest = 48.0,
     ),

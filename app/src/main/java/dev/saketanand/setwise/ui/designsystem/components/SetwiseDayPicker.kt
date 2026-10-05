@@ -11,6 +11,8 @@ import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import java.time.DayOfWeek
 import java.time.format.TextStyle
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
 
 /**
  * Pick days of the week (Mon … Sun), any number: training days in onboarding and Settings.
@@ -19,7 +21,7 @@ import java.time.format.TextStyle
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SetwiseDayPicker(
-    selected: Set<DayOfWeek>,
+    selected: ImmutableSet<DayOfWeek>,
     onToggle: (DayOfWeek) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -43,5 +45,5 @@ fun SetwiseDayPicker(
 @ComponentPreviews
 @Composable
 private fun SetwiseDayPickerPreview() = SetwisePreview {
-    SetwiseDayPicker(selected = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY), onToggle = {})
+    SetwiseDayPicker(selected = persistentSetOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY), onToggle = {})
 }

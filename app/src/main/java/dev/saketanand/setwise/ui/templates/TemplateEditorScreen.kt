@@ -46,6 +46,9 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -58,7 +61,7 @@ import org.koin.androidx.compose.koinViewModel
  */
 @Composable
 fun TemplateEditorScreenRoot(
-    pickedExerciseIds: List<Long>?,
+    pickedExerciseIds: ImmutableList<Long>?,
     onPickedExercisesConsumed: () -> Unit,
     onAddExercises: () -> Unit,
     onSaved: () -> Unit,
@@ -130,7 +133,7 @@ fun TemplateEditorScreen(
             if (!uiState.isNew) {
                 SetwiseOverflowMenu(
                     contentDescription = stringResource(R.string.template_options),
-                    items = listOf(
+                    items = persistentListOf(
                         SetwiseMenuItem(
                             label = stringResource(R.string.delete_template),
                             onClick = { onAction(TemplateEditorAction.OnDeleteClick) },
@@ -280,7 +283,7 @@ private fun TemplateExerciseRow(
                             onClick = { onAction(TemplateEditorAction.OnRemoveExercise(exercise.exerciseId)) },
                             isDestructive = true,
                         ),
-                    ),
+                    ).toImmutableList(),
                 )
             }
         },

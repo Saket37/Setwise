@@ -17,6 +17,7 @@ room = "2.8.5"
 # Other
 koin = "4.2.2"
 kotlinxSerialization = "1.11.0"
+kotlinxCollectionsImmutable = "0.5.2"
 mlkitGenaiPrompt = "1.0.0-beta4"
 mlkitGenaiSpeech = "1.0.0-alpha1"
 playServicesTextRecognition = "19.0.1"
@@ -74,6 +75,7 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 
 # DI
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }

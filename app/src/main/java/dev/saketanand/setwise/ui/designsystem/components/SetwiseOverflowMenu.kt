@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /** One entry of a [SetwiseOverflowMenu]. [isDestructive] items are shown in the error colour. */
 @Immutable
@@ -30,7 +32,7 @@ data class SetwiseMenuItem(
 @Composable
 fun SetwiseOverflowMenu(
     contentDescription: String,
-    items: List<SetwiseMenuItem>,
+    items: ImmutableList<SetwiseMenuItem>,
     modifier: Modifier = Modifier,
     size: Dp = 36.dp,
 ) {
@@ -73,6 +75,6 @@ fun SetwiseOverflowMenu(
 private fun SetwiseOverflowMenuPreview() = SetwisePreview {
     SetwiseOverflowMenu(
         contentDescription = "Exercise options",
-        items = listOf(SetwiseMenuItem("Remove exercise", onClick = {}, isDestructive = true)),
+        items = persistentListOf(SetwiseMenuItem("Remove exercise", onClick = {}, isDestructive = true)),
     )
 }

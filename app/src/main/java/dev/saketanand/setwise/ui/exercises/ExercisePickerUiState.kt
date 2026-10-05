@@ -1,6 +1,8 @@
 package dev.saketanand.setwise.ui.exercises
 
 import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /** Everything [ExercisePickerScreen] draws. */
 @Immutable
@@ -10,7 +12,7 @@ data class ExercisePickerUiState(
     /** Search text as typed (the field itself is a TextFieldState in the screen). */
     val query: String = "",
     /** Filter chips after "All", biggest group first. */
-    val muscleGroups: List<String> = emptyList(),
+    val muscleGroups: ImmutableList<String> = persistentListOf(),
     /** Selected chip; null = "All". */
     val selectedMuscleGroup: String? = null,
     /** Recently done exercises, with last session's top set. */

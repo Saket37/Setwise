@@ -22,39 +22,41 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.domain.ai.DownloadFailure
+import dev.saketanand.setwise.domain.ai.DownloadState
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.model.Sex
+import dev.saketanand.setwise.domain.model.UserSettings
 import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.NumberKind
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseBodyWeightDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseChoiceDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseDayPicker
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseNumberField
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseSettingsGroup
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseSettingsRow
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseSwitchRow
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseValueDialog
+import dev.saketanand.setwise.ui.designsystem.components.ValueKind
 import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.toWeightInput
 import dev.saketanand.setwise.util.toWeightLabel
+import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.format.TextStyle
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.toImmutableList
 import org.koin.androidx.compose.koinViewModel
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseBodyWeightDialog
-import dev.saketanand.setwise.domain.ai.ModelAvailability
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import dev.saketanand.setwise.domain.ai.DownloadFailure
-import dev.saketanand.setwise.domain.ai.DownloadState
-import dev.saketanand.setwise.domain.model.Sex
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseChoiceDialog
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseValueDialog
-import dev.saketanand.setwise.ui.designsystem.components.ValueKind
-import java.text.NumberFormat
-import androidx.lifecycle.compose.dropUnlessResumed
-import dev.saketanand.setwise.domain.model.UserSettings
 
 /** Destination: [Route.Settings]. */
 @Composable
@@ -251,8 +253,10 @@ fun SettingsScreen(
         SettingsEditor.DefaultRest -> SetwiseChoiceDialog(
             title = stringResource(R.string.default_rest),
             message = stringResource(R.string.default_rest_detail),
-            options = listOf<Pair<Int?, String>>(null to stringResource(R.string.rest_per_exercise)) +
-                UserSettings.REST_CHOICES.map { it to restLabel(it) },
+            options = (
+                listOf<Pair<Int?, String>>(null to stringResource(R.string.rest_per_exercise)) +
+                    UserSettings.REST_CHOICES.map { it to restLabel(it) }
+                ).toImmutableList(),
             selected = uiState.restSecOverride,
             onSelect = { onAction(SettingsAction.OnSaveDefaultRest(it)) },
             onDismiss = { onAction(SettingsAction.OnDismissEditor) },
@@ -260,7 +264,7 @@ fun SettingsScreen(
         SettingsEditor.SexChoice -> SetwiseChoiceDialog(
             title = stringResource(R.string.profile_sex),
             message = stringResource(R.string.profile_sex_detail),
-            options = Sex.entries.map { it to stringResource(it.labelRes()) },
+            options = Sex.entries.map { it to stringResource(it.labelRes()) }.toImmutableList(),
             selected = uiState.sex,
             onSelect = { onAction(SettingsAction.OnSaveSex(it)) },
             onDismiss = { onAction(SettingsAction.OnDismissEditor) },
@@ -316,7 +320,7 @@ private fun trainingDaysLabel(days: Set<DayOfWeek>): String {
 }
 
 @Composable
-private fun TrainingDaysDialog(selected: Set<DayOfWeek>, onAction: (SettingsAction) -> Unit) {
+private fun TrainingDaysDialog(selected: ImmutableSet<DayOfWeek>, onAction: (SettingsAction) -> Unit) {
     AlertDialog(
         onDismissRequest = { onAction(SettingsAction.OnDismissEditor) },
         title = { Text(stringResource(R.string.training_days)) },

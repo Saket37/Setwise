@@ -2,6 +2,7 @@ package dev.saketanand.setwise.ui.summary
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,14 +27,19 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.PrKind
+import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.ui.ObserveAsEvents
 import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseBodyWeightDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseConfirmDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButtonDefaults
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseMenuItem
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseOverflowMenu
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTimePickerDialog
 import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
@@ -45,13 +51,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.collections.immutable.persistentListOf
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.foundation.clickable
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseConfirmDialog
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseMenuItem
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseOverflowMenu
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseBodyWeightDialog
 
 /**
  * Destination: [Route.WorkoutSummary].
@@ -189,7 +190,7 @@ private fun SummaryHeader(uiState: WorkoutSummaryUiState, onAction: (WorkoutSumm
             )
             SetwiseOverflowMenu(
                 contentDescription = stringResource(R.string.workout_options),
-                items = listOf(
+                items = persistentListOf(
                     SetwiseMenuItem(stringResource(R.string.rename_workout), { onAction(WorkoutSummaryAction.OnRenameClick) }),
                     SetwiseMenuItem(
                         label = stringResource(R.string.delete_workout),
@@ -282,7 +283,7 @@ private fun WorkoutSummaryScreenPreview() = SetwiseScreenPreview {
 @ScreenPreviews
 @Composable
 private fun WorkoutSummaryFromTemplatePreview() = SetwiseScreenPreview {
-    WorkoutSummaryScreen(uiState = SampleWorkoutSummaryState.copy(canSaveAsTemplate = false, records = emptyList()), onAction = {})
+    WorkoutSummaryScreen(uiState = SampleWorkoutSummaryState.copy(canSaveAsTemplate = false, records = persistentListOf()), onAction = {})
 }
 
 /** A finished workout with records: previews and UI tests. */
@@ -296,11 +297,11 @@ internal val SampleWorkoutSummaryState = WorkoutSummaryUiState(
     volumeKg = 8_420.0,
     completedSets = 18,
     exerciseCount = 3,
-    records = listOf(
+    records = persistentListOf(
         RecordUi("Bench Press (Barbell)", PrKind.Weight, SetKind.WeightReps, PreviousSet(62.5, 8), PreviousSet(60.0, 8)),
         RecordUi("Pull-up", PrKind.Reps, SetKind.Bodyweight, PreviousSet(null, 12), PreviousSet(null, 10)),
     ),
-    exercises = listOf(
+    exercises = persistentListOf(
         SummaryExerciseUi(1, 11, "Bench Press (Barbell)", 4, "62.5 × 8"),
         SummaryExerciseUi(2, 12, "Overhead Press (Barbell)", 3, "40 × 7"),
         SummaryExerciseUi(3, 13, "Pull-up", 3, "12"),

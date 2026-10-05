@@ -8,6 +8,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
+import kotlinx.collections.immutable.toImmutableList
 
 /** Domain → UI for History. Plain functions, unit-tested without Android. */
 
@@ -38,7 +39,7 @@ fun historyUi(
                     isSelected = day == selectedDate,
                 )
             }
-            .toList(),
+            .toImmutableList(),
         // The list is newest first, so grouping keeps months (and workouts in them) newest first.
         months = workouts.groupBy { YearMonth.from(it.date) }.map { (month, inMonth) -> HistoryMonthUi(month, inMonth) },
         selectedDate = selectedDate,

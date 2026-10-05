@@ -10,13 +10,14 @@ import dev.saketanand.setwise.domain.repository.BodyRepository
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.util.DateProvider
 import dev.saketanand.setwise.util.parseWeight
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -43,8 +44,8 @@ class BodyViewModel(
             history = history,
             bmr = BodyRules.bmr(history, settings, today()),
             latest = LatestBody(newest { it.weightKg } ?: settings.bodyWeightKg, newest { it.bodyFatPercent }, newest { it.muscleMassKg }, newest { it.visceralFat }),
-            weightTrend = history.mapNotNull { it.weightKg }.take(CHART_POINTS).reversed(),
-            bodyFatTrend = history.mapNotNull { it.bodyFatPercent }.take(CHART_POINTS).reversed(),
+            weightTrend = history.mapNotNull { it.weightKg }.take(CHART_POINTS).reversed().toImmutableList(),
+            bodyFatTrend = history.mapNotNull { it.bodyFatPercent }.take(CHART_POINTS).reversed().toImmutableList(),
             isReading = screen.isReading,
             readFailed = screen.readFailed,
             editor = screen.editor,

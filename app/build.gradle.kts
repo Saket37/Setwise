@@ -87,6 +87,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.kotlinx.serialization.json)
+    // ImmutableList / ImmutableSet: collection parameters the Compose compiler knows are stable.
+    implementation(libs.kotlinx.collections.immutable)
     // Declared so the app's coroutines move with kotlinx-coroutines-test (#85).
     implementation(libs.kotlinx.coroutines.android)
 

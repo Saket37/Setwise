@@ -2,13 +2,15 @@ package dev.saketanand.setwise.ui.summary
 
 import androidx.compose.runtime.Immutable
 import dev.saketanand.setwise.domain.model.CardioValues
-import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.PrKind
+import dev.saketanand.setwise.domain.model.PreviousSet
+import dev.saketanand.setwise.domain.model.WorkoutFacts
 import dev.saketanand.setwise.ui.workout.SetKind
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.time.Duration
-import dev.saketanand.setwise.domain.model.WorkoutFacts
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /** Everything [WorkoutSummaryScreen] draws. */
 @Immutable
@@ -31,8 +33,8 @@ data class WorkoutSummaryUiState(
     val needsBodyWeight: Boolean = false,
     /** The body weight dialog from that tile; null when closed. */
     val bodyWeightDialog: BodyWeightDialogUi? = null,
-    val records: List<RecordUi> = emptyList(),
-    val exercises: List<SummaryExerciseUi> = emptyList(),
+    val records: ImmutableList<RecordUi> = persistentListOf(),
+    val exercises: ImmutableList<SummaryExerciseUi> = persistentListOf(),
     /** False for workouts started from a template (saving would just duplicate it). */
     val canSaveAsTemplate: Boolean = false,
     val isTemplateSaved: Boolean = false,
