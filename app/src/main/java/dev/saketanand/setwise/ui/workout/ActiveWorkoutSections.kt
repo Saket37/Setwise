@@ -56,7 +56,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseMenuItem
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseNumberField
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseOverflowMenu
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 import dev.saketanand.setwise.ui.designsystem.theme.pr
@@ -484,7 +484,7 @@ fun ActiveWorkoutDialogs(
     }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetRowsPreview() = SetwisePreview {
     Column(

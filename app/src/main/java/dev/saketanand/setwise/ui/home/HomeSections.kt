@@ -23,6 +23,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -32,7 +33,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.rememberElapsedTime
 import dev.saketanand.setwise.ui.designsystem.components.HorizontalGap
 import dev.saketanand.setwise.ui.designsystem.components.IconTile
 import dev.saketanand.setwise.ui.designsystem.components.RoutineCard
@@ -50,6 +50,7 @@ import dev.saketanand.setwise.ui.designsystem.components.StatTile
 import dev.saketanand.setwise.ui.designsystem.components.VerticalGap
 import dev.saketanand.setwise.ui.designsystem.theme.pr
 import dev.saketanand.setwise.ui.designsystem.theme.spacing
+import dev.saketanand.setwise.ui.rememberElapsedTime
 import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toShortDurationLabel
 
@@ -280,8 +281,8 @@ fun StartWorkoutButton(
     text: String,
     isStarting: Boolean,
     onClick: () -> Unit,
+    startIcon: Int,
     modifier: Modifier = Modifier,
-    startIcon: Int
 ) {
     SetwiseButton(
         text = text,
@@ -367,6 +368,7 @@ fun HomeGreeting(
 
 /** "today", "yesterday", "3 days ago". */
 @Composable
+@ReadOnlyComposable
 fun relativeDaysText(daysAgo: Int): String = when (daysAgo) {
     0 -> stringResource(R.string.today)
     1 -> stringResource(R.string.yesterday)

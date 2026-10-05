@@ -10,14 +10,14 @@ import androidx.compose.ui.tooling.preview.Preview
  * Wraps content, so the preview is only as big as the component.
  *
  * ```
- * @ComponentPreviews
+ * @PreviewComponents
  * @Composable
  * private fun SetRowPreview() = SetwisePreview { SetRow(...) }
  * ```
  */
 @Preview(name = "Light", group = "Component", uiMode = UI_MODE_NIGHT_NO or UI_MODE_TYPE_NORMAL)
 @Preview(name = "Dark", group = "Component", uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
-annotation class ComponentPreviews
+annotation class PreviewComponents
 
 /**
  * Full screens at the design canvas size (390×844 dp, to compare against the mockups)
@@ -27,12 +27,12 @@ annotation class ComponentPreviews
 @Preview(name = "Design · Light", group = "Screen", widthDp = 390, heightDp = 844, uiMode = UI_MODE_NIGHT_NO or UI_MODE_TYPE_NORMAL)
 @Preview(name = "Pixel 10 · Dark", group = "Screen", widthDp = 411, heightDp = 923, uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
 @Preview(name = "Pixel 10 · Light", group = "Screen", widthDp = 411, heightDp = 923, uiMode = UI_MODE_NIGHT_NO or UI_MODE_TYPE_NORMAL)
-annotation class ScreenPreviews
+annotation class PreviewScreens
 
 /**
  * Accessibility check: large system font and a narrow phone. Use alongside
- * [ScreenPreviews] on screens with dense rows (active workout, history).
+ * [PreviewScreens] on screens with dense rows (active workout, history).
  */
 @Preview(name = "Font 130% · Dark", group = "Accessibility", widthDp = 390, heightDp = 844, fontScale = 1.3f, uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
 @Preview(name = "Small phone 360dp · Dark", group = "Accessibility", widthDp = 360, heightDp = 740, uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
-annotation class AccessibilityPreviews
+annotation class PreviewAccessibility

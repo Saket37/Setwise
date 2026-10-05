@@ -25,7 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 
 /**
@@ -152,7 +152,7 @@ object SetwiseListCardDefaults {
     fun transparentColors() = colors(containerColor = Color.Transparent)
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseListCardPreview() = SetwisePreview {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

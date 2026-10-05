@@ -41,7 +41,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseMenuItem
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseOverflowMenu
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextInputDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTimePickerDialog
-import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.ui.workout.SetKind
@@ -278,13 +278,13 @@ private fun SummaryButtons(uiState: WorkoutSummaryUiState, onAction: (WorkoutSum
 
 // Previews: one per scenario
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun WorkoutSummaryScreenPreview() = SetwiseScreenPreview {
     WorkoutSummaryScreen(uiState = SampleWorkoutSummaryState, onAction = {})
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun WorkoutSummaryFromTemplatePreview() = SetwiseScreenPreview {
     WorkoutSummaryScreen(uiState = SampleWorkoutSummaryState.copy(canSaveAsTemplate = false, records = persistentListOf()), onAction = {})

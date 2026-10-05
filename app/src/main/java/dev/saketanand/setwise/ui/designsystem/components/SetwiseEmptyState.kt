@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 
 /**
@@ -66,7 +66,7 @@ fun SetwiseEmptyState(
     }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseEmptyStatePreview() = SetwisePreview {
     SetwiseEmptyState(

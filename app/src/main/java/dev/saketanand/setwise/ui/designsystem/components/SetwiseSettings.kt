@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 
@@ -93,7 +93,7 @@ private fun SettingsRowLayout(
     label: String,
     supporting: String?,
     showDivider: Boolean,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     trailing: @Composable () -> Unit,
 ) {
     Column(modifier = modifier) {
@@ -117,7 +117,7 @@ private fun SettingsRowLayout(
     }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseSettingsPreview() = SetwisePreview {
     SetwiseSettingsGroup(title = "Profile · used for calories") {

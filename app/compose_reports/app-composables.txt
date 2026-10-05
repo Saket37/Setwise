@@ -10,6 +10,7 @@ restartable skippable fun dev.saketanand.setwise.ui.ObserveAsEvents(
 )
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.SetwiseAppRoot(
   startDestination: Route
+  stable modifier: Modifier? = @static <expression>
   unstable navController: NavHostController? = @dynamic <expression>
   appLinks: Flow<AppLink>? = @dynamic <expression>
 )
@@ -368,7 +369,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable, [androidx.compo
   stable label: String
   stable supporting: String?
   stable showDivider: Boolean
-  stable modifier: Modifier
+  stable modifier: Modifier? = @static <expression>
   stable trailing: Function2<Composer, Int, Unit>
 )
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.designsystem.components.SetwiseSettingsPreview()
@@ -482,7 +483,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable onRemove: Function0<Unit>?
   stable onDismiss: Function0<Unit>
 )
-restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.designsystem.components.DialogTextButton(
+scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.designsystem.components.DialogTextButton(
   stable text: String
   stable onClick: Function0<Unit>
 )
@@ -500,6 +501,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
 )
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.designsystem.components.StatTilePreview()
 restartable skippable scheme("[androidx.compose.ui.UiComposable, [androidx.compose.ui.UiComposable]]") fun dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview(
+  stable modifier: Modifier? = @static <expression>
   stable padding: Dp = @static <expression>
   stable content: Function2<Composer, Int, Unit>
 )
@@ -595,7 +597,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable onToggle: Function1<@[ParameterName(name = 'exerciseId')] Long, Unit>
   stable modifier: Modifier? = @static <expression>
 )
-fun dev.saketanand.setwise.ui.exercises.exerciseDetail(
+readonly fun dev.saketanand.setwise.ui.exercises.exerciseDetail(
   stable exercise: ExerciseRowUi
 ): String
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.exercises.NoExercisesFound(
@@ -763,8 +765,8 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable text: String
   stable isStarting: Boolean
   stable onClick: Function0<Unit>
-  stable modifier: Modifier? = @static <expression>
   stable startIcon: Int
+  stable modifier: Modifier? = @static <expression>
 )
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.home.ResumeWorkoutCard(
   stable activeWorkout: ActiveWorkoutUi
@@ -779,7 +781,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable lastWorkout: LastWorkoutUi?
   stable modifier: Modifier? = @static <expression>
 )
-fun dev.saketanand.setwise.ui.home.relativeDaysText(
+readonly fun dev.saketanand.setwise.ui.home.relativeDaysText(
   stable daysAgo: Int
 ): String
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.home.WeekStatsRow(
@@ -905,6 +907,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable modifier: Modifier? = @static <expression>
 )
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.onboarding.StepText(
+  unused stable <this>: ColumnScope
   stable title: Int
   stable message: Int
 )
@@ -999,7 +1002,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.summary.SummaryTile(
   stable label: String
   stable value: String
-  stable modifier: Modifier
+  stable modifier: Modifier? = @static <expression>
   stable unit: String? = @static null
   stable caption: String? = @static null
 )
@@ -1212,7 +1215,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable label: String
   stable state: TextFieldState
   stable hint: String?
-  stable modifier: Modifier
+  stable modifier: Modifier? = @static <expression>
 )
 restartable skippable scheme("[androidx.compose.ui.UiComposable, [androidx.compose.ui.UiComposable]]") fun dev.saketanand.setwise.ui.workout.Section(
   stable title: String
@@ -1260,7 +1263,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable onAction: Function1<ActiveWorkoutAction, Unit>
   stable modifier: Modifier? = @static <expression>
 )
-fun dev.saketanand.setwise.ui.workout.restLabel(
+readonly fun dev.saketanand.setwise.ui.workout.restLabel(
   stable rest: RestUi
 ): String
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.workout.RestCountdown(

@@ -15,7 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.util.toWeightInput
 
@@ -83,7 +83,7 @@ private fun DialogButton(text: Int, onClick: () -> Unit) {
     SetwiseButton(text = stringResource(text), onClick = onClick, style = SetwiseButtonStyle.Text, size = SetwiseButtonSize.Medium)
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseBodyWeightDialogPreview() = SetwisePreview {
     SetwiseBodyWeightDialog(current = 72.5, isInvalid = false, onSave = {}, onDismiss = {}, onRemove = {})

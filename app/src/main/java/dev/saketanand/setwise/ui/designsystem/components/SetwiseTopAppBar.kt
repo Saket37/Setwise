@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.designsystem.components
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,9 +23,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
-import androidx.compose.foundation.clickable
 
 /**
  * Top bar of pushed screens (exercise picker, create exercise, template editor…): back arrow,
@@ -91,7 +91,7 @@ fun SetwiseTopAppBar(
     }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseTopAppBarPreview() = SetwisePreview(padding = 0.dp) {
     Column {

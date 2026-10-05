@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -20,7 +21,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import kotlinx.collections.immutable.ImmutableList
 
@@ -130,12 +131,14 @@ private fun RemoveAndCancel(onRemove: (() -> Unit)?, onDismiss: () -> Unit) {
     }
 }
 
+// Only forwards to SetwiseButton: no restart group of its own.
 @Composable
+@NonRestartableComposable
 private fun DialogTextButton(text: String, onClick: () -> Unit) {
     SetwiseButton(text = text, onClick = onClick, style = SetwiseButtonStyle.Text, size = SetwiseButtonSize.Medium)
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseValueDialogPreview() = SetwisePreview {
     SetwiseValueDialog(title = "Height", current = "178", kind = ValueKind.Integer, unit = "cm", onSave = {}, onDismiss = {}, onRemove = {})

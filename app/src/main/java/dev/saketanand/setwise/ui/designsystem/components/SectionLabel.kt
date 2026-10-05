@@ -1,14 +1,14 @@
 package dev.saketanand.setwise.ui.designsystem.components
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 
 /**
@@ -30,7 +30,7 @@ fun SectionLabel(
     )
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SectionLabelPreview() = SetwisePreview {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

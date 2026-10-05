@@ -46,7 +46,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseSettingsRow
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseSwitchRow
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseValueDialog
 import dev.saketanand.setwise.ui.designsystem.components.ValueKind
-import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.toClockLabel
@@ -340,13 +340,13 @@ private fun DialogButton(text: Int, onClick: () -> Unit) {
 
 // Previews: one per scenario
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun SettingsScreenPreview() = SetwiseScreenPreview {
     SettingsScreen(uiState = SampleSettingsState, onAction = {})
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun SettingsScreenNothingSetPreview() = SetwiseScreenPreview {
     SettingsScreen(uiState = SettingsUiState(isLoading = false), onAction = {})

@@ -30,7 +30,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseDayChoices
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.util.toShortDayLabel
 import java.time.LocalDate
@@ -137,7 +137,7 @@ private fun CheckInDayRow(day: CheckInDayUi, onAction: (HomeAction) -> Unit, clo
     }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun DayCheckInContentPreview() = SetwisePreview {
     DayCheckInContent(

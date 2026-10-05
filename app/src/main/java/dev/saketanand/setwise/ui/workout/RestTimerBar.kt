@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.LongState
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -38,7 +39,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.util.toClockLabel
 import kotlin.time.Duration.Companion.milliseconds
@@ -114,6 +115,7 @@ fun RestTimerBar(
 
 /** "Rest · next set 3", "Rest · next: Overhead Press" or "Rest". */
 @Composable
+@ReadOnlyComposable
 private fun restLabel(rest: RestUi): String = when {
     rest.nextSetNumber != null -> stringResource(R.string.rest_next_set, rest.nextSetNumber)
     rest.nextExerciseName != null -> stringResource(R.string.rest_next_exercise, rest.nextExerciseName)
@@ -164,7 +166,7 @@ private fun rememberRemainingMillis(endsAtElapsed: Long): LongState {
     return remaining
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun RestTimerBarPreview() = SetwisePreview(padding = 0.dp) {
     RestTimerBar(

@@ -6,7 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 
 /**
@@ -51,7 +51,7 @@ fun SetwiseConfirmDialog(
     )
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseConfirmDialogPreview() = SetwisePreview {
     SetwiseConfirmDialog(
