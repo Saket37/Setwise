@@ -52,8 +52,8 @@ object LogTextParser {
         return Result(workouts, unread)
     }
 
-    /** "Squat: 100kg 5,5,5" → Squat, 3 × 100 kg × 5; "Pullups 10 8 6" → reps alone. */
-    private fun exercise(line: String): SharedExercise? {
+    /** "Squat: 100kg 5,5,5" → Squat, 3 × 100 kg × 5; "Pullups 10 8 6" → reps alone; null if it can't read it. */
+    fun exercise(line: String): SharedExercise? {
         val parse = QuickLogParser.parse(line)
         val phrase = parse.exercisePhrase ?: return null
         val sets = parse.sets.ifEmpty {

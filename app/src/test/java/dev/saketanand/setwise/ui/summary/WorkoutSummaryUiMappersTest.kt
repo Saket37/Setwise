@@ -40,6 +40,15 @@ class WorkoutSummaryUiMappersTest {
     }
 
     @Test
+    fun `the calorie estimate says where it came from`() {
+        fun source(stored: String?) = session().copy(calories = 320, caloriesSource = stored).toSummaryUi(zone).caloriesSource
+        assertEquals(CaloriesSourceUi.OnDevice, source("on_device_model"))
+        assertEquals(CaloriesSourceUi.Formula, source("formula"))
+        assertEquals(null, source("heart_rate")) // not one the app labels yet
+        assertEquals(null, source(null))
+    }
+
+    @Test
     fun `a cardio entry isn't counted as a set`() {
         val ui = session(
             exercise(1, "Bench", ExerciseType.STRENGTH, listOf(set(1, 60.0, 8), set(2, 62.5, 6))),

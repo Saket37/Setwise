@@ -37,4 +37,7 @@ sealed interface WorkoutSummaryAction {
 
     /** An exercise row: its detail (progress, past sessions). → nav */
     data class OnExerciseClick(val exerciseId: Long) : WorkoutSummaryAction
+
+    /** Menu → "Edit sets": the workout's sets in the workout screen, to correct them. */
+    data object OnEditSetsClick : WorkoutSummaryAction
 }

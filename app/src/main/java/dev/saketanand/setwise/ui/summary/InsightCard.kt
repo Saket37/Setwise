@@ -24,8 +24,10 @@ import dev.saketanand.setwise.domain.model.Intensity
 import dev.saketanand.setwise.domain.model.Measure
 import dev.saketanand.setwise.domain.model.WorkoutFacts
 import dev.saketanand.setwise.ui.currentLocale
+import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toWeightLabel
 import kotlin.math.abs
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Design "On-device insight · Gemini Nano": the model's few sentences; until it has written
@@ -66,7 +68,6 @@ fun InsightCard(insight: InsightUi, modifier: Modifier = Modifier) {
  */
 @Composable
 private fun templateInsight(facts: WorkoutFacts): String {
-    val locale = currentLocale()
     val sentences = mutableListOf<String>()
     val best = facts.changes.firstOrNull()
     if (best != null) {
@@ -87,7 +88,7 @@ private fun templateInsight(facts: WorkoutFacts): String {
     facts.intensity?.let { intensity ->
         val word = stringResource(intensity.labelRes())
         sentences += facts.medianRestSec?.let { rest ->
-            stringResource(R.string.insight_intensity_rest, word, "%d:%02d".format(locale, rest / 60, rest % 60))
+            stringResource(R.string.insight_intensity_rest, word, rest.seconds.toClockLabel())
         } ?: stringResource(R.string.insight_intensity, word)
     }
     return sentences.joinToString(" ")
