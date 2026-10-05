@@ -1,30 +1,31 @@
 package dev.saketanand.setwise
 
 import android.app.Application
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import dev.saketanand.setwise.data.dev.DevDataSeeder
 import dev.saketanand.setwise.data.seed.ExerciseSeeder
+import dev.saketanand.setwise.di.IoDispatcher
 import dev.saketanand.setwise.di.appModule
 import dev.saketanand.setwise.di.viewModelModule
+import dev.saketanand.setwise.domain.CalorieSync
+import dev.saketanand.setwise.domain.ai.OnDeviceModel
 import dev.saketanand.setwise.timer.RestNotifications
 import dev.saketanand.setwise.timer.RestTimerCoordinator
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
-import dev.saketanand.setwise.domain.CalorieSync
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ProcessLifecycleOwner
-import dev.saketanand.setwise.domain.ai.OnDeviceModel
 
 class SetwiseApp : Application() {
 
-    /** App-wide scope for startup work. SupervisorJob: one failed job doesn't cancel the rest. */
-    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    /** App-wide scope for startup work (disk, the seed). SupervisorJob: one failed job doesn't cancel the rest. */
+    private val appScope by lazy { CoroutineScope(SupervisorJob() + get<CoroutineDispatcher>(IoDispatcher)) }
 
     override fun onCreate() {
         super.onCreate()
