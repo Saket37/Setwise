@@ -73,8 +73,9 @@ fun SetwiseNumberField(
 
     BasicTextField(
         state = state,
+        // At least a 48dp touch target, however small the drawn box ([minHeight]).
         modifier = modifier
-            .heightIn(min = minHeight)
+            .heightIn(min = maxOf(minHeight, MIN_TOUCH_TARGET))
             .semantics { this.contentDescription = contentDescription },
         textStyle = fieldTextStyle,
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
@@ -87,23 +88,26 @@ fun SetwiseNumberField(
         onKeyboardAction = onKeyboardAction,
         interactionSource = interactionSource,
         decorator = { innerTextField ->
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = minHeight)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest, shape)
-                    .border(2.dp, if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent, shape),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (state.text.isEmpty() && placeholder.isNotEmpty()) {
-                    Text(
-                        text = placeholder,
-                        style = fieldTextStyle,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        maxLines = 1,
-                    )
+            // The drawn box, centred in the (taller) touch target.
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = minHeight)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest, shape)
+                        .border(2.dp, if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent, shape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (state.text.isEmpty() && placeholder.isNotEmpty()) {
+                        Text(
+                            text = placeholder,
+                            style = fieldTextStyle,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            maxLines = 1,
+                        )
+                    }
+                    innerTextField()
                 }
-                innerTextField()
             }
         },
     )
@@ -131,3 +135,6 @@ private fun SetwiseNumberFieldPreview() = SetwisePreview {
         SetwiseNumberField(rememberTextFieldState("8"), "Reps", Modifier.width(52.dp), placeholder = "8")
     }
 }
+
+/** Android's minimum touch target. */
+private val MIN_TOUCH_TARGET = 48.dp

@@ -366,7 +366,7 @@ private fun ExerciseCards(
 private fun StartTimeButton(startTime: LocalTime, pastDay: LocalDate?, onClick: () -> Unit) {
     Row(
         modifier = Modifier
-            .heightIn(min = 24.dp)
+            .heightIn(min = 48.dp) // a full touch target
             .clickable(onClickLabel = stringResource(R.string.change_start_time), role = Role.Button, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),

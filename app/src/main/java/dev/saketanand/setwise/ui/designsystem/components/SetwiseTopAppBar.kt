@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.designsystem.components
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
@@ -24,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
-import androidx.compose.foundation.clickable
 
 /**
  * Top bar of pushed screens (exercise picker, create exercise, template editor…): back arrow,
@@ -77,8 +78,19 @@ fun SetwiseTopAppBar(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 // Lets screen-reader users jump straight to the screen title.
+                // A tappable title is a full 48dp touch target. Over a subtitle, the extra height goes
+                // above the text, so the two still read as one block.
                 modifier = Modifier
-                    .then(if (onTitleClick != null) Modifier.clickable(onClickLabel = titleClickLabel, onClick = onTitleClick) else Modifier)
+                    .then(
+                        if (onTitleClick != null) {
+                            Modifier
+                                .clickable(onClickLabel = titleClickLabel, onClick = onTitleClick)
+                                .heightIn(min = 48.dp)
+                                .wrapContentHeight(if (subtitle != null) Alignment.Bottom else Alignment.CenterVertically)
+                        } else {
+                            Modifier
+                        },
+                    )
                     .semantics { heading() },
             )
             if (subtitle != null) {
