@@ -885,6 +885,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable byModel: Boolean
   stable modifier: Modifier? = @static <expression>
 )
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.importing.ImportScreenByModelPreview()
 restartable skippable scheme("[androidx.compose.ui.UiComposable, [androidx.compose.ui.UiComposable]]") fun dev.saketanand.setwise.ui.navigation.TabScreen(
   stable content: Function2<Composer, Int, Unit>
 )

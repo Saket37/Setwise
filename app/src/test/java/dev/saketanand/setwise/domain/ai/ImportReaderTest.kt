@@ -75,6 +75,8 @@ class ImportReaderTest {
 
         val (rows, pullUps) = read.workouts.single().exercises
         assertEquals(List(3) { SharedSet(60.0, 10) }, rows.sets)
+        assertEquals(false, rows.readByModel) // Setwise read these itself
+        assertEquals(true, pullUps.readByModel) // marked in the preview to check
         // Code can't read this line ("did 8 at the end"): the model's set stays.
         assertEquals(listOf(SharedSet(null, 8)), pullUps.sets)
     }

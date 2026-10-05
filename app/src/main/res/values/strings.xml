@@ -409,7 +409,8 @@
         <item quantity="other">%d lines couldn\'t be read and are left out. Check the workouts below.</item>
     </plurals>
     <string name="import_choose_screenshots">Choose screenshots</string>
-    <string name="import_by_model">Read on this phone by Gemini Nano: check each workout carefully. Any whose numbers weren\'t in what you gave were left out.</string>
+    <string name="import_by_model">Read on this phone by Gemini Nano. Exercises marked below have numbers the model read: check those carefully. Any workout whose numbers weren\'t in what you gave was left out.</string>
+    <string name="import_exercise_by_model">Numbers read by Gemini Nano: check them</string>
     <string name="import_paste_hint">Or paste workouts here</string>
     <string name="import_read">Read</string>
     <string name="import_reading">Reading…</string>

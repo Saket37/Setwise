@@ -40,12 +40,20 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.domain.ai.ImportReader
 import dev.saketanand.setwise.domain.ai.WorkoutImporter
+import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.SharedExercise
+import dev.saketanand.setwise.domain.model.SharedSet
+import dev.saketanand.setwise.domain.model.SharedWorkout
 import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTag
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
+import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -215,6 +223,10 @@ private fun PlannedWorkoutCard(workout: WorkoutImporter.PlannedWorkout) {
                     style = MaterialTheme.typography.bodySmall,
                     color = if (exercise.match == null) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
                 )
+                // Only these numbers came from the model; the rest Setwise read itself.
+                if (exercise.shared.readByModel) {
+                    Text(stringResource(R.string.import_exercise_by_model), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+                }
             }
         }
     }
@@ -257,3 +269,43 @@ private fun ReadNotes(unreadLines: Int, byModel: Boolean, modifier: Modifier = M
 
 /** The most screenshots read at once. */
 private const val MAX_SCREENSHOTS = 20
+
+/** A log read by Gemini Nano: the rows Setwise read itself, the pull-ups the model read. */
+internal val SampleImportByModelState = ImportUiState(
+    source = ImportReader.Source.Model,
+    plan = WorkoutImporter.Plan(
+        listOf(
+            WorkoutImporter.PlannedWorkout(
+                shared = SharedWorkout(
+                    name = "Back day",
+                    startedAt = LocalDateTime.of(2026, 9, 30, 18, 0),
+                    exercises = listOf(
+                        SharedExercise("Barbell rows", List(3) { SharedSet(60.0, 10) }),
+                        SharedExercise("Pull-ups", listOf(SharedSet(reps = 8)), readByModel = true),
+                    ),
+                ),
+                exercises = listOf(
+                    WorkoutImporter.PlannedExercise(
+                        SharedExercise("Barbell rows", List(3) { SharedSet(60.0, 10) }),
+                        Exercise(1, "Bent Over Row (Barbell)", ExerciseType.STRENGTH, "Back", "Barbell", 120, false, false, null, null, null),
+                    ),
+                    WorkoutImporter.PlannedExercise(
+                        SharedExercise("Pull-ups", listOf(SharedSet(reps = 8)), readByModel = true),
+                        Exercise(2, "Pull-up", ExerciseType.BODYWEIGHT, "Back", "Bodyweight", 120, false, false, null, null, null),
+                    ),
+                ),
+                alreadyImported = false,
+            ),
+        ),
+    ),
+)
+
+@PreviewScreens
+@Composable
+private fun ImportScreenByModelPreview() = SetwiseScreenPreview {
+    ImportScreen(
+        uiState = SampleImportByModelState,
+        initialText = "Back day, the 30th\nBarbell rows, 3 sets of 10 with 60\nPull-ups: did 8 at the end",
+        onRead = {}, onChooseFile = {}, onChooseScreenshots = {}, onImport = {}, onBack = {}, onOpenHistory = {},
+    )
+}

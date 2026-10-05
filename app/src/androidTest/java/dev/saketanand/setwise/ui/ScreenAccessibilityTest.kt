@@ -28,6 +28,7 @@ import dev.saketanand.setwise.ui.home.HomeUiState
 import dev.saketanand.setwise.ui.home.SampleHomeState
 import dev.saketanand.setwise.ui.importing.ImportScreen
 import dev.saketanand.setwise.ui.importing.ImportUiState
+import dev.saketanand.setwise.ui.importing.SampleImportByModelState
 import dev.saketanand.setwise.ui.settings.SampleSettingsState
 import dev.saketanand.setwise.ui.settings.SettingsScreen
 import dev.saketanand.setwise.ui.summary.SampleWorkoutSummaryState
@@ -96,6 +97,20 @@ class ScreenAccessibilityTest {
     fun import() = check {
         ImportScreen(
             uiState = ImportUiState(),
+            initialText = "",
+            onRead = {},
+            onChooseFile = {},
+            onChooseScreenshots = {},
+            onImport = {},
+            onBack = {},
+            onOpenHistory = {},
+        )
+    }
+
+    @Test
+    fun importReadByModel() = check {
+        ImportScreen(
+            uiState = SampleImportByModelState,
             initialText = "",
             onRead = {},
             onChooseFile = {},
