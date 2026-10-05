@@ -54,8 +54,10 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTag
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
+import dev.saketanand.setwise.util.toShortDurationLabel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.time.toKotlinDuration
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -222,6 +224,8 @@ private fun PlannedWorkoutCard(workout: WorkoutImporter.PlannedWorkout) {
         }
         Text(
             text = workout.shared.startedAt.format(DateTimeFormatter.ofPattern("EEE d MMM yyyy, h:mm a", locale)) + " · " +
+                // The length, when the source says (CSV, Strong's workout screen); else it's estimated.
+                workout.shared.duration?.let { it.toKotlinDuration().toShortDurationLabel() + " · " }.orEmpty() +
                 pluralStringResource(R.plurals.import_exercises, workout.exercises.size, workout.exercises.size) + ", " +
                 pluralStringResource(R.plurals.import_sets, workout.shared.setCount, workout.shared.setCount),
             style = MaterialTheme.typography.bodySmall,
