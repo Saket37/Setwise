@@ -9,9 +9,9 @@ buildscript {
             // AGP 9.1 pulls Bouncy Castle 1.79 for APK signing (GHSA-574f-3g2m-x479,
             // GHSA-9pwp-9qqc-pr26 and others, fixed in 1.85). The three modules must match.
             // Remove once AGP brings a fixed version itself.
-            classpath("org.bouncycastle:bcprov-jdk18on:1.85")
-            classpath("org.bouncycastle:bcpkix-jdk18on:1.85")
-            classpath("org.bouncycastle:bcutil-jdk18on:1.85")
+            classpath("org.bouncycastle:bcprov-jdk18on:1.86")
+            classpath("org.bouncycastle:bcpkix-jdk18on:1.86")
+            classpath("org.bouncycastle:bcutil-jdk18on:1.86")
             // AGP's other dependencies with advisories (#82); remove each once AGP brings a
             // fixed version itself.
             classpath("org.bitbucket.b_c:jose4j:0.9.7") // GHSA-3677-xxcr-wjqv
