@@ -2,6 +2,7 @@ package dev.saketanand.setwise.ui.workout
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import app.cash.turbine.test
 import dev.saketanand.setwise.domain.ai.ExerciseAssistant
 import dev.saketanand.setwise.domain.ai.Heard
 import dev.saketanand.setwise.domain.ai.ModelAvailability
@@ -70,7 +71,7 @@ class ActiveWorkoutViewModelTest {
     private val speech = FakeSpeechInput(availability = ModelAvailability.Unavailable)
     private val settings = FakeUserSettingsRepository()
 
-    private fun TestScope.viewModel() =
+    private fun TestScope.viewModel(editingFinished: Boolean = false) =
         ActiveWorkoutViewModel(
             WORKOUT_ID, repository, FixedDateProvider, SavedStateHandle(),
             writeScope = backgroundScope,
@@ -80,6 +81,7 @@ class ActiveWorkoutViewModelTest {
             exerciseRepository = FakeLibrary,
             speechInput = speech,
             userSettings = settings,
+            isEditingFinished = editingFinished,
         ).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
         }
@@ -235,6 +237,38 @@ class ActiveWorkoutViewModelTest {
         vm.onAction(ActiveWorkoutAction.OnNotificationsAllowed)
 
         assertEquals(1, notificationRefreshes)
+    }
+
+    // Editing a finished workout
+
+    @Test
+    fun `a finished workout opened to edit stays open, without a rest or a progression hint`() = runTest(dispatcher) {
+        repository.session.value = repository.session.value!!.copy(endedAt = Instant.parse("2026-10-03T19:00:00Z"))
+        val vm = viewModel(editingFinished = true)
+
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "", reps = ""))
+
+        assertTrue(vm.state.value.isEditingFinished)
+        assertFalse(vm.state.value.isLoading)
+        assertTrue(restTimer.starts.isEmpty())
+        assertTrue(vm.state.value.exercises.all { it.nextSession == null })
+    }
+
+    @Test
+    fun `saving edits tidies the workout and goes back, asking first about open sets`() = runTest(dispatcher) {
+        repository.session.value = repository.session.value!!.copy(endedAt = Instant.parse("2026-10-03T19:00:00Z"))
+        val vm = viewModel(editingFinished = true)
+        vm.events.test {
+            vm.onAction(ActiveWorkoutAction.OnFinishClick)
+            // The fake's sets aren't ticked off: they'd be dropped, so it asks.
+            assertTrue(vm.state.value.dialog is ActiveWorkoutDialog.FinishWithIncompleteSets)
+            vm.onAction(ActiveWorkoutAction.OnConfirmFinish)
+
+            assertEquals(ActiveWorkoutEvent.Finished(WORKOUT_ID), awaitItem())
+        }
+        assertEquals(listOf(WORKOUT_ID), repository.edited.map { it.first })
+        assertEquals(repository.session.value!!.exercises.map { it.exercise.id }.toSet(), repository.edited.single().second.toSet())
+        assertTrue(repository.finished.isEmpty()) // not "finished" again
     }
 
     @Test
@@ -546,6 +580,11 @@ class ActiveWorkoutViewModelTest {
     }
 
     private class FakeWorkoutRepository : StubWorkoutRepository() {
+        val edited = mutableListOf<Pair<Long, Collection<Long>>>()
+        override suspend fun finishEditing(workoutId: Long, exerciseIds: Collection<Long>): Boolean {
+            edited += workoutId to exerciseIds
+            return true
+        }
         val loggedSets = mutableListOf<Triple<Long?, Long, List<SetFact>>>()
 
         override suspend fun logSets(workoutId: Long, workoutExerciseId: Long?, exerciseId: Long, sets: List<SetFact>, completedAt: Instant): Long {

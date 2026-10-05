@@ -128,7 +128,7 @@ class WorkoutSummaryViewModel(
             }
 
             // Navigation: WorkoutSummaryScreenRoot handles these.
-            WorkoutSummaryAction.OnDoneClick, is WorkoutSummaryAction.OnExerciseClick -> Unit
+            WorkoutSummaryAction.OnDoneClick, is WorkoutSummaryAction.OnExerciseClick, WorkoutSummaryAction.OnEditSetsClick -> Unit
         }
     }
 

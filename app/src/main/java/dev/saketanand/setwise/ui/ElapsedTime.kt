@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.ui
 
+import android.os.SystemClock
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,6 +17,9 @@ import kotlinx.coroutines.delay
  * own clock, so ticks are deterministic.
  */
 val LocalWallClock = staticCompositionLocalOf<() -> Long> { System::currentTimeMillis }
+
+/** The boot clock (SystemClock.elapsedRealtime) the rest countdown reads; tests replace it like [LocalWallClock]. */
+val LocalBootClock = staticCompositionLocalOf<() -> Long> { SystemClock::elapsedRealtime }
 
 /**
  * Time since [startedAtMillis], updated once a second while on screen (the Resume card,

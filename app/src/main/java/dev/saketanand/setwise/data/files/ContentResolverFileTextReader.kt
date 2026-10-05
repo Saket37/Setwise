@@ -4,13 +4,12 @@ import android.content.ContentResolver
 import androidx.core.net.toUri
 import dev.saketanand.setwise.domain.ai.FileTextReader
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** [FileTextReader] for content:// and file:// links (a chosen or shared CSV export), off the main thread. */
 class ContentResolverFileTextReader(
     private val contentResolver: ContentResolver,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val ioDispatcher: CoroutineDispatcher,
 ) : FileTextReader {
 
     override suspend fun read(uri: String, maxChars: Int): String = withContext(ioDispatcher) {

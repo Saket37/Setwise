@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import dev.saketanand.setwise.data.local.dao.ExerciseDao
 import dev.saketanand.setwise.data.mapper.toEntity
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
@@ -21,13 +21,14 @@ class ExerciseSeeder(
     private val exerciseDao: ExerciseDao,
     private val seedPreferences: SeedPreferences,
     private val json: Json,
+    private val ioDispatcher: CoroutineDispatcher,
 ) {
 
     suspend fun seedIfNeeded() {
         try {
             val seededVersion = seedPreferences.exerciseSeedVersion()
 
-            val seedFile = withContext(Dispatchers.IO) {
+            val seedFile = withContext(ioDispatcher) {
                 val text = context.assets.open(SEED_FILE).bufferedReader().use { it.readText() }
                 json.decodeFromString<ExerciseSeedFile>(text)
             }
