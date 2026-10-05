@@ -113,6 +113,7 @@ dependencies {
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.robolectric)
+    testImplementation(libs.koin.test) // Module.verify(): every definition's dependencies are declared
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Instrumented tests (./gradlew connectedDebugAndroidTest)
