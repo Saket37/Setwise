@@ -2,13 +2,28 @@ package dev.saketanand.setwise.ui.workout
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import app.cash.turbine.test
+import dev.saketanand.setwise.domain.ai.ExerciseAssistant
+import dev.saketanand.setwise.domain.ai.Heard
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.QuickLogInterpreter
+import dev.saketanand.setwise.domain.ai.QuickLogResult
+import dev.saketanand.setwise.domain.model.CardioValues
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.NewExercise
 import dev.saketanand.setwise.domain.model.PreviousSet
+import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.model.SessionExercise
+import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutSet
+import dev.saketanand.setwise.domain.repository.ExerciseRepository
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import dev.saketanand.setwise.testing.FakeRestTimer
+import dev.saketanand.setwise.testing.FakeSpeechInput
+import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 import dev.saketanand.setwise.testing.StubWorkoutRepository
 import dev.saketanand.setwise.timer.NextUp
 import dev.saketanand.setwise.timer.RestTimerState
@@ -19,38 +34,27 @@ import java.time.LocalTime
 import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import dev.saketanand.setwise.domain.ai.ExerciseAssistant
-import dev.saketanand.setwise.domain.ai.QuickLogInterpreter
-import dev.saketanand.setwise.domain.ai.QuickLogResult
-import dev.saketanand.setwise.domain.model.CreateExerciseResult
-import dev.saketanand.setwise.domain.model.NewExercise
-import dev.saketanand.setwise.domain.model.RecentExercise
-import dev.saketanand.setwise.domain.model.SetFact
-import dev.saketanand.setwise.domain.repository.ExerciseRepository
-import dev.saketanand.setwise.testing.FakeOnDeviceModel
-import dev.saketanand.setwise.domain.ai.Heard
-import dev.saketanand.setwise.domain.ai.ModelAvailability
-import dev.saketanand.setwise.testing.FakeSpeechInput
-import kotlinx.coroutines.test.advanceTimeBy
-import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ActiveWorkoutViewModelTest {
@@ -67,7 +71,7 @@ class ActiveWorkoutViewModelTest {
     private val speech = FakeSpeechInput(availability = ModelAvailability.Unavailable)
     private val settings = FakeUserSettingsRepository()
 
-    private fun TestScope.viewModel() =
+    private fun TestScope.viewModel(editingFinished: Boolean = false) =
         ActiveWorkoutViewModel(
             WORKOUT_ID, repository, FixedDateProvider, SavedStateHandle(),
             writeScope = backgroundScope,
@@ -77,6 +81,7 @@ class ActiveWorkoutViewModelTest {
             exerciseRepository = FakeLibrary,
             speechInput = speech,
             userSettings = settings,
+            isEditingFinished = editingFinished,
         ).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
         }
@@ -234,6 +239,38 @@ class ActiveWorkoutViewModelTest {
         assertEquals(1, notificationRefreshes)
     }
 
+    // Editing a finished workout
+
+    @Test
+    fun `a finished workout opened to edit stays open, without a rest or a progression hint`() = runTest(dispatcher) {
+        repository.session.value = repository.session.value!!.copy(endedAt = Instant.parse("2026-10-03T19:00:00Z"))
+        val vm = viewModel(editingFinished = true)
+
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "", reps = ""))
+
+        assertTrue(vm.state.value.isEditingFinished)
+        assertFalse(vm.state.value.isLoading)
+        assertTrue(restTimer.starts.isEmpty())
+        assertTrue(vm.state.value.exercises.all { it.nextSession == null })
+    }
+
+    @Test
+    fun `saving edits tidies the workout and goes back, asking first about open sets`() = runTest(dispatcher) {
+        repository.session.value = repository.session.value!!.copy(endedAt = Instant.parse("2026-10-03T19:00:00Z"))
+        val vm = viewModel(editingFinished = true)
+        vm.events.test {
+            vm.onAction(ActiveWorkoutAction.OnFinishClick)
+            // The fake's sets aren't ticked off: they'd be dropped, so it asks.
+            assertTrue(vm.state.value.dialog is ActiveWorkoutDialog.FinishWithIncompleteSets)
+            vm.onAction(ActiveWorkoutAction.OnConfirmFinish)
+
+            assertEquals(ActiveWorkoutEvent.Finished(WORKOUT_ID), awaitItem())
+        }
+        assertEquals(listOf(WORKOUT_ID), repository.edited.map { it.first })
+        assertEquals(repository.session.value!!.exercises.map { it.exercise.id }.toSet(), repository.edited.single().second.toSet())
+        assertTrue(repository.finished.isEmpty()) // not "finished" again
+    }
+
     @Test
     fun `finishing or discarding stops the rest`() = runTest(dispatcher) {
         repository.session.value = session(bench(sets = listOf(set(1, 60.0, 8, done = true))))
@@ -337,6 +374,22 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
+    fun `a workout that fails to load shows the screen, not a spinner`() = runTest(dispatcher) {
+        repository.failReads = true
+        assertFalse(viewModel().state.value.isLoading)
+    }
+
+    @Test
+    fun `a set that fails to save says so`() = runTest(dispatcher) {
+        repository.failWrites = true
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "60", reps = "8"))
+
+        assertEquals(ActiveWorkoutEvent.SaveFailed, vm.events.first())
+    }
+
+    @Test
     fun `a workout that is already finished closes the screen`() = runTest(dispatcher) {
         repository.session.value = session(bench()).copy(endedAt = FixedDateProvider.now())
         val vm = viewModel()
@@ -403,6 +456,22 @@ class ActiveWorkoutViewModelTest {
     private data class Values(val setId: Long, val weightKg: Double?, val reps: Int?, val durationSec: Int?)
 
     // Quick log
+
+    @Test
+    fun `quick-logged cardio is added to the workout as its exercise`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogSubmit("treadmill 30 min 6% incline"))
+        val preview = vm.state.value.quickLog.preview!!
+        assertEquals("Treadmill", preview.exerciseName)
+        assertEquals(SetKind.Cardio, preview.kind)
+        assertFalse(preview.isInWorkout)
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogConfirm)
+
+        assertEquals(listOf(listOf(13L)), repository.added)
+        assertEquals(listOf(500L to CardioValues(1_800, inclinePct = 6.0)), repository.cardio)
+    }
 
     @Test
     fun `a quick-logged line is shown, then added into the exercise's open sets`() = runTest(dispatcher) {
@@ -500,7 +569,7 @@ class ActiveWorkoutViewModelTest {
     }
 
     private object FakeLibrary : ExerciseRepository {
-        private val library = listOf(bench().exercise, press().exercise, plank().exercise)
+        private val library = listOf(bench().exercise, press().exercise, plank().exercise, exercise(13, "Treadmill", ExerciseType.CARDIO))
         override fun observeExercises(query: String, muscleGroup: String?): Flow<List<Exercise>> = flowOf(library)
         override fun observeMuscleGroups(): Flow<List<String>> = flowOf(emptyList())
         override fun observeRecentExercises(limit: Int): Flow<List<RecentExercise>> = flowOf(emptyList())
@@ -511,6 +580,11 @@ class ActiveWorkoutViewModelTest {
     }
 
     private class FakeWorkoutRepository : StubWorkoutRepository() {
+        val edited = mutableListOf<Pair<Long, Collection<Long>>>()
+        override suspend fun finishEditing(workoutId: Long, exerciseIds: Collection<Long>): Boolean {
+            edited += workoutId to exerciseIds
+            return true
+        }
         val loggedSets = mutableListOf<Triple<Long?, Long, List<SetFact>>>()
 
         override suspend fun logSets(workoutId: Long, workoutExerciseId: Long?, exerciseId: Long, sets: List<SetFact>, completedAt: Instant): Long {
@@ -532,10 +606,20 @@ class ActiveWorkoutViewModelTest {
             renames += name
         }
 
-        override fun observeSession(workoutId: Long): Flow<WorkoutSession?> = session
+        var failReads = false
+        var failWrites = false
+        val cardio = mutableListOf<Pair<Long, CardioValues>>()
+
+        override fun observeSession(workoutId: Long): Flow<WorkoutSession?> =
+            if (failReads) flow { error("Database closed") } else session
 
         override suspend fun setCompleted(setId: Long, completedAt: Instant?, weightKg: Double?, reps: Int?, durationSec: Int?) {
+            if (failWrites) error("Disk full")
             completions += Completion(setId, completedAt != null, weightKg, reps, durationSec)
+        }
+
+        override suspend fun logCardio(workoutExerciseId: Long, values: CardioValues, completedAt: Instant) {
+            cardio += workoutExerciseId to values
         }
 
         override suspend fun updateSetValues(setId: Long, weightKg: Double?, reps: Int?, durationSec: Int?) {

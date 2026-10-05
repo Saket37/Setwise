@@ -1,9 +1,14 @@
 package dev.saketanand.setwise.ui.home
 
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.WeeklyRecapWriter
 import dev.saketanand.setwise.domain.model.ActiveWorkout
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.DayStatus
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.LoggedSetRecord
+import dev.saketanand.setwise.domain.model.NewExercise
 import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.model.Template
 import dev.saketanand.setwise.domain.model.TemplateDraft
@@ -12,24 +17,8 @@ import dev.saketanand.setwise.domain.model.WorkoutStats
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.TemplateRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
 import dev.saketanand.setwise.testing.FakeDayMarkRepository
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 import dev.saketanand.setwise.testing.StubWorkoutRepository
 import dev.saketanand.setwise.util.DateProvider
@@ -38,12 +27,25 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import kotlin.time.Duration
-import dev.saketanand.setwise.domain.model.CreateExerciseResult
-import dev.saketanand.setwise.domain.model.NewExercise
-import dev.saketanand.setwise.domain.ai.ModelAvailability
-import dev.saketanand.setwise.domain.ai.WeeklyRecapWriter
-import dev.saketanand.setwise.domain.model.LoggedSetRecord
-import dev.saketanand.setwise.testing.FakeOnDeviceModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
@@ -260,6 +262,24 @@ class HomeViewModelTest {
         assertEquals(false, vm.state.value.isStartingWorkout)
     }
 
+    @Test
+    fun `a template save that fails says so`() = runTest {
+        FakeTemplateRepository.fail = true
+        try {
+            val vm = viewModel()
+            vm.onAction(HomeAction.OnSaveLastWorkoutAsTemplate(9))
+            assertEquals(HomeEvent.SaveTemplateFailed, vm.events.first())
+        } finally {
+            FakeTemplateRepository.fail = false // a shared object
+        }
+    }
+
+    @Test
+    fun `a Workout tab that fails to load shows what it has, not a spinner`() = runTest {
+        workouts.failReads = true
+        assertFalse(viewModel().state.value.isLoading)
+    }
+
     // Fakes
 
     private data class StartCall(val templateId: Long?, val discard: Long?)
@@ -275,7 +295,8 @@ class HomeViewModelTest {
         override suspend fun getTrainingLog(): List<LoggedSetRecord> = log
 
         override fun observeLastFinishedWorkout(): Flow<FinishedWorkout?> = flowOf(null)
-        override fun observeActiveWorkout(): Flow<ActiveWorkout?> = active
+        var failReads = false
+        override fun observeActiveWorkout(): Flow<ActiveWorkout?> = if (failReads) flow { error("Database closed") } else active
         override fun observeHistory(): Flow<List<WorkoutHistoryItem>> = history
         override fun observeStats(from: Instant, to: Instant): Flow<WorkoutStats> =
             flowOf(WorkoutStats(workouts = 0, timeTrained = Duration.ZERO, prs = 0))
@@ -290,11 +311,13 @@ class HomeViewModelTest {
 
     private object FakeTemplateRepository : TemplateRepository {
         val created = mutableListOf<Long>()
+        var fail = false
         override fun observeTemplates(): Flow<List<Template>> = flowOf(emptyList())
         override suspend fun getTemplate(templateId: Long): Template? = null
         override suspend fun saveTemplate(draft: TemplateDraft, now: Instant): Long = 0
         override suspend fun deleteTemplate(templateId: Long) = Unit
         override suspend fun createFromWorkout(workoutId: Long, createdAt: Instant): Long {
+            if (fail) error("Disk full")
             created += workoutId
             return 40
         }

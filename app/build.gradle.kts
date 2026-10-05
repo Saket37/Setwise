@@ -120,6 +120,7 @@ dependencies {
     testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.ext.junit) // AndroidJUnit4, for the shared Room tests
+    testImplementation(libs.koin.test) // Module.verify(): every definition's dependencies are declared
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Instrumented tests (./gradlew connectedDebugAndroidTest)

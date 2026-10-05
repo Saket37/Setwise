@@ -279,6 +279,28 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun editingAFinishedWorkoutsSetsTidiesItAndRechecksLaterRecords() = runTest {
+        val early = finishWithBench(1_000, kg = 50.0)
+        val later = finishWithBench(10_000, kg = 60.0)
+        assertTrue(isRecord(later))
+        repository.setCalories(early, CalorieEstimate(300, Intensity.Moderate), "on_device_model")
+        repository.setInsight(early, "A solid start.")
+
+        // Edit the early one: its set was really 70 kg, and an extra set is left open.
+        val exercise = repository.observeSession(early).first()!!.exercises.single()
+        repository.updateSetValues(exercise.sets.single().id, weightKg = 70.0, reps = 5, durationSec = null)
+        repository.addSet(exercise.id)
+        assertTrue(repository.finishEditing(early, listOf(bench)))
+
+        val edited = repository.observeSession(early).first()!!
+        assertEquals(1, edited.exercises.single().sets.size) // the open set is dropped
+        assertNull(edited.calories) // to be estimated again, from the new sets
+        assertNull(edited.insight)
+        assertFalse(isRecord(later)) // 60 kg no longer beats what came before
+        assertFalse(repository.finishEditing(repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(20_000)), emptyList())) // only finished ones
+    }
+
+    @Test
     fun editingTimesClearsAFormulaEstimateButKeepsOtherSources() = runTest {
         val formula = finishWithBench(startedAt = 1_000, kg = 60.0)
         val measured = finishWithBench(startedAt = 5_000, kg = 60.0)

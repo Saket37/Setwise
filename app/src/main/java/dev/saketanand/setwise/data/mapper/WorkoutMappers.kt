@@ -109,6 +109,7 @@ fun WorkoutWithExercises.toSession(
         startedAt = Instant.ofEpochMilli(workout.startedAt),
         endedAt = workout.endedAt?.let(Instant::ofEpochMilli),
         calories = workout.calories,
+        caloriesSource = workout.caloriesSource,
         intensity = Intensity.fromStored(workout.intensity),
         insight = workout.summary,
         exercises = items

@@ -63,8 +63,9 @@ object StrongShareParser {
                 val exercise = lines[i]
                 val sets = mutableListOf<SharedSet>()
                 i++
-                while (i < lines.size && SET_LINE.matches(lines[i])) {
-                    set(SET_LINE.find(lines[i])!!.groupValues[1])?.let { sets += it }
+                while (i < lines.size) {
+                    val match = SET_LINE.matchEntire(lines[i]) ?: break
+                    set(match.groupValues[1])?.let { sets += it }
                     i++
                 }
                 if (sets.isNotEmpty() && !SET_LINE.matches(exercise)) exercises += SharedExercise(exercise, sets)

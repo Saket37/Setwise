@@ -78,8 +78,10 @@ class WorkoutInsightWriter(private val model: OnDeviceModel) {
             }
             // Named on the screen already: a count is enough here.
             if (facts.records.isNotEmpty()) add("Personal records: ${facts.records.size}")
-            facts.volumeChangePercent?.let { percent ->
-                add("Volume: ${facts.volumeKg.kg()}, last ${facts.previous!!.name} ${facts.previous.volumeKg.kg()} (${percent.signed()}%)")
+            val previous = facts.previous
+            val percent = facts.volumeChangePercent
+            if (previous != null && percent != null) {
+                add("Volume: ${facts.volumeKg.kg()}, last ${previous.name} ${previous.volumeKg.kg()} (${percent.signed()}%)")
             }
         }.joinToString("\n")
 

@@ -94,5 +94,5 @@ Compose:
   ModifierMissing:
     active: true
   CompositionLocalAllowlist:
-    # The design system's spacing, and the clock ticking labels read (tests drive it).
-    allowedCompositionLocals: ['LocalSpacing', 'LocalWallClock']
+    # The design system's spacing, and the clocks ticking labels read (tests drive them).
+    allowedCompositionLocals: ['LocalSpacing', 'LocalWallClock', 'LocalBootClock']
