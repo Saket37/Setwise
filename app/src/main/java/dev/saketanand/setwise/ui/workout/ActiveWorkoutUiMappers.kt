@@ -3,17 +3,16 @@ package dev.saketanand.setwise.ui.workout
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
+import dev.saketanand.setwise.domain.model.Progression
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSet
 import dev.saketanand.setwise.timer.NextUp
 import dev.saketanand.setwise.timer.RestTimerState
-import dev.saketanand.setwise.util.parseWeight
 import dev.saketanand.setwise.util.toWeightInput
 import dev.saketanand.setwise.util.toWeightLabel
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
-import dev.saketanand.setwise.domain.model.Progression
 
 /** Domain → UI for the active workout. Plain functions, unit-tested without Android. */
 
@@ -104,7 +103,6 @@ fun PreviousSet.label(kind: SetKind): String? = when (kind) {
 private fun WorkoutSet.amount(kind: SetKind): Int? = if (kind == SetKind.Duration) durationSec else reps
 
 private fun PreviousSet.amount(kind: SetKind): Int? = if (kind == SetKind.Duration) durationSec else reps
-
 
 fun parseAmount(text: String): Int? = text.trim().toIntOrNull()
 

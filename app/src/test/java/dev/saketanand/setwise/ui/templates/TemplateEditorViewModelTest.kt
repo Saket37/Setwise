@@ -1,8 +1,10 @@
 package dev.saketanand.setwise.ui.templates
 
 import androidx.lifecycle.SavedStateHandle
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.NewExercise
 import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.model.Template
 import dev.saketanand.setwise.domain.model.TemplateDraft
@@ -29,8 +31,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import dev.saketanand.setwise.domain.model.CreateExerciseResult
-import dev.saketanand.setwise.domain.model.NewExercise
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TemplateEditorViewModelTest {
@@ -39,6 +39,7 @@ class TemplateEditorViewModelTest {
     private val templates = FakeTemplateRepository()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
+
     @After fun tearDown() = Dispatchers.resetMain()
 
     private fun viewModel(templateId: Long = Route.NEW_TEMPLATE_ID, handle: SavedStateHandle = SavedStateHandle()) =

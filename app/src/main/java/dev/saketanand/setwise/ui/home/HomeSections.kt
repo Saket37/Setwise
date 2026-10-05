@@ -32,7 +32,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.rememberElapsedTime
 import dev.saketanand.setwise.ui.designsystem.components.HorizontalGap
 import dev.saketanand.setwise.ui.designsystem.components.IconTile
 import dev.saketanand.setwise.ui.designsystem.components.RoutineCard
@@ -50,6 +49,7 @@ import dev.saketanand.setwise.ui.designsystem.components.StatTile
 import dev.saketanand.setwise.ui.designsystem.components.VerticalGap
 import dev.saketanand.setwise.ui.designsystem.theme.pr
 import dev.saketanand.setwise.ui.designsystem.theme.spacing
+import dev.saketanand.setwise.ui.rememberElapsedTime
 import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toShortDurationLabel
 
@@ -281,7 +281,7 @@ fun StartWorkoutButton(
     isStarting: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    startIcon: Int
+    startIcon: Int,
 ) {
     SetwiseButton(
         text = text,

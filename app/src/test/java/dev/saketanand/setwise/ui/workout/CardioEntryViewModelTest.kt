@@ -35,6 +35,7 @@ class CardioEntryViewModelTest {
     private val repository = FakeRepository()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
+
     @After fun tearDown() = Dispatchers.resetMain()
 
     private fun viewModel(handle: SavedStateHandle = SavedStateHandle()) =

@@ -2,7 +2,6 @@ package dev.saketanand.setwise.data.dev
 
 import android.util.Log
 import androidx.room.withTransaction
-import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import dev.saketanand.setwise.data.local.SetwiseDatabase
 import dev.saketanand.setwise.data.local.dao.ExerciseDao
 import dev.saketanand.setwise.data.local.dao.TemplateDao
@@ -14,6 +13,7 @@ import dev.saketanand.setwise.data.local.entity.TemplateExerciseEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId

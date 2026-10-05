@@ -198,6 +198,7 @@ object Progression {
     private const val STILL_TRAINING_DAYS = 21L
     private const val MIN_SESSIONS = 4
     private const val MIN_WEEKS = 3L
+
     /** A session within 1% of the best is "about as good": noise, not a new best. */
     private const val FLAT_TOLERANCE = 0.01
     private const val EPSILON = 1e-6

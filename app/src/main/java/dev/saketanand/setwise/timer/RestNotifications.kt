@@ -10,10 +10,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import dev.saketanand.setwise.MainActivity
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.domain.model.ActiveWorkout
 import dev.saketanand.setwise.service.WorkoutTimerService
 import dev.saketanand.setwise.ui.navigation.AppLink
 import dev.saketanand.setwise.ui.navigation.AppLinks
-import dev.saketanand.setwise.domain.model.ActiveWorkout
 
 /**
  * The rest timer's notification channels and notifications, in one place.

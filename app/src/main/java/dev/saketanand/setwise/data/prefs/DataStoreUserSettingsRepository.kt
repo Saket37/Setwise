@@ -6,17 +6,17 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
+import dev.saketanand.setwise.domain.model.BodyRules
+import dev.saketanand.setwise.domain.model.Sex
 import dev.saketanand.setwise.domain.model.UserSettings
+import dev.saketanand.setwise.domain.model.WeeklyRecap
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import java.time.DayOfWeek
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import androidx.datastore.preferences.core.stringPreferencesKey
-import dev.saketanand.setwise.domain.model.WeeklyRecap
-import dev.saketanand.setwise.domain.model.BodyRules
-import dev.saketanand.setwise.domain.model.Sex
 
 /**
  * [UserSettingsRepository] in the app's DataStore (the same file as the seed version).

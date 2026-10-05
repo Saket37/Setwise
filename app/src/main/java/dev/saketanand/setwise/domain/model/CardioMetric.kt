@@ -5,5 +5,5 @@ enum class CardioMetric {
     INCLINE,
     SPEED,
     DISTANCE,
-    LEVEL
+    LEVEL,
 }

@@ -55,7 +55,6 @@ import dev.saketanand.setwise.domain.model.BodyMeasurement
 import dev.saketanand.setwise.domain.model.Sex
 import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.NumberKind
-import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseBarChart
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize

@@ -14,7 +14,6 @@ import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutSet
 import java.time.Instant
-import kotlin.time.Duration.Companion.minutes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
