@@ -8,6 +8,7 @@ import dev.saketanand.setwise.domain.ai.Heard
 import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.domain.ai.QuickLogInterpreter
 import dev.saketanand.setwise.domain.ai.QuickLogResult
+import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
@@ -37,6 +38,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -372,6 +374,22 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
+    fun `a workout that fails to load shows the screen, not a spinner`() = runTest(dispatcher) {
+        repository.failReads = true
+        assertFalse(viewModel().state.value.isLoading)
+    }
+
+    @Test
+    fun `a set that fails to save says so`() = runTest(dispatcher) {
+        repository.failWrites = true
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "60", reps = "8"))
+
+        assertEquals(ActiveWorkoutEvent.SaveFailed, vm.events.first())
+    }
+
+    @Test
     fun `a workout that is already finished closes the screen`() = runTest(dispatcher) {
         repository.session.value = session(bench()).copy(endedAt = FixedDateProvider.now())
         val vm = viewModel()
@@ -438,6 +456,22 @@ class ActiveWorkoutViewModelTest {
     private data class Values(val setId: Long, val weightKg: Double?, val reps: Int?, val durationSec: Int?)
 
     // Quick log
+
+    @Test
+    fun `quick-logged cardio is added to the workout as its exercise`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogSubmit("treadmill 30 min 6% incline"))
+        val preview = vm.state.value.quickLog.preview!!
+        assertEquals("Treadmill", preview.exerciseName)
+        assertEquals(SetKind.Cardio, preview.kind)
+        assertFalse(preview.isInWorkout)
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogConfirm)
+
+        assertEquals(listOf(listOf(13L)), repository.added)
+        assertEquals(listOf(500L to CardioValues(1_800, inclinePct = 6.0)), repository.cardio)
+    }
 
     @Test
     fun `a quick-logged line is shown, then added into the exercise's open sets`() = runTest(dispatcher) {
@@ -535,7 +569,7 @@ class ActiveWorkoutViewModelTest {
     }
 
     private object FakeLibrary : ExerciseRepository {
-        private val library = listOf(bench().exercise, press().exercise, plank().exercise)
+        private val library = listOf(bench().exercise, press().exercise, plank().exercise, exercise(13, "Treadmill", ExerciseType.CARDIO))
         override fun observeExercises(query: String, muscleGroup: String?): Flow<List<Exercise>> = flowOf(library)
         override fun observeMuscleGroups(): Flow<List<String>> = flowOf(emptyList())
         override fun observeRecentExercises(limit: Int): Flow<List<RecentExercise>> = flowOf(emptyList())
@@ -572,10 +606,20 @@ class ActiveWorkoutViewModelTest {
             renames += name
         }
 
-        override fun observeSession(workoutId: Long): Flow<WorkoutSession?> = session
+        var failReads = false
+        var failWrites = false
+        val cardio = mutableListOf<Pair<Long, CardioValues>>()
+
+        override fun observeSession(workoutId: Long): Flow<WorkoutSession?> =
+            if (failReads) flow { error("Database closed") } else session
 
         override suspend fun setCompleted(setId: Long, completedAt: Instant?, weightKg: Double?, reps: Int?, durationSec: Int?) {
+            if (failWrites) error("Disk full")
             completions += Completion(setId, completedAt != null, weightKg, reps, durationSec)
+        }
+
+        override suspend fun logCardio(workoutExerciseId: Long, values: CardioValues, completedAt: Instant) {
+            cardio += workoutExerciseId to values
         }
 
         override suspend fun updateSetValues(setId: Long, weightKg: Double?, reps: Int?, durationSec: Int?) {

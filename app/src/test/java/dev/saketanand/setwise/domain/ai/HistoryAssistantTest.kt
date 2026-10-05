@@ -88,6 +88,31 @@ class HistoryAssistantTest {
         assertEquals(HistoryReply.NotUnderstood, ask("should I eat more protein")) // no model here
     }
 
+    @Test
+    fun `when code can't tell the lookup, the model picks one from the list`() = runTest {
+        model.availability = ModelAvailability.Ready
+        model.answer = { """{"lookup": "best set", "period": "all time", "kg": 0}""" }
+
+        val reply = ask("tell me about squat") as HistoryReply.Answered
+
+        assertTrue(reply.byModel)
+        assertEquals(squat, ((reply.answer as HistoryAnswer.Lifted).question as HistoryQuestion.BestSet).exercise)
+    }
+
+    @Test
+    fun `the model's made-up weight is dropped, and an answer off the list isn't used`() = runTest {
+        model.availability = ModelAvailability.Ready
+        model.answer = { """{"lookup": "last time lifted", "period": "all time", "kg": 140}""" }
+        val lifted = (ask("tell me about squat") as HistoryReply.Answered).answer as HistoryAnswer.Lifted
+        assertEquals(HistoryQuestion.LastLifted(squat, null), lifted.question) // 140 isn't in the question
+
+        model.answer = { """{"lookup": "calories burned", "period": "all time", "kg": 0}""" }
+        assertEquals(HistoryReply.NotUnderstood, ask("tell me about squat"))
+
+        model.answer = { error("Busy") }
+        assertEquals(HistoryReply.NotUnderstood, ask("tell me about squat"))
+    }
+
     private fun set(workoutId: Long, name: String, day: LocalDate, exercise: Exercise, number: Int, kg: Double, reps: Int, pr: Boolean = false) =
         LoggedSetRecord(workoutId, name, day.atTime(18, 0).atZone(zone).toInstant(), exercise.id, exercise.name, exercise.muscleGroup, number, kg, reps, null, null, pr)
 
