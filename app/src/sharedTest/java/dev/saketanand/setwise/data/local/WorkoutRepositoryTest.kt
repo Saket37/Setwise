@@ -12,8 +12,8 @@ import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
 import dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl
 import dev.saketanand.setwise.domain.model.CalorieEstimate
 import dev.saketanand.setwise.domain.model.CardioValues
-import dev.saketanand.setwise.domain.model.Intensity
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.Intensity
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.SharedSet
