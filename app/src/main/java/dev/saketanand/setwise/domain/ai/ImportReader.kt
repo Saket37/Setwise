@@ -120,9 +120,24 @@ class ImportReader(
             }
             val values = sets.flatMap { (_, set) -> listOfNotNull(set.weightKg, set.reps?.toDouble(), set.seconds?.toDouble()) }
             if (sets.isEmpty() || values.any { !inText(it) }) return null
-            // Rows to exercises, in first-seen order.
-            val exercises = sets.groupBy({ it.first }, { it.second }).map { (name, exerciseSets) -> SharedExercise(name, exerciseSets) }
+            // Rows to exercises, in first-seen order. Code first: where code reads an exercise's
+            // lines itself, its sets count, so a real number the model put in the wrong field
+            // ("3 sets of 10 with 60" as 60 kg × 3) doesn't (#43).
+            val exercises = sets.groupBy({ it.first }, { it.second }).map { (name, exerciseSets) ->
+                SharedExercise(name, setsReadInCode(name, text) ?: exerciseSets)
+            }
             return SharedWorkout(workout.name.trim().ifEmpty { "Workout" }, LocalDateTime.of(day, time), exercises)
+        }
+
+        /**
+         * [exercise]'s sets as code reads them from [text]'s lines, if every line naming it (but
+         * not a date line) is one [LogTextParser] reads as that exercise; else null.
+         */
+        fun setsReadInCode(exercise: String, text: String): List<SharedSet>? {
+            val mentions = text.lines().map { it.trim() }
+                .filter { it.contains(exercise, ignoreCase = true) && LogTextParser.dateTime(it) == null }
+            val read = mentions.mapNotNull { line -> LogTextParser.exercise(line)?.takeIf { it.name.equals(exercise, ignoreCase = true) } }
+            return read.takeIf { it.isNotEmpty() && it.size == mentions.size }?.flatMap { it.sets }
         }
 
         fun prompt(text: String) = ModelRequest(
