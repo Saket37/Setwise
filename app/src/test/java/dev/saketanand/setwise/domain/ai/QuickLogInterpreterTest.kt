@@ -126,7 +126,11 @@ class QuickLogInterpreterTest {
     @Test
     fun `nothing to log, or no exercise, is said so`() = runTest {
         assertEquals(QuickLogResult.NotUnderstood(QuickLogResult.Reason.NothingToLog), interpreter.interpret("bench", session, null, recent, library))
-        assertEquals(QuickLogResult.NotUnderstood(QuickLogResult.Reason.NoExercise), interpreter.interpret("zercher squat 3x5 at 80", session, null, recent, library))
+        // A name it doesn't know: said so, with the sets kept for when one is picked (#138).
+        assertEquals(
+            QuickLogResult.NotUnderstood(QuickLogResult.Reason.UnknownExercise, exerciseWords = "zercher squat", rest = "3x5 at 80"),
+            interpreter.interpret("zercher squat 3x5 at 80", session, null, recent, library),
+        )
         assertEquals(QuickLogResult.NotUnderstood(QuickLogResult.Reason.NoLastTime), interpreter.interpret("ohp same as last time", session, null, recent, library))
     }
 
