@@ -2,8 +2,10 @@ package dev.saketanand.setwise.domain
 
 import dev.saketanand.setwise.domain.model.LogTextParser
 import dev.saketanand.setwise.domain.model.SharedSet
+import java.time.LocalDate
 import java.time.LocalDateTime
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -53,5 +55,39 @@ class LogTextParserTest {
     @Test
     fun `no dated lines, no workouts`() {
         assertTrue(LogTextParser.parse("bench 3x8 at 60\nsquat 5x5 at 100").workouts.isEmpty())
+    }
+
+    @Test
+    fun `a date without a year is its last time up to today`() {
+        val today = LocalDate.of(2026, 10, 5)
+        val text = """
+            Back day 30 Sep
+            Barbell rows, 3 sets of 10 with 60
+
+            Oct 3rd morning legs
+            Squat: 100kg 5,5,5
+
+            20 December push
+            bench press 60x8
+        """.trimIndent()
+
+        val (back, legs, push) = LogTextParser.parse(text, today).workouts
+
+        assertEquals("Back day", back.name)
+        assertEquals(LocalDateTime.of(2026, 9, 30, 12, 0), back.startedAt)
+        assertEquals(List(3) { SharedSet(60.0, 10) }, back.exercises.single().sets)
+        assertEquals("Legs", legs.name)
+        assertEquals(LocalDateTime.of(2026, 10, 3, 8, 0), legs.startedAt)
+        assertEquals(LocalDate.of(2025, 12, 20), push.startedAt.toLocalDate()) // not a future date: last year's
+        assertTrue(LogTextParser.parse(text).workouts.isEmpty()) // without today, no yearless dates
+    }
+
+    @Test
+    fun `a yearless date needs a real month name, on a line that isn't an exercise`() {
+        val today = LocalDate.of(2026, 10, 5)
+        assertNull(LogTextParser.dateTime("3 decline", today)) // not December
+        assertNull(LogTextParser.dateTime("bench 3x8 at 60, sep 30", today)) // an exercise
+        assertNull(LogTextParser.dateTime("legs 31 Sep", today)) // no such day
+        assertEquals(LocalDate.of(2026, 9, 30), LogTextParser.dateTime("legs sept 30", today)?.toLocalDate())
     }
 }

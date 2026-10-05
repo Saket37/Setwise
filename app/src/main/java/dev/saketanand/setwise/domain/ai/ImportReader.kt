@@ -9,6 +9,7 @@ import dev.saketanand.setwise.domain.model.SharedExercise
 import dev.saketanand.setwise.domain.model.SharedSet
 import dev.saketanand.setwise.domain.model.SharedWorkout
 import dev.saketanand.setwise.domain.model.StrongShareParser
+import dev.saketanand.setwise.util.DateProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -33,6 +34,8 @@ class ImportReader(
     private val textReader: TextReader,
     private val fileReader: FileTextReader,
     private val model: OnDeviceModel,
+    /** Today, for log dates written without a year ("30 Sep"). */
+    private val dateProvider: DateProvider,
 ) {
 
     enum class Source { Csv, StrongShare, Log, Model }
@@ -43,7 +46,8 @@ class ImportReader(
     suspend fun fromText(text: String): Read {
         CsvWorkoutParser.parse(text)?.takeIf { it.isNotEmpty() }?.let { return Read(it, Source.Csv) }
         StrongShareParser.parse(text).takeIf { it.isNotEmpty() }?.let { return Read(it, Source.StrongShare) }
-        LogTextParser.parse(text).takeIf { it.workouts.isNotEmpty() }?.let { return Read(it.workouts, Source.Log, it.unreadLines) }
+        val today = dateProvider.now().atZone(dateProvider.zone).toLocalDate()
+        LogTextParser.parse(text, today).takeIf { it.workouts.isNotEmpty() }?.let { return Read(it.workouts, Source.Log, it.unreadLines) }
         val byModel = modelWorkouts(text)
         return Read(byModel, Source.Model.takeIf { byModel.isNotEmpty() })
     }

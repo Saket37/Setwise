@@ -3,7 +3,13 @@ package dev.saketanand.setwise.domain.ai
 import dev.saketanand.setwise.domain.model.OcrLine
 import dev.saketanand.setwise.domain.model.SharedSet
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
+import dev.saketanand.setwise.util.DateProvider
+import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -19,6 +25,7 @@ class ImportReaderTest {
         textReader = object : TextReader { override suspend fun read(uri: String) = screenshots.getValue(uri) },
         fileReader = object : FileTextReader { override suspend fun read(uri: String, maxChars: Int) = files.getValue(uri).take(maxChars) },
         model = model,
+        dateProvider = Today,
     )
 
     /** Prose no code reader takes apart. */
@@ -56,7 +63,7 @@ class ImportReaderTest {
     @Test
     fun `lines code can read keep code's numbers, wherever the model put them`() = runTest {
         model.availability = ModelAvailability.Ready
-        // No year in the date: the log reader skips it, so the model reads the workout. On a
+        // A date the log reader doesn't read ("the 30th"), so the model reads the workout. On a
         // Pixel, it gave the rows as 60 kg × 3 reps (#43).
         model.answer = {
             """{"name": "Back day", "date": "2026-09-30", "time": "12:00", "sets": [""" +
@@ -64,7 +71,7 @@ class ImportReaderTest {
                 """{"exercise": "Pull-ups", "weightKg": 0, "reps": 8, "seconds": 0}]}"""
         }
 
-        val read = reader.fromText("Back day 30 Sep\nBarbell rows, 3 sets of 10 with 60\nPull-ups: did 8 at the end")
+        val read = reader.fromText("Back day, the 30th\nBarbell rows, 3 sets of 10 with 60\nPull-ups: did 8 at the end")
 
         val (rows, pullUps) = read.workouts.single().exercises
         assertEquals(List(3) { SharedSet(60.0, 10) }, rows.sets)
@@ -130,4 +137,21 @@ class ImportReaderTest {
 
     private fun answer(sets: String) =
         """{"name": "Leg day", "date": "2026-10-02", "time": "18:00", "sets": [$sets]}"""
+
+    @Test
+    fun `a log dated without a year is read in code`() = runTest {
+        model.availability = ModelAvailability.Ready
+
+        val read = reader.fromText("Back day 30 Sep\nBarbell rows, 3 sets of 10 with 60")
+
+        assertEquals(ImportReader.Source.Log, read.source)
+        assertEquals(List(3) { SharedSet(60.0, 10) }, read.workouts.single().exercises.single().sets)
+        assertTrue(model.requests.isEmpty())
+    }
+
+    private object Today : DateProvider {
+        override val zone: ZoneId = ZoneId.of("Asia/Kolkata")
+        override fun now(): Instant = LocalDate.of(2026, 10, 5).atTime(9, 0).atZone(zone).toInstant()
+        override fun today(): Flow<LocalDate> = flowOf(LocalDate.of(2026, 10, 5))
+    }
 }
