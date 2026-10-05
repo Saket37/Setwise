@@ -91,7 +91,8 @@ object StrongShareParser {
         return LocalDateTime.of(day, LocalTime.of(hour, minute))
     }
 
-    private fun set(value: String): SharedSet? {
+    /** One set's value: "10 kg × 15 reps", "15 reps", "1:30", "2.5 km"… (also [StrongScreenParser]'s rows). */
+    internal fun set(value: String): SharedSet? {
         val text = value.replace('×', 'x').replace(',', '.').lowercase(Locale.ROOT)
         val pounds = Regex("\\blbs?\\b").containsMatchIn(text)
         fun kg(v: Double) = if (pounds) (v * LB_TO_KG * 10).roundToInt() / 10.0 else v

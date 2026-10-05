@@ -15,6 +15,7 @@ import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.NewExercise
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.RecentExercise
+import dev.saketanand.setwise.domain.model.RemovedSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.WorkoutSession
@@ -363,6 +364,18 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
+    fun `a deleted set can be put back with Undo`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnDeleteSet(setId = 2))
+
+        val removed = (vm.events.first() as ActiveWorkoutEvent.SetRemoved).set
+        assertEquals(listOf(2L), repository.deleted)
+        vm.onAction(ActiveWorkoutAction.OnUndoRemoveSet(removed))
+        assertEquals(listOf(removed), repository.restored)
+    }
+
+    @Test
     fun `a failed finish re-enables Finish and says so`() = runTest(dispatcher) {
         repository.session.value = session(bench(sets = listOf(set(1, 60.0, 8, done = true))))
         repository.failFinish = true
@@ -602,6 +615,16 @@ class ActiveWorkoutViewModelTest {
         val added = mutableListOf<List<Long>>()
         val startTimes = mutableListOf<Instant>()
         val renames = mutableListOf<String>()
+
+        val deleted = mutableListOf<Long>()
+        val restored = mutableListOf<RemovedSet>()
+        override suspend fun deleteSet(setId: Long): RemovedSet {
+            deleted += setId
+            return RemovedSet(BENCH, 2, 60.0, 8, null, null, null, null, null, null, true, 1L, false)
+        }
+        override suspend fun restoreSet(set: RemovedSet) {
+            restored += set
+        }
 
         override suspend fun renameWorkout(workoutId: Long, name: String) {
             renames += name
