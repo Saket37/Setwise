@@ -93,6 +93,14 @@ interface WorkoutRepository {
      */
     suspend fun refreshPersonalRecords(workoutId: Long)
 
+    /**
+     * A finished workout's sets were edited (Summary → Edit sets): drops sets that aren't ticked
+     * off and exercises left without sets, renumbers, rechecks records here and in later workouts
+     * for [exerciseIds] (and what it has now), and clears the calorie estimate and insight.
+     * False if it isn't a finished workout.
+     */
+    suspend fun finishEditing(workoutId: Long, exerciseIds: Collection<Long>): Boolean
+
     /** Deletes a running workout and everything in it. */
     suspend fun discardWorkout(workoutId: Long)
 
