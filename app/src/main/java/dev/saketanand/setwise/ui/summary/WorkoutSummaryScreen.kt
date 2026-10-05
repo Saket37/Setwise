@@ -291,6 +291,8 @@ private fun WorkoutSummaryFromTemplatePreview() = SetwiseScreenPreview {
 
 /** A finished workout with records: previews and UI tests. */
 internal val SampleWorkoutSummaryState = WorkoutSummaryUiState(
+    caloriesKcal = 412,
+    caloriesSource = CaloriesSourceUi.Formula,
     isLoading = false,
     name = "Push Day",
     date = LocalDate.of(2026, 10, 2),
