@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.util
 
+import java.util.Locale
 import kotlin.time.Duration
 
 /** Compact total time for stat tiles: "45m", "3h 24m", "2h", "0m". */
@@ -14,11 +15,18 @@ fun Duration.toShortDurationLabel(): String {
     }
 }
 
-/** Running clock: "4:05", "12:34", "1:02:03". */
+/**
+ * Running clock: "4:05", "12:34", "1:02:03". Always Latin digits (Locale.ROOT), like the app's
+ * other workout numbers, whatever the device's locale (#39).
+ */
 fun Duration.toClockLabel(): String {
     val totalSeconds = inWholeSeconds.coerceAtLeast(0)
     val hours = totalSeconds / 3600
     val minutes = (totalSeconds % 3600) / 60
     val seconds = totalSeconds % 60
-    return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds) else "%d:%02d".format(minutes, seconds)
+    return if (hours > 0) {
+        "%d:%02d:%02d".format(Locale.ROOT, hours, minutes, seconds)
+    } else {
+        "%d:%02d".format(Locale.ROOT, minutes, seconds)
+    }
 }
