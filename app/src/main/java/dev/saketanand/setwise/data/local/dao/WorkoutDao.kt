@@ -11,11 +11,11 @@ import dev.saketanand.setwise.data.local.relation.ActiveWorkoutRow
 import dev.saketanand.setwise.data.local.relation.ExerciseHistorySetRow
 import dev.saketanand.setwise.data.local.relation.ExerciseLogRow
 import dev.saketanand.setwise.data.local.relation.PreviousSetRow
+import dev.saketanand.setwise.data.local.relation.TrainingLogRow
 import dev.saketanand.setwise.data.local.relation.WorkoutHistoryRow
 import dev.saketanand.setwise.data.local.relation.WorkoutStatsRow
 import dev.saketanand.setwise.data.local.relation.WorkoutWithExercises
 import kotlinx.coroutines.flow.Flow
-import dev.saketanand.setwise.data.local.relation.TrainingLogRow
 
 @Dao
 interface WorkoutDao {

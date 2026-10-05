@@ -43,6 +43,7 @@ class SettingsViewModelTest {
     private val settings = FakeUserSettingsRepository(UserSettings(bodyWeightKg = 70.0))
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
+
     @After fun tearDown() = Dispatchers.resetMain()
 
     private val model = FakeOnDeviceModel(ModelAvailability.Downloadable)

@@ -4,15 +4,21 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.saketanand.setwise.domain.ai.HistoryAssistant
+import dev.saketanand.setwise.domain.ai.HistoryReply
 import dev.saketanand.setwise.domain.model.DayCheckIn
 import dev.saketanand.setwise.domain.model.DayStatus
 import dev.saketanand.setwise.domain.repository.DayMarkRepository
+import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import dev.saketanand.setwise.util.DateProvider
 import java.time.LocalDate
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -22,12 +28,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import dev.saketanand.setwise.domain.ai.HistoryAssistant
-import dev.saketanand.setwise.domain.ai.HistoryReply
-import dev.saketanand.setwise.domain.repository.ExerciseRepository
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Screen: [HistoryScreenRoot]. Live: a finished workout, a deleted one, corrected times or a day

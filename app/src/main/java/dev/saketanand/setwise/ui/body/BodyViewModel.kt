@@ -112,6 +112,7 @@ class BodyViewModel(
 
     private fun save(action: BodyAction.OnSave) {
         val editor = screen.value.editor ?: return
+
         // Blank: not given. Typed but not a believable number: not saved.
         fun decimal(text: String, range: ClosedFloatingPointRange<Double>): Result<Double?> =
             if (text.isBlank()) Result.success(null) else parseWeight(text)?.takeIf { it in range }?.let { Result.success(it) } ?: Result.failure(IllegalArgumentException())

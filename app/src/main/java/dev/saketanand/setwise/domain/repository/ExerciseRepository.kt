@@ -1,10 +1,10 @@
 package dev.saketanand.setwise.domain.repository
 
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.NewExercise
 import dev.saketanand.setwise.domain.model.RecentExercise
 import kotlinx.coroutines.flow.Flow
-import dev.saketanand.setwise.domain.model.CreateExerciseResult
-import dev.saketanand.setwise.domain.model.NewExercise
 
 /** The exercise library as the rest of the app sees it: domain models only, no Room. */
 interface ExerciseRepository {

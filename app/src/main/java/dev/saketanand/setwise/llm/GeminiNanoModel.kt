@@ -9,16 +9,16 @@ import com.google.mlkit.genai.prompt.SystemInstruction
 import com.google.mlkit.genai.prompt.TextPart
 import com.google.mlkit.genai.prompt.generateContentRequest
 import com.google.mlkit.genai.prompt.generateTypedContentRequest
+import dev.saketanand.setwise.domain.ai.DownloadFailure
 import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.domain.ai.ModelDownload
 import dev.saketanand.setwise.domain.ai.ModelJson
 import dev.saketanand.setwise.domain.ai.ModelOutput
 import dev.saketanand.setwise.domain.ai.ModelRequest
 import dev.saketanand.setwise.domain.ai.OnDeviceModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import dev.saketanand.setwise.domain.ai.DownloadFailure
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 

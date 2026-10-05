@@ -9,10 +9,13 @@ import dev.saketanand.setwise.data.local.relation.TemplateWithExercises
 import dev.saketanand.setwise.data.local.relation.WorkoutHistoryRow
 import dev.saketanand.setwise.data.local.relation.WorkoutStatsRow
 import dev.saketanand.setwise.data.local.relation.WorkoutWithExercises
-import dev.saketanand.setwise.domain.model.Intensity
-import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.ActiveWorkout
+import dev.saketanand.setwise.domain.model.CardioValues
+import dev.saketanand.setwise.domain.model.ExerciseSession
+import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.Intensity
+import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.domain.model.PersonalBests
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
@@ -24,9 +27,6 @@ import dev.saketanand.setwise.domain.model.WorkoutSet
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
-import dev.saketanand.setwise.domain.model.CardioValues
-import dev.saketanand.setwise.domain.model.ExerciseSession
-import dev.saketanand.setwise.domain.model.LoggedSet
 
 /** Only call for finished workouts (endedAt != null). */
 fun WorkoutEntity.toFinishedWorkout(): FinishedWorkout = FinishedWorkout(

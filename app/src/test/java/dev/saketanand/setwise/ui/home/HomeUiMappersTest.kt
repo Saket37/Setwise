@@ -2,11 +2,11 @@ package dev.saketanand.setwise.ui.home
 
 import dev.saketanand.setwise.domain.model.Template
 import dev.saketanand.setwise.domain.model.TemplateExercise
-import org.junit.Assert.assertEquals
-import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class HomeUiMappersTest {
 

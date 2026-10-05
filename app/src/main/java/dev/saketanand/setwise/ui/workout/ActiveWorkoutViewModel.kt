@@ -1,49 +1,48 @@
 package dev.saketanand.setwise.ui.workout
 
-import dev.saketanand.setwise.util.parseWeight
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.saketanand.setwise.domain.ai.Heard
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.QuickLogInterpreter
+import dev.saketanand.setwise.domain.ai.QuickLogResult
+import dev.saketanand.setwise.domain.ai.SpeechInput
+import dev.saketanand.setwise.domain.ai.SuggestionSource
 import dev.saketanand.setwise.domain.model.WorkoutSession
+import dev.saketanand.setwise.domain.repository.ExerciseRepository
+import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import dev.saketanand.setwise.timer.RestNotificationRefresher
 import dev.saketanand.setwise.timer.RestTimer
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.DateProvider
+import dev.saketanand.setwise.util.parseWeight
 import java.time.Instant
-import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import dev.saketanand.setwise.domain.ai.QuickLogInterpreter
-import dev.saketanand.setwise.domain.ai.QuickLogResult
-import dev.saketanand.setwise.domain.ai.SuggestionSource
-import dev.saketanand.setwise.domain.repository.ExerciseRepository
-import kotlinx.coroutines.flow.first
-import dev.saketanand.setwise.domain.ai.Heard
-import dev.saketanand.setwise.domain.ai.ModelAvailability
-import dev.saketanand.setwise.domain.ai.SpeechInput
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.withTimeoutOrNull
-import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 
 /**
  * Screen: [ActiveWorkoutScreenRoot].
@@ -234,7 +233,8 @@ class ActiveWorkoutViewModel(
             ActiveWorkoutAction.OnMinimizeClick,
             ActiveWorkoutAction.OnAddExerciseClick,
             is ActiveWorkoutAction.OnLogCardioClick,
-            is ActiveWorkoutAction.OnExerciseHistoryClick -> Unit
+            is ActiveWorkoutAction.OnExerciseHistoryClick,
+            -> Unit
         }
     }
 

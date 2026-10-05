@@ -1,9 +1,9 @@
 package dev.saketanand.setwise.util
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
 import java.time.LocalDate
 import java.util.Locale
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class DateFormattingTest {
 
