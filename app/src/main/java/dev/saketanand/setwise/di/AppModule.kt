@@ -8,8 +8,9 @@ import androidx.room.Room
 import dev.saketanand.setwise.data.dev.DevDataSeeder
 import dev.saketanand.setwise.data.files.ContentResolverFileTextReader
 import dev.saketanand.setwise.data.local.SetwiseDatabase
-import dev.saketanand.setwise.data.prefs.DataStoreBodyRepository
 import dev.saketanand.setwise.data.prefs.DataStoreUserSettingsRepository
+import dev.saketanand.setwise.data.prefs.LegacyBodyMeasurements
+import dev.saketanand.setwise.data.repository.BodyRepositoryImpl
 import dev.saketanand.setwise.data.repository.DayMarkRepositoryImpl
 import dev.saketanand.setwise.data.repository.ExerciseRepositoryImpl
 import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
@@ -113,6 +114,7 @@ val appModule = module {
     single { get<SetwiseDatabase>().workoutDao() }
     single { get<SetwiseDatabase>().templateDao() }
     single { get<SetwiseDatabase>().dayMarkDao() }
+    single { get<SetwiseDatabase>().bodyMeasurementDao() }
 
     // App preferences (seed version now; settings like body weight later). One instance per file.
     single<DataStore<Preferences>> {
@@ -121,7 +123,8 @@ val appModule = module {
     singleOf(::SeedPreferences)
     // Body weight, training days, check-in switch, onboarding done (Settings / onboarding).
     singleOf(::DataStoreUserSettingsRepository) bind UserSettingsRepository::class
-    singleOf(::DataStoreBodyRepository) bind BodyRepository::class
+    singleOf(::BodyRepositoryImpl) bind BodyRepository::class
+    singleOf(::LegacyBodyMeasurements) // copies older builds' DataStore measurements into Room, once
 
     single { ExerciseSeeder(androidContext(), get(), get(), get(), get(IoDispatcher)) }
 

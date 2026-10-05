@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import dev.saketanand.setwise.data.local.entity.BodyMeasurementEntity
 import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
 import dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl
 import kotlinx.coroutines.flow.first
@@ -56,6 +57,29 @@ class MigrationTest {
             assertEquals(100.0, set.weightKg!!, 0.0)
             assertEquals(5, set.reps)
             assertNull(session.exercises.single().targetReps)
+        } finally {
+            database.close()
+            context.deleteDatabase(NAME)
+        }
+    }
+
+    @Test
+    fun version2ToVersion3AddsBodyMeasurements() = runTest {
+        helper.createDatabase(NAME, 2).use { db ->
+            db.execSQL("INSERT INTO workouts (id, name, templateId, startedAt, endedAt) VALUES (1, 'Legs', NULL, 2000, 5000)")
+        }
+
+        // Migrates, and checks the result matches the version 3 schema exactly.
+        helper.runMigrationsAndValidate(NAME, 3, true).close()
+
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val database = Room.databaseBuilder(context, SetwiseDatabase::class.java, NAME).build()
+        try {
+            val dao = database.bodyMeasurementDao()
+            assertEquals(emptyList<BodyMeasurementEntity>(), dao.observeAll().first()) // the new table, empty
+            dao.upsert(BodyMeasurementEntity(1, 20_000, 80.0, null, null, null, null, "Manual"))
+            assertEquals(80.0, dao.newestWeightKg()!!, 0.0)
+            assertEquals("Legs", WorkoutRepositoryImpl(database, database.workoutDao(), database.templateDao()).observeSession(1).first()?.name) // kept
         } finally {
             database.close()
             context.deleteDatabase(NAME)
