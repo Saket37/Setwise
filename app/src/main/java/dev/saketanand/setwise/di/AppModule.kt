@@ -54,8 +54,8 @@ import dev.saketanand.setwise.util.DateProvider
 import dev.saketanand.setwise.util.ElapsedClock
 import dev.saketanand.setwise.util.SystemDateProvider
 import dev.saketanand.setwise.util.SystemElapsedClock
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidContext
@@ -68,13 +68,15 @@ val appModule = module {
     // The app's clock ("now", today + midnight rollover); swapped for a fixed date in tests.
     singleOf(::SystemDateProvider) bind DateProvider::class
 
+    includes(dispatchersModule)
+
     // Outlives screens; SupervisorJob so one failing job doesn't cancel the others.
-    single(ApplicationScope) { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
+    single(ApplicationScope) { CoroutineScope(SupervisorJob() + get<CoroutineDispatcher>(DefaultDispatcher)) }
 
     // Rest timer: one for the whole app, on the main thread (its callers are the screen and the
     // notification's buttons). Counts on the boot clock, which doesn't jump with time changes.
     single<ElapsedClock> { SystemElapsedClock }
-    single<RestTimer> { DefaultRestTimer(CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate), get()) }
+    single<RestTimer> { DefaultRestTimer(CoroutineScope(SupervisorJob() + get<CoroutineDispatcher>(MainDispatcher)), get()) }
     single { RestAlert(androidContext()) }
     // On-device model (Gemini Nano). Features take OnDeviceModel, so tests use a fake.
     single<OnDeviceModel> { GeminiNanoModel() }
@@ -82,7 +84,7 @@ val appModule = module {
     single<TextReader> { MlKitTextReader(androidContext()) }
     singleOf(::BodyReportReader)
     singleOf(::WorkoutImporter)
-    single<FileTextReader> { ContentResolverFileTextReader(androidContext().contentResolver) }
+    single<FileTextReader> { ContentResolverFileTextReader(androidContext().contentResolver, get(IoDispatcher)) }
     singleOf(::ImportReader)
     singleOf(::GoalPlanAssistant)
     singleOf(::CalorieEstimator)
@@ -96,7 +98,7 @@ val appModule = module {
     factoryOf(::AiCheck) // debug launch extra only (MainActivity)
     singleOf(::CalorieSync)
     single<NotificationPermission> { AndroidNotificationPermission(androidContext()) }
-    single { RestTimerCoordinator(androidContext(), get(), get(), get(), get(), get(), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)) } bind
+    single { RestTimerCoordinator(androidContext(), get(), get(), get(), get(), get(), CoroutineScope(SupervisorJob() + get<CoroutineDispatcher>(MainDispatcher))) } bind
         RestNotificationRefresher::class
 
     // Shared JSON parser. ignoreUnknownKeys: new fields in exercises.json won't crash older builds.
@@ -121,7 +123,7 @@ val appModule = module {
     singleOf(::DataStoreUserSettingsRepository) bind UserSettingsRepository::class
     singleOf(::DataStoreBodyRepository) bind BodyRepository::class
 
-    singleOf(::ExerciseSeeder)
+    single { ExerciseSeeder(androidContext(), get(), get(), get(), get(IoDispatcher)) }
 
     // Repositories: bound to their domain interface, so callers depend on ExerciseRepository.
     singleOf(::ExerciseRepositoryImpl) bind ExerciseRepository::class
