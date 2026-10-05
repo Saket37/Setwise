@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -293,7 +295,14 @@ private fun CheckSheet(editor: BodyEditor, onAction: (BodyAction) -> Unit) {
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
-        Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Scrolls: with the keyboard open, the sheet only has the space above it. A plain Column
+        // squeezed its last child, Save, to a sliver (#123).
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             Text(
                 stringResource(if (editor.fromReport) R.string.body_read_title else R.string.body_add_title),
                 style = MaterialTheme.typography.titleLarge,
