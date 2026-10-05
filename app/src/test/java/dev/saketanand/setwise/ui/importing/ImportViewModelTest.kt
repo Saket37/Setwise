@@ -105,6 +105,20 @@ class ImportViewModelTest {
     }
 
     @Test
+    fun `after importing, Import more starts over`() = runTest(dispatcher) {
+        val vm = viewModel(SharedImport(text = strongText))
+        vm.importMore() // nothing imported yet: the preview stays
+        assertEquals(2, vm.state.value.plan?.workouts?.size)
+
+        vm.import()
+        vm.importMore()
+
+        assertEquals(ImportUiState(), vm.state.value)
+        vm.read(strongText) // and it reads again
+        assertEquals(2, vm.state.value.plan?.workouts?.size)
+    }
+
+    @Test
     fun `a failed import keeps the preview and says so`() = runTest(dispatcher) {
         workouts.failImport = true
         val vm = viewModel(SharedImport(text = strongText))
