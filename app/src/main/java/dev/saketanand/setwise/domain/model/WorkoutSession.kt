@@ -18,6 +18,8 @@ data class WorkoutSession(
     val intensity: Intensity? = null,
     /** The on-device model's insight (summary screen); null until written. */
     val insight: String? = null,
+    /** What estimated [calories]: [CalorieFormula.SOURCE], the on-device model's, or another. */
+    val caloriesSource: String? = null,
 )
 
 /** One exercise in a workout, with its sets and what was done last time. */
