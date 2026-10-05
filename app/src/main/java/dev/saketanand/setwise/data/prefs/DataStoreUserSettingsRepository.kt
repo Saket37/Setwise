@@ -40,6 +40,7 @@ class DataStoreUserSettingsRepository(
             trainingDays = prefs[TRAINING_DAYS].orEmpty()
                 .mapNotNull { name -> DayOfWeek.entries.firstOrNull { it.name == name } }
                 .toSet(),
+            noFixedTrainingDays = prefs[NO_FIXED_TRAINING_DAYS] ?: false,
             askAboutUnloggedDays = prefs[ASK_ABOUT_UNLOGGED_DAYS] ?: true,
             onboardingDone = prefs[ONBOARDING_DONE] ?: false,
             checkInLastAskedOn = prefs[CHECK_IN_LAST_ASKED_ON]?.let(LocalDate::ofEpochDay),
@@ -54,8 +55,11 @@ class DataStoreUserSettingsRepository(
         return true
     }
 
-    override suspend fun setTrainingDays(days: Set<DayOfWeek>) {
-        dataStore.edit { it[TRAINING_DAYS] = days.mapTo(HashSet()) { day -> day.name } }
+    override suspend fun setTrainingDays(days: Set<DayOfWeek>, noFixedDays: Boolean) {
+        dataStore.edit {
+            it[TRAINING_DAYS] = days.mapTo(HashSet()) { day -> day.name }
+            it[NO_FIXED_TRAINING_DAYS] = noFixedDays && days.isEmpty()
+        }
     }
 
     override suspend fun setAskAboutUnloggedDays(ask: Boolean) {
@@ -130,6 +134,7 @@ class DataStoreUserSettingsRepository(
         val HEIGHT_CM = doublePreferencesKey("height_cm")
         val BODY_WEIGHT_KG = doublePreferencesKey("body_weight_kg")
         val TRAINING_DAYS = stringSetPreferencesKey("training_days")
+        val NO_FIXED_TRAINING_DAYS = booleanPreferencesKey("no_fixed_training_days")
         val ASK_ABOUT_UNLOGGED_DAYS = booleanPreferencesKey("ask_about_unlogged_days")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val CHECK_IN_LAST_ASKED_ON = longPreferencesKey("check_in_last_asked_on")
