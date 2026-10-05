@@ -100,6 +100,11 @@ class ImportViewModel(
         }
     }
 
+    /** After an import: back to the start, to import something else (#127). */
+    fun importMore() {
+        if (_state.value.result != null) _state.value = ImportUiState()
+    }
+
     fun import() {
         val plan = _state.value.plan ?: return
         if (_state.value.isImporting || plan.toImport.isEmpty()) return

@@ -14,6 +14,7 @@ import androidx.test.filters.SdkSuppress
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResultUtils.matchesChecks
 import com.google.android.apps.common.testing.accessibility.framework.checks.TouchTargetSizeCheck
 import com.google.android.apps.common.testing.accessibility.framework.integrations.espresso.AccessibilityValidator
+import dev.saketanand.setwise.domain.ai.WorkoutImporter
 import dev.saketanand.setwise.domain.model.DayState
 import dev.saketanand.setwise.ui.designsystem.theme.SetwiseTheme
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailScreen
@@ -97,6 +98,20 @@ class ScreenAccessibilityTest {
     fun import() = check {
         ImportScreen(
             uiState = ImportUiState(),
+            initialText = "",
+            onRead = {},
+            onChooseFile = {},
+            onChooseScreenshots = {},
+            onImport = {},
+            onBack = {},
+            onOpenHistory = {},
+        )
+    }
+
+    @Test
+    fun importDone() = check {
+        ImportScreen(
+            uiState = ImportUiState(result = WorkoutImporter.Result(workouts = 1, sets = 14, newExercises = 1)),
             initialText = "",
             onRead = {},
             onChooseFile = {},
