@@ -42,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -102,11 +103,13 @@ fun ActiveWorkoutScreenRoot(
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // The picker's result arrives once; hand it to the ViewModel and clear it.
+    // The picker's result arrives once; hand it to the ViewModel and clear it. The latest
+    // callback, not the one from when the effect started (#35).
+    val onPickedConsumed by rememberUpdatedState(onPickedExercisesConsumed)
     LaunchedEffect(pickedExerciseIds) {
         if (pickedExerciseIds != null) {
             viewModel.onAction(ActiveWorkoutAction.OnExercisesPicked(pickedExerciseIds))
-            onPickedExercisesConsumed()
+            onPickedConsumed()
         }
     }
 

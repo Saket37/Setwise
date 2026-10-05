@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -58,10 +59,12 @@ fun ExercisePickerScreenRoot(
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
 
+    // The latest callback, not the one from when the effect started (#35).
+    val onCreatedConsumed by rememberUpdatedState(onCreatedExerciseConsumed)
     LaunchedEffect(createdExerciseId) {
         if (createdExerciseId != null) {
             viewModel.onAction(ExercisePickerAction.OnExerciseCreated(createdExerciseId))
-            onCreatedExerciseConsumed()
+            onCreatedConsumed()
         }
     }
 
