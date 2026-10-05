@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -29,6 +30,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,9 +44,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -51,6 +59,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.ObserveAsEvents
+import dev.saketanand.setwise.ui.RecognizeSpeech
+import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
@@ -61,7 +71,6 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
-import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.rememberElapsedTime
 import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toShortDayLabel
@@ -69,14 +78,6 @@ import dev.saketanand.setwise.util.toShortTimeLabel
 import java.time.LocalDate
 import java.time.LocalTime
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import dev.saketanand.setwise.ui.RecognizeSpeech
 
 /**
  * Destination: [Route.ActiveWorkout].
@@ -128,6 +129,8 @@ fun ActiveWorkoutScreenRoot(
 
     // dropUnlessResumed: no double navigation from a double tap or two events in a row.
     val minimize = dropUnlessResumed(block = onMinimize)
+    // Editing a finished workout: the system back saves too (the edits are already written).
+    BackHandler(enabled = uiState.isEditingFinished) { viewModel.onAction(ActiveWorkoutAction.OnFinishClick) }
     val addExercises = dropUnlessResumed(block = onAddExercises)
 
     // The quick-log line lives here (typing stays in sync); changing it drops a card about the old one.
@@ -196,7 +199,8 @@ fun ActiveWorkoutScreenRoot(
         onSpeak = onSpeak,
         onAction = { action ->
             when (action) {
-                ActiveWorkoutAction.OnMinimizeClick -> minimize()
+                // Editing a finished workout: leaving saves the edits (they're already written).
+                ActiveWorkoutAction.OnMinimizeClick -> if (uiState.isEditingFinished) viewModel.onAction(ActiveWorkoutAction.OnFinishClick) else minimize()
                 ActiveWorkoutAction.OnAddExerciseClick -> addExercises()
                 is ActiveWorkoutAction.OnLogCardioClick -> onOpenCardioEntry(action.workoutExerciseId)
                 is ActiveWorkoutAction.OnExerciseHistoryClick -> onOpenExercise(action.exerciseId)
@@ -229,32 +233,7 @@ fun ActiveWorkoutScreen(
             // navigation bar, so only the part of the keyboard above it is added here.
             .windowInsetsPadding(WindowInsets.ime.exclude(WindowInsets.navigationBars)),
     ) {
-        SetwiseTopAppBar(
-            title = uiState.name,
-            onBack = { onAction(ActiveWorkoutAction.OnMinimizeClick) },
-            onTitleClick = { onAction(ActiveWorkoutAction.OnRenameClick) },
-            titleClickLabel = stringResource(R.string.rename_workout),
-            navigationIcon = R.drawable.ic_chevron_down,
-            navigationContentDescription = stringResource(R.string.minimise_workout),
-            subtitle = {
-                uiState.startTime?.let {
-                    StartTimeButton(it, pastDay = uiState.pastDay, onClick = { onAction(ActiveWorkoutAction.OnStartTimeClick) })
-                }
-            },
-        ) {
-            // No running clock for a workout logged afterwards for a past day.
-            if (!uiState.isLoading && uiState.pastDay == null) {
-                WorkoutClock(startedAtMillis = uiState.startedAtMillis, modifier = Modifier.padding(end = 6.dp))
-            }
-            SetwiseButton(
-                text = stringResource(R.string.finish),
-                onClick = { onAction(ActiveWorkoutAction.OnFinishClick) },
-                size = SetwiseButtonSize.Medium,
-                textStyle = MaterialTheme.typography.titleSmall,
-                enabled = !uiState.isLoading && !uiState.isFinishing,
-                modifier = Modifier.padding(end = 4.dp),
-            )
-        }
+        ActiveWorkoutTopBar(uiState, onAction)
 
         if (!uiState.isLoading) {
             ExerciseCards(uiState = uiState, onAction = onAction, modifier = Modifier.weight(1f))
@@ -329,7 +308,7 @@ private fun ExerciseCards(
         ) { exercise ->
             val cardModifier = Modifier.animateItem()
             if (exercise.id == uiState.expandedExerciseId) {
-                ExpandedExerciseCard(exercise = exercise, onAction = onAction, modifier = cardModifier)
+                ExpandedExerciseCard(exercise = exercise, onAction = onAction, modifier = cardModifier, editableWhenDone = uiState.isEditingFinished)
             } else {
                 CollapsedExerciseCard(exercise = exercise, onAction = onAction, modifier = cardModifier)
             }
@@ -346,7 +325,8 @@ private fun ExerciseCards(
                     .animateItem(),
             )
         }
-        item(key = "discard", contentType = "button") {
+        // A finished workout is deleted from its summary.
+        if (!uiState.isEditingFinished) item(key = "discard", contentType = "button") {
             SetwiseButton(
                 text = stringResource(R.string.discard_workout),
                 onClick = { onAction(ActiveWorkoutAction.OnDiscardWorkoutClick) },
@@ -358,6 +338,45 @@ private fun ExerciseCards(
                     .animateItem(),
             )
         }
+    }
+}
+
+/** Name (tap: rename), "Started 6:42 PM ✎" (editing a finished workout: "Editing sets"), the clock, Finish / Save. */
+@Composable
+private fun ActiveWorkoutTopBar(uiState: ActiveWorkoutUiState, onAction: (ActiveWorkoutAction) -> Unit) {
+    SetwiseTopAppBar(
+        title = uiState.name,
+        onBack = { onAction(ActiveWorkoutAction.OnMinimizeClick) },
+        onTitleClick = { onAction(ActiveWorkoutAction.OnRenameClick) },
+        titleClickLabel = stringResource(R.string.rename_workout),
+        navigationIcon = if (uiState.isEditingFinished) R.drawable.ic_arrow_back else R.drawable.ic_chevron_down,
+        navigationContentDescription = stringResource(if (uiState.isEditingFinished) R.string.back else R.string.minimise_workout),
+        subtitle = {
+            when {
+                // Its times are edited on the summary.
+                uiState.isEditingFinished -> Text(
+                    stringResource(R.string.editing_sets),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                else -> uiState.startTime?.let {
+                    StartTimeButton(it, pastDay = uiState.pastDay, onClick = { onAction(ActiveWorkoutAction.OnStartTimeClick) })
+                }
+            }
+        },
+    ) {
+        // No running clock for a workout logged afterwards for a past day, or one being edited.
+        if (!uiState.isLoading && uiState.pastDay == null && !uiState.isEditingFinished) {
+            WorkoutClock(startedAtMillis = uiState.startedAtMillis, modifier = Modifier.padding(end = 6.dp))
+        }
+        SetwiseButton(
+            text = stringResource(if (uiState.isEditingFinished) R.string.save else R.string.finish),
+            onClick = { onAction(ActiveWorkoutAction.OnFinishClick) },
+            size = SetwiseButtonSize.Medium,
+            textStyle = MaterialTheme.typography.titleSmall,
+            enabled = !uiState.isLoading && !uiState.isFinishing,
+            modifier = Modifier.padding(end = 4.dp),
+        )
     }
 }
 

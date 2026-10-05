@@ -82,6 +82,8 @@ fun ExpandedExerciseCard(
     exercise: WorkoutExerciseUi,
     onAction: (ActiveWorkoutAction) -> Unit,
     modifier: Modifier = Modifier,
+    /** Editing a finished workout: ticked-off sets stay editable. */
+    editableWhenDone: Boolean = false,
 ) {
     Column(
         modifier = modifier
@@ -135,7 +137,7 @@ fun ExpandedExerciseCard(
             // are deleted.
             key(set.id) {
                 SwipeToDeleteSet(onDelete = { onAction(ActiveWorkoutAction.OnDeleteSet(set.id)) }) {
-                    SetRow(set = set, kind = exercise.kind, onAction = onAction)
+                    SetRow(set = set, kind = exercise.kind, onAction = onAction, editableWhenDone = editableWhenDone)
                 }
             }
         }
@@ -274,6 +276,8 @@ fun SetRow(
     kind: SetKind,
     onAction: (ActiveWorkoutAction) -> Unit,
     modifier: Modifier = Modifier,
+    /** Editing a finished workout: a ticked-off set's values stay editable (it stays ticked). */
+    editableWhenDone: Boolean = false,
 ) {
     val rowColor = if (set.isCompleted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer
     SetTableRow(
@@ -290,7 +294,7 @@ fun SetRow(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        if (set.isCompleted) {
+        if (set.isCompleted && !editableWhenDone) {
             DoneValue(text = if (kind == SetKind.Duration) "" else set.weight, width = SetColumns.Weight)
             DoneValue(text = set.reps, width = SetColumns.Reps)
             CheckCell {
@@ -350,13 +354,13 @@ private fun RowScope.OpenSetFields(set: SetUi, kind: SetKind, onAction: (ActiveW
     val canComplete = canCompleteSet(reps.text.toString(), set.repsHint)
     CheckCell {
         SetwiseCheckButton(
-            checked = false,
+            checked = set.isCompleted,
             onCheckedChange = {
                 focusManager.clearFocus()
                 onAction(ActiveWorkoutAction.OnSetDoneToggle(set.id, weight.text.toString(), reps.text.toString()))
             },
             contentDescription = stringResource(R.string.a11y_set_done, set.number),
-            enabled = canComplete,
+            enabled = set.isCompleted || canComplete,
         )
     }
 }
