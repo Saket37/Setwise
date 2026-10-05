@@ -26,7 +26,9 @@ import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.ObserveAsEvents
 import dev.saketanand.setwise.ui.designsystem.components.HorizontalGap
 import dev.saketanand.setwise.ui.designsystem.components.VerticalGap
+import dev.saketanand.setwise.ui.designsystem.preview.PREVIEW_NOW_MILLIS
 import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewToday
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.designsystem.theme.spacing
 import dev.saketanand.setwise.ui.designsystem.theme.wordmark
@@ -150,7 +152,7 @@ fun HomeScreen(
 @PreviewScreens
 @Composable
 private fun HomeScreenFirstRunPreview() = SetwiseScreenPreview {
-    HomeScreen(uiState = HomeUiState(isLoading = false), onAction = {})
+    HomeScreen(uiState = HomeUiState(isLoading = false, today = PreviewToday), onAction = {})
 }
 
 @PreviewScreens
@@ -166,6 +168,7 @@ private fun HomeScreenPlanYourRoutinePreview() = SetwiseScreenPreview {
     HomeScreen(
         uiState = HomeUiState(
             isLoading = false,
+            today = PreviewToday,
             lastWorkout = previewLastWorkout,
             weekStats = WeekStatsUi(workouts = 1, timeTrained = 62.minutes, newPrs = 0),
         ),
@@ -179,10 +182,11 @@ private fun HomeScreenResumePreview() = SetwiseScreenPreview {
     HomeScreen(
         uiState = HomeUiState(
             isLoading = false,
+            today = PreviewToday,
             activeWorkout = ActiveWorkoutUi(
                 workoutId = 7,
                 name = "Push Day",
-                startedAtMillis = 0,
+                startedAtMillis = PREVIEW_NOW_MILLIS - (12 * 60 + 34) * 1_000L, // "Running 12:34"
                 completedSets = 6
             ),
             lastWorkout = previewLastWorkout,
@@ -196,6 +200,7 @@ private fun HomeScreenResumePreview() = SetwiseScreenPreview {
 internal val SampleHomeState by lazy {
     HomeUiState(
         isLoading = false,
+        today = PreviewToday,
         lastWorkout = previewLastWorkout,
         weekStats = WeekStatsUi(workouts = 3, timeTrained = 204.minutes, newPrs = 2),
         templates = previewTemplates,

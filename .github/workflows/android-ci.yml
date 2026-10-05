@@ -35,11 +35,13 @@ jobs:
       # Caches Gradle downloads and build outputs between runs; validates the Gradle wrapper.
       - uses: gradle/actions/setup-gradle@v6
 
-      # Debug build, JVM unit tests (Compose recomposition tests included, on Robolectric), and
-      # line coverage (Kover), which fails under the minimum set in app/build.gradle.kts.
+      # Debug build, JVM unit tests (Compose recomposition tests included, on Robolectric), the
+      # screenshot tests (every @Preview against the goldens in app/src/test/screenshots, #50),
+      # and line coverage (Kover), which fails under the minimum set in app/build.gradle.kts.
+      # verifyRoborazziDebug runs testDebugUnitTest with the screenshot comparison switched on.
       # Instrumented tests (androidTest) run on an emulator in instrumented-tests.yml.
       - name: Build, test and check coverage
-        run: ./gradlew assembleDebug testDebugUnitTest koverXmlReportDebug koverHtmlReportDebug koverVerifyDebug --stacktrace
+        run: ./gradlew assembleDebug verifyRoborazziDebug koverXmlReportDebug koverHtmlReportDebug koverVerifyDebug --stacktrace
 
       # Coverage per package on the run's summary page.
       - name: Coverage summary
@@ -52,6 +54,32 @@ jobs:
         with:
           name: coverage
           path: app/build/reports/kover/htmlDebug/
+          retention-days: 7
+
+      # A screen that looks different: which ones, on the run's summary page, and the images
+      # (golden, new, and the two side by side with the changes marked) to download. If the
+      # change is intended, run the "Record screenshots" workflow and commit its images.
+      - name: Screenshot changes
+        if: failure()
+        run: |
+          shopt -s nullglob
+          changed=(app/build/outputs/roborazzi/*_compare.png)
+          if [ ${#changed[@]} -gt 0 ]; then
+            {
+              echo "## Screenshots that changed: ${#changed[@]}"
+              for f in "${changed[@]}"; do echo "- \`$(basename "$f" _compare.png)\`"; done
+              echo
+              echo "If the change is intended, run **Record screenshots** on this branch and commit its images."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload screenshot diffs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshot-diffs
+          path: app/build/outputs/roborazzi/
+          if-no-files-found: ignore
           retention-days: 7
 
       # When something fails, the test reports are downloadable from the run's summary page.

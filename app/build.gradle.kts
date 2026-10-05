@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kover)
     alias(libs.plugins.detekt)
     alias(libs.plugins.compose.guard)
+    alias(libs.plugins.roborazzi)
 }
 
 android {
@@ -61,6 +62,20 @@ android {
     sourceSets {
         named("test") { kotlin.directories.add("src/sharedTest/java") }
         named("androidTest") { kotlin.directories.add("src/sharedTest/java") }
+    }
+}
+
+// Screenshot tests (#50): every @Preview rendered on Robolectric, light and dark, compared with
+// the goldens in src/test/screenshots. Update them with ./gradlew recordRoborazziDebug.
+roborazzi {
+    outputDir.set(file("src/test/screenshots"))
+    generateComposePreviewRobolectricTests {
+        enable.set(true)
+        packages.set(listOf("dev.saketanand.setwise"))
+        includePrivatePreviews.set(true)
+        useScanOptionParametersInTester.set(true) // SetwisePreviewTester passes them on to the default tester
+        robolectricConfig.set(mapOf("sdk" to "[35]", "qualifiers" to "RobolectricDeviceQualifiers.Pixel7"))
+        testerQualifiedClassName.set("dev.saketanand.setwise.screenshots.SetwisePreviewTester")
     }
 }
 
@@ -121,6 +136,11 @@ dependencies {
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.robolectric)
+    // Screenshot tests of every @Preview (#50): Roborazzi on Robolectric.
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.roborazzi.compose.preview.scanner.support)
+    testImplementation(libs.composable.preview.scanner)
     testImplementation(libs.androidx.test.ext.junit) // AndroidJUnit4, for the shared Room tests
     testImplementation(libs.koin.test) // Module.verify(): every definition's dependencies are declared
     debugImplementation(libs.androidx.compose.ui.test.manifest)

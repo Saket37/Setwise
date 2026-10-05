@@ -20,19 +20,21 @@ import androidx.compose.ui.tooling.preview.Preview
 annotation class PreviewComponents
 
 /**
- * Full screens at the design canvas size (390×844 dp, to compare against the mockups)
- * and at Pixel 10 width (411 dp, to check the layout stretches sensibly). Light + dark for each.
+ * Full screens at the design canvas size (390×844 dp, to compare against the mockups), at
+ * Pixel 10 width (411 dp, to check the layout stretches sensibly), and at the design size with
+ * 130% font. Light + dark for each. The screenshot tests (#50) use the design and font ones.
  */
-@Preview(name = "Design · Dark", group = "Screen", widthDp = 390, heightDp = 844, uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
-@Preview(name = "Design · Light", group = "Screen", widthDp = 390, heightDp = 844, uiMode = UI_MODE_NIGHT_NO or UI_MODE_TYPE_NORMAL)
-@Preview(name = "Pixel 10 · Dark", group = "Screen", widthDp = 411, heightDp = 923, uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
-@Preview(name = "Pixel 10 · Light", group = "Screen", widthDp = 411, heightDp = 923, uiMode = UI_MODE_NIGHT_NO or UI_MODE_TYPE_NORMAL)
+@Preview(name = "Design dark", group = "Screen", widthDp = 390, heightDp = 844, uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
+@Preview(name = "Design light", group = "Screen", widthDp = 390, heightDp = 844, uiMode = UI_MODE_NIGHT_NO or UI_MODE_TYPE_NORMAL)
+@Preview(name = "Pixel 10 dark", group = "Screen", widthDp = 411, heightDp = 923, uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
+@Preview(name = "Pixel 10 light", group = "Screen", widthDp = 411, heightDp = 923, uiMode = UI_MODE_NIGHT_NO or UI_MODE_TYPE_NORMAL)
+@Preview(name = "Large font dark", group = "Screen", widthDp = 390, heightDp = 844, fontScale = 1.3f, uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
+@Preview(name = "Large font light", group = "Screen", widthDp = 390, heightDp = 844, fontScale = 1.3f, uiMode = UI_MODE_NIGHT_NO or UI_MODE_TYPE_NORMAL)
 annotation class PreviewScreens
 
 /**
- * Accessibility check: large system font and a narrow phone. Use alongside
+ * Accessibility check: a narrow phone (130% font is in [PreviewScreens]). Use alongside
  * [PreviewScreens] on screens with dense rows (active workout, history).
  */
-@Preview(name = "Font 130% · Dark", group = "Accessibility", widthDp = 390, heightDp = 844, fontScale = 1.3f, uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
-@Preview(name = "Small phone 360dp · Dark", group = "Accessibility", widthDp = 360, heightDp = 740, uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
+@Preview(name = "Small phone dark", group = "Accessibility", widthDp = 360, heightDp = 740, uiMode = UI_MODE_NIGHT_YES or UI_MODE_TYPE_NORMAL)
 annotation class PreviewAccessibility
