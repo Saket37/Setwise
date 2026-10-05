@@ -23,7 +23,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.onPr
 import dev.saketanand.setwise.ui.designsystem.theme.pr
@@ -108,7 +108,7 @@ object SetwiseTagDefaults {
     )
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseTagPreview() = SetwisePreview {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {

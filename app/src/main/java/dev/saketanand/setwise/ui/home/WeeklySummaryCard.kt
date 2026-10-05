@@ -35,7 +35,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButtonDefaults
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberLarge
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
@@ -204,7 +204,7 @@ private fun signed(value: Int) = if (value > 0) "+$value" else "$value"
 private fun compact(kg: Double, locale: Locale): String =
     if (kg >= 1000) NumberFormat.getNumberInstance(locale).apply { maximumFractionDigits = 1 }.format(kg / 1000) + "k" else kg.toLong().toString()
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun WeeklySummaryCardPreview() = SetwisePreview {
     WeeklySummaryCard(

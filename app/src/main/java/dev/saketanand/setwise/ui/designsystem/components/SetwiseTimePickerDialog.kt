@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import java.time.LocalTime
 
@@ -56,7 +56,7 @@ fun SetwiseTimePickerDialog(
     )
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseTimePickerDialogPreview() = SetwisePreview {
     SetwiseTimePickerDialog(title = "Start time", initial = LocalTime.of(18, 42), onConfirm = {}, onDismiss = {})

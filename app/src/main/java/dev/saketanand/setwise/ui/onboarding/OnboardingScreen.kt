@@ -14,6 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.exclude
@@ -56,7 +57,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseDayPicker
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseNumberField
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseSettingsGroup
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseSwitchRow
-import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
 import java.time.DayOfWeek
@@ -217,8 +218,9 @@ fun OnboardingScreen(
     }
 }
 
+/** The step's title and message, as two rows of the step's Column. */
 @Composable
-private fun StepText(title: Int, message: Int) {
+private fun ColumnScope.StepText(title: Int, message: Int) {
     Text(
         text = stringResource(title),
         style = MaterialTheme.typography.headlineLarge,
@@ -348,13 +350,13 @@ private fun StepDots(current: Int, count: Int, modifier: Modifier = Modifier) {
 
 // Previews: one per step
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun OnboardingWelcomePreview() = SetwiseScreenPreview {
     OnboardingScreen(uiState = OnboardingUiState(), bodyWeight = rememberTextFieldState(), onAction = {})
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun OnboardingDaysPreview() = SetwiseScreenPreview {
     OnboardingScreen(
@@ -364,19 +366,19 @@ private fun OnboardingDaysPreview() = SetwiseScreenPreview {
     )
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun OnboardingWeightPreview() = SetwiseScreenPreview {
     OnboardingScreen(uiState = OnboardingUiState(step = OnboardingStep.BodyWeight), bodyWeight = rememberTextFieldState("72.5"), onAction = {})
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun OnboardingCheckInsPreview() = SetwiseScreenPreview {
     OnboardingScreen(uiState = OnboardingUiState(step = OnboardingStep.CheckIns), bodyWeight = rememberTextFieldState(), onAction = {})
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun OnboardingNotificationsPreview() = SetwiseScreenPreview {
     OnboardingScreen(uiState = OnboardingUiState(step = OnboardingStep.Notifications), bodyWeight = rememberTextFieldState(), onAction = {})

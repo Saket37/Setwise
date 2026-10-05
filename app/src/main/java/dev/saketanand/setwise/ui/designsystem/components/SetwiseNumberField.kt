@@ -35,7 +35,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 
@@ -122,7 +122,7 @@ private fun numberInput(kind: NumberKind, maxLength: Int) = InputTransformation 
     if (!valid) revertAllChanges()
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseNumberFieldPreview() = SetwisePreview {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -42,7 +42,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseFilterChip
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseStepper
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextField
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
-import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.toClockLabel
@@ -249,7 +249,7 @@ private fun ExerciseKindOption.labelRes(): Int = when (this) {
 
 // Previews: one per scenario
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun CreateExercisePreview() = SetwiseScreenPreview {
     CreateExerciseScreen(

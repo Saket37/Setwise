@@ -15,7 +15,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 
 /**
@@ -66,7 +66,7 @@ private fun StepButton(icon: Int, description: String, enabled: Boolean, onClick
     )
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseStepperPreview() = SetwisePreview {
     SetwiseStepper(value = 3, label = "3 sets", onDecrease = {}, onIncrease = {}, decreaseDescription = "", increaseDescription = "", range = 1..10)

@@ -26,7 +26,7 @@ import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.ObserveAsEvents
 import dev.saketanand.setwise.ui.designsystem.components.HorizontalGap
 import dev.saketanand.setwise.ui.designsystem.components.VerticalGap
-import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.designsystem.theme.spacing
 import dev.saketanand.setwise.ui.designsystem.theme.wordmark
@@ -147,19 +147,19 @@ fun HomeScreen(
 
 // Previews: one per scenario
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun HomeScreenFirstRunPreview() = SetwiseScreenPreview {
     HomeScreen(uiState = HomeUiState(isLoading = false), onAction = {})
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun HomeScreenDashboardPreview() = SetwiseScreenPreview {
     HomeScreen(uiState = SampleHomeState, onAction = {})
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun HomeScreenPlanYourRoutinePreview() = SetwiseScreenPreview {
     // Trained, but no templates saved yet → "Plan your routine" + "Save Pull Day as a template".
@@ -173,7 +173,7 @@ private fun HomeScreenPlanYourRoutinePreview() = SetwiseScreenPreview {
     )
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun HomeScreenResumePreview() = SetwiseScreenPreview {
     HomeScreen(

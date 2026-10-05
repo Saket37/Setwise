@@ -23,6 +23,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -280,8 +281,8 @@ fun StartWorkoutButton(
     text: String,
     isStarting: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
     startIcon: Int,
+    modifier: Modifier = Modifier,
 ) {
     SetwiseButton(
         text = text,
@@ -367,6 +368,7 @@ fun HomeGreeting(
 
 /** "today", "yesterday", "3 days ago". */
 @Composable
+@ReadOnlyComposable
 fun relativeDaysText(daysAgo: Int): String = when (daysAgo) {
     0 -> stringResource(R.string.today)
     1 -> stringResource(R.string.yesterday)

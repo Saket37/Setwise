@@ -100,7 +100,7 @@ fun SummaryStats(uiState: WorkoutSummaryUiState, onAddBodyWeight: () -> Unit, mo
 
 /** Design: caption above a Barlow 28 value. */
 @Composable
-private fun SummaryTile(label: String, value: String, modifier: Modifier, unit: String? = null, caption: String? = null) {
+private fun SummaryTile(label: String, value: String, modifier: Modifier = Modifier, unit: String? = null, caption: String? = null) {
     StatTile(
         value = value,
         label = label,
