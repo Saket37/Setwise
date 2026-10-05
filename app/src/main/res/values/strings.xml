@@ -203,7 +203,6 @@
     <string name="stat_duration">Duration</string>
     <string name="stat_volume">Volume</string>
     <string name="stat_sets">Sets</string>
-    <string name="stat_exercises">Exercises</string>
     <string name="stat_calories">Calories</string>
     <string name="unit_kg">kg</string>
     <string name="unit_kcal">kcal</string>
@@ -232,6 +231,8 @@
     <string name="end_time">End time</string>
     <string name="save">Save</string>
     <string name="calories_by_model">Estimated on this phone</string>
+    <!-- The summary's Calories tile while the estimate is worked out -->
+    <string name="calories_estimating">Estimating…</string>
     <string name="calories_by_formula">Estimated by formula</string>
     <string name="edit_sets">Edit sets</string>
     <string name="editing_sets">Editing sets · finished workout</string>
