@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -71,7 +72,9 @@ fun ExerciseDetailScreenRoot(
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     // The exercise was deleted: nothing to show.
-    LaunchedEffect(uiState.isMissing) { if (uiState.isMissing) onBack() }
+    // The latest callback, not the one from when the effect started (#35).
+    val onBackLatest by rememberUpdatedState(onBack)
+    LaunchedEffect(uiState.isMissing) { if (uiState.isMissing) onBackLatest() }
     ExerciseDetailScreen(
         uiState = uiState,
         onBack = dropUnlessResumed(block = onBack),

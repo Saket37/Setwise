@@ -19,7 +19,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Runs the real SQL against an in-memory database (on a device/emulator). */
+/** Runs the real SQL against an in-memory database: on a device/emulator, and on Robolectric. */
 @RunWith(AndroidJUnit4::class)
 class ExerciseDaoTest {
 

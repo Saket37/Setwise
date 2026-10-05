@@ -74,7 +74,7 @@ object Progression {
             return when (measure) {
                 Measure.Weight -> {
                     val step = stepKg(exercise, history)
-                    NextSession(round(last.weightKg!! + step), last.target, null, last.sets, ProgressionRule.AddWeight, last.fact(measure), step)
+                    NextSession(round(last.topWeight() + step), last.target, null, last.sets, ProgressionRule.AddWeight, last.fact(measure), step)
                 }
                 Measure.Reps -> NextSession(last.weightKg, last.target + 1, null, last.sets, ProgressionRule.AddRep, last.fact(measure))
                 Measure.Seconds -> NextSession(last.weightKg, null, last.target + TIME_STEP_SEC, last.sets, ProgressionRule.AddTime, last.fact(measure))
@@ -82,7 +82,7 @@ object Progression {
         }
         if (measure == Measure.Weight && plateau(exercise, history, now) != null) {
             val step = stepKg(exercise, history)
-            val weight = last.weightKg!!
+            val weight = last.topWeight()
             val lighter = floorTo(weight * DELOAD, step).let { if (it >= weight) weight - step else it }
             if (lighter > 0) return NextSession(round(lighter), last.target + DELOAD_EXTRA_REPS, null, last.sets, ProgressionRule.Lighter, last.fact(measure))
         }
@@ -153,6 +153,9 @@ object Progression {
      * every one reached it.
      */
     private data class Working(val weightKg: Double?, val target: Int, val sets: Int, val clean: Boolean) {
+        /** For [Measure.Weight] sessions, which only keep sets with a weight. */
+        fun topWeight(): Double = checkNotNull(weightKg) { "A weighted session's sets all have a weight" }
+
         fun fact(measure: Measure) =
             if (measure == Measure.Seconds) SetFact(weightKg, null, target) else SetFact(weightKg, target, null)
     }
@@ -163,7 +166,7 @@ object Progression {
         }
         if (sets.isEmpty()) return null
         val top = sets.maxOf { it.weightKg ?: 0.0 }
-        val amounts = sets.filter { abs((it.weightKg ?: 0.0) - top) < EPSILON }.map { amount(it, measure)!! }
+        val amounts = sets.filter { abs((it.weightKg ?: 0.0) - top) < EPSILON }.mapNotNull { amount(it, measure) }
         val target = amounts.groupingBy { it }.eachCount().entries
             .maxWith(compareBy<Map.Entry<Int, Int>>({ it.value }, { it.key })).key
         return Working(top.takeIf { it > 0 }, target, amounts.size, amounts.all { it >= target })

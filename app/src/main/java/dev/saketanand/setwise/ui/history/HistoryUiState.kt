@@ -31,7 +31,10 @@ data class HistoryUiState(
 
     /** The empty selected day is in the past: it can be logged, or marked rest / missed. */
     val canCheckInSelectedDay: Boolean
-        get() = isSelectedDayEmpty && today != null && selectedDate!!.isBefore(today)
+        get() {
+            val day = selectedDate ?: return false
+            return isSelectedDayEmpty && today != null && day.isBefore(today)
+        }
 
     val selectedDayState: DayState
         get() = days.firstOrNull { it.date == selectedDate }?.state ?: DayState.None

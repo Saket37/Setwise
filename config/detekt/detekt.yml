@@ -22,9 +22,16 @@ style:
     ignorePropertyDeclaration: true
     ignoreNamedArgument: true
     ignoreEnums: true
+    # detekt's test folders, plus src/sharedTest (Room tests run as unit and instrumented tests).
+    excludes: ['**/test/**', '**/androidTest/**', '**/sharedTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**']
   ForbiddenComment:
     # TODOs are tracked as GitHub issues instead.
     active: true
+
+potential-bugs:
+  UnsafeCallOnNullableType:
+    # As MagicNumber: tests may assert with !!.
+    excludes: ['**/test/**', '**/androidTest/**', '**/sharedTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**']
 
 naming:
   FunctionNaming:
@@ -40,6 +47,9 @@ complexity:
     ignoreAnnotated: ['Composable']
   LongMethod:
     ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    # As MagicNumber: a test class has one function per test.
+    excludes: ['**/test/**', '**/androidTest/**', '**/sharedTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**']
 
 ktlint:
   # Formatting the codebase doesn't follow (one statement per line, no forced wrapping): off.
@@ -84,5 +94,5 @@ Compose:
   ModifierMissing:
     active: true
   CompositionLocalAllowlist:
-    # The design system's spacing, and the clock ticking labels read (tests drive it).
-    allowedCompositionLocals: ['LocalSpacing', 'LocalWallClock']
+    # The design system's spacing, and the clocks ticking labels read (tests drive them).
+    allowedCompositionLocals: ['LocalSpacing', 'LocalWallClock', 'LocalBootClock']

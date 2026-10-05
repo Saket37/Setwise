@@ -496,6 +496,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable valueStyle: TextStyle? = @dynamic <expression>
   stable valueColor: Color = @dynamic <expression>
   stable containerColor: Color = @dynamic <expression>
+  stable caption: String? = @static null
 )
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.designsystem.components.StatTilePreview()
 restartable skippable scheme("[androidx.compose.ui.UiComposable, [androidx.compose.ui.UiComposable]]") fun dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview(
@@ -971,6 +972,7 @@ fun dev.saketanand.setwise.ui.summary.improvement(
 ): String
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.summary.WorkoutSummaryScreenRoot(
   stable onOpenExercise: Function1<@[ParameterName(name = 'exerciseId')] Long, Unit>
+  stable onEditSets: Function0<Unit>
   stable onDone: Function0<Unit>
   viewModel: WorkoutSummaryViewModel? = @dynamic <expression>
 )
@@ -999,6 +1001,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable value: String
   stable modifier: Modifier
   stable unit: String? = @static null
+  stable caption: String? = @static null
 )
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.summary.PersonalRecordsSection(
   stable records: ImmutableList<RecordUi>
@@ -1107,6 +1110,10 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable onAction: Function1<ActiveWorkoutAction, Unit>
   stable modifier: Modifier? = @static <expression>
 )
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.workout.ActiveWorkoutTopBar(
+  stable uiState: ActiveWorkoutUiState
+  stable onAction: Function1<ActiveWorkoutAction, Unit>
+)
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.workout.StartTimeButton(
   stable startTime: LocalTime
   stable pastDay: LocalDate?
@@ -1123,6 +1130,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable exercise: WorkoutExerciseUi
   stable onAction: Function1<ActiveWorkoutAction, Unit>
   stable modifier: Modifier? = @static <expression>
+  stable editableWhenDone: Boolean = @static false
 )
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.workout.CollapsedExerciseCard(
   stable exercise: WorkoutExerciseUi
@@ -1149,6 +1157,7 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
   stable kind: SetKind
   stable onAction: Function1<ActiveWorkoutAction, Unit>
   stable modifier: Modifier? = @static <expression>
+  stable editableWhenDone: Boolean = @static false
 )
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.workout.OpenSetFields(
   unused stable <this>: RowScope
@@ -1254,10 +1263,13 @@ restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saket
 fun dev.saketanand.setwise.ui.workout.restLabel(
   stable rest: RestUi
 ): String
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.workout.RestCountdown(
+  stable remainingMillis: Function0<Long>
+)
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.workout.RestProgress(
-  stable fraction: Float
+  stable fraction: Function0<Float>
 )
 fun dev.saketanand.setwise.ui.workout.rememberRemainingMillis(
   stable endsAtElapsed: Long
-): Long
+): LongState
 restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun dev.saketanand.setwise.ui.workout.RestTimerBarPreview()

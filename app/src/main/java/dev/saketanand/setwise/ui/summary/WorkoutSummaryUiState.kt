@@ -27,6 +27,8 @@ data class WorkoutSummaryUiState(
     val exerciseCount: Int = 0,
     /** Estimated once a body weight is known (CalorieSync); null until then. */
     val caloriesKcal: Int? = null,
+    /** How [caloriesKcal] was estimated, shown under it; null if unknown. */
+    val caloriesSource: CaloriesSourceUi? = null,
     /** The insight card: null when there's nothing to say (e.g. no lifting). */
     val insight: InsightUi? = null,
     /** No estimate because no body weight is set: the calories tile asks for it. */
@@ -96,3 +98,12 @@ data class InsightUi(
     /** The on-device model's text; null: use the template. */
     val modelText: String?,
 )
+
+/** Where a workout's calorie estimate came from. */
+enum class CaloriesSourceUi {
+    /** Gemini Nano on the phone, checked against the formula. */
+    OnDevice,
+
+    /** MET / ACSM formulas. */
+    Formula,
+}

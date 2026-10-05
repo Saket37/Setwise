@@ -56,6 +56,12 @@ android {
         // Robolectric (Compose UI tests on the JVM) needs the app's resources.
         unitTests.isIncludeAndroidResources = true
     }
+    // Room DAO and repository tests: on the emulator (instrumented) and on Robolectric (unit
+    // tests, so coverage counts the data layer).
+    sourceSets {
+        named("test") { kotlin.directories.add("src/sharedTest/java") }
+        named("androidTest") { kotlin.directories.add("src/sharedTest/java") }
+    }
 }
 
 composeCompiler {
@@ -115,6 +121,8 @@ dependencies {
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.ext.junit) // AndroidJUnit4, for the shared Room tests
+    testImplementation(libs.koin.test) // Module.verify(): every definition's dependencies are declared
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Instrumented tests (./gradlew connectedDebugAndroidTest)

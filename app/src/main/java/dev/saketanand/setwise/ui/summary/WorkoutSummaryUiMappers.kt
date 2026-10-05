@@ -1,5 +1,7 @@
 package dev.saketanand.setwise.ui.summary
 
+import dev.saketanand.setwise.domain.ai.CalorieEstimator
+import dev.saketanand.setwise.domain.model.CalorieFormula
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
@@ -34,6 +36,11 @@ fun WorkoutSession.toSummaryUi(zone: ZoneId): WorkoutSummaryUiState {
         completedSets = done.filter { (exercise, _) -> exercise.exercise.type != ExerciseType.CARDIO }.sumOf { (_, sets) -> sets.size },
         exerciseCount = done.size,
         caloriesKcal = calories,
+        caloriesSource = when (caloriesSource) {
+            CalorieEstimator.MODEL_SOURCE -> CaloriesSourceUi.OnDevice
+            CalorieFormula.SOURCE -> CaloriesSourceUi.Formula
+            else -> null
+        },
         records = exercises.mapNotNull { exercise ->
             exercise.personalRecord?.let { record ->
                 RecordUi(

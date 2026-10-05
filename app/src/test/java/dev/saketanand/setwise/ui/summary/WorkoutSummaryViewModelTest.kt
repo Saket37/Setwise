@@ -1,5 +1,7 @@
 package dev.saketanand.setwise.ui.summary
 
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.WorkoutInsightWriter
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.SessionExercise
@@ -8,6 +10,8 @@ import dev.saketanand.setwise.domain.model.TemplateDraft
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutSet
 import dev.saketanand.setwise.domain.repository.TemplateRepository
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
+import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 import dev.saketanand.setwise.testing.StubWorkoutRepository
 import dev.saketanand.setwise.util.DateProvider
 import java.time.Instant
@@ -20,6 +24,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -29,14 +34,11 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import dev.saketanand.setwise.testing.FakeUserSettingsRepository
-import dev.saketanand.setwise.domain.ai.ModelAvailability
-import dev.saketanand.setwise.domain.ai.WorkoutInsightWriter
-import dev.saketanand.setwise.testing.FakeOnDeviceModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WorkoutSummaryViewModelTest {
@@ -142,16 +144,88 @@ class WorkoutSummaryViewModelTest {
         assertEquals(WorkoutSummaryEvent.Closed, vm.events.first())
     }
 
+    @Test
+    fun `the workout is renamed from its dialog`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(WorkoutSummaryAction.OnRenameClick)
+        assertTrue(vm.state.value.isRenaming)
+        vm.onAction(WorkoutSummaryAction.OnRenameDismiss)
+        assertFalse(vm.state.value.isRenaming)
+
+        vm.onAction(WorkoutSummaryAction.OnRenameClick)
+        vm.onAction(WorkoutSummaryAction.OnRenameConfirm("Heavy push"))
+        assertFalse(vm.state.value.isRenaming)
+        assertEquals(listOf("Heavy push"), workouts.renames)
+    }
+
+    @Test
+    fun `a rename or delete that fails says so`() = runTest(dispatcher) {
+        workouts.failWrites = true
+        val vm = viewModel()
+
+        vm.onAction(WorkoutSummaryAction.OnRenameConfirm("Heavy push"))
+        assertEquals(WorkoutSummaryEvent.SaveFailed, vm.events.first())
+
+        vm.onAction(WorkoutSummaryAction.OnDeleteClick)
+        vm.onAction(WorkoutSummaryAction.OnConfirmDelete)
+        assertEquals(WorkoutSummaryEvent.SaveFailed, vm.events.first())
+        assertFalse(vm.state.value.isConfirmingDelete)
+    }
+
+    @Test
+    fun `a template save that fails says so and can be tried again`() = runTest(dispatcher) {
+        templates.fail = true
+        val vm = viewModel()
+
+        vm.onAction(WorkoutSummaryAction.OnSaveAsTemplateClick)
+        assertEquals(WorkoutSummaryEvent.SaveFailed, vm.events.first())
+
+        templates.fail = false
+        vm.onAction(WorkoutSummaryAction.OnSaveAsTemplateClick)
+        assertEquals(WorkoutSummaryEvent.TemplateSaved, vm.events.first())
+        assertEquals(listOf(WORKOUT_ID), templates.created)
+    }
+
+    @Test
+    fun `a summary that fails to load shows the screen, not a spinner`() = runTest(dispatcher) {
+        workouts.failReads = true
+        assertFalse(viewModel().state.value.isLoading)
+    }
+
+    @Test
+    fun `the end time is picked too, and a time with no picker open is ignored`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAction(WorkoutSummaryAction.OnEditTimesClick)
+
+        vm.onAction(WorkoutSummaryAction.OnTimePicked(LocalTime.of(20, 0))) // no picker open
+        assertEquals(LocalTime.of(19, 51), vm.state.value.editTimes?.end)
+
+        vm.onAction(WorkoutSummaryAction.OnPickTime(TimeField.End))
+        vm.onAction(WorkoutSummaryAction.OnTimePicked(LocalTime.of(20, 0)))
+        assertEquals(LocalTime.of(20, 0), vm.state.value.editTimes?.end)
+        assertNull(vm.state.value.editTimes?.picking)
+    }
+
     private class FakeWorkoutRepository : StubWorkoutRepository() {
         val session = MutableStateFlow<WorkoutSession?>(session())
         val timeUpdates = mutableListOf<Pair<Instant, Instant>>()
-        override fun observeSession(workoutId: Long): Flow<WorkoutSession?> = session
+        val renames = mutableListOf<String>()
+        var failReads = false
+        var failWrites = false
+        override fun observeSession(workoutId: Long): Flow<WorkoutSession?> =
+            if (failReads) flow { error("Database closed") } else session
+        override suspend fun renameWorkout(workoutId: Long, name: String) {
+            if (failWrites) error("Disk full")
+            renames += name
+        }
         val insights = mutableListOf<Pair<Long, String>>()
         override suspend fun setInsight(workoutId: Long, insight: String) {
             insights += workoutId to insight
             session.value = session.value?.copy(insight = insight)
         }
         override suspend fun deleteFinishedWorkout(workoutId: Long): Boolean {
+            if (failWrites) error("Disk full")
             session.value = null // like Room: the observed workout is gone
             return true
         }
@@ -163,11 +237,13 @@ class WorkoutSummaryViewModelTest {
 
     private class FakeTemplateRepository : TemplateRepository {
         val created = mutableListOf<Long>()
+        var fail = false
         override fun observeTemplates(): Flow<List<Template>> = flowOf(emptyList())
         override suspend fun getTemplate(templateId: Long): Template? = null
         override suspend fun saveTemplate(draft: TemplateDraft, now: Instant): Long = 0
         override suspend fun deleteTemplate(templateId: Long) = Unit
         override suspend fun createFromWorkout(workoutId: Long, createdAt: Instant): Long {
+            if (fail) error("Disk full")
             created += workoutId
             return 1
         }

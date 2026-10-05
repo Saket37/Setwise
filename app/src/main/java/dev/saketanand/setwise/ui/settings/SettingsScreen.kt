@@ -49,11 +49,13 @@ import dev.saketanand.setwise.ui.designsystem.components.ValueKind
 import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
+import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toWeightInput
 import dev.saketanand.setwise.util.toWeightLabel
 import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.format.TextStyle
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableList
 import org.koin.androidx.compose.koinViewModel
@@ -363,4 +365,4 @@ private fun Sex.labelRes() = when (this) {
 }
 
 /** "1:30". */
-private fun restLabel(seconds: Int) = "%d:%02d".format(seconds / 60, seconds % 60)
+private fun restLabel(seconds: Int) = seconds.seconds.toClockLabel()
