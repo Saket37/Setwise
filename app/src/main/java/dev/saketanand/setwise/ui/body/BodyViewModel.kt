@@ -5,9 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.saketanand.setwise.domain.ai.BodyReportReader
 import dev.saketanand.setwise.domain.model.BodyMeasurement
+import dev.saketanand.setwise.domain.model.BodyProgress
 import dev.saketanand.setwise.domain.model.BodyRules
+import dev.saketanand.setwise.domain.model.ProgressMeasure
+import dev.saketanand.setwise.domain.model.ProgressRange
 import dev.saketanand.setwise.domain.repository.BodyRepository
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
+import dev.saketanand.setwise.ui.designsystem.components.ChartPoint
 import dev.saketanand.setwise.util.DateProvider
 import dev.saketanand.setwise.util.parseWeight
 import kotlinx.collections.immutable.toImmutableList
@@ -44,8 +48,9 @@ class BodyViewModel(
             history = history,
             bmr = BodyRules.bmr(history, settings, today()),
             latest = LatestBody(newest { it.weightKg } ?: settings.bodyWeightKg, newest { it.bodyFatPercent }, newest { it.muscleMassKg }, newest { it.visceralFat }),
-            weightTrend = history.mapNotNull { it.weightKg }.take(CHART_POINTS).reversed().toImmutableList(),
-            bodyFatTrend = history.mapNotNull { it.bodyFatPercent }.take(CHART_POINTS).reversed().toImmutableList(),
+            progress = recentProgress(history),
+            weightChanges = BodyProgress.weightChanges(history),
+            latestReport = history.firstOrNull { !it.details.isEmpty },
             isReading = screen.isReading,
             readFailed = screen.readFailed,
             editor = screen.editor,
@@ -56,6 +61,20 @@ class BodyViewModel(
             emit(BodyUiState(isLoading = false))
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BodyUiState())
+
+    /** The Progress card: the last 3 months (design 15). */
+    private fun recentProgress(history: List<BodyMeasurement>): RecentProgress? {
+        if (history.isEmpty()) return null
+        val measures = BodyProgress.measures(history, ProgressRange.ThreeMonths, today()).associateBy { it.measure }
+        val weight = measures.getValue(ProgressMeasure.Weight)
+        return RecentProgress(
+            since = weight.since,
+            weightChange = weight.change,
+            fatChange = measures.getValue(ProgressMeasure.BodyFat).change,
+            muscleChange = measures.getValue(ProgressMeasure.Muscle).change,
+            weightPoints = weight.points.map { (day, kg) -> ChartPoint(day.toEpochDay(), kg) }.toImmutableList(),
+        )
+    }
 
     fun onAction(action: BodyAction) {
         when (action) {

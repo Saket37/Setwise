@@ -5,12 +5,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -52,6 +56,7 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.domain.model.BmrEstimate
 import dev.saketanand.setwise.domain.model.BodyMeasurement
+import dev.saketanand.setwise.domain.model.ProgressMeasure
 import dev.saketanand.setwise.domain.model.Sex
 import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.NumberKind
@@ -61,9 +66,11 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButtonDefaults
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseLineChart
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseNumberField
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.theme.numberLarge
+import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
 import dev.saketanand.setwise.util.toShortDayLabel
 import dev.saketanand.setwise.util.toWeightInput
 import dev.saketanand.setwise.util.toWeightLabel
@@ -76,7 +83,12 @@ import kotlinx.collections.immutable.ImmutableList
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun BodyScreenRoot(onBack: () -> Unit, viewModel: BodyViewModel = koinViewModel()) {
+fun BodyScreenRoot(
+    onBack: () -> Unit,
+    onOpenProgress: () -> Unit,
+    onOpenCheck: (Long) -> Unit,
+    viewModel: BodyViewModel = koinViewModel(),
+) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     // A report photo: taken with the camera (into the app's cache), or chosen. Neither is kept.
@@ -92,6 +104,8 @@ fun BodyScreenRoot(onBack: () -> Unit, viewModel: BodyViewModel = koinViewModel(
         uiState = uiState,
         onAction = viewModel::onAction,
         onBack = dropUnlessResumed(block = onBack),
+        onOpenProgress = dropUnlessResumed(block = onOpenProgress),
+        onOpenCheck = onOpenCheck,
         onTakePhoto = {
             val file = File(context.cacheDir, "reports").apply { mkdirs() }.resolve("report.jpg")
             val uri: Uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
@@ -114,6 +128,8 @@ fun BodyScreen(
     onTakePhoto: () -> Unit,
     onChoosePhoto: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenProgress: () -> Unit = {},
+    onOpenCheck: (Long) -> Unit = {},
 ) {
     val locale = currentLocale()
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -122,7 +138,7 @@ fun BodyScreen(
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            item(key = "latest") { LatestCard(uiState, locale) }
+            item(key = "latest") { LatestCard(uiState, locale, onOpenCheck) }
             item(key = "scan") {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.body_scan_detail), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -168,13 +184,20 @@ fun BodyScreen(
                     }
                 }
             }
-            if (uiState.weightTrend.size >= 2) item(key = "weight") { TrendCard(stringResource(R.string.body_weight_trend), uiState.weightTrend, "kg", locale) }
-            if (uiState.bodyFatTrend.size >= 2) item(key = "fat") { TrendCard(stringResource(R.string.body_fat_trend), uiState.bodyFatTrend, "%", locale) }
+            uiState.progress?.let { progress -> item(key = "progress") { ProgressCard(progress, locale, onOpenProgress) } }
             if (uiState.history.isNotEmpty()) {
                 item(key = "history-title") {
                     Text(stringResource(R.string.body_history), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
                 }
-                items(uiState.history, key = { it.id }) { check -> CheckRow(check, locale, onDelete = { onAction(BodyAction.OnDelete(check.id)) }) }
+                items(uiState.history, key = { it.id }) { check ->
+                    CheckRow(
+                        check = check,
+                        change = uiState.weightChanges[check.id],
+                        locale = locale,
+                        onOpen = { onOpenCheck(check.id) },
+                        onDelete = { onAction(BodyAction.OnDelete(check.id)) },
+                    )
+                }
             }
         }
     }
@@ -182,7 +205,7 @@ fun BodyScreen(
 }
 
 @Composable
-private fun LatestCard(uiState: BodyUiState, locale: Locale) {
+private fun LatestCard(uiState: BodyUiState, locale: Locale, onOpenCheck: (Long) -> Unit) {
     val latest = uiState.latest
     Column(
         modifier = Modifier
@@ -218,6 +241,65 @@ private fun LatestCard(uiState: BodyUiState, locale: Locale) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        // A full report: its score, and everything else it said (design 17).
+        uiState.latestReport?.let { report ->
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainerHighest)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .clickable(onClickLabel = stringResource(R.string.body_full_report)) { onOpenCheck(report.id) },
+            ) {
+                Text(
+                    text = report.details.fitnessScore?.let { stringResource(R.string.body_full_report_with_score, it) } ?: stringResource(R.string.body_full_report),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            }
+        }
+    }
+}
+
+/** "Progress · last 3 months": the weight line and what changed; opens Body progress (design 15). */
+@Composable
+private fun ProgressCard(progress: RecentProgress, locale: Locale, onOpen: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .clickable(onClickLabel = stringResource(R.string.body_progress), onClick = onOpen)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(stringResource(R.string.body_progress_card), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
+                Text(
+                    text = progress.since?.let { stringResource(R.string.body_progress_card_since, it.toDayMonthLabel(locale)) } ?: stringResource(R.string.body_progress_card_empty),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        }
+        if (progress.weightPoints.size >= 2) {
+            SetwiseLineChart(points = progress.weightPoints, contentDescription = "", height = 56.dp)
+        }
+        val changes = listOfNotNull(
+            progress.weightChange?.let { measureChange(ProgressMeasure.Weight, it, locale) to stringResource(R.string.measure_weight) },
+            progress.fatChange?.let { measureChange(ProgressMeasure.BodyFat, it, locale) to stringResource(R.string.measure_body_fat) },
+            progress.muscleChange?.let { measureChange(ProgressMeasure.Muscle, it, locale) to stringResource(R.string.body_muscle_label) },
+        )
+        if (changes.isNotEmpty()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                changes.forEach { (value, label) -> Value(value, label.lowercase(locale), Modifier.weight(1f)) }
+                repeat(3 - changes.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
     }
 }
 
@@ -230,24 +312,7 @@ private fun Value(value: String?, label: String, modifier: Modifier = Modifier) 
 }
 
 @Composable
-private fun TrendCard(title: String, values: ImmutableList<Double?>, unit: String, locale: Locale) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainer, MaterialTheme.shapes.large)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-            Text("${values.last()?.toWeightLabel(locale)} $unit", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
-        }
-        SetwiseBarChart(values = values, contentDescription = "$title: " + values.joinToString { "${it?.toWeightLabel(locale)} $unit" })
-    }
-}
-
-@Composable
-private fun CheckRow(check: BodyMeasurement, locale: Locale, onDelete: () -> Unit) {
+private fun CheckRow(check: BodyMeasurement, change: Double?, locale: Locale, onOpen: () -> Unit, onDelete: () -> Unit) {
     val parts = listOfNotNull(
         check.weightKg?.let { "${it.toWeightLabel(locale)} kg" },
         check.bodyFatPercent?.let { "${it.toWeightLabel(locale)}% fat" },
@@ -255,7 +320,13 @@ private fun CheckRow(check: BodyMeasurement, locale: Locale, onDelete: () -> Uni
         check.bmrKcal?.let { "BMR $it" },
     )
     Column {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(vertical = 6.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .clickable(onClickLabel = stringResource(R.string.body_open_check), onClick = onOpen)
+                .padding(vertical = 6.dp),
+        ) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = check.measuredOn.toShortDayLabel(locale) + if (check.source == BodyMeasurement.Source.Report) " · " + stringResource(R.string.body_source_report) else "",
@@ -263,6 +334,14 @@ private fun CheckRow(check: BodyMeasurement, locale: Locale, onDelete: () -> Uni
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(parts.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+            }
+            // Weight change from the check before ("−0.4").
+            change?.let {
+                Text(
+                    text = measureNumber(ProgressMeasure.Weight, it, locale).let { n -> if (it > 0) "+$n" else n.replace("-", "−") },
+                    style = MaterialTheme.typography.numberSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             SetwiseIconButton(
                 icon = R.drawable.ic_delete,

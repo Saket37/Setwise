@@ -4,9 +4,9 @@ import androidx.compose.runtime.Immutable
 import dev.saketanand.setwise.domain.model.BmrEstimate
 import dev.saketanand.setwise.domain.model.BodyMeasurement
 import dev.saketanand.setwise.domain.model.ReportDetails
+import dev.saketanand.setwise.ui.designsystem.components.ChartPoint
 import java.time.LocalDate
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 /** Everything [BodyScreen] draws. */
 @Immutable
@@ -17,9 +17,12 @@ data class BodyUiState(
     val bmr: BmrEstimate? = null,
     /** The newest value of each, from any check. */
     val latest: LatestBody = LatestBody(),
-    /** Up to the last [CHART_POINTS] checks with a value, oldest first. */
-    val weightTrend: ImmutableList<Double?> = persistentListOf(),
-    val bodyFatTrend: ImmutableList<Double?> = persistentListOf(),
+    /** The last 3 months, for the Progress card (design 15); null with no checks. */
+    val progress: RecentProgress? = null,
+    /** Each check's weight change from the one before it, by id. */
+    val weightChanges: Map<Long, Double> = emptyMap(),
+    /** The newest check with a full report: its fitness score and a link to it. */
+    val latestReport: BodyMeasurement? = null,
     /** A photo is being read. */
     val isReading: Boolean = false,
     /** The last photo had nothing that looked like a report. */
@@ -60,4 +63,13 @@ data class BodyEditor(
     val isInvalid: Boolean = false,
 )
 
-const val CHART_POINTS = 8
+/** What changed in the last 3 months (each null without two values), and the weight line. */
+@Immutable
+data class RecentProgress(
+    val since: LocalDate?,
+    val weightChange: Double?,
+    val fatChange: Double?,
+    val muscleChange: Double?,
+    /** x: epoch days. */
+    val weightPoints: ImmutableList<ChartPoint>,
+)
