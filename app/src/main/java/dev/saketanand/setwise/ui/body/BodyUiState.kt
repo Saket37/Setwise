@@ -42,6 +42,8 @@ data class BodyEditor(
     /** Changes when a new sheet opens, so its fields start fresh. */
     val key: Long,
     val day: LocalDate,
+    /** Today, when the sheet opened: the latest day a reading can be for (#128). */
+    val latestDay: LocalDate,
     val weightKg: Double? = null,
     val bodyFatPercent: Double? = null,
     val muscleMassKg: Double? = null,
