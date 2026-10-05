@@ -34,6 +34,7 @@ class CalorieEstimator(private val model: OnDeviceModel) {
         val formula = CalorieFormula.estimate(session, bodyWeightKg, bmrKcal) ?: return null
         val fallback = SourcedCalorieEstimate(formula, CalorieFormula.SOURCE)
         if (!useModel || model.availability() != ModelAvailability.Ready) return fallback
+        val weightKg = bodyWeightKg ?: return fallback // the formula needs it too, so it's there
 
         val startedAt = System.nanoTime()
         fun outcome(text: String) = Log.d(
@@ -43,7 +44,7 @@ class CalorieEstimator(private val model: OnDeviceModel) {
         )
 
         val parsed = try {
-            model.generate(prompt(session, bodyWeightKg!!, formula, bmrKcal), ModelCalorieAnswer.OUTPUT)
+            model.generate(prompt(session, weightKg, formula, bmrKcal), ModelCalorieAnswer.OUTPUT)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

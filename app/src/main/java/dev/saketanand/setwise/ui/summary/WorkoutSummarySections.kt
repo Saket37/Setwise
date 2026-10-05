@@ -72,6 +72,11 @@ fun SummaryStats(uiState: WorkoutSummaryUiState, onAddBodyWeight: () -> Unit, mo
                     value = uiState.caloriesKcal.toString(),
                     unit = stringResource(R.string.unit_kcal),
                     modifier = tile.weight(1f),
+                    caption = when (uiState.caloriesSource) {
+                        CaloriesSourceUi.OnDevice -> stringResource(R.string.calories_by_model)
+                        CaloriesSourceUi.Formula -> stringResource(R.string.calories_by_formula)
+                        null -> null
+                    },
                 )
             } else if (uiState.needsBodyWeight) {
                 StatTile(
@@ -94,10 +99,11 @@ fun SummaryStats(uiState: WorkoutSummaryUiState, onAddBodyWeight: () -> Unit, mo
 
 /** Design: caption above a Barlow 28 value. */
 @Composable
-private fun SummaryTile(label: String, value: String, modifier: Modifier, unit: String? = null) {
+private fun SummaryTile(label: String, value: String, modifier: Modifier, unit: String? = null, caption: String? = null) {
     StatTile(
         value = value,
         label = label,
+        caption = caption,
         unit = unit,
         labelFirst = true,
         valueStyle = MaterialTheme.typography.headlineSmall,

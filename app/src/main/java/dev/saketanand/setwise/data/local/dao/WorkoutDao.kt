@@ -343,6 +343,18 @@ interface WorkoutDao {
     )
     suspend fun updateFinishedTimes(workoutId: Long, startedAt: Long, endedAt: Long): Int
 
+    /**
+     * A finished workout's sets were edited: its calorie estimate and written insight describe the
+     * old sets, so both are cleared to be worked out again (CalorieSync, the summary).
+     */
+    @Query(
+        """
+        UPDATE workouts SET calories = NULL, intensity = NULL, caloriesSource = NULL, summary = NULL
+        WHERE id = :workoutId AND endedAt IS NOT NULL
+        """
+    )
+    suspend fun clearEstimates(workoutId: Long): Int
+
     /** Finished workouts with no calorie estimate yet, newest first. */
     @Query("SELECT id FROM workouts WHERE endedAt IS NOT NULL AND calories IS NULL ORDER BY startedAt DESC")
     fun observeWorkoutsWithoutCalories(): Flow<List<Long>>
