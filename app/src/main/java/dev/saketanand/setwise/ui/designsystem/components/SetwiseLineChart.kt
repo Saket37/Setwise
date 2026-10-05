@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -22,10 +21,6 @@ import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-
-/** A point on a [SetwiseLineChart]: [x] in any unit of time (e.g. epoch days), so uneven gaps show. */
-@Immutable
-data class ChartPoint(val x: Long, val y: Double)
 
 /**
  * A line through [points] (oldest left), spaced by time, with a dot on the latest and a

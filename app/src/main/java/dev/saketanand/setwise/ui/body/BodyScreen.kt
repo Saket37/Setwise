@@ -64,7 +64,6 @@ import dev.saketanand.setwise.domain.model.ProgressMeasure
 import dev.saketanand.setwise.domain.model.Sex
 import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.NumberKind
-import dev.saketanand.setwise.ui.designsystem.components.SetwiseBarChart
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
@@ -83,7 +82,6 @@ import java.text.NumberFormat
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.Locale
-import kotlinx.collections.immutable.ImmutableList
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -283,7 +281,8 @@ private fun ProgressCard(progress: RecentProgress, locale: Locale, onOpen: () ->
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(stringResource(R.string.body_progress_card), style = MaterialTheme.typography.titleSmall, modifier = Modifier.semantics { heading() })
                 Text(
-                    text = progress.since?.let { stringResource(R.string.body_progress_card_since, it.toDayMonthLabel(locale)) } ?: stringResource(R.string.body_progress_card_empty),
+                    text = progress.since?.let { stringResource(R.string.body_progress_card_since, it.toDayMonthLabel(locale)) }
+                        ?: stringResource(R.string.body_progress_card_empty),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

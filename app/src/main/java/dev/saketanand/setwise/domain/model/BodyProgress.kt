@@ -4,7 +4,12 @@ import java.time.LocalDate
 
 /** A time range for body progress: the last month… or all checks. */
 enum class ProgressRange(val days: Long?) {
-    Month(30), ThreeMonths(92), SixMonths(183), Year(365), All(null);
+    Month(30),
+    ThreeMonths(92),
+    SixMonths(183),
+    Year(365),
+    All(null),
+    ;
 
     /** The first day in range; null: no limit. */
     fun start(today: LocalDate): LocalDate? = days?.let { today.minusDays(it) }

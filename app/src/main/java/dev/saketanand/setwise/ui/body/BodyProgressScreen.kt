@@ -208,7 +208,10 @@ internal val SampleBodyProgressState: BodyProgressUiState = run {
     BodyProgressUiState(
         isLoading = false,
         measures = persistentListOf(
-            MeasureUi(ProgressMeasure.Weight, 78.4, -2.1, day(7, 6), day(10, 5), points(day(7, 6) to 80.5, day(7, 27) to 80.0, day(8, 17) to 79.6, day(9, 7) to 79.3, day(9, 28) to 78.8, day(10, 5) to 78.4)),
+            MeasureUi(
+                ProgressMeasure.Weight, 78.4, -2.1, day(7, 6), day(10, 5),
+                points(day(7, 6) to 80.5, day(7, 27) to 80.0, day(8, 17) to 79.6, day(9, 7) to 79.3, day(9, 28) to 78.8, day(10, 5) to 78.4),
+            ),
             MeasureUi(ProgressMeasure.BodyFat, 18.5, -1.2, day(7, 6), day(10, 5), points(day(7, 6) to 19.7, day(8, 17) to 19.4, day(9, 21) to 18.9, day(10, 5) to 18.5)),
             MeasureUi(ProgressMeasure.Muscle, 35.1, 0.5, day(7, 6), day(10, 5), points(day(7, 6) to 34.6, day(8, 17) to 34.7, day(9, 21) to 34.9, day(10, 5) to 35.1)),
             MeasureUi(ProgressMeasure.FitnessScore, 78.0, null, null, null, persistentListOf()),

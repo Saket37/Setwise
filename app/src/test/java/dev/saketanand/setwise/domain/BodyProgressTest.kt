@@ -20,24 +20,27 @@ class BodyProgressTest {
     private val today = LocalDate.of(2026, 10, 5)
     private fun on(month: Int, day: Int) = LocalDate.of(2026, month, day)
 
-    private fun report(id: Long, day: LocalDate, weight: Double, fat: Double, arms: Double, legs: Double, score: Int) = BodyMeasurement(
-        id, day, weightKg = weight, bodyFatPercent = fat, source = BodyMeasurement.Source.Report,
+    /** A report's values: weight, body fat, lean arms and legs (both sides), fitness score. */
+    private data class Values(val weight: Double, val fat: Double, val arms: Double, val legs: Double, val score: Int)
+
+    private fun report(id: Long, day: LocalDate, v: Values) = BodyMeasurement(
+        id, day, weightKg = v.weight, bodyFatPercent = v.fat, source = BodyMeasurement.Source.Report,
         details = ReportDetails(
-            fitnessScore = score,
+            fitnessScore = v.score,
             segments = listOf(
-                SegmentValues(BodySegment.RightArm, leanKg = arms / 2), SegmentValues(BodySegment.LeftArm, leanKg = arms / 2),
+                SegmentValues(BodySegment.RightArm, leanKg = v.arms / 2), SegmentValues(BodySegment.LeftArm, leanKg = v.arms / 2),
                 SegmentValues(BodySegment.Trunk, leanKg = 28.0),
-                SegmentValues(BodySegment.RightLeg, leanKg = legs / 2), SegmentValues(BodySegment.LeftLeg, leanKg = legs / 2),
+                SegmentValues(BodySegment.RightLeg, leanKg = v.legs / 2), SegmentValues(BodySegment.LeftLeg, leanKg = v.legs / 2),
             ),
         ),
     )
 
     private val checks = listOf(
-        report(1, on(4, 25), 80.6, 20.1, 6.9, 18.2, 74),
+        report(1, on(4, 25), Values(80.6, 20.1, 6.9, 18.2, 74)),
         BodyMeasurement(2, on(5, 30), weightKg = 79.9), // typed in: weight only
-        report(3, on(7, 6), 80.5, 19.7, 7.0, 18.3, 75),
+        report(3, on(7, 6), Values(80.5, 19.7, 7.0, 18.3, 75)),
         BodyMeasurement(4, on(9, 28), weightKg = 78.8),
-        report(5, on(10, 5), 78.4, 18.5, 7.2, 18.7, 78),
+        report(5, on(10, 5), Values(78.4, 18.5, 7.2, 18.7, 78)),
     ).shuffled(kotlin.random.Random(3))
 
     private fun progress(range: ProgressRange, measure: ProgressMeasure) =
