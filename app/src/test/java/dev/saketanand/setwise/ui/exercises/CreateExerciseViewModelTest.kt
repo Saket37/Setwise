@@ -1,12 +1,16 @@
 package dev.saketanand.setwise.ui.exercises
 
 import androidx.lifecycle.SavedStateHandle
+import dev.saketanand.setwise.domain.ai.ExerciseAssistant
+import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.ai.SuggestionSource
 import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.NewExercise
 import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -25,10 +29,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import dev.saketanand.setwise.domain.ai.ExerciseAssistant
-import dev.saketanand.setwise.domain.ai.ModelAvailability
-import dev.saketanand.setwise.domain.ai.SuggestionSource
-import dev.saketanand.setwise.testing.FakeOnDeviceModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CreateExerciseViewModelTest {
@@ -38,6 +38,7 @@ class CreateExerciseViewModelTest {
     private val model = FakeOnDeviceModel()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
+
     @After fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel(name: String = "", handle: SavedStateHandle = SavedStateHandle()) =

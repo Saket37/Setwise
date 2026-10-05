@@ -95,7 +95,8 @@ enum class SetwiseButtonSize(
     Medium(minHeight = 44.dp, horizontalPadding = 16.dp, verticalPadding = 10.dp, iconSize = 18.dp, iconGap = 8.dp),
 
     /** 36dp, SemiBold 12: compact actions in headers ("+ New"). */
-    Small(minHeight = 36.dp, horizontalPadding = 14.dp, verticalPadding = 0.dp, iconSize = 16.dp, iconGap = 6.dp);
+    Small(minHeight = 36.dp, horizontalPadding = 14.dp, verticalPadding = 0.dp, iconSize = 16.dp, iconGap = 6.dp),
+    ;
 
     @Composable
     fun textStyle(): TextStyle = when (this) {

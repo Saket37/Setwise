@@ -28,6 +28,7 @@ class OnboardingViewModelTest {
     private val settings = FakeUserSettingsRepository()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
+
     @After fun tearDown() = Dispatchers.resetMain()
 
     /** Default: notifications already allowed (or Android 12-), so no notifications step. */

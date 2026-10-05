@@ -43,6 +43,7 @@ class ExerciseDetailViewModelTest {
     private val model = FakeOnDeviceModel()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
+
     @After fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel() =

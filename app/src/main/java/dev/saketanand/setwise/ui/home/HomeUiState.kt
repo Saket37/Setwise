@@ -2,10 +2,10 @@ package dev.saketanand.setwise.ui.home
 
 import androidx.compose.runtime.Immutable
 import dev.saketanand.setwise.domain.model.DayStatus
+import dev.saketanand.setwise.domain.model.WeekFacts
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.time.Duration
-import dev.saketanand.setwise.domain.model.WeekFacts
 
 /**
  * Everything the Workout tab (Home) shows. Design artboards:

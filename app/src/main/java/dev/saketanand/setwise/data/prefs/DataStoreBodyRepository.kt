@@ -70,6 +70,7 @@ class DataStoreBodyRepository(private val dataStore: DataStore<Preferences>) : B
         const val TAG = "DataStoreBodyRepository"
         val JSON = Json { ignoreUnknownKeys = true }
         val MEASUREMENTS = stringPreferencesKey("body_measurements")
+
         /** Same key as the profile's body weight (DataStoreUserSettingsRepository). */
         val BODY_WEIGHT_KG = doublePreferencesKey("body_weight_kg")
         val NEWEST_FIRST = compareByDescending<BodyMeasurement> { it.measuredOn }.thenByDescending { it.id }

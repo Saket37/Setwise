@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.saketanand.setwise.domain.ai.ExerciseAssistant
+import dev.saketanand.setwise.domain.ai.ExerciseSuggestion
 import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.NewExercise
@@ -19,14 +21,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import dev.saketanand.setwise.domain.ai.ExerciseAssistant
-import dev.saketanand.setwise.domain.ai.ExerciseSuggestion
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.mapLatest
 
 /**
  * Screen: [CreateExerciseScreenRoot]. A custom exercise: name (pre-filled with the picker's
@@ -213,6 +213,7 @@ class CreateExerciseViewModel(
         const val KEY_PICKED = "picked"
         const val CARDIO = "Cardio"
         const val MATCH_DEBOUNCE_MS = 300L
+
         /** Longer than the match: the model is asked once typing has really paused. */
         const val SUGGEST_DEBOUNCE_MS = 600L
         const val MIN_MATCH_LENGTH = 3

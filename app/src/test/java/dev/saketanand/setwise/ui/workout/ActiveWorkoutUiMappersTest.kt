@@ -1,6 +1,5 @@
 package dev.saketanand.setwise.ui.workout
 
-import dev.saketanand.setwise.util.parseWeight
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.ExerciseType
@@ -9,12 +8,13 @@ import dev.saketanand.setwise.domain.model.PersonalBests
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSet
+import dev.saketanand.setwise.timer.NextUp
+import dev.saketanand.setwise.util.parseWeight
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Locale
-import dev.saketanand.setwise.timer.NextUp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

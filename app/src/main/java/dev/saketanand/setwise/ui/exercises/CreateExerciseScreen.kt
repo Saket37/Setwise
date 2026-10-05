@@ -183,8 +183,7 @@ fun CreateExerciseScreen(
                         onIncrease = { onAction(CreateExerciseAction.OnRestChange(+1)) },
                         decreaseDescription = stringResource(R.string.decrease_rest),
                         increaseDescription = stringResource(R.string.increase_rest),
-                        range = CreateExerciseUiState.REST_RANGE_SEC.first / CreateExerciseUiState.REST_STEP_SEC..
-                            CreateExerciseUiState.REST_RANGE_SEC.last / CreateExerciseUiState.REST_STEP_SEC,
+                        range = CreateExerciseUiState.REST_STEPS,
                     )
                 }
             }

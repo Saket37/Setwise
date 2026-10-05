@@ -1,17 +1,17 @@
 package dev.saketanand.setwise.data.repository
 
 import dev.saketanand.setwise.data.local.dao.ExerciseDao
+import dev.saketanand.setwise.data.local.entity.ExerciseEntity
 import dev.saketanand.setwise.data.mapper.toDomain
+import dev.saketanand.setwise.domain.model.CardioMetric
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.NewExercise
 import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import dev.saketanand.setwise.data.local.entity.ExerciseEntity
-import dev.saketanand.setwise.domain.model.CardioMetric
-import dev.saketanand.setwise.domain.model.CreateExerciseResult
-import dev.saketanand.setwise.domain.model.ExerciseType
-import dev.saketanand.setwise.domain.model.NewExercise
 
 private const val CARDIO_MUSCLE_GROUP = "Cardio"
 

@@ -68,6 +68,7 @@ private const val MIN_FRACTION = 0.08f
  * never above [MAX_FLOOR] of the highest, so 48 → 48.2 kg (a plateau) stays level instead of
  * doubling.
  */
+
 /** The axis starts at most this far up the highest value: smaller differences don't look big. */
 private const val MAX_FLOOR = 0.8
 

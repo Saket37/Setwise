@@ -1,12 +1,12 @@
 package dev.saketanand.setwise.ui.workout
 
 import androidx.compose.runtime.Immutable
+import dev.saketanand.setwise.domain.ai.QuickLogResult
 import dev.saketanand.setwise.domain.model.CardioValues
+import dev.saketanand.setwise.domain.model.NextSession
+import dev.saketanand.setwise.domain.model.SetFact
 import java.time.LocalDate
 import java.time.LocalTime
-import dev.saketanand.setwise.domain.ai.QuickLogResult
-import dev.saketanand.setwise.domain.model.SetFact
-import dev.saketanand.setwise.domain.model.NextSession
 
 /** Everything [ActiveWorkoutScreen] draws. */
 @Immutable

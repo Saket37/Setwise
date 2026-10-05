@@ -3,8 +3,8 @@ package dev.saketanand.setwise.ui.summary
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PersonalBests
-import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.PrKind
+import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutSet
