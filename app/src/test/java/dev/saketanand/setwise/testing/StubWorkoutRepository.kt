@@ -7,6 +7,7 @@ import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.FinishedWorkout
 import dev.saketanand.setwise.domain.model.LoggedSetRecord
+import dev.saketanand.setwise.domain.model.RemovedSet
 import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.SharedSet
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
@@ -45,7 +46,8 @@ open class StubWorkoutRepository : WorkoutRepository {
     override suspend fun addSet(workoutExerciseId: Long) = Unit
     override suspend fun updateSetValues(setId: Long, weightKg: Double?, reps: Int?, durationSec: Int?) = Unit
     override suspend fun setCompleted(setId: Long, completedAt: Instant?, weightKg: Double?, reps: Int?, durationSec: Int?) = Unit
-    override suspend fun deleteSet(setId: Long) = Unit
+    override suspend fun deleteSet(setId: Long): RemovedSet? = null
+    override suspend fun restoreSet(set: RemovedSet) = Unit
     override suspend fun updateStartTime(workoutId: Long, startedAt: Instant) = Unit
     override suspend fun finishWorkout(workoutId: Long, endedAt: Instant): Boolean = true
     override suspend fun updateFinishedTimes(workoutId: Long, startedAt: Instant, endedAt: Instant): Boolean = true

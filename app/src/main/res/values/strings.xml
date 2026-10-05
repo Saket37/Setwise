@@ -757,4 +757,6 @@
     <string name="not_now">Not now</string>
     <string name="mark_all_as_rest">Mark all as rest</string>
     <string name="check_in_settings_hint">You can turn these questions off in Settings.</string>
+    <string name="set_removed">Set %1$d removed</string>
+    <string name="undo">Undo</string>
 </resources>
