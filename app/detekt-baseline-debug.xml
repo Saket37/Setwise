@@ -8,7 +8,6 @@
     <ID>ComplexCondition:ExerciseNames.kt:ExerciseNames$i &gt; 1 &amp;&amp; j &gt; 1 &amp;&amp; a[i - 1] == b[j - 2] &amp;&amp; a[i - 2] == b[j - 1]</ID>
     <ID>ComplexCondition:PersonalRecords.kt:PersonalRecords$weightKg == null || weightKg &lt;= 0 || reps == null || reps &lt;= 0</ID>
     <ID>ComplexCondition:QuickLogInterpreter.kt:QuickLogInterpreter$exercise.type == ExerciseType.BODYWEIGHT &amp;&amp; parse.sets.isEmpty() &amp;&amp; parse.bare.isNotEmpty() &amp;&amp; parse.leftover.all { it.toIntOrNull() != null } &amp;&amp; parse.bare.all { it in 1..MAX_BARE }</ID>
-    <ID>ComposableParamOrder:HomeSections.kt:@Composable fun StartWorkoutButton</ID>
     <ID>CyclomaticComplexMethod:ActiveWorkoutScreen.kt:@Composable fun ActiveWorkoutScreenRoot</ID>
     <ID>CyclomaticComplexMethod:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$fun onAction</ID>
     <ID>CyclomaticComplexMethod:BodyViewModel.kt:BodyViewModel$private fun save</ID>
@@ -168,16 +167,6 @@
     <ID>MaxLineLength:HistoryAsk.kt:stringResource(R.string.ask_last_lifted_kg, stringResource(R.string.ask_weight_kg, question.atLeastKg.toWeightLabel(locale)), name, day, set.long(locale), set.setNumber)</ID>
     <ID>MaxLineLength:WeeklySummaryCard.kt:add(Triple(stringResource(R.string.weekly_best_set, set.exerciseName), set.short(locale), if (set.isPr) MaterialTheme.colorScheme.pr else MaterialTheme.colorScheme.primary))</ID>
     <ID>MaxLineLength:WeeklySummaryCard.kt:add(Triple(stringResource(R.string.weekly_plateau, plateau.exerciseName), pluralStringResource(R.plurals.weekly_flat_weeks, plateau.weeks, plateau.weeks), MaterialTheme.colorScheme.onSurfaceVariant))</ID>
-    <ID>MissingNonRestartableComposable:SetwiseValueDialog.kt:@Composable private fun DialogTextButton</ID>
-    <ID>MissingReadOnlyComposable:ExercisePickerSections.kt:@Composable private fun exerciseDetail: String</ID>
-    <ID>MissingReadOnlyComposable:HomeSections.kt:@Composable fun relativeDaysText: String</ID>
-    <ID>MissingReadOnlyComposable:RestTimerBar.kt:@Composable private fun restLabel: String</ID>
-    <ID>ModifierMissing:SetwiseAppRoot.kt:@Composable fun SetwiseAppRoot</ID>
-    <ID>ModifierMissing:SetwisePreview.kt:@Composable fun SetwisePreview</ID>
-    <ID>ModifierWithoutDefault:CardioEntryScreen.kt:modifier: Modifier</ID>
-    <ID>ModifierWithoutDefault:SetwiseSettings.kt:modifier: Modifier</ID>
-    <ID>ModifierWithoutDefault:WorkoutSummarySections.kt:modifier: Modifier</ID>
-    <ID>MultipleEmitters:OnboardingScreen.kt:@Composable private fun StepText</ID>
     <ID>ParameterNaming:ActiveWorkoutScreen.kt:onFinished: (workoutId: Long) -&gt; Unit</ID>
     <ID>ParameterNaming:ActiveWorkoutScreen.kt:onPickedExercisesConsumed: () -&gt; Unit</ID>
     <ID>ParameterNaming:CreateExerciseScreen.kt:onExerciseCreated: (exerciseId: Long) -&gt; Unit</ID>
@@ -188,9 +177,6 @@
     <ID>ParameterNaming:TemplateEditorScreen.kt:onPickedExercisesConsumed: () -&gt; Unit</ID>
     <ID>ParameterNaming:TemplateEditorScreen.kt:onSaved: () -&gt; Unit</ID>
     <ID>ParameterNaming:TemplateFromGoalScreen.kt:onDraftCreated: (templateId: Long) -&gt; Unit</ID>
-    <ID>PreviewAnnotationNaming:PreviewAnnotations.kt:AccessibilityPreviews</ID>
-    <ID>PreviewAnnotationNaming:PreviewAnnotations.kt:ComponentPreviews</ID>
-    <ID>PreviewAnnotationNaming:PreviewAnnotations.kt:ScreenPreviews</ID>
     <ID>PropertyName:Type.kt:/** Tabular figures keep ticking timers and set values from shifting sideways. */ private const val TabularNumbers = "tnum"</ID>
     <ID>SpreadOperator:CardioEntryScreen.kt:(*fields.all.map { field -&gt; snapshotFlow { field.text.toString() }.drop(1) }.toTypedArray())</ID>
     <ID>TooGenericExceptionCaught:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel$e: Exception</ID>

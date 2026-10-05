@@ -18,7 +18,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberLarge
 import dev.saketanand.setwise.ui.designsystem.theme.pr
@@ -71,7 +71,7 @@ fun StatTile(
     }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun StatTilePreview() = SetwisePreview {
     Row(modifier = Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

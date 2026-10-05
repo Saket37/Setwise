@@ -49,7 +49,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseFilterChip
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButtonDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseInputBar
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 import dev.saketanand.setwise.util.toWeightLabel
@@ -284,7 +284,7 @@ private fun QuickLogResult.Reason.messageRes() = when (this) {
     QuickLogResult.Reason.NoLastTime -> R.string.quick_log_no_last_time
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun QuickLogSectionPreview() = SetwisePreview(padding = 0.dp) {
     QuickLogSection(

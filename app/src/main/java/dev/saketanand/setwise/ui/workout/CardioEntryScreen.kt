@@ -43,7 +43,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseNumberField
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseStepper
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
-import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.toWeightInput
@@ -290,7 +290,7 @@ private fun UnitLabel(text: String) {
 }
 
 @Composable
-private fun LabeledField(label: String, state: TextFieldState, hint: String?, modifier: Modifier) {
+private fun LabeledField(label: String, state: TextFieldState, hint: String?, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         SetwiseNumberField(
@@ -343,7 +343,7 @@ private fun StepperSection(title: String, unit: String, stepper: @Composable () 
 
 // Previews: one per scenario
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun CardioEntryTreadmillPreview() = SetwiseScreenPreview {
     CardioEntryScreen(
@@ -359,7 +359,7 @@ private fun CardioEntryTreadmillPreview() = SetwiseScreenPreview {
     )
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun CardioEntryEllipticalPreview() = SetwiseScreenPreview {
     CardioEntryScreen(

@@ -30,7 +30,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 
 /**
@@ -100,7 +100,7 @@ fun SetwiseSearchField(
     )
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseSearchFieldPreview() = SetwisePreview {
     Column {

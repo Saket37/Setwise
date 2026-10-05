@@ -30,7 +30,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 
 /**
@@ -110,7 +110,7 @@ fun SetwiseTextField(
     }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseTextFieldPreview() = SetwisePreview {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

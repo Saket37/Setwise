@@ -17,7 +17,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -83,7 +83,7 @@ fun barFractions(values: List<Double?>): List<Float?> {
     }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseBarChartPreview() = SetwisePreview {
     SetwiseBarChart(values = persistentListOf(40.0, 42.0, null, 47.5, 48.0, 48.0, 47.5, 48.0), contentDescription = "")

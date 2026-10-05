@@ -45,7 +45,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseBarChart
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseEmptyState
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
-import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberMedium
 import dev.saketanand.setwise.ui.navigation.Route
@@ -370,7 +370,7 @@ private fun ProgressMetric.unitRes(): Int = when (this) {
 
 // Previews: one per scenario
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun ExerciseDetailPreview() = SetwiseScreenPreview {
     ExerciseDetailScreen(
@@ -380,7 +380,7 @@ private fun ExerciseDetailPreview() = SetwiseScreenPreview {
     )
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun ExerciseDetailEmptyPreview() = SetwiseScreenPreview {
     ExerciseDetailScreen(

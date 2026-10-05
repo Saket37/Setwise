@@ -15,7 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 
 /**
@@ -65,7 +65,7 @@ fun SetwiseTextInputDialog(
     )
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseTextInputDialogPreview() = SetwisePreview {
     SetwiseTextInputDialog(title = "Rename workout", label = "Name", initialText = "Workout", onConfirm = {}, onDismiss = {})

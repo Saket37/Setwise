@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import java.time.DayOfWeek
 import java.time.format.TextStyle
@@ -42,7 +42,7 @@ fun SetwiseDayPicker(
     }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseDayPickerPreview() = SetwisePreview {
     SetwiseDayPicker(selected = persistentSetOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY), onToggle = {})

@@ -69,7 +69,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseEmptyState
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTimePickerDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
-import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.ui.rememberElapsedTime
@@ -419,13 +419,13 @@ private fun WorkoutClock(startedAtMillis: Long, modifier: Modifier = Modifier) {
 
 // Previews: one per scenario
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun ActiveWorkoutScreenPreview() = SetwiseScreenPreview {
     ActiveWorkoutScreen(uiState = SampleActiveWorkoutState, onAction = {})
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun ActiveWorkoutEmptyPreview() = SetwiseScreenPreview {
     ActiveWorkoutScreen(
@@ -434,7 +434,7 @@ private fun ActiveWorkoutEmptyPreview() = SetwiseScreenPreview {
     )
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun ActiveWorkoutFinishDialogPreview() = SetwiseScreenPreview {
     ActiveWorkoutScreen(

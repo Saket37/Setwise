@@ -20,7 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
 
@@ -69,7 +69,7 @@ fun IconTile(
     }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun IconTilePreview() = SetwisePreview {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {

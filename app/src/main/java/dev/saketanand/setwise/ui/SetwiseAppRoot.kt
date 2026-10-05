@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.emptyFlow
 @Composable
 fun SetwiseAppRoot(
     startDestination: Route,
+    modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     appLinks: Flow<AppLink> = emptyFlow(),
 ) {
@@ -61,7 +62,7 @@ fun SetwiseAppRoot(
     val showBottomBar = TopLevelDestination.entries.any { currentDestination.isOn(it) }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {

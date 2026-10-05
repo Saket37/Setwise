@@ -15,10 +15,10 @@ style:
     active: false
   UnusedPrivateFunction:
     # Previews are used by Android Studio.
-    ignoreAnnotated: ['Preview', 'ComponentPreviews', 'ScreenPreviews', 'AccessibilityPreviews']
+    ignoreAnnotated: ['Preview', 'PreviewComponents', 'PreviewScreens', 'PreviewAccessibility']
   MagicNumber:
     # Layout values in composables and named defaults are read in place.
-    ignoreAnnotated: ['Composable', 'Preview', 'ComponentPreviews', 'ScreenPreviews', 'AccessibilityPreviews']
+    ignoreAnnotated: ['Composable', 'Preview', 'PreviewComponents', 'PreviewScreens', 'PreviewAccessibility']
     ignorePropertyDeclaration: true
     ignoreNamedArgument: true
     ignoreEnums: true
