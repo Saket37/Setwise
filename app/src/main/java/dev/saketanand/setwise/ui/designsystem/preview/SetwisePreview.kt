@@ -13,18 +13,19 @@ import dev.saketanand.setwise.ui.designsystem.theme.SetwiseTheme
 
 /**
  * Wraps preview content in [SetwiseTheme] with the theme's background, picking light or dark
- * from the preview's uiMode. Pair it with [ComponentPreviews], [ScreenPreviews] or
- * [AccessibilityPreviews].
+ * from the preview's uiMode. Pair it with [PreviewComponents], [PreviewScreens] or
+ * [PreviewAccessibility].
  *
  * @param padding space around a component so it isn't flush to the preview edge; use 0.dp for screens.
  */
 @Composable
 fun SetwisePreview(
+    modifier: Modifier = Modifier,
     padding: Dp = 16.dp,
     content: @Composable () -> Unit,
 ) {
     SetwiseTheme(darkTheme = isSystemInDarkTheme()) {
-        Surface(color = MaterialTheme.colorScheme.background) {
+        Surface(modifier = modifier, color = MaterialTheme.colorScheme.background) {
             Box(Modifier.padding(padding)) {
                 content()
             }

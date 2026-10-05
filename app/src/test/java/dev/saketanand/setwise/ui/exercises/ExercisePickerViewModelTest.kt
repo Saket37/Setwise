@@ -1,8 +1,10 @@
 package dev.saketanand.setwise.ui.exercises
 
 import androidx.lifecycle.SavedStateHandle
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.NewExercise
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
@@ -25,8 +27,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import dev.saketanand.setwise.domain.model.CreateExerciseResult
-import dev.saketanand.setwise.domain.model.NewExercise
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExercisePickerViewModelTest {
@@ -35,6 +35,7 @@ class ExercisePickerViewModelTest {
     private val repository = FakeExerciseRepository()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
+
     @After fun tearDown() = Dispatchers.resetMain()
 
     /** state only runs while collected (WhileSubscribed), like on screen. */

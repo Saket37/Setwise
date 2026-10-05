@@ -12,15 +12,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.ui.currentLocale
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -104,7 +104,7 @@ fun monthWeeks(month: YearMonth, firstDayOfWeek: DayOfWeek): List<List<LocalDate
     return cells.chunked(7).map { week -> week + List(7 - week.size) { null } }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun SetwiseMonthCalendarPreview() = SetwisePreview {
     SetwiseMonthCalendar(month = YearMonth.of(2026, 10), onPreviousMonth = {}, onNextMonth = null) { date ->

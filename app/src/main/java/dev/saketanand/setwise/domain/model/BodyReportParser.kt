@@ -127,6 +127,7 @@ object BodyReportParser {
     }
 
     private val WEIGHT = Label("\\b(body ?weight|weight)\\b", unless = "ideal|target|control|fat.?free|lean|standard|muscle")
+
     // "PBF" is often read as "PBE" or "P8F".
     private val BODY_FAT = Label("(percent body fat|body fat percentage|body fat ?%|\\bp[b8][fe]\\b|fat ?%|\\bbf ?%)", unless = "mass|visceral")
     private val MUSCLE = Label("(skeletal muscle mass|\\bsmm\\b|muscle mass|^\\s*muscle\\b)", unless = "fat|control|lean")

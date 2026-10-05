@@ -36,7 +36,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseSearchField
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
-import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
 import kotlinx.collections.immutable.persistentListOf
@@ -177,7 +177,7 @@ fun ExercisePickerScreen(
 
 // Previews: one per scenario
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun ExercisePickerScreenPreview() = SetwiseScreenPreview {
     ExercisePickerScreen(
@@ -193,7 +193,7 @@ private fun ExercisePickerScreenPreview() = SetwiseScreenPreview {
     )
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun ExercisePickerFilteredPreview() = SetwiseScreenPreview {
     ExercisePickerScreen(
@@ -209,7 +209,7 @@ private fun ExercisePickerFilteredPreview() = SetwiseScreenPreview {
     )
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun ExercisePickerNoResultsPreview() = SetwiseScreenPreview {
     ExercisePickerScreen(

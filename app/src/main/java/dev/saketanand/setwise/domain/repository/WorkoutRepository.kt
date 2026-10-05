@@ -1,19 +1,19 @@
 package dev.saketanand.setwise.domain.repository
 
-import dev.saketanand.setwise.domain.model.ExerciseSession
-import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.ActiveWorkout
+import dev.saketanand.setwise.domain.model.CalorieEstimate
+import dev.saketanand.setwise.domain.model.CardioEntry
+import dev.saketanand.setwise.domain.model.CardioValues
+import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.LoggedSetRecord
+import dev.saketanand.setwise.domain.model.SetFact
+import dev.saketanand.setwise.domain.model.SharedSet
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutStats
-import kotlinx.coroutines.flow.Flow
 import java.time.Instant
-import dev.saketanand.setwise.domain.model.CardioEntry
-import dev.saketanand.setwise.domain.model.CardioValues
-import dev.saketanand.setwise.domain.model.CalorieEstimate
-import dev.saketanand.setwise.domain.model.LoggedSetRecord
-import dev.saketanand.setwise.domain.model.SharedSet
+import kotlinx.coroutines.flow.Flow
 
 interface WorkoutRepository {
 

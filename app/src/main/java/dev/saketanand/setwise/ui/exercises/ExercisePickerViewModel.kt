@@ -124,7 +124,8 @@ class ExercisePickerViewModel(
             // Navigation: ExercisePickerScreenRoot handles these.
             ExercisePickerAction.OnAddClick,
             ExercisePickerAction.OnCreateNewClick,
-            ExercisePickerAction.OnBackClick -> Unit
+            ExercisePickerAction.OnBackClick,
+            -> Unit
         }
     }
 

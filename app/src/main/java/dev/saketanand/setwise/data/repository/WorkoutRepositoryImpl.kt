@@ -11,28 +11,28 @@ import dev.saketanand.setwise.data.mapper.toCardioValues
 import dev.saketanand.setwise.data.mapper.toDomain
 import dev.saketanand.setwise.data.mapper.toFinishedWorkout
 import dev.saketanand.setwise.data.mapper.toSession
+import dev.saketanand.setwise.domain.model.ActiveWorkout
+import dev.saketanand.setwise.domain.model.CalorieEstimate
 import dev.saketanand.setwise.domain.model.CardioEntry
 import dev.saketanand.setwise.domain.model.CardioValues
-import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.ExerciseSession
-import dev.saketanand.setwise.domain.model.LoggedSet
-import dev.saketanand.setwise.domain.model.SetFact
-import dev.saketanand.setwise.domain.model.ActiveWorkout
+import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.FinishedWorkout
+import dev.saketanand.setwise.domain.model.LoggedSet
+import dev.saketanand.setwise.domain.model.LoggedSetRecord
+import dev.saketanand.setwise.domain.model.SetFact
+import dev.saketanand.setwise.domain.model.SharedSet
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
+import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import java.time.Instant
-import dev.saketanand.setwise.domain.model.CalorieEstimate
-import dev.saketanand.setwise.domain.model.LoggedSetRecord
-import dev.saketanand.setwise.domain.model.SharedSet
 
 class WorkoutRepositoryImpl(
     private val database: SetwiseDatabase,

@@ -112,15 +112,19 @@ class BodyViewModel(
 
     private fun save(action: BodyAction.OnSave) {
         val editor = screen.value.editor ?: return
+
         // Blank: not given. Typed but not a believable number: not saved.
-        fun decimal(text: String, range: ClosedFloatingPointRange<Double>): Result<Double?> =
-            if (text.isBlank()) Result.success(null) else parseWeight(text)?.takeIf { it in range }?.let { Result.success(it) } ?: Result.failure(IllegalArgumentException())
+        fun decimal(text: String, range: ClosedFloatingPointRange<Double>): Result<Double?> = when {
+            text.isBlank() -> Result.success(null)
+            else -> parseWeight(text)?.takeIf { it in range }?.let { Result.success(it) }
+                ?: Result.failure(IllegalArgumentException("Not a believable value: $text"))
+        }
         val weight = decimal(action.weight, BodyRules.WEIGHT_KG)
         val fat = decimal(action.bodyFat, BodyRules.BODY_FAT_PERCENT)
         val muscle = decimal(action.muscle, BodyRules.MUSCLE_KG)
         val visceral = decimal(action.visceral, BodyRules.VISCERAL)
         val bmr = if (action.bmr.isBlank()) Result.success(null) else action.bmr.trim().toIntOrNull()?.takeIf { it in BodyRules.BMR_KCAL }
-            ?.let { Result.success(it) } ?: Result.failure(IllegalArgumentException())
+            ?.let { Result.success(it) } ?: Result.failure(IllegalArgumentException("Not a believable BMR: ${action.bmr}"))
         val measurement = if (listOf(weight, fat, muscle, visceral, bmr).any { it.isFailure }) {
             null
         } else {

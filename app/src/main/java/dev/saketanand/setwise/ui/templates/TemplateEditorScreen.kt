@@ -44,7 +44,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseOverflowMenu
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseStepper
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTextField
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
-import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
 import kotlinx.collections.immutable.ImmutableList
@@ -193,7 +193,7 @@ fun TemplateEditorScreen(
                     )
                 }
             }
-            itemsIndexed(draft.exercises, key = { _, it -> it.exerciseId }) { index, exercise ->
+            itemsIndexed(draft.exercises, key = { _, exercise -> exercise.exerciseId }) { index, exercise ->
                 TemplateExerciseRow(
                     exercise = exercise,
                     isFirst = index == 0,
@@ -318,7 +318,7 @@ private fun TargetRepsStepper(exercise: TemplateEditorExercise, onAction: (Templ
 
 // Previews: one per scenario
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun TemplateEditorPreview() = SetwiseScreenPreview {
     TemplateEditorScreen(
@@ -340,7 +340,7 @@ private fun TemplateEditorPreview() = SetwiseScreenPreview {
     )
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun TemplateEditorNewPreview() = SetwiseScreenPreview {
     TemplateEditorScreen(uiState = TemplateEditorUiState(isLoading = false), onAction = {})

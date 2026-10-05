@@ -7,14 +7,13 @@ import android.os.PowerManager
 import androidx.core.app.ServiceCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
+import dev.saketanand.setwise.timer.Ongoing
 import dev.saketanand.setwise.timer.RestNotifications
 import dev.saketanand.setwise.timer.RestTimer
-import dev.saketanand.setwise.timer.RestTimerState
+import dev.saketanand.setwise.timer.RestTimerCoordinator
 import dev.saketanand.setwise.util.ElapsedClock
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import dev.saketanand.setwise.timer.Ongoing
-import dev.saketanand.setwise.timer.RestTimerCoordinator
 
 /**
  * Foreground service while there's something ongoing ([RestTimerCoordinator.ongoing]): the

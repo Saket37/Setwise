@@ -49,7 +49,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTag
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTagDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
-import dev.saketanand.setwise.ui.designsystem.preview.ScreenPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
 import org.koin.androidx.compose.koinViewModel
@@ -247,7 +247,7 @@ private fun GoalType.labelRes() = when (this) {
 
 // Previews: one per scenario
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun TemplateFromGoalPreview() = SetwiseScreenPreview {
     TemplateFromGoalScreen(
@@ -258,7 +258,7 @@ private fun TemplateFromGoalPreview() = SetwiseScreenPreview {
     )
 }
 
-@ScreenPreviews
+@PreviewScreens
 @Composable
 private fun TemplateFromGoalEmptyPreview() = SetwiseScreenPreview {
     TemplateFromGoalScreen(uiState = TemplateFromGoalUiState(), goal = rememberTextFieldState(), onAction = {}, onBack = {})

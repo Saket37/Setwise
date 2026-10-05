@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import dev.saketanand.setwise.R
-import dev.saketanand.setwise.ui.designsystem.preview.ComponentPreviews
+import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 
 /**
@@ -117,7 +117,7 @@ object RoutineCardDefaults {
     )
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun RoutineCardPreview() = SetwisePreview {
     // Same arrangement as on the Workout tab: two cards side by side, equal height.
@@ -143,7 +143,7 @@ private fun RoutineCardPreview() = SetwisePreview {
     }
 }
 
-@ComponentPreviews
+@PreviewComponents
 @Composable
 private fun RoutineCardFullWidthPreview() = SetwisePreview {
     RoutineCard(

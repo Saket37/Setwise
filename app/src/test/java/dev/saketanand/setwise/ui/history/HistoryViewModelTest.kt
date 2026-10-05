@@ -1,9 +1,21 @@
 package dev.saketanand.setwise.ui.history
 
 import androidx.lifecycle.SavedStateHandle
+import dev.saketanand.setwise.domain.ai.ExerciseAssistant
+import dev.saketanand.setwise.domain.ai.HistoryAssistant
+import dev.saketanand.setwise.domain.ai.HistoryReply
 import dev.saketanand.setwise.domain.model.ActiveWorkout
+import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.DayStatus
+import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.HistoryAnswer
+import dev.saketanand.setwise.domain.model.LoggedSetRecord
+import dev.saketanand.setwise.domain.model.NewExercise
+import dev.saketanand.setwise.domain.model.RecentExercise
+import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.testing.FakeDayMarkRepository
+import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 import dev.saketanand.setwise.testing.StubWorkoutRepository
 import dev.saketanand.setwise.util.DateProvider
@@ -24,21 +36,9 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import dev.saketanand.setwise.domain.ai.ExerciseAssistant
-import dev.saketanand.setwise.domain.ai.HistoryAssistant
-import dev.saketanand.setwise.domain.ai.HistoryReply
-import dev.saketanand.setwise.domain.model.CreateExerciseResult
-import dev.saketanand.setwise.domain.model.Exercise
-import dev.saketanand.setwise.domain.model.ExerciseType
-import dev.saketanand.setwise.domain.model.HistoryAnswer
-import dev.saketanand.setwise.domain.model.LoggedSetRecord
-import dev.saketanand.setwise.domain.model.NewExercise
-import dev.saketanand.setwise.domain.model.RecentExercise
-import dev.saketanand.setwise.domain.repository.ExerciseRepository
-import dev.saketanand.setwise.testing.FakeOnDeviceModel
-import org.junit.Assert.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModelTest {
@@ -46,6 +46,7 @@ class HistoryViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
+
     @After fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel(
