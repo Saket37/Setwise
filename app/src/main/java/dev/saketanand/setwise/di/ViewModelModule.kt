@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.di
 
+import android.util.Log
 import dev.saketanand.setwise.MainViewModel
 import dev.saketanand.setwise.ui.body.BodyViewModel
 import dev.saketanand.setwise.ui.exercises.CreateExerciseViewModel
@@ -8,6 +9,7 @@ import dev.saketanand.setwise.ui.exercises.ExercisePickerViewModel
 import dev.saketanand.setwise.ui.history.HistoryViewModel
 import dev.saketanand.setwise.ui.home.HomeViewModel
 import dev.saketanand.setwise.ui.importing.ImportViewModel
+import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.ui.onboarding.OnboardingViewModel
 import dev.saketanand.setwise.ui.settings.SettingsViewModel
 import dev.saketanand.setwise.ui.summary.WorkoutSummaryViewModel
@@ -40,10 +42,15 @@ val viewModelModule = module {
     }
     viewModelOf(::SettingsViewModel)
 
-    // Route argument passed by SetwiseNavHost: koinViewModel { parametersOf(route.workoutId) }.
+    // SetwiseNavHost passes the whole route (koinViewModel { parametersOf(route) }): read by type,
+    // so its values can't be mixed up. Without one there's no workout to show: the screen closes
+    // (no workout has NO_WORKOUT_ID) instead of the app crashing.
     viewModel { params ->
+        val route = params.getOrNull<Route.ActiveWorkout>()
+            ?: Route.ActiveWorkout(Route.NO_WORKOUT_ID).also { Log.e("ViewModelModule", "The active workout opened without its route") }
         ActiveWorkoutViewModel(
-            workoutId = params.get(),
+            workoutId = route.workoutId,
+            isEditingFinished = route.editingFinished,
             workoutRepository = get(),
             dateProvider = get(),
             savedStateHandle = get(),

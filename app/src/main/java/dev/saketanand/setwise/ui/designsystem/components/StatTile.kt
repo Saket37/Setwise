@@ -40,6 +40,8 @@ fun StatTile(
     valueStyle: TextStyle = MaterialTheme.typography.numberLarge,
     valueColor: Color = MaterialTheme.colorScheme.onSurface,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    /** A small note under the tile's text, e.g. how a value was estimated. */
+    caption: String? = null,
 ) {
     Column(
         modifier = modifier
@@ -63,6 +65,9 @@ fun StatTile(
             color = valueColor,
         )
         if (!labelFirst) labelText()
+        if (caption != null) {
+            Text(text = caption, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 

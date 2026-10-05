@@ -134,10 +134,6 @@
     <ID>Kdoc:Type.kt:/** Top-bar titles ("Add exercise", "Treadmill"). */</ID>
     <ID>Kdoc:Type.kt:/** UPPERCASE captions: "PREVIOUS", "REST", "TEMPLATES". */</ID>
     <ID>Kdoc:Type.kt:/** Workout name on the Summary screen. */</ID>
-    <ID>LambdaParameterInRestartableEffect:ActiveWorkoutScreen.kt:onPickedExercisesConsumed: () -&gt; Unit</ID>
-    <ID>LambdaParameterInRestartableEffect:ExerciseDetailScreen.kt:onBack: () -&gt; Unit</ID>
-    <ID>LambdaParameterInRestartableEffect:ExercisePickerScreen.kt:onCreatedExerciseConsumed: () -&gt; Unit</ID>
-    <ID>LambdaParameterInRestartableEffect:TemplateEditorScreen.kt:onPickedExercisesConsumed: () -&gt; Unit</ID>
     <ID>LongMethod:SettingsViewModel.kt:SettingsViewModel$fun onAction</ID>
     <ID>LongParameterList:ActiveWorkoutViewModel.kt:ActiveWorkoutViewModel</ID>
     <ID>LongParameterList:AiCheck.kt:AiCheck</ID>
