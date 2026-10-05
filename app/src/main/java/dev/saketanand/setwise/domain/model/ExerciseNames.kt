@@ -58,7 +58,7 @@ object ExerciseNames {
             words.filter { it !in EQUIPMENT_WORDS }.sorted() == core && (gear.isEmpty() || gear.containsAll(nameGear))
         }
         if (same.size <= 1) return same.singleOrNull()
-        return same.filter { exercise -> words(exercise.name).filter { it in EQUIPMENT_WORDS }.toSet() == gear }.singleOrNull()
+        return same.singleOrNull { exercise -> words(exercise.name).filter { it in EQUIPMENT_WORDS }.toSet() == gear }
     }
 
     /**
@@ -74,7 +74,7 @@ object ExerciseNames {
         val usual = USUAL_VARIANTS[typedWords.sorted()] ?: USUAL_VARIANTS[core] ?: return null
         val exercise = library.firstOrNull { it.name == usual } ?: return null
         val usualGear = words(exercise.name).filter { it in EQUIPMENT_WORDS }.toSet()
-        return exercise.takeIf { gear.isEmpty() || usualGear.isEmpty() || usualGear.any { it in gear } }
+        return exercise.takeIf { gear.isEmpty() || usualGear.isEmpty() || usualGear.any { word -> word in gear } }
     }
 
     /** Every typed word that isn't equipment is in [name]: nothing that tells them apart is dropped ("preacher"). */
@@ -90,7 +90,7 @@ object ExerciseNames {
     fun onlyOneCovering(typed: String, library: List<Exercise>): Exercise? {
         val typedWords = words(typed).toSet()
         if (typedWords.isEmpty()) return null
-        return library.filter { words(it.name).containsAll(typedWords) }.singleOrNull()
+        return library.singleOrNull { words(it.name).containsAll(typedWords) }
     }
 
     /**
@@ -114,7 +114,7 @@ object ExerciseNames {
             val best = closest.minOfOrNull { it.second } ?: return@joinToString word
             val tied = closest.filter { it.second == best }.map { it.first }
             // A tie goes to the word it starts with: the same word with an ending ("pulled" → pull).
-            tied.singleOrNull() ?: tied.filter { word.startsWith(it) }.singleOrNull() ?: word
+            tied.singleOrNull() ?: tied.singleOrNull { word.startsWith(it) } ?: word
         }
     }
 

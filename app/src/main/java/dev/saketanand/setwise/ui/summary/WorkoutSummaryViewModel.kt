@@ -139,7 +139,7 @@ class WorkoutSummaryViewModel(
         viewModelScope.launch {
             runCatching { templateRepository.createFromWorkout(workoutId, dateProvider.now()) }
                 .onSuccess {
-                    overlays.update { it.copy(isTemplateSaved = true, isSavingTemplate = false) }
+                    overlays.update { current -> current.copy(isTemplateSaved = true, isSavingTemplate = false) }
                     eventChannel.send(WorkoutSummaryEvent.TemplateSaved)
                 }
                 .onFailure { e ->

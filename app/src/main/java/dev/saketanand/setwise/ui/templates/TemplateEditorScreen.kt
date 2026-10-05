@@ -193,7 +193,7 @@ fun TemplateEditorScreen(
                     )
                 }
             }
-            itemsIndexed(draft.exercises, key = { _, it -> it.exerciseId }) { index, exercise ->
+            itemsIndexed(draft.exercises, key = { _, exercise -> exercise.exerciseId }) { index, exercise ->
                 TemplateExerciseRow(
                     exercise = exercise,
                     isFirst = index == 0,

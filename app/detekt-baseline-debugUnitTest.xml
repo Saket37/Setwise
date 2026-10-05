@@ -40,8 +40,5 @@
     <ID>SpacingBetweenDeclarationsWithAnnotations:TemplateEditorViewModelTest.kt:TemplateEditorViewModelTest$@After fun tearDown</ID>
     <ID>SpacingBetweenDeclarationsWithAnnotations:WorkoutSummaryViewModelTest.kt:WorkoutSummaryViewModelTest$@After fun tearDown</ID>
     <ID>SpacingBetweenDeclarationsWithComments:CalorieEstimatorTest.kt:CalorieEstimatorTest$// 60 min, 18 sets, 90 s apart → formula: 350 kcal, moderate (70 kg).</ID>
-    <ID>UnnecessaryNotNullOperator:ExerciseDetailUiMappersTest.kt:ExerciseDetailUiMappersTest$old.progress!!</ID>
-    <ID>UnnecessaryNotNullOperator:ExerciseDetailUiMappersTest.kt:ExerciseDetailUiMappersTest$ui.nextSession!!</ID>
-    <ID>UseCheckOrError:ModelDownloaderTest.kt:ModelDownloaderTest.&lt;no name provided&gt;$throw IllegalStateException("AICore not ready")</ID>
   </CurrentIssues>
 </SmellBaseline>
