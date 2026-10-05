@@ -57,7 +57,8 @@ object BodyRules {
     fun bmr(measurements: List<BodyMeasurement>, profile: UserSettings, today: LocalDate): BmrEstimate? {
         measurements.firstOrNull { it.bmrKcal != null }
             ?.takeIf { !it.measuredOn.isBefore(today.minusDays(REPORT_VALID_DAYS)) }
-            ?.let { return BmrEstimate(it.bmrKcal!!, BmrEstimate.Source.Report) }
+            ?.bmrKcal
+            ?.let { return BmrEstimate(it, BmrEstimate.Source.Report) }
         val weight = latestWeight(measurements, profile)
         val fat = measurements.firstOrNull { it.bodyFatPercent != null }?.bodyFatPercent
         if (weight != null && fat != null) return BmrEstimate(katchMcArdle(weight, fat), BmrEstimate.Source.BodyFat)

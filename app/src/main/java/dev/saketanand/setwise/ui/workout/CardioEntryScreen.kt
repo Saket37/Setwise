@@ -48,6 +48,7 @@ import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.toWeightInput
 import java.text.NumberFormat
+import java.util.Locale
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.merge
@@ -122,7 +123,7 @@ class CardioFields(
     fun fill(values: CardioValues) {
         values.durationSec?.let {
             minutes.setTextAndPlaceCursorAtEnd((it / 60).toString())
-            seconds.setTextAndPlaceCursorAtEnd("%02d".format(it % 60))
+            seconds.setTextAndPlaceCursorAtEnd("%02d".format(Locale.ROOT, it % 60))
         }
         values.speedMinKmh?.let { speedFrom.setTextAndPlaceCursorAtEnd(it.toWeightInput()) }
         values.speedMaxKmh?.let { speedTo.setTextAndPlaceCursorAtEnd(it.toWeightInput()) }
@@ -263,7 +264,7 @@ private fun DurationSection(fields: CardioFields, last: CardioValues?) {
             DurationField(fields.minutes, stringResource(R.string.cardio_minutes), last?.durationSec?.let { (it / 60).toString() } ?: "30")
             UnitLabel(stringResource(R.string.unit_minutes))
             Text(":", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            DurationField(fields.seconds, stringResource(R.string.cardio_seconds), last?.durationSec?.let { "%02d".format(it % 60) } ?: "00")
+            DurationField(fields.seconds, stringResource(R.string.cardio_seconds), last?.durationSec?.let { "%02d".format(Locale.ROOT, it % 60) } ?: "00")
             UnitLabel(stringResource(R.string.unit_sec))
         }
     }

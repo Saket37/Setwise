@@ -29,27 +29,30 @@ object PersonalRecords {
         val previous = before.heaviest ?: return null
         val best = sets.filter { it.weightKg != null && (it.reps ?: 0) > 0 }
             .maxWithOrNull(compareBy<WorkoutSet>({ it.weightKg }, { it.reps })) ?: return null
-        return if (best.weightKg!! > previous.weightKg!!) PersonalRecord(PrKind.Weight, best, previous) else null
+        val bestKg = best.weightKg ?: return null
+        val previousKg = previous.weightKg ?: return null
+        return if (bestKg > previousKg) PersonalRecord(PrKind.Weight, best, previous) else null
     }
 
     private fun bestEstimatedOneRepMax(sets: List<WorkoutSet>, before: PersonalBests): PersonalRecord? {
         val previous = before.bestEstimatedOneRepMax ?: return null
-        val best = sets.filter { estimatedOneRepMax(it.weightKg, it.reps) != null }
-            .maxByOrNull { estimatedOneRepMax(it.weightKg, it.reps)!! } ?: return null
-        val gained = estimatedOneRepMax(best.weightKg, best.reps)!! - estimatedOneRepMax(previous.weightKg, previous.reps)!!
-        return if (gained > EPSILON) PersonalRecord(PrKind.EstimatedOneRepMax, best, previous) else null
+        val (best, bestMax) = sets.bestBy { estimatedOneRepMax(it.weightKg, it.reps) } ?: return null
+        val previousMax = estimatedOneRepMax(previous.weightKg, previous.reps) ?: return null
+        return if (bestMax - previousMax > EPSILON) PersonalRecord(PrKind.EstimatedOneRepMax, best, previous) else null
     }
 
     private fun mostReps(sets: List<WorkoutSet>, before: PersonalBests): PersonalRecord? {
         val previous = before.mostReps ?: return null
-        val best = sets.filter { it.reps != null }.maxByOrNull { it.reps!! } ?: return null
-        return if (best.reps!! > previous.reps!!) PersonalRecord(PrKind.Reps, best, previous) else null
+        val (best, reps) = sets.bestBy { it.reps } ?: return null
+        val previousReps = previous.reps ?: return null
+        return if (reps > previousReps) PersonalRecord(PrKind.Reps, best, previous) else null
     }
 
     private fun longestHold(sets: List<WorkoutSet>, before: PersonalBests): PersonalRecord? {
         val previous = before.longestHold ?: return null
-        val best = sets.filter { it.durationSec != null }.maxByOrNull { it.durationSec!! } ?: return null
-        return if (best.durationSec!! > previous.durationSec!!) PersonalRecord(PrKind.Duration, best, previous) else null
+        val (best, seconds) = sets.bestBy { it.durationSec } ?: return null
+        val previousSeconds = previous.durationSec ?: return null
+        return if (seconds > previousSeconds) PersonalRecord(PrKind.Duration, best, previous) else null
     }
 
     /** Epley: weight × (1 + reps / 30). Null without a weight or reps. */
@@ -74,10 +77,9 @@ data class PersonalBests(
         fun from(sets: List<PreviousSet>): PersonalBests = PersonalBests(
             heaviest = sets.filter { it.weightKg != null && (it.reps ?: 0) > 0 }
                 .maxWithOrNull(compareBy<PreviousSet>({ it.weightKg }, { it.reps })),
-            bestEstimatedOneRepMax = sets.filter { PersonalRecords.estimatedOneRepMax(it.weightKg, it.reps) != null }
-                .maxByOrNull { PersonalRecords.estimatedOneRepMax(it.weightKg, it.reps)!! },
-            mostReps = sets.filter { it.reps != null }.maxByOrNull { it.reps!! },
-            longestHold = sets.filter { it.durationSec != null }.maxByOrNull { it.durationSec!! },
+            bestEstimatedOneRepMax = sets.bestBy { PersonalRecords.estimatedOneRepMax(it.weightKg, it.reps) }?.first,
+            mostReps = sets.bestBy { it.reps }?.first,
+            longestHold = sets.bestBy { it.durationSec }?.first,
         )
     }
 }
@@ -90,3 +92,7 @@ data class PersonalRecord(
     val set: WorkoutSet,
     val previousBest: PreviousSet,
 )
+
+/** The item with the highest non-null [value] (the first, on a tie), and that value; null if none has one. */
+private inline fun <T, V : Comparable<V>> List<T>.bestBy(value: (T) -> V?): Pair<T, V>? =
+    mapNotNull { item -> value(item)?.let { item to it } }.maxByOrNull { it.second }

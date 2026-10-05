@@ -54,6 +54,33 @@ class ImportReaderTest {
     }
 
     @Test
+    fun `lines code can read keep code's numbers, wherever the model put them`() = runTest {
+        model.availability = ModelAvailability.Ready
+        // No year in the date: the log reader skips it, so the model reads the workout. On a
+        // Pixel, it gave the rows as 60 kg × 3 reps (#43).
+        model.answer = {
+            """{"name": "Back day", "date": "2026-09-30", "time": "12:00", "sets": [""" +
+                """{"exercise": "Barbell rows", "weightKg": 60, "reps": 3, "seconds": 0}, """ +
+                """{"exercise": "Pull-ups", "weightKg": 0, "reps": 8, "seconds": 0}]}"""
+        }
+
+        val read = reader.fromText("Back day 30 Sep\nBarbell rows, 3 sets of 10 with 60\nPull-ups: did 8 at the end")
+
+        val (rows, pullUps) = read.workouts.single().exercises
+        assertEquals(List(3) { SharedSet(60.0, 10) }, rows.sets)
+        // Code can't read this line ("did 8 at the end"): the model's set stays.
+        assertEquals(listOf(SharedSet(null, 8)), pullUps.sets)
+    }
+
+    @Test
+    fun `code's sets count only when it reads every line naming the exercise`() {
+        val text = "Bench 60x8\nBench felt heavy, then some more"
+        assertNull(ImportReader.setsReadInCode("Bench", text)) // the second line isn't readable
+        assertEquals(listOf(SharedSet(60.0, 8), SharedSet(62.5, 6)), ImportReader.setsReadInCode("Bench", "Bench 60x8\nbench 62.5x6"))
+        assertNull(ImportReader.setsReadInCode("Squat", text)) // not in the text
+    }
+
+    @Test
     fun `a chosen or shared file is read like text`() = runTest {
         files = mapOf("export.csv" to "Date,Exercise,Weight (kg),Reps\n2026-09-29,Bench Press,60,8")
         val read = reader.fromFile("export.csv")
