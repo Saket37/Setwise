@@ -94,7 +94,8 @@ val ColorScheme.pr: Color get() = tertiary
 val ColorScheme.onPr: Color get() = onTertiary
 
 val MaterialTheme.spacing: Spacing
-    @Composable @ReadOnlyComposable get() = LocalSpacing.current
+    @Composable @ReadOnlyComposable
+    get() = LocalSpacing.current
 
 /**
  * Setwise is dark-first. Dynamic colour is deliberately not supported so Volt and Ember

@@ -32,8 +32,8 @@ import dev.saketanand.setwise.ui.designsystem.theme.spacing
 import dev.saketanand.setwise.ui.designsystem.theme.wordmark
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.toShortDayLabel
-import org.koin.androidx.compose.koinViewModel
 import kotlin.time.Duration.Companion.minutes
+import org.koin.androidx.compose.koinViewModel
 
 /**
  * Destination: [Route.Home].

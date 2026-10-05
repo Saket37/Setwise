@@ -32,6 +32,9 @@ data class CreateExerciseUiState(
         val EQUIPMENT_OPTIONS = listOf("Barbell", "Dumbbell", "Machine", "Cable", "Kettlebell", "Smith Machine", "EZ Bar", "Bodyweight", "None")
         const val REST_STEP_SEC = 15
         val REST_RANGE_SEC = 15..300
+
+        /** [REST_RANGE_SEC] in steps of [REST_STEP_SEC]: the rest stepper's values. */
+        val REST_STEPS = REST_RANGE_SEC.first / REST_STEP_SEC..REST_RANGE_SEC.last / REST_STEP_SEC
     }
 }
 

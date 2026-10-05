@@ -44,13 +44,13 @@ import dev.saketanand.setwise.domain.model.HistoryQuestion
 import dev.saketanand.setwise.domain.model.PeriodName
 import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
+import dev.saketanand.setwise.ui.designsystem.theme.numberLarge
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
 import dev.saketanand.setwise.ui.designsystem.theme.pr
 import dev.saketanand.setwise.util.toWeightLabel
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import dev.saketanand.setwise.ui.designsystem.theme.numberLarge
 
 /** Design "Ask your history": the reply (or that it's looking), then "You can also ask". */
 @Composable

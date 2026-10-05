@@ -19,6 +19,7 @@ import org.junit.Test
 class CalorieEstimatorTest {
 
     private val start = Instant.parse("2026-10-03T12:00:00Z")
+
     // 60 min, 18 sets, 90 s apart → formula: 350 kcal, moderate (70 kg).
     private val session = WorkoutSession(
         1, "Push Day", null, start, start.plusSeconds(3_600),

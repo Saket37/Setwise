@@ -41,6 +41,7 @@ class BodyViewModelTest {
     private var ocr: List<OcrLine> = emptyList()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
+
     @After fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel() = BodyViewModel(

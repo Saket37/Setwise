@@ -238,7 +238,8 @@ class HomeViewModel(
             is HomeAction.OnTemplateClick,
             HomeAction.OnCreateTemplateClick,
             HomeAction.OnCreateTemplateFromGoalClick,
-            is HomeAction.OnPlateauExerciseClick -> Unit
+            is HomeAction.OnPlateauExerciseClick,
+            -> Unit
         }
     }
 

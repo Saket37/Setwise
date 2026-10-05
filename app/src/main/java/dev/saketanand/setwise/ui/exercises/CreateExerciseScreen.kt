@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,12 +23,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.domain.ai.SuggestionSource
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.ui.ObserveAsEvents
@@ -44,10 +48,6 @@ import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.toClockLabel
 import kotlin.time.Duration.Companion.seconds
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.ui.res.painterResource
-import dev.saketanand.setwise.domain.ai.SuggestionSource
 
 /**
  * Destination: [Route.CreateExercise].
@@ -183,8 +183,7 @@ fun CreateExerciseScreen(
                         onIncrease = { onAction(CreateExerciseAction.OnRestChange(+1)) },
                         decreaseDescription = stringResource(R.string.decrease_rest),
                         increaseDescription = stringResource(R.string.increase_rest),
-                        range = CreateExerciseUiState.REST_RANGE_SEC.first / CreateExerciseUiState.REST_STEP_SEC..
-                            CreateExerciseUiState.REST_RANGE_SEC.last / CreateExerciseUiState.REST_STEP_SEC,
+                        range = CreateExerciseUiState.REST_STEPS,
                     )
                 }
             }

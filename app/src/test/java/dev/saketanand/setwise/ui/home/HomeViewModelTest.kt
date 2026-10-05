@@ -16,7 +16,6 @@ import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import dev.saketanand.setwise.domain.model.WorkoutStats
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.TemplateRepository
-import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import dev.saketanand.setwise.testing.FakeDayMarkRepository
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import dev.saketanand.setwise.testing.FakeUserSettingsRepository
@@ -53,6 +52,7 @@ class HomeViewModelTest {
     private val workouts = FakeWorkoutRepository()
 
     @Before fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+
     @After fun tearDown() = Dispatchers.resetMain()
 
     private val marks = FakeDayMarkRepository()

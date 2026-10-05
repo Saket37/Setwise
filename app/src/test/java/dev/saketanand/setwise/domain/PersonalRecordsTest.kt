@@ -4,8 +4,8 @@ import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.PersonalBests
 import dev.saketanand.setwise.domain.model.PersonalRecords
-import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.PrKind
+import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.WorkoutSet
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

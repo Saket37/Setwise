@@ -44,6 +44,7 @@ data class RestTimerState(
 sealed interface NextUp {
     data class Set(val number: Int) : NextUp
     data class Exercise(val name: String) : NextUp
+
     /** The last set of the workout was just done. */
     data object Nothing : NextUp
 }

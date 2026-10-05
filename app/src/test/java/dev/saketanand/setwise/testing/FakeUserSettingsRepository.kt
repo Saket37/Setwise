@@ -1,5 +1,7 @@
 package dev.saketanand.setwise.testing
 
+import dev.saketanand.setwise.domain.model.BodyRules
+import dev.saketanand.setwise.domain.model.Sex
 import dev.saketanand.setwise.domain.model.UserSettings
 import dev.saketanand.setwise.domain.model.WeeklyRecap
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
@@ -7,8 +9,6 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import dev.saketanand.setwise.domain.model.BodyRules
-import dev.saketanand.setwise.domain.model.Sex
 
 /** In-memory settings, with the same validation as the real one. */
 class FakeUserSettingsRepository(initial: UserSettings = UserSettings()) : UserSettingsRepository {

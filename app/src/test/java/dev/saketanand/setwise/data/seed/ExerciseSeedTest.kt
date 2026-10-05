@@ -2,12 +2,12 @@ package dev.saketanand.setwise.data.seed
 
 import dev.saketanand.setwise.data.mapper.toEntity
 import dev.saketanand.setwise.domain.model.ExerciseType
+import java.io.File
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.io.File
 
 /** Checks the real assets/exercises.json parses and maps cleanly. Runs on the JVM, no emulator. */
 class ExerciseSeedTest {

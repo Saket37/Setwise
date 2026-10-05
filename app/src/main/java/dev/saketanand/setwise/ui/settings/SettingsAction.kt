@@ -1,7 +1,7 @@
 package dev.saketanand.setwise.ui.settings
 
-import java.time.DayOfWeek
 import dev.saketanand.setwise.domain.model.Sex
+import java.time.DayOfWeek
 
 /** What the user can do on [SettingsScreen]. */
 sealed interface SettingsAction {
