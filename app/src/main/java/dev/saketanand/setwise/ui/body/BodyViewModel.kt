@@ -79,9 +79,10 @@ class BodyViewModel(
     fun onAction(action: BodyAction) {
         when (action) {
             BodyAction.OnBack -> Unit
-            BodyAction.OnAddManually -> screen.update { it.copy(readFailed = false, editor = BodyEditor(key = System.nanoTime(), day = today())) }
+            BodyAction.OnAddManually -> screen.update { it.copy(readFailed = false, editor = BodyEditor(key = System.nanoTime(), day = today(), latestDay = today())) }
             is BodyAction.OnReportPhoto -> read(action.uri)
-            is BodyAction.OnDayChange -> screen.update { it.copy(editor = it.editor?.copy(day = action.day)) }
+            // No readings for days that haven't happened (#128); the picker doesn't offer them either.
+            is BodyAction.OnDayChange -> if (!action.day.isAfter(today())) screen.update { it.copy(editor = it.editor?.copy(day = action.day)) }
             is BodyAction.OnSave -> save(action)
             BodyAction.OnDismissEditor -> screen.update { it.copy(editor = null) }
             is BodyAction.OnDelete -> viewModelScope.launch { bodyRepository.delete(action.id) }
@@ -109,6 +110,7 @@ class BodyViewModel(
                             editor = BodyEditor(
                                 key = System.nanoTime(),
                                 day = values.measuredOn?.takeIf { day -> !day.isAfter(today()) } ?: today(),
+                                latestDay = today(),
                                 weightKg = values.weightKg,
                                 bodyFatPercent = values.bodyFatPercent,
                                 muscleMassKg = values.muscleMassKg,
@@ -150,7 +152,7 @@ class BodyViewModel(
         } else {
             BodyMeasurement(
                 id = System.currentTimeMillis(),
-                measuredOn = editor.day,
+                measuredOn = minOf(editor.day, today()),
                 weightKg = weight.getOrNull(),
                 bodyFatPercent = fat.getOrNull(),
                 muscleMassKg = muscle.getOrNull(),

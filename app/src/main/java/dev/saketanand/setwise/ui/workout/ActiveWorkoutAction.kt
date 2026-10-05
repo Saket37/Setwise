@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.ui.workout
 
+import dev.saketanand.setwise.domain.model.RemovedSet
 import java.time.LocalTime
 
 /** What the user can do on [ActiveWorkoutScreen]. */
@@ -51,6 +52,9 @@ sealed interface ActiveWorkoutAction {
     data class OnSetDoneToggle(val setId: Long, val weight: String, val reps: String) : ActiveWorkoutAction
 
     data class OnDeleteSet(val setId: Long) : ActiveWorkoutAction
+
+    /** Undo on "Set removed": put it back. */
+    data class OnUndoRemoveSet(val set: RemovedSet) : ActiveWorkoutAction
 
     // Rest timer
 

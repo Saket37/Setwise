@@ -246,6 +246,13 @@ interface WorkoutDao {
     @Query("DELETE FROM sets WHERE id = :setId")
     suspend fun deleteSet(setId: Long)
 
+    @Query("SELECT * FROM sets WHERE id = :setId")
+    suspend fun getSet(setId: Long): SetEntity?
+
+    /** Makes room for a set put back at [from]: the sets from there move down one. */
+    @Query("UPDATE sets SET setNumber = setNumber + 1 WHERE workoutExerciseId = :workoutExerciseId AND setNumber >= :from")
+    suspend fun shiftSetNumbers(workoutExerciseId: Long, from: Int)
+
     // Cardio entry
 
     @Query("SELECT * FROM workout_exercises WHERE id = :workoutExerciseId")

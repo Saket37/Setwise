@@ -15,6 +15,7 @@ import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.NewExercise
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.RecentExercise
+import dev.saketanand.setwise.domain.model.RemovedSet
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.SetFact
 import dev.saketanand.setwise.domain.model.WorkoutSession
@@ -140,15 +141,14 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
-    fun `0 reps is not a set, so it falls back to the hint or isn't logged`() = runTest(dispatcher) {
+    fun `a typed 0 isn't logged, not even as the hint's reps`() = runTest(dispatcher) {
         val vm = viewModel()
 
         vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "60", reps = "0"))
-        assertEquals("hint used instead of 0", 8, repository.completions.single().reps)
+        assertEquals("0 is not swapped for the hint (#133)", emptyList<Any>(), repository.completions)
 
-        repository.session.value = session(bench(previous = emptyList()))
-        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 2, weight = "60", reps = "0"))
-        assertEquals(1, repository.completions.size)
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "60", reps = ""))
+        assertEquals("nothing typed: the hint", 8, repository.completions.single().reps)
     }
 
     @Test
@@ -360,6 +360,18 @@ class ActiveWorkoutViewModelTest {
 
         assertEquals("finished once", listOf(WORKOUT_ID), repository.finished)
         assertTrue("disabled until the summary opens", vm.state.value.isFinishing)
+    }
+
+    @Test
+    fun `a deleted set can be put back with Undo`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnDeleteSet(setId = 2))
+
+        val removed = (vm.events.first() as ActiveWorkoutEvent.SetRemoved).set
+        assertEquals(listOf(2L), repository.deleted)
+        vm.onAction(ActiveWorkoutAction.OnUndoRemoveSet(removed))
+        assertEquals(listOf(removed), repository.restored)
     }
 
     @Test
@@ -602,6 +614,16 @@ class ActiveWorkoutViewModelTest {
         val added = mutableListOf<List<Long>>()
         val startTimes = mutableListOf<Instant>()
         val renames = mutableListOf<String>()
+
+        val deleted = mutableListOf<Long>()
+        val restored = mutableListOf<RemovedSet>()
+        override suspend fun deleteSet(setId: Long): RemovedSet {
+            deleted += setId
+            return RemovedSet(BENCH, 2, 60.0, 8, null, null, null, null, null, null, true, 1L, false)
+        }
+        override suspend fun restoreSet(set: RemovedSet) {
+            restored += set
+        }
 
         override suspend fun renameWorkout(workoutId: Long, name: String) {
             renames += name

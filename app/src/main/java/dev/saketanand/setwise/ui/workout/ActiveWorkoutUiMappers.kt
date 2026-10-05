@@ -107,11 +107,12 @@ private fun PreviousSet.amount(kind: SetKind): Int? = if (kind == SetKind.Durati
 fun parseAmount(text: String): Int? = text.trim().toIntOrNull()
 
 /**
- * Reps (or seconds) a set is ticked off with: what's typed, else the hint. Null when there's
- * nothing to log; 0 doesn't count, a set of 0 reps wasn't done.
+ * Reps (or seconds) a set is ticked off with: what's typed, else (only when nothing is typed)
+ * the hint. Null when there's nothing to log: 0 doesn't count, a set of 0 reps wasn't done, and
+ * a typed 0 isn't swapped for the hint behind your back (#133).
  */
 fun loggedAmount(typed: String, hint: String): Int? =
-    parseAmount(typed)?.takeIf { it > 0 } ?: parseAmount(hint)?.takeIf { it > 0 }
+    if (typed.isNotBlank()) parseAmount(typed)?.takeIf { it > 0 } else parseAmount(hint)?.takeIf { it > 0 }
 
 /** Whether ✓ can be tapped: there's a reps (or seconds) value to log. Same rule as [loggedAmount]. */
 fun canCompleteSet(typedReps: String, repsHint: String): Boolean = loggedAmount(typedReps, repsHint) != null

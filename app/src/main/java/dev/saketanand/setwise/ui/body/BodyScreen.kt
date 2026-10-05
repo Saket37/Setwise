@@ -19,15 +19,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -372,7 +376,14 @@ private fun CheckSheet(editor: BodyEditor, onAction: (BodyAction) -> Unit) {
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
-        Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Scrolls: with the keyboard open, the sheet only has the space above it. A plain Column
+        // squeezed its last child, Save, to a sliver (#123).
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             Text(
                 stringResource(if (editor.fromReport) R.string.body_read_title else R.string.body_add_title),
                 style = MaterialTheme.typography.titleLarge,
@@ -418,8 +429,17 @@ private fun CheckSheet(editor: BodyEditor, onAction: (BodyAction) -> Unit) {
         }
     }
     if (pickingDay) {
+        val latestMillis = editor.latestDay.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
         val picker = rememberDatePickerState(
             initialSelectedDateMillis = editor.day.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+            yearRange = DatePickerDefaults.YearRange.first..editor.latestDay.year,
+            selectableDates = remember(latestMillis) {
+                // Up to today: a reading can't be for a day that hasn't happened (#128).
+                object : SelectableDates {
+                    override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= latestMillis
+                    override fun isSelectableYear(year: Int) = year <= editor.latestDay.year
+                }
+            },
         )
         DatePickerDialog(
             onDismissRequest = { pickingDay = false },

@@ -222,7 +222,11 @@ class ActiveWorkoutViewModel(
             is ActiveWorkoutAction.OnAddSetClick -> write { workoutRepository.addSet(action.workoutExerciseId) }
             is ActiveWorkoutAction.OnSetValuesChange -> saveValues(action.setId, action.weight, action.reps)
             is ActiveWorkoutAction.OnSetDoneToggle -> toggleDone(action.setId, action.weight, action.reps)
-            is ActiveWorkoutAction.OnDeleteSet -> write { workoutRepository.deleteSet(action.setId) }
+            // Deleted at once; the screen offers Undo, which puts it back (#130).
+            is ActiveWorkoutAction.OnDeleteSet -> write {
+                workoutRepository.deleteSet(action.setId)?.let { eventChannel.trySend(ActiveWorkoutEvent.SetRemoved(it)) }
+            }
+            is ActiveWorkoutAction.OnUndoRemoveSet -> write { workoutRepository.restoreSet(action.set) }
 
             is ActiveWorkoutAction.OnRestAdjust -> restTimer.adjust(action.deltaSec)
             ActiveWorkoutAction.OnRestSkip -> restTimer.skip()

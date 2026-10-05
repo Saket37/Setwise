@@ -140,7 +140,9 @@ class ActiveWorkoutUiMappersTest {
 
     @Test
     fun `0 reps doesn't count as a set`() {
-        assertEquals(8, loggedAmount(typed = "0", hint = "8"))
+        assertNull(loggedAmount(typed = "0", hint = "8")) // a typed 0 isn't replaced by the hint (#133)
+        assertEquals(false, canCompleteSet("0", "8"))
+        assertEquals(8, loggedAmount(typed = "", hint = "8")) // nothing typed: the hint
         assertNull(loggedAmount(typed = "0", hint = ""))
         assertEquals(10, loggedAmount(typed = "10", hint = "8"))
         assertEquals(false, canCompleteSet("", ""))
