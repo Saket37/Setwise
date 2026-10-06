@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dev.saketanand.setwise.domain.ai.GoalPlanAssistant
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.Goal
+import dev.saketanand.setwise.domain.model.GoalAdvice
 import dev.saketanand.setwise.domain.model.GoalPlanner
 import dev.saketanand.setwise.domain.model.GoalReader
 import dev.saketanand.setwise.domain.model.PlannedTemplate
@@ -84,13 +85,18 @@ class TemplateFromGoalViewModel(
             // The library, the settings or the model failing leaves the last draft shown.
             @Suppress("TooGenericExceptionCaught")
             try {
-                val goal = goal()
+                val settings = userSettingsRepository.settings.first()
+                val goal = GoalReader.read(text, defaultDays = settings.trainingDays.size.takeIf { it > 0 })
+                val advice = GoalAdvice.of(text, settings.bodyWeightKg)
+                _state.update { it.copy(advice = advice?.let(::GoalAdviceUi)) }
                 val exercises = library()
                 val modelChooses = variation == 0 && assistant.canChoose()
                 show(goal, GoalPlanner.plan(goal, exercises, doneIds, variation), byModel = false, isChoosing = modelChooses)
                 if (modelChooses) {
                     val byModel = assistant.plan(text, goal, exercises, doneIds)
                     show(goal, byModel.templates, byModel = byModel.byModel, isChoosing = false)
+                    // Then the goal note in words, one model call at a time.
+                    advice?.let { assistant.note(it) }?.let { note -> _state.update { it.copy(advice = GoalAdviceUi(advice, note)) } }
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -99,11 +105,6 @@ class TemplateFromGoalViewModel(
                 _state.update { it.copy(isChoosing = false) }
             }
         }
-    }
-
-    private suspend fun goal(): Goal {
-        val plannedDays = userSettingsRepository.settings.first().trainingDays.size.takeIf { it > 0 }
-        return GoalReader.read(text, defaultDays = plannedDays)
     }
 
     private suspend fun library(): List<Exercise> = library ?: run {
@@ -117,7 +118,7 @@ class TemplateFromGoalViewModel(
             it.copy(
                 understood = GoalChipsUi(goal.type, goal.daysPerWeek, goal.minutes, goal.gear),
                 templates = templates.map { t ->
-                    PlannedTemplateUi(t.name, t.estimatedMinutes, t.exercises.map { e -> PlannedExerciseUi(e.exercise.name, e.sets, e.reps, e.isTimed) })
+                    PlannedTemplateUi(t.name, t.estimatedMinutes, t.exercises.map { e -> PlannedExerciseUi(e.exercise.name, e.sets, e.reps, e.isTimed, e.isCardio) })
                 },
                 byModel = byModel,
                 isChoosing = isChoosing,
@@ -138,7 +139,10 @@ class TemplateFromGoalViewModel(
                         id = 0,
                         name = template.name,
                         category = template.category,
-                        exercises = template.exercises.map { TemplateDraftExercise(it.exercise.id, it.sets, it.reps) },
+                        // A cardio finisher is one entry, without target reps (its minutes are a suggestion).
+                        exercises = template.exercises.map {
+                            if (it.isCardio) TemplateDraftExercise(it.exercise.id, 1) else TemplateDraftExercise(it.exercise.id, it.sets, it.reps)
+                        },
                     )
                     templateRepository.saveTemplate(draft, dateProvider.now())
                 }
