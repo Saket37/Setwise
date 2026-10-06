@@ -141,15 +141,14 @@ class ActiveWorkoutViewModelTest {
     }
 
     @Test
-    fun `0 reps is not a set, so it falls back to the hint or isn't logged`() = runTest(dispatcher) {
+    fun `a typed 0 isn't logged, not even as the hint's reps`() = runTest(dispatcher) {
         val vm = viewModel()
 
         vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "60", reps = "0"))
-        assertEquals("hint used instead of 0", 8, repository.completions.single().reps)
+        assertEquals("0 is not swapped for the hint (#133)", emptyList<Any>(), repository.completions)
 
-        repository.session.value = session(bench(previous = emptyList()))
-        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 2, weight = "60", reps = "0"))
-        assertEquals(1, repository.completions.size)
+        vm.onAction(ActiveWorkoutAction.OnSetDoneToggle(setId = 1, weight = "60", reps = ""))
+        assertEquals("nothing typed: the hint", 8, repository.completions.single().reps)
     }
 
     @Test

@@ -79,13 +79,22 @@ private fun WorkoutSet.toPreviousSet() = PreviousSet(weightKg = weightKg, reps =
 
 /**
  * New start and end for a finished workout from times picked on the clock, on the workout's
- * [date]. An end at or before the start means it ran past midnight (next day); an end in the
- * future becomes [now]. Null if that still doesn't leave the end after the start.
+ * [date]. An end at or before the start means it ran past midnight, but only if that makes a
+ * workout of at most [MAX_PAST_MIDNIGHT] that has already ended: "6:30 pm to 6:00 pm" is a typo,
+ * not a 23½-hour workout (#132). A same-day end in the future becomes [now]. Null when the
+ * times don't make a workout: the dialog says so.
  */
 fun editedTimes(date: LocalDate, start: LocalTime, end: LocalTime, zone: ZoneId, now: Instant): Pair<Instant, Instant>? {
     val startAt = date.atTime(start).atZone(zone).toInstant()
-    var endAt = date.atTime(end).atZone(zone).toInstant()
-    if (!endAt.isAfter(startAt)) endAt = date.plusDays(1).atTime(end).atZone(zone).toInstant()
-    if (endAt.isAfter(now)) endAt = now
+    val sameDay = date.atTime(end).atZone(zone).toInstant()
+    val endAt = if (sameDay.isAfter(startAt)) {
+        sameDay.coerceAtMost(now)
+    } else {
+        date.plusDays(1).atTime(end).atZone(zone).toInstant()
+            .takeIf { !it.isAfter(now) && JavaDuration.between(startAt, it) <= MAX_PAST_MIDNIGHT } ?: return null
+    }
     return if (endAt.isAfter(startAt)) startAt to endAt else null
 }
+
+/** The longest workout taken to have run past midnight. */
+private val MAX_PAST_MIDNIGHT: JavaDuration = JavaDuration.ofHours(6)

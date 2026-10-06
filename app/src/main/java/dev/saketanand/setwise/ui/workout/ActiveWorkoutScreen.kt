@@ -247,7 +247,7 @@ fun ActiveWorkoutScreen(
     quickLogField: TextFieldState = rememberTextFieldState(),
     /** The quick-log mic; null hides it. */
     onSpeak: (() -> Unit)? = null,
-    /** "Set 2 removed · Undo", save errors: shown above the rest bar. */
+    /** "Removed set 2 · Undo", save errors: shown above the rest bar. */
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     var isQuickLogFocused by remember { mutableStateOf(false) }
