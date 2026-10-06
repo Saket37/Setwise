@@ -145,7 +145,7 @@ fun SettingsScreen(
         SetwiseSettingsGroup(title = stringResource(R.string.settings_training)) {
             SetwiseSettingsRow(
                 label = stringResource(R.string.training_days),
-                value = trainingDaysLabel(uiState.trainingDays),
+                value = trainingDaysLabel(uiState.trainingDays, uiState.noFixedTrainingDays),
                 onClick = { onAction(SettingsAction.OnTrainingDaysClick) },
             )
             SetwiseSwitchRow(
@@ -212,7 +212,7 @@ fun SettingsScreen(
                 null
             },
         )
-        is SettingsEditor.TrainingDays -> TrainingDaysDialog(selected = editor.selected, onAction = onAction)
+        is SettingsEditor.TrainingDays -> TrainingDaysDialog(selected = editor.selected, noFixedDays = editor.noFixedDays, onAction = onAction)
         SettingsEditor.Name -> SetwiseValueDialog(
             title = stringResource(R.string.profile_name),
             current = uiState.name.orEmpty(),
@@ -302,23 +302,30 @@ private fun AiRow(ai: AiStatusUi, onDownload: () -> Unit) {
     )
 }
 
-/** "Mon, Wed, Fri", "Every day" or "Not set". */
+/** "Mon, Wed, Fri", "Every day", "None" (picked: no fixed days) or "Not set". */
 @Composable
-private fun trainingDaysLabel(days: Set<DayOfWeek>): String {
+private fun trainingDaysLabel(days: Set<DayOfWeek>, noFixedDays: Boolean): String {
     val locale = currentLocale()
     return when (days.size) {
-        0 -> stringResource(R.string.not_set)
+        0 -> stringResource(if (noFixedDays) R.string.no_fixed_days else R.string.not_set)
         7 -> stringResource(R.string.every_day)
         else -> days.sorted().joinToString(", ") { it.getDisplayName(TextStyle.SHORT, locale) }
     }
 }
 
 @Composable
-private fun TrainingDaysDialog(selected: ImmutableSet<DayOfWeek>, onAction: (SettingsAction) -> Unit) {
+private fun TrainingDaysDialog(selected: ImmutableSet<DayOfWeek>, noFixedDays: Boolean, onAction: (SettingsAction) -> Unit) {
     AlertDialog(
         onDismissRequest = { onAction(SettingsAction.OnDismissEditor) },
         title = { Text(stringResource(R.string.training_days)) },
-        text = { SetwiseDayPicker(selected = selected, onToggle = { onAction(SettingsAction.OnDayToggle(it)) }) },
+        text = {
+            SetwiseDayPicker(
+                selected = selected,
+                onToggle = { onAction(SettingsAction.OnDayToggle(it)) },
+                noneSelected = noFixedDays,
+                onNoneClick = { onAction(SettingsAction.OnNoFixedDaysToggle) },
+            )
+        },
         confirmButton = { DialogButton(R.string.save) { onAction(SettingsAction.OnSaveTrainingDays) } },
         dismissButton = { DialogButton(R.string.cancel) { onAction(SettingsAction.OnDismissEditor) } },
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
