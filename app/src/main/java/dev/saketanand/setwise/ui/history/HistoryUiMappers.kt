@@ -3,8 +3,8 @@ package dev.saketanand.setwise.ui.history
 import dev.saketanand.setwise.domain.model.DayCheckIn
 import dev.saketanand.setwise.domain.model.DayState
 import dev.saketanand.setwise.domain.model.DayStatus
+import dev.saketanand.setwise.domain.model.TrainingPlan
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -21,7 +21,7 @@ fun historyUi(
     zone: ZoneId,
     selectedDate: LocalDate? = null,
     marks: Map<LocalDate, DayStatus> = emptyMap(),
-    trainingDays: Set<DayOfWeek> = emptySet(),
+    plan: TrainingPlan = TrainingPlan(),
 ): HistoryUiState {
     val workouts = history.map { it.toUi(zone) }
     val trainedDays = workouts.mapTo(HashSet()) { it.date }
@@ -35,7 +35,7 @@ fun historyUi(
                 DayUi(
                     date = day,
                     isToday = day == today,
-                    state = DayCheckIn.stateOf(day, today, trainedDays, marks, trainingDays, firstWorkoutDate),
+                    state = DayCheckIn.stateOf(day, today, trainedDays, marks, plan, firstWorkoutDate),
                     isSelected = day == selectedDate,
                 )
             }

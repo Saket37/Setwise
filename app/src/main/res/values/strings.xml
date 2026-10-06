@@ -262,6 +262,8 @@
     <string name="onboarding_notifications_note">Only during rests: no reminders, no ads. You can change this anytime in your phone\'s settings.</string>
     <string name="allow_notifications">Allow notifications</string>
     <string name="onboarding_checkins_message">When you open the app after a day without a workout, Setwise asks once whether you trained, rested or missed it. Never during a workout, at most once a day.</string>
+    <!-- With training days "None"; %1$d = days in a row -->
+    <string name="onboarding_checkins_message_no_fixed">With no fixed days, Setwise asks only after %1$d days in a row without a workout: whether you trained, rested or missed them. Never during a workout.</string>
     <string name="ask_about_unlogged_days">Ask about days I didn\'t log</string>
     <string name="settings_change_later">You can change all of this in Settings.</string>
 
@@ -278,6 +280,8 @@
     <!-- Training days: no fixed days (they change week to week) -->
     <string name="no_fixed_days">None</string>
     <string name="ask_about_unlogged_days_detail">Once a day at most, never during a workout</string>
+    <!-- With training days "None"; %1$d = days in a row -->
+    <string name="ask_about_unlogged_days_detail_no_fixed">After %1$d days in a row without a workout, never during one</string>
     <!-- History -->
     <string name="history">History</string>
     <string name="no_workouts_yet">No workouts yet</string>

@@ -24,6 +24,7 @@ import dev.saketanand.setwise.R
 import dev.saketanand.setwise.domain.ai.DownloadFailure
 import dev.saketanand.setwise.domain.ai.DownloadState
 import dev.saketanand.setwise.domain.ai.ModelAvailability
+import dev.saketanand.setwise.domain.model.DayCheckIn
 import dev.saketanand.setwise.domain.model.Sex
 import dev.saketanand.setwise.domain.model.UserSettings
 import dev.saketanand.setwise.ui.currentLocale
@@ -150,7 +151,11 @@ fun SettingsScreen(
             )
             SetwiseSwitchRow(
                 label = stringResource(R.string.ask_about_unlogged_days),
-                supporting = stringResource(R.string.ask_about_unlogged_days_detail),
+                supporting = if (uiState.noFixedTrainingDays) {
+                    stringResource(R.string.ask_about_unlogged_days_detail_no_fixed, DayCheckIn.NO_FIXED_DAYS_GAP)
+                } else {
+                    stringResource(R.string.ask_about_unlogged_days_detail)
+                },
                 checked = uiState.askAboutUnloggedDays,
                 onCheckedChange = { onAction(SettingsAction.OnAskAboutUnloggedDaysChange(it)) },
             )
