@@ -247,7 +247,7 @@
     <string name="onboarding_welcome_title">Welcome to Setwise</string>
     <string name="onboarding_welcome_message">Log sets fast, see last time\'s numbers, and keep your rests on time. A few quick questions to set it up. All optional.</string>
     <string name="onboarding_days_title">Which days do you usually train?</string>
-    <string name="onboarding_days_message">If one of these days passes without a workout, Setwise can ask what happened. Pick none if it changes week to week.</string>
+    <string name="onboarding_days_message">If one of these days passes without a workout, Setwise can ask what happened. Pick None if it changes week to week.</string>
     <string name="onboarding_weight_title">What do you weigh?</string>
     <string name="onboarding_weight_message">Used to estimate the calories you burn. It stays on this phone.</string>
     <string name="onboarding_weight_invalid">Enter a weight between 20 and 400 kg.</string>
@@ -275,6 +275,8 @@
     <string name="training_days">Training days</string>
     <string name="not_set">Not set</string>
     <string name="every_day">Every day</string>
+    <!-- Training days: no fixed days (they change week to week) -->
+    <string name="no_fixed_days">None</string>
     <string name="ask_about_unlogged_days_detail">Once a day at most, never during a workout</string>
     <!-- History -->
     <string name="history">History</string>

@@ -88,6 +88,25 @@ class OnboardingViewModelTest {
     }
 
     @Test
+    fun `None is a choice of its own, and a day turns it off`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAction(OnboardingAction.OnContinue()) // Welcome
+        vm.onAction(OnboardingAction.OnDayToggle(DayOfWeek.MONDAY))
+
+        vm.onAction(OnboardingAction.OnNoFixedDaysToggle) // clears Monday (#156)
+        assertTrue(vm.state.value.noFixedDays)
+        assertTrue(vm.state.value.trainingDays.isEmpty())
+        vm.onAction(OnboardingAction.OnContinue())
+
+        assertTrue(settings.settings.value.noFixedTrainingDays)
+        assertEquals(emptySet<DayOfWeek>(), settings.settings.value.trainingDays)
+
+        vm.onAction(OnboardingAction.OnBack)
+        vm.onAction(OnboardingAction.OnDayToggle(DayOfWeek.FRIDAY))
+        assertEquals(false, vm.state.value.noFixedDays)
+    }
+
+    @Test
     fun `skipping a step saves nothing for it`() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onAction(OnboardingAction.OnContinue())
