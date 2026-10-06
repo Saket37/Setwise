@@ -697,11 +697,17 @@
     <string name="goal_scheme_minutes">%1$d min</string>
     <string name="goal_advice_title">About your goal</string>
     <string name="goal_advice_title_by_model">About your goal · Gemini Nano</string>
-    <!-- %1$s kg, %2$s time as typed ("2 months"), %3$s kg a week, %4$s–%5$s steady kg a week, %6$d–%7$d weeks -->
-    <string name="goal_advice_fast">%1$s kg in %2$s is about %3$s kg a week. A pace that usually lasts is %4$s to %5$s kg a week, so %6$d to %7$d weeks is a steadier aim.</string>
+    <!-- %1$s kg, %2$s time as typed ("2 months"), %3$s kg a week, %4$s–%5$s steady kg a week, %6$d–%7$d weeks (the plural follows %7$d) -->
+    <plurals name="goal_advice_fast">
+        <item quantity="one">%1$s kg in %2$s is about %3$s kg a week. A pace that usually lasts is %4$s to %5$s kg a week, so %6$d to %7$d week is a steadier aim.</item>
+        <item quantity="other">%1$s kg in %2$s is about %3$s kg a week. A pace that usually lasts is %4$s to %5$s kg a week, so %6$d to %7$d weeks is a steadier aim.</item>
+    </plurals>
     <string name="goal_advice_steady">%1$s kg in %2$s is about %3$s kg a week: a steady pace that usually lasts.</string>
-    <!-- %1$s–%2$s steady kg a week, %3$s kg, %4$d–%5$d weeks -->
-    <string name="goal_advice_no_time">At a steady %1$s to %2$s kg a week, %3$s kg takes about %4$d to %5$d weeks.</string>
+    <!-- %1$s–%2$s steady kg a week, %3$s kg, %4$d–%5$d weeks (the plural follows %5$d) -->
+    <plurals name="goal_advice_no_time">
+        <item quantity="one">At a steady %1$s to %2$s kg a week, %3$s kg takes about %4$d to %5$d week.</item>
+        <item quantity="other">At a steady %1$s to %2$s kg a week, %3$s kg takes about %4$d to %5$d weeks.</item>
+    </plurals>
     <string name="goal_advice_losing">These workouts help you keep muscle while you lose fat; most of the loss comes from eating a little less.</string>
     <string name="goal_advice_gaining">These workouts give muscle a reason to grow; enough food and sleep do the rest.</string>
     <plurals name="goal_draft">

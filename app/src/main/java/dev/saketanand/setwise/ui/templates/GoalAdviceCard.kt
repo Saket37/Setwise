@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -54,12 +55,12 @@ internal fun AdviceCard(ui: GoalAdviceUi, modifier: Modifier = Modifier) {
 private fun adviceText(advice: GoalAdvice): String {
     val target = advice.target
     val pace = when {
-        advice.kgPerWeek == null -> stringResource(
-            R.string.goal_advice_no_time,
+        advice.kgPerWeek == null -> pluralStringResource(
+            R.plurals.goal_advice_no_time, advice.steadyWeeksMax,
             advice.steadyLowKg.kg(), advice.steadyHighKg.kg(), target.kg.kg(), advice.steadyWeeksMin, advice.steadyWeeksMax,
         )
-        advice.isFast -> stringResource(
-            R.string.goal_advice_fast,
+        advice.isFast -> pluralStringResource(
+            R.plurals.goal_advice_fast, advice.steadyWeeksMax,
             target.kg.kg(), target.timeLabel.orEmpty(), advice.kgPerWeek.kg(),
             advice.steadyLowKg.kg(), advice.steadyHighKg.kg(), advice.steadyWeeksMin, advice.steadyWeeksMax,
         )
