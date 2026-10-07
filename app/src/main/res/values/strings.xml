@@ -691,6 +691,7 @@
     <string name="gear_cables">cables</string>
     <string name="gear_machines">machines</string>
     <string name="gear_bodyweight">bodyweight</string>
+    <string name="gear_bars">pull-up bar</string>
     <string name="goal_type_strength">Strength</string>
     <string name="goal_type_muscle">Muscle</string>
     <string name="goal_type_general">General fitness</string>

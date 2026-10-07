@@ -13,9 +13,21 @@ enum class Gear {
     Cable,
     Machine,
     Bodyweight,
+
+    /** A pull-up bar, dip bars or rings: the library lists what needs them as bodyweight (#143). */
+    Bars,
     ;
 
     companion object {
+        /** What [exercise] needs: its equipment, or [Bars] for a bodyweight move done hanging or on bars. */
+        fun of(exercise: Exercise): Gear {
+            val name = exercise.name.lowercase(Locale.ROOT)
+            val onBars = NEEDS_BARS.any { it in name } && "bench dip" !in name
+            return if (onBars && of(exercise.equipment) == Bodyweight) Bars else of(exercise.equipment)
+        }
+
+        private val NEEDS_BARS = listOf("pull-up", "chin-up", "hanging", " dip", "inverted row", "muscle-up")
+
         /** A library exercise's equipment ("EZ Bar", "Smith Machine", "None"…) as a [Gear]. */
         fun of(equipment: String): Gear = when (equipment.lowercase(Locale.ROOT)) {
             "barbell", "ez bar", "trap bar" -> Barbell
@@ -95,7 +107,11 @@ object GoalReader {
 
     /** Named equipment (plus bodyweight); "home" / "no equipment" alone: bodyweight; nothing named: a full gym. */
     private fun gear(text: String): Set<Gear> {
-        val named = GEAR_WORDS.filter { (words, _) -> words.any { " $it " in text } }.map { it.second }.toSet()
+        // "a pull-up bar" is bars, not a barbell: those words are read first, then taken out.
+        val bars = BAR_WORDS.any { " $it " in text }
+        val rest = BAR_WORDS.fold(text) { t, words -> t.replace(" $words ", " ") }
+        val named = GEAR_WORDS.filter { (words, _) -> words.any { " $it " in rest } }.map { it.second }.toSet() +
+            listOfNotNull(Gear.Bars.takeIf { bars })
         return when {
             named.isNotEmpty() -> named + Gear.Bodyweight
             BODYWEIGHT_ONLY.any { " $it " in text } -> setOf(Gear.Bodyweight)
@@ -116,6 +132,9 @@ object GoalReader {
         listOf("cable", "cables") to Gear.Cable,
         listOf("machine", "machines") to Gear.Machine,
     )
+
+    /** Bars to hang from or dip on ([Gear.Bars]). */
+    private val BAR_WORDS = listOf("pull up bar", "pullup bar", "chin up bar", "chinup bar", "dip bars", "dip station", "rings")
     private val BODYWEIGHT_ONLY = listOf("home", "bodyweight", "no equipment", "calisthenics")
 
     /** Lift words people name, and the word library names use for them. */
