@@ -1,11 +1,15 @@
 package dev.saketanand.setwise.ui.workout
 
 import androidx.lifecycle.SavedStateHandle
+import dev.saketanand.setwise.domain.model.CalorieMethod
 import dev.saketanand.setwise.domain.model.CardioEntry
 import dev.saketanand.setwise.domain.model.CardioMetric
 import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.UserSettings
+import dev.saketanand.setwise.testing.FakeBodyRepository
+import dev.saketanand.setwise.testing.FakeUserSettingsRepository
 import dev.saketanand.setwise.testing.StubWorkoutRepository
 import dev.saketanand.setwise.util.DateProvider
 import java.time.Instant
@@ -33,13 +37,28 @@ class CardioEntryViewModelTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeRepository()
+    private val settings = FakeUserSettingsRepository()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
 
     @After fun tearDown() = Dispatchers.resetMain()
 
     private fun viewModel(handle: SavedStateHandle = SavedStateHandle()) =
-        CardioEntryViewModel(WORKOUT_EXERCISE_ID, repository, FixedDateProvider, handle)
+        CardioEntryViewModel(WORKOUT_EXERCISE_ID, repository, FixedDateProvider, handle, settings, FakeBodyRepository())
+
+    @Test
+    fun `the calorie line needs a body weight, and goes by the exercise's formula`() = runTest(dispatcher) {
+        val vm = viewModel()
+        assertNull(vm.state.value.calories)
+
+        settings.settings.value = UserSettings(bodyWeightKg = 78.0)
+
+        val basis = vm.state.value.calories!!
+        assertEquals(78.0, basis.weightKg, 0.0)
+        assertEquals(78.0, basis.kcalPerMetHour, 0.0) // 1 kcal per kg per MET-hour without a BMR
+        assertEquals(false, basis.fromBmr)
+        assertEquals(CalorieMethod.ACSM_TREADMILL, basis.method)
+    }
 
     @Test
     fun `steppers start from last time and stay in range`() = runTest(dispatcher) {
@@ -83,7 +102,7 @@ class CardioEntryViewModelTest {
                 exercise = Exercise(
                     3, "Treadmill", ExerciseType.CARDIO, "Cardio", "Machine", 0, isTimed = false, isCustom = false,
                     metrics = listOf(CardioMetric.DURATION, CardioMetric.INCLINE, CardioMetric.SPEED, CardioMetric.DISTANCE),
-                    calorieMethod = null, met = null,
+                    calorieMethod = CalorieMethod.ACSM_TREADMILL, met = null,
                 ),
                 logged = null,
                 lastTime = CardioValues(1_800, inclinePct = 5.0, speedMinKmh = 5.5, speedMaxKmh = 7.5, distanceKm = 3.9),

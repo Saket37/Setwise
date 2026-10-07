@@ -2,6 +2,7 @@ package dev.saketanand.setwise.ui.workout
 
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.NextSession
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.Progression
 import dev.saketanand.setwise.domain.model.SessionExercise
@@ -32,13 +33,17 @@ fun SessionExercise.toUi(hintsAt: Instant? = null): WorkoutExerciseUi {
     val kind = exercise.setKind
     // Hints: the template's target reps (or seconds) if it has them, else the same set last time;
     // for extra sets beyond last time's count, the row above (what was typed there, or its
-    // hint), so set 5 suggests what set 4 was done with.
+    // hint), so set 5 suggests what set 4 was done with. With a progression hint ("Try 60 kg"),
+    // last time's working sets hint what it suggests instead, as in the design (#145); warm-ups
+    // keep theirs.
     // 🏆 as soon as a ticked-off set beats the earlier best (stored when the workout finishes).
+    val nextSession = hintsAt?.let { Progression.next(exercise, history, it) }?.takeIf { it.isChange }
     val recordSetId = personalRecord?.set?.id
     var weightAbove = ""
     var repsAbove = ""
     val rows = sets.mapIndexed { index, set ->
         val previous = previousSets.getOrNull(index)
+        val suggested = nextSession?.takeIf { previous != null && previous.isWorkingSetOf(it) }
         val row = SetUi(
             id = set.id,
             number = index + 1,
@@ -46,8 +51,8 @@ fun SessionExercise.toUi(hintsAt: Instant? = null): WorkoutExerciseUi {
             // Field text and hints are parsed back, so they use the locale-independent format.
             weight = set.weightKg?.toWeightInput().orEmpty(),
             reps = set.amount(kind)?.toString().orEmpty(),
-            weightHint = previous?.weightKg?.toWeightInput() ?: weightAbove,
-            repsHint = targetReps?.toString() ?: previous?.amount(kind)?.toString() ?: repsAbove,
+            weightHint = (suggested?.weightKg ?: previous?.weightKg)?.toWeightInput() ?: weightAbove,
+            repsHint = (suggested?.amount(kind) ?: targetReps ?: previous?.amount(kind))?.toString() ?: repsAbove,
             isCompleted = set.isCompleted,
             isPr = set.id == recordSetId,
         )
@@ -64,7 +69,7 @@ fun SessionExercise.toUi(hintsAt: Instant? = null): WorkoutExerciseUi {
         sets = rows,
         lastTime = previousSets.mapNotNull { it.label(kind) }.takeIf { it.isNotEmpty() }?.joinToString(" · "),
         cardio = sets.firstOrNull { it.isCompleted }?.cardio,
-        nextSession = hintsAt?.let { Progression.next(exercise, history, it) }?.takeIf { it.isChange },
+        nextSession = nextSession,
     )
 }
 
@@ -103,6 +108,14 @@ fun PreviousSet.label(kind: SetKind): String? = when (kind) {
 private fun WorkoutSet.amount(kind: SetKind): Int? = if (kind == SetKind.Duration) durationSec else reps
 
 private fun PreviousSet.amount(kind: SetKind): Int? = if (kind == SetKind.Duration) durationSec else reps
+
+private fun NextSession.amount(kind: SetKind): Int? = if (kind == SetKind.Duration) seconds else reps
+
+/** Done at the weight the suggestion went by (not a lighter warm-up). */
+private fun PreviousSet.isWorkingSetOf(next: NextSession): Boolean =
+    kotlin.math.abs((weightKg ?: 0.0) - (next.done.weightKg ?: 0.0)) < WORKING_WEIGHT_TOLERANCE_KG
+
+private const val WORKING_WEIGHT_TOLERANCE_KG = 0.01
 
 fun parseAmount(text: String): Int? = text.trim().toIntOrNull()
 

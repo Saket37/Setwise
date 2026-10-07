@@ -52,7 +52,7 @@ object CalorieFormula {
             exercise.sets.filter { it.isCompleted }.mapNotNull { set -> set.cardio?.let { exercise.exercise to it } }
         }
         val cardioHours = cardioEntries.sumOf { (_, values) -> (values.durationSec ?: 0) / 3600.0 }
-        val cardioKcal = cardioEntries.sumOf { (exercise, values) -> cardioKcal(exercise, values, kcalPerMetHour) }
+        val cardioKcal = cardioEntries.sumOf { (exercise, values) -> cardioKcal(exercise.calorieMethod, exercise.met, values, kcalPerMetHour) }
 
         val strengthSets = session.exercises
             .filter { it.exercise.type != ExerciseType.CARDIO }
@@ -87,13 +87,16 @@ object CalorieFormula {
     fun kcalPerMetHour(weightKg: Double, bmrKcal: Int?): Double =
         bmrKcal?.takeIf { it in BodyRules.BMR_KCAL }?.let { it / HOURS_PER_DAY } ?: weightKg
 
-    /** @param kcalPerMetHour see [kcalPerMetHour]. */
-    fun cardioKcal(exercise: Exercise, values: CardioValues, kcalPerMetHour: Double): Double {
+    /**
+     * One cardio entry, by its exercise's [method] and [met] (also the cardio screen's live line).
+     * @param kcalPerMetHour see [kcalPerMetHour].
+     */
+    fun cardioKcal(method: CalorieMethod?, met: Double?, values: CardioValues, kcalPerMetHour: Double): Double {
         val seconds = values.durationSec ?: return 0.0
         val minutes = seconds / 60.0
         val speedKmh = values.averageSpeedKmh() ?: values.distanceKm?.let { it / (minutes / 60.0) }
         val grade = (values.inclinePct ?: 0.0) / 100
-        val vo2 = when (exercise.calorieMethod) {
+        val vo2 = when (method) {
             // ml O2 / kg / min. Above ~8 km/h the treadmill is run, below it walked.
             CalorieMethod.ACSM_TREADMILL -> speedKmh?.let { if (it >= RUN_FROM_KMH) runningVo2(it, grade) else walkingVo2(it, grade) }
             CalorieMethod.ACSM_RUN_FROM_PACE -> speedKmh?.let { runningVo2(it, 0.0) }
@@ -101,8 +104,8 @@ object CalorieFormula {
             CalorieMethod.MET, null -> null
         }
         // 1 MET = 3.5 ml/kg/min; kcal = MET × (kcal per MET-hour) × hours.
-        val met = vo2?.let { it / 3.5 } ?: exercise.met ?: typicalMet(exercise.calorieMethod)
-        return met * kcalPerMetHour * (minutes / 60.0)
+        val mets = vo2?.let { it / 3.5 } ?: met ?: typicalMet(method)
+        return mets * kcalPerMetHour * (minutes / 60.0)
     }
 
     private fun CardioValues.averageSpeedKmh(): Double? = when {

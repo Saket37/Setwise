@@ -99,7 +99,9 @@ fun WeeklySummaryCard(
                 Stat(facts.prs.toString(), pluralStringResource(R.plurals.weekly_stat_prs, facts.prs), Modifier.weight(1f), MaterialTheme.colorScheme.pr)
                 val change = facts.volumeChangePercent
                 if (change != null) {
-                    Stat(signed(change) + "%", stringResource(R.string.weekly_stat_volume), Modifier.weight(1f), MaterialTheme.colorScheme.primary)
+                    // Volt only for a rise: a drop isn't good news, but isn't an error either (#145).
+                    val color = if (change > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    Stat(signed(change) + "%", stringResource(R.string.weekly_stat_volume), Modifier.weight(1f), color)
                 } else {
                     Stat(compact(facts.volumeKg, locale), stringResource(R.string.weekly_stat_volume_kg), Modifier.weight(1f))
                 }

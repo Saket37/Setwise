@@ -76,6 +76,8 @@ val viewModelModule = module {
             workoutRepository = get(),
             dateProvider = get(),
             savedStateHandle = get(),
+            userSettingsRepository = get(),
+            bodyRepository = get(),
         )
     }
     // Route argument passed by SetwiseNavHost.

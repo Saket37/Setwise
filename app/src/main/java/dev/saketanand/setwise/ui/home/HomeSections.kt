@@ -124,7 +124,7 @@ fun HomeDashboardContent(
             HomeGreeting(lastWorkout = uiState.lastWorkout, modifier = Modifier.padding(bottom = SectionGap))
         }
 
-        // Start of a new week: recap of the last one (artboard 13).
+        // Start of a new week: recap of the last one (artboard 13), in place of this week's tiles.
         uiState.weeklySummary?.let { summary ->
             item(key = "weeklySummary", contentType = "weeklySummary") {
                 WeeklySummaryCard(
@@ -135,8 +135,12 @@ fun HomeDashboardContent(
             }
         }
 
-        item(key = "weekStats", contentType = "weekStats") {
-            WeekStatsRow(stats = uiState.weekStats, modifier = Modifier.padding(bottom = SectionGap))
+        // The design swaps this week's tiles for last week's card: not both, so "0 workouts this
+        // week" doesn't sit next to last week's numbers (#145).
+        if (uiState.weeklySummary == null) {
+            item(key = "weekStats", contentType = "weekStats") {
+                WeekStatsRow(stats = uiState.weekStats, modifier = Modifier.padding(bottom = SectionGap))
+            }
         }
 
         item(key = "startWorkout", contentType = "startWorkout") {

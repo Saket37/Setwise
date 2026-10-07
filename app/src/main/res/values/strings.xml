@@ -139,6 +139,18 @@
     <string name="sets_progress">%1$d / %2$d sets</string>
     <!-- %1$s = last session's sets, e.g. "40 × 6 · 40 × 6 · 37.5 × 8" -->
     <string name="last_time">Last time: %1$s</string>
+    <!-- Cardio entry's calorie line (#145): "About 310 kcal · ACSM treadmill formula at 78 kg" -->
+    <string name="cardio_kcal_value">%1$s kcal</string>
+    <!-- %1$s = cardio_kcal_value, %2$s = how it's worked out -->
+    <string name="cardio_kcal_line">About %1$s · %2$s</string>
+    <string name="cardio_formula_treadmill">ACSM treadmill formula</string>
+    <string name="cardio_formula_running">ACSM running formula</string>
+    <string name="cardio_formula_walking">ACSM walking formula</string>
+    <string name="cardio_formula_met">MET estimate</string>
+    <!-- %1$s = the formula, %2$s = body weight in kg -->
+    <string name="cardio_formula_at_weight">%1$s at %2$s kg</string>
+    <!-- %1$s = the formula -->
+    <string name="cardio_formula_from_bmr">%1$s, from your BMR</string>
     <string name="log_cardio">Log cardio</string>
     <string name="discard_workout">Discard workout</string>
     <string name="no_exercises_yet">No exercises yet</string>

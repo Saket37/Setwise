@@ -4,7 +4,12 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.saketanand.setwise.domain.model.BodyRules
+import dev.saketanand.setwise.domain.model.CalorieFormula
 import dev.saketanand.setwise.domain.model.CardioMetric
+import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.repository.BodyRepository
+import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import dev.saketanand.setwise.ui.navigation.Route
 import dev.saketanand.setwise.util.DateProvider
@@ -14,6 +19,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -31,6 +38,8 @@ class CardioEntryViewModel(
     private val workoutRepository: WorkoutRepository,
     private val dateProvider: DateProvider,
     private val savedStateHandle: SavedStateHandle,
+    userSettingsRepository: UserSettingsRepository,
+    bodyRepository: BodyRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CardioEntryUiState())
@@ -38,6 +47,8 @@ class CardioEntryViewModel(
 
     private val eventChannel = Channel<CardioEntryEvent>(Channel.BUFFERED)
     val events: Flow<CardioEntryEvent> = eventChannel.receiveAsFlow()
+
+    private val exercise = MutableStateFlow<Exercise?>(null)
 
     init {
         workoutRepository.observeCardioEntry(workoutExerciseId)
@@ -47,6 +58,7 @@ class CardioEntryViewModel(
                     return@onEach
                 }
                 val start = entry.logged ?: entry.lastTime
+                exercise.value = entry.exercise
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -63,6 +75,31 @@ class CardioEntryViewModel(
                 Log.e(TAG, "Loading cardio entry $workoutExerciseId failed", e)
                 eventChannel.send(CardioEntryEvent.Closed)
             }
+            .launchIn(viewModelScope)
+
+        // The calorie line's basis (#145), as the workout's own estimate works it out (CalorieSync).
+        combine(
+            exercise.filterNotNull(),
+            userSettingsRepository.settings,
+            bodyRepository.observeMeasurements(),
+            dateProvider.today(),
+        ) { exercise, settings, measurements, today ->
+            settings.bodyWeightKg?.let { weightKg ->
+                val bmr = BodyRules.bmr(measurements, settings, today)?.kcal
+                CardioCalorieBasis(
+                    method = exercise.calorieMethod,
+                    met = exercise.met,
+                    kcalPerMetHour = CalorieFormula.kcalPerMetHour(weightKg, bmr),
+                    weightKg = weightKg,
+                    fromBmr = bmr != null && bmr in BodyRules.BMR_KCAL,
+                )
+            }
+        }
+            .catch { e ->
+                Log.e(TAG, "Loading the calorie basis failed", e)
+                emit(null)
+            }
+            .onEach { basis -> _state.update { it.copy(calories = basis) } }
             .launchIn(viewModelScope)
     }
 
