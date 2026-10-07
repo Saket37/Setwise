@@ -35,6 +35,19 @@ class DataStoreUserSettingsRepositoryTest {
     }
 
     @Test
+    fun `None is kept apart from not set, and days given turn it off`() = runTest {
+        val repository = newRepository()
+        assertEquals(false, repository.settings.first().noFixedTrainingDays) // not set
+
+        repository.setTrainingDays(emptySet(), noFixedDays = true)
+        assertTrue(repository.settings.first().noFixedTrainingDays)
+
+        repository.setTrainingDays(setOf(DayOfWeek.MONDAY))
+        assertEquals(false, repository.settings.first().noFixedTrainingDays)
+        assertEquals(setOf(DayOfWeek.MONDAY), repository.settings.first().trainingDays)
+    }
+
+    @Test
     fun `settings are saved and read back`() = runTest {
         val repository = newRepository()
 
