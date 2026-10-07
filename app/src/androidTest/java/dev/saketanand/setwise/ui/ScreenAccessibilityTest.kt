@@ -16,6 +16,10 @@ import com.google.android.apps.common.testing.accessibility.framework.checks.Tou
 import com.google.android.apps.common.testing.accessibility.framework.integrations.espresso.AccessibilityValidator
 import dev.saketanand.setwise.domain.ai.WorkoutImporter
 import dev.saketanand.setwise.domain.model.DayState
+import dev.saketanand.setwise.ui.body.BodyProgressScreen
+import dev.saketanand.setwise.ui.body.BodyReportScreen
+import dev.saketanand.setwise.ui.body.SampleBodyProgressState
+import dev.saketanand.setwise.ui.body.SampleBodyReportState
 import dev.saketanand.setwise.ui.designsystem.theme.SetwiseTheme
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailScreen
 import dev.saketanand.setwise.ui.exercises.SampleExerciseDetailState
@@ -83,6 +87,14 @@ class ScreenAccessibilityTest {
 
     @Test
     fun settings() = check { SettingsScreen(uiState = SampleSettingsState, onAction = {}) }
+
+    @Test
+    fun bodyProgress() = check { BodyProgressScreen(uiState = SampleBodyProgressState, onRangeChange = {}, onBack = {}) }
+
+    @Test
+    fun bodyReport() = check {
+        BodyReportScreen(uiState = SampleBodyReportState, onBack = {}, onDeleteClick = {}, onDeleteDismiss = {}, onConfirmDelete = {})
+    }
 
     @Test
     fun buildFromAGoal() = check {
