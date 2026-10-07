@@ -6,6 +6,7 @@ import dev.saketanand.setwise.domain.model.NextSession
 import dev.saketanand.setwise.ui.workout.SetKind
 import java.time.LocalDate
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /** Everything [ExerciseDetailScreen] draws. */
 @Immutable
@@ -25,7 +26,30 @@ data class ExerciseDetailUiState(
     val nextSession: NextSession? = null,
     /** Newest first. */
     val sessions: List<ExerciseSessionUi> = emptyList(),
+    /** The user's own exercise: it can be edited, deleted or merged (#146). */
+    val isCustom: Boolean = false,
+    /** The delete or merge dialog, if open. */
+    val manage: ManageExerciseUi? = null,
 )
+
+/** Deleting a custom exercise: plainly when it's in no workout, otherwise by merging it into another. */
+@Immutable
+sealed interface ManageExerciseUi {
+    /** In no workout: "Delete Bnech press?", and how many templates it's taken out of. */
+    data class ConfirmDelete(val templates: Int) : ManageExerciseUi
+
+    /** In [workouts] workouts: pick the exercise it should have been, logged the same way. */
+    data class Merge(
+        val workouts: Int,
+        val query: String = "",
+        val candidates: ImmutableList<MergeCandidateUi> = persistentListOf(),
+        val selectedId: Long? = null,
+    ) : ManageExerciseUi
+}
+
+/** "Bench Press (Dumbbell) · Chest". */
+@Immutable
+data class MergeCandidateUi(val id: Long, val name: String, val muscleGroup: String)
 
 /** What the chart shows, by kind of exercise. */
 enum class ProgressMetric {

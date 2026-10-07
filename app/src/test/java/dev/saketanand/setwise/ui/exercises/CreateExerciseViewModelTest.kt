@@ -10,7 +10,9 @@ import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.NewExercise
 import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
+import dev.saketanand.setwise.testing.FakeExerciseEditor
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
+import dev.saketanand.setwise.ui.navigation.Route
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -36,13 +38,14 @@ class CreateExerciseViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = FakeExerciseRepository()
     private val model = FakeOnDeviceModel()
+    private val editor = FakeExerciseEditor()
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
 
     @After fun tearDown() = Dispatchers.resetMain()
 
-    private fun TestScope.viewModel(name: String = "", handle: SavedStateHandle = SavedStateHandle()) =
-        CreateExerciseViewModel(name, repository, ExerciseAssistant(model), handle).also { vm ->
+    private fun TestScope.viewModel(name: String = "", handle: SavedStateHandle = SavedStateHandle(), exerciseId: Long = Route.NEW_EXERCISE_ID) =
+        CreateExerciseViewModel(name, repository, ExerciseAssistant(model), handle, editor, exerciseId).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
             advanceUntilIdle()
         }
@@ -131,6 +134,38 @@ class CreateExerciseViewModelTest {
         assertTrue(vm.state.value.canCreate) // cardio needs no muscle group
     }
 
+    @Test
+    fun `editing starts from the exercise, keeps how it's logged, and saves`() = runTest(dispatcher) {
+        val vm = viewModel(exerciseId = TYPO.id)
+        val state = vm.state.value
+        assertTrue(state.isEditing)
+        assertEquals("Bnech press", state.name)
+        assertEquals("Dumbbell", state.equipment)
+        assertEquals(90, state.restSec)
+        assertEquals(null, state.suggestionSource) // nothing suggested over its details
+        assertEquals(null, state.match) // nor "Already in your library?"
+
+        vm.onAction(CreateExerciseAction.OnKindClick(ExerciseKindOption.Cardio)) // can't change
+        vm.onAction(CreateExerciseAction.OnNameChange("Bench Press (Barbell)"))
+        advanceUntilIdle()
+        assertTrue(vm.state.value.isNameTaken)
+        assertFalse(vm.state.value.canCreate)
+
+        vm.onAction(CreateExerciseAction.OnNameChange("Bench press"))
+        vm.onAction(CreateExerciseAction.OnMuscleGroupClick("Quads"))
+        advanceUntilIdle()
+        vm.onAction(CreateExerciseAction.OnCreateClick)
+        advanceUntilIdle()
+
+        assertEquals(CreateExerciseEvent.Done(TYPO.id), vm.events.first())
+        assertEquals(TYPO.id to NewExercise("Bench press", ExerciseType.STRENGTH, false, "Quads", "Dumbbell", 90), editor.edited.single())
+        assertTrue(repository.created.isEmpty())
+    }
+
+    private companion object {
+        val TYPO = Exercise(5, "Bnech press", ExerciseType.STRENGTH, "Chest", "Dumbbell", 90, false, true, null, null, null)
+    }
+
     private class FakeExerciseRepository : ExerciseRepository {
         private val library = listOf(exercise(1, "Bench Press (Barbell)"), exercise(2, "Bench Press (Dumbbell)"))
         val created = mutableListOf<NewExercise>()
@@ -145,7 +180,7 @@ class CreateExerciseViewModelTest {
             return CreateExerciseResult.Created(99)
         }
         override suspend fun getExercises(ids: List<Long>): List<Exercise> = emptyList()
-        override fun observeExercise(id: Long): Flow<Exercise?> = flowOf(null)
+        override fun observeExercise(id: Long): Flow<Exercise?> = flowOf(TYPO.takeIf { it.id == id })
 
         private companion object {
             fun exercise(id: Long, name: String) =

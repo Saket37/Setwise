@@ -13,14 +13,14 @@ import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-private const val CARDIO_MUSCLE_GROUP = "Cardio"
+internal const val CARDIO_MUSCLE_GROUP = "Cardio"
 
 class ExerciseRepositoryImpl(
     private val exerciseDao: ExerciseDao,
 ) : ExerciseRepository {
 
     override suspend fun createExercise(exercise: NewExercise): CreateExerciseResult {
-        val name = exercise.name.trim().replace(Regex("\\s+"), " ")
+        val name = tidyExerciseName(exercise.name)
         exerciseDao.findByNameIgnoringCase(name)?.let { return CreateExerciseResult.NameTaken(it.toDomain()) }
         val isCardio = exercise.type == ExerciseType.CARDIO
         val id = exerciseDao.insert(
@@ -59,3 +59,6 @@ class ExerciseRepositoryImpl(
 
     override fun observeExerciseCount(): Flow<Int> = exerciseDao.observeCount()
 }
+
+/** "  Spoto   press " → "Spoto press". */
+internal fun tidyExerciseName(name: String): String = name.trim().replace(Regex("\\s+"), " ")

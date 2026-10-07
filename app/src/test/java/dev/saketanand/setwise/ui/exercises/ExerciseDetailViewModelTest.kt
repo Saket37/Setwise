@@ -6,11 +6,13 @@ import dev.saketanand.setwise.domain.model.CreateExerciseResult
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseSession
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.model.ExerciseUsage
 import dev.saketanand.setwise.domain.model.LoggedSet
 import dev.saketanand.setwise.domain.model.NewExercise
 import dev.saketanand.setwise.domain.model.ProgressionRule
 import dev.saketanand.setwise.domain.model.RecentExercise
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
+import dev.saketanand.setwise.testing.FakeExerciseEditor
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import dev.saketanand.setwise.testing.StubWorkoutRepository
 import dev.saketanand.setwise.util.DateProvider
@@ -31,6 +33,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -46,8 +49,8 @@ class ExerciseDetailViewModelTest {
 
     @After fun tearDown() = Dispatchers.resetMain()
 
-    private fun TestScope.viewModel() =
-        ExerciseDetailViewModel(OHP.id, Library, Sessions, FixedDateProvider, PlateauNoteWriter(model)).also { vm ->
+    private fun TestScope.viewModel(exerciseId: Long = OHP.id, editor: FakeExerciseEditor = FakeExerciseEditor()) =
+        ExerciseDetailViewModel(exerciseId, Library, Sessions, FixedDateProvider, PlateauNoteWriter(model), editor).also { vm ->
             backgroundScope.launch { vm.state.collect {} }
         }
 
@@ -79,14 +82,67 @@ class ExerciseDetailViewModelTest {
         assertTrue(model.requests.isEmpty())
     }
 
+    @Test
+    fun `a built-in exercise has no edit or delete`() = runTest(dispatcher) {
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.isCustom)
+    }
+
+    @Test
+    fun `a custom exercise in no workout is deleted after asking`() = runTest(dispatcher) {
+        val editor = FakeExerciseEditor(ExerciseUsage(workouts = 0, templates = 2))
+        val vm = viewModel(TYPO.id, editor)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.isCustom)
+
+        vm.onAction(ExerciseDetailAction.OnDeleteClick)
+        advanceUntilIdle()
+        assertEquals(ManageExerciseUi.ConfirmDelete(templates = 2), vm.state.value.manage)
+
+        vm.onAction(ExerciseDetailAction.OnConfirmDelete)
+        advanceUntilIdle()
+        assertEquals(listOf(TYPO.id), editor.deleted)
+    }
+
+    @Test
+    fun `with history it's merged into an exercise logged the same way`() = runTest(dispatcher) {
+        val editor = FakeExerciseEditor(ExerciseUsage(workouts = 3, templates = 0))
+        val vm = viewModel(TYPO.id, editor)
+        advanceUntilIdle()
+
+        vm.onAction(ExerciseDetailAction.OnDeleteClick)
+        advanceUntilIdle()
+        val merge = vm.state.value.manage as ManageExerciseUi.Merge
+        assertEquals(3, merge.workouts)
+        // Weight × reps like it, not itself, not the timed plank.
+        assertEquals(listOf(OHP.name, BENCH.name), merge.candidates.map { it.name })
+
+        vm.onAction(ExerciseDetailAction.OnMergeQueryChange("bench"))
+        advanceUntilIdle()
+        assertEquals(listOf(BENCH.name), (vm.state.value.manage as ManageExerciseUi.Merge).candidates.map { it.name })
+
+        vm.onAction(ExerciseDetailAction.OnConfirmMerge) // nothing picked yet
+        advanceUntilIdle()
+        assertTrue(editor.merged.isEmpty())
+
+        vm.onAction(ExerciseDetailAction.OnMergeTargetClick(BENCH.id))
+        vm.onAction(ExerciseDetailAction.OnConfirmMerge)
+        advanceUntilIdle()
+        assertEquals(listOf(TYPO.id to BENCH.id), editor.merged)
+        assertTrue(editor.deleted.isEmpty())
+    }
+
     private object Library : ExerciseRepository {
-        override fun observeExercises(query: String, muscleGroup: String?): Flow<List<Exercise>> = flowOf(listOf(OHP))
+        override fun observeExercises(query: String, muscleGroup: String?): Flow<List<Exercise>> =
+            flowOf(listOf(OHP, TYPO, BENCH, PLANK).filter { it.name.contains(query, ignoreCase = true) })
         override fun observeMuscleGroups(): Flow<List<String>> = flowOf(emptyList())
         override fun observeRecentExercises(limit: Int): Flow<List<RecentExercise>> = flowOf(emptyList())
         override fun observeExerciseCount(): Flow<Int> = flowOf(1)
         override suspend fun createExercise(exercise: NewExercise): CreateExerciseResult = CreateExerciseResult.Created(0)
         override suspend fun getExercises(ids: List<Long>): List<Exercise> = emptyList()
-        override fun observeExercise(id: Long): Flow<Exercise?> = flowOf(OHP.takeIf { it.id == id })
+        override fun observeExercise(id: Long): Flow<Exercise?> = flowOf(listOf(OHP, TYPO, BENCH, PLANK).find { it.id == id })
     }
 
     /** Twice a week since 9 Sep at an estimated 1RM of about 48 kg, never every rep. */
@@ -108,6 +164,9 @@ class ExerciseDetailViewModelTest {
     private companion object {
         val ZONE: ZoneId = ZoneId.of("Asia/Kolkata")
         val OHP = Exercise(7, "Overhead Press (Barbell)", ExerciseType.STRENGTH, "Shoulders", "Barbell", 90, false, false, null, null, null)
+        val TYPO = Exercise(20, "Bnech press", ExerciseType.STRENGTH, "Chest", "Dumbbell", 90, false, true, null, null, null)
+        val BENCH = Exercise(21, "Bench Press (Dumbbell)", ExerciseType.STRENGTH, "Chest", "Dumbbell", 120, false, false, null, null, null)
+        val PLANK = Exercise(22, "Plank", ExerciseType.BODYWEIGHT, "Core", "Bodyweight", 60, true, false, null, null, null)
         const val NOTE = "Your overhead press has held at about 48 kg for 3 weeks, even with 2 sessions a week. A lighter week, or 8 to 10 reps a set for a month, often gets it moving again."
     }
 }
