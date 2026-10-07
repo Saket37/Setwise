@@ -799,6 +799,8 @@
     <string name="check_in_title">Did you train?</string>
     <string name="check_in_subtitle">Nothing was logged on these days.</string>
     <string name="not_now">Not now</string>
+    <!-- In the start-time picker, when the time picked hasn't happened yet -->
+    <string name="start_time_in_future">That\'s later than now. Pick an earlier time.</string>
     <string name="mark_all_as_rest">Mark all as rest</string>
     <string name="check_in_settings_hint">You can turn these questions off in Settings.</string>
 
