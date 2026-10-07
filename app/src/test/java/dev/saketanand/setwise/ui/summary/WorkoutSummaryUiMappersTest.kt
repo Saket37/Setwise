@@ -110,6 +110,27 @@ class WorkoutSummaryUiMappersTest {
         assertNull(editedTimes(today, LocalTime.of(18, 30), LocalTime.of(19, 0), zone, now))
     }
 
+    @Test
+    fun `an end before the start is a typo unless it makes a short workout past midnight`() {
+        val older = LocalDate.of(2026, 10, 1)
+        val now = at(2026, 10, 3, 19, 0)
+
+        // 6:30 pm to 6:00 pm would be 23½ hours: rejected, not saved (#132).
+        assertNull(editedTimes(older, LocalTime.of(18, 30), LocalTime.of(18, 0), zone, now))
+        // 10 pm to 3 am: 5 hours past midnight, believable.
+        assertEquals(at(2026, 10, 1, 22, 0) to at(2026, 10, 2, 3, 0), editedTimes(older, LocalTime.of(22, 0), LocalTime.of(3, 0), zone, now))
+        // 9 pm to 4 am: 7 hours, too long to be one.
+        assertNull(editedTimes(older, LocalTime.of(21, 0), LocalTime.of(4, 0), zone, now))
+    }
+
+    @Test
+    fun `today, an end before the start isn't moved to now`() {
+        val today = LocalDate.of(2026, 10, 3)
+        val now = at(2026, 10, 3, 19, 0)
+        // Read as tomorrow 6:00 pm, which hasn't happened: rejected (it used to save as 7:00 pm).
+        assertNull(editedTimes(today, LocalTime.of(18, 30), LocalTime.of(18, 0), zone, now))
+    }
+
     private fun at(y: Int, m: Int, d: Int, h: Int, min: Int): Instant = LocalDateTime.of(y, m, d, h, min).atZone(zone).toInstant()
 
     private fun session(vararg exercises: SessionExercise, templateId: Long? = null) = WorkoutSession(

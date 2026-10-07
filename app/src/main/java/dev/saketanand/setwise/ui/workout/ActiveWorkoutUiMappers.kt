@@ -107,11 +107,12 @@ private fun PreviousSet.amount(kind: SetKind): Int? = if (kind == SetKind.Durati
 fun parseAmount(text: String): Int? = text.trim().toIntOrNull()
 
 /**
- * Reps (or seconds) a set is ticked off with: what's typed, else the hint. Null when there's
- * nothing to log; 0 doesn't count, a set of 0 reps wasn't done.
+ * Reps (or seconds) a set is ticked off with: what's typed, else (only when nothing is typed)
+ * the hint. Null when there's nothing to log: 0 doesn't count, a set of 0 reps wasn't done, and
+ * a typed 0 isn't swapped for the hint behind your back (#133).
  */
 fun loggedAmount(typed: String, hint: String): Int? =
-    parseAmount(typed)?.takeIf { it > 0 } ?: parseAmount(hint)?.takeIf { it > 0 }
+    if (typed.isNotBlank()) parseAmount(typed)?.takeIf { it > 0 } else parseAmount(hint)?.takeIf { it > 0 }
 
 /** Whether ✓ can be tapped: there's a reps (or seconds) value to log. Same rule as [loggedAmount]. */
 fun canCompleteSet(typedReps: String, repsHint: String): Boolean = loggedAmount(typedReps, repsHint) != null
@@ -123,11 +124,20 @@ fun canCompleteSet(typedReps: String, repsHint: String): Boolean = loggedAmount(
  * day). A start in the future becomes now.
  */
 fun pickedStartTime(time: LocalTime, currentStart: Instant, now: Instant, zone: ZoneId): Instant {
+    val picked = nearestStart(time, currentStart, zone)
+    return if (picked.isAfter(now)) now else picked
+}
+
+/** Whether [time] can be the start: not in the future, read as [pickedStartTime] reads it. The picker says why not (#140). */
+fun isPickableStartTime(time: LocalTime, currentStart: Instant, now: Instant, zone: ZoneId): Boolean =
+    !nearestStart(time, currentStart, zone).isAfter(now)
+
+/** [time] on whichever day (the start's own, the day before or after) is closest to [currentStart]. */
+private fun nearestStart(time: LocalTime, currentStart: Instant, zone: ZoneId): Instant {
     val startDay = currentStart.atZone(zone).toLocalDate()
-    val picked = (-1L..1L)
+    return (-1L..1L)
         .map { startDay.plusDays(it).atTime(time).atZone(zone).toInstant() }
         .minBy { java.time.Duration.between(it, currentStart).abs() }
-    return if (picked.isAfter(now)) now else picked
 }
 
 /** How long a workout logged afterwards is assumed to last; editable on the summary. */

@@ -140,7 +140,9 @@ class ActiveWorkoutUiMappersTest {
 
     @Test
     fun `0 reps doesn't count as a set`() {
-        assertEquals(8, loggedAmount(typed = "0", hint = "8"))
+        assertNull(loggedAmount(typed = "0", hint = "8")) // a typed 0 isn't replaced by the hint (#133)
+        assertEquals(false, canCompleteSet("0", "8"))
+        assertEquals(8, loggedAmount(typed = "", hint = "8")) // nothing typed: the hint
         assertNull(loggedAmount(typed = "0", hint = ""))
         assertEquals(10, loggedAmount(typed = "10", hint = "8"))
         assertEquals(false, canCompleteSet("", ""))
@@ -155,6 +157,19 @@ class ActiveWorkoutUiMappersTest {
 
         assertEquals(at(2026, 10, 3, 17, 45, zone), pickedStartTime(LocalTime.of(17, 45), start, now, zone))
         assertEquals("future → now", now, pickedStartTime(LocalTime.of(23, 0), start, now, zone))
+    }
+
+    @Test
+    fun `a start time in the future can't be picked, read the same way`() {
+        val zone = ZoneId.of("Asia/Kolkata")
+        val start = at(2026, 10, 3, 18, 0, zone)
+        val now = at(2026, 10, 3, 18, 30, zone)
+        assertEquals(true, isPickableStartTime(LocalTime.of(17, 45), start, now, zone))
+        assertEquals(false, isPickableStartTime(LocalTime.of(23, 0), start, now, zone)) // #140: said, not silently "now"
+
+        // Started 23:30 last night, now 00:20: 23:15 is last night, fine; 01:00 is the future.
+        assertEquals(true, isPickableStartTime(LocalTime.of(23, 15), at(2026, 10, 2, 23, 30, zone), at(2026, 10, 3, 0, 20, zone), zone))
+        assertEquals(false, isPickableStartTime(LocalTime.of(1, 0), at(2026, 10, 2, 23, 30, zone), at(2026, 10, 3, 0, 20, zone), zone))
     }
 
     @Test
