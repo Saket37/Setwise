@@ -5,6 +5,7 @@ import dev.saketanand.setwise.data.mapper.toEntity
 import dev.saketanand.setwise.domain.ai.GoalPlanAssistant
 import dev.saketanand.setwise.domain.ai.ModelAvailability
 import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.GoalAdvice
 import dev.saketanand.setwise.domain.model.GoalPlanner
 import dev.saketanand.setwise.domain.model.GoalReader
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
@@ -13,6 +14,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -87,5 +89,19 @@ class GoalPlanAssistantTest {
 
         assistant.plan(text, goal, library, emptySet(), variation = 1)
         assertTrue(model.requests.isEmpty())
+    }
+
+    @Test
+    fun `the goal note is the model's words only if every number is from the facts`() = runTest {
+        val advice = GoalAdvice.of("lose 12 kg in 2 months", bodyWeightKg = null)!!
+        model.answer = { "Losing 12 kg in 2 months is about 1.4 kg a week, faster than steady, so 12 to 24 weeks is kinder. These workouts keep your muscle." }
+        assertEquals(model.answer(), assistant.note(advice))
+        assertTrue(model.requests.last().prompt.endsWith(advice.factLines() + "\n</facts>"))
+
+        model.answer = { "Aim for 2,000 calories a day and lose 12 kg in 9 weeks." } // numbers it made up
+        assertNull(assistant.note(advice))
+
+        model.availability = ModelAvailability.Unavailable
+        assertNull(assistant.note(advice))
     }
 }

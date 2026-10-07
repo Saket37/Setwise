@@ -41,6 +41,7 @@ fun ActiveWorkout.toUi() = ActiveWorkoutUi(
     name = name,
     startedAtMillis = startedAt.toEpochMilli(),
     completedSets = completedSets,
+    cardioEntries = cardioEntries,
 )
 
 fun WorkoutStats.toUi() = WeekStatsUi(workouts = workouts, timeTrained = timeTrained, newPrs = prs)
