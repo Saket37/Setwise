@@ -20,6 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,6 +36,7 @@ import dev.saketanand.setwise.R
 import dev.saketanand.setwise.domain.ai.SuggestionSource
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.ui.LeaveGuard
 import dev.saketanand.setwise.ui.ObserveAsEvents
 import dev.saketanand.setwise.ui.designsystem.components.IconTile
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
@@ -45,6 +49,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
+import dev.saketanand.setwise.ui.rememberLeaveGuardState
 import dev.saketanand.setwise.util.toClockLabel
 import kotlin.time.Duration.Companion.seconds
 import org.koin.androidx.compose.koinViewModel
@@ -62,7 +67,11 @@ fun CreateExerciseScreenRoot(
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val close = dropUnlessResumed(block = onBack)
-    BackHandler(onBack = close)
+    // Anything chosen or typed by hand (not the name it opened with, or the suggestions) asks first (#139).
+    var isEdited by rememberSaveable { mutableStateOf(false) }
+    val leaveGuard = rememberLeaveGuardState()
+    BackHandler(enabled = !isEdited, onBack = close)
+    LeaveGuard(leaveGuard, hasChanges = isEdited, onLeave = close)
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
             // Not through dropUnlessResumed: events arrive from STARTED, where it would ignore them.
@@ -75,8 +84,11 @@ fun CreateExerciseScreenRoot(
         uiState = uiState,
         onAction = { action ->
             when (action) {
-                CreateExerciseAction.OnCloseClick -> close()
-                else -> viewModel.onAction(action)
+                CreateExerciseAction.OnCloseClick -> leaveGuard.leave(isEdited, close)
+                else -> {
+                    if (action.isEdit) isEdited = true
+                    viewModel.onAction(action)
+                }
             }
         },
     )
@@ -263,3 +275,9 @@ private fun CreateExercisePreview() = SetwiseScreenPreview {
         onAction = {},
     )
 }
+
+/** What the user changes by hand (not creating, closing or taking the library's match). */
+private val CreateExerciseAction.isEdit: Boolean
+    get() = this is CreateExerciseAction.OnNameChange || this is CreateExerciseAction.OnKindClick ||
+        this is CreateExerciseAction.OnMuscleGroupClick || this is CreateExerciseAction.OnEquipmentClick ||
+        this is CreateExerciseAction.OnRestChange

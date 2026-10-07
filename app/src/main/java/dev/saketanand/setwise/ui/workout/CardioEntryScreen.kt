@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.domain.model.CardioMetric
 import dev.saketanand.setwise.domain.model.CardioValues
+import dev.saketanand.setwise.ui.LeaveGuard
 import dev.saketanand.setwise.ui.ObserveAsEvents
 import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.NumberKind
@@ -46,6 +47,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
+import dev.saketanand.setwise.ui.rememberLeaveGuardState
 import dev.saketanand.setwise.util.toWeightInput
 import java.text.NumberFormat
 import java.util.Locale
@@ -67,6 +69,10 @@ fun CardioEntryScreenRoot(
     val context = LocalContext.current
     val back = dropUnlessResumed(block = onBack)
     val fields = rememberCardioFields()
+    // Typed in or stepped after opening: leaving asks first (#139).
+    var isEdited by rememberSaveable { mutableStateOf(false) }
+    val leaveGuard = rememberLeaveGuardState()
+    LeaveGuard(leaveGuard, hasChanges = isEdited, onLeave = back)
 
     // Start the fields with this workout's entry, once (they then keep what's typed, also
     // across process death). Empty fields show last time's values as hints.
@@ -79,7 +85,10 @@ fun CardioEntryScreenRoot(
     }
     LaunchedEffect(fields) {
         merge(*fields.all.map { field -> snapshotFlow { field.text.toString() }.drop(1) }.toTypedArray())
-            .collect { viewModel.onAction(CardioEntryAction.OnInputEdited) }
+            .collect {
+                if (isPrefilled) isEdited = true
+                viewModel.onAction(CardioEntryAction.OnInputEdited)
+            }
     }
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
@@ -95,7 +104,11 @@ fun CardioEntryScreenRoot(
         fields = fields,
         onAction = { action ->
             when (action) {
-                CardioEntryAction.OnBackClick -> back()
+                CardioEntryAction.OnBackClick -> leaveGuard.leave(isEdited, back)
+                is CardioEntryAction.OnInclineChange, is CardioEntryAction.OnLevelChange -> {
+                    isEdited = true
+                    viewModel.onAction(action)
+                }
                 else -> viewModel.onAction(action)
             }
         },

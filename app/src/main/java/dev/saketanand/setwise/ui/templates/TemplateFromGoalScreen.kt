@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.saketanand.setwise.R
 import dev.saketanand.setwise.domain.model.Gear
 import dev.saketanand.setwise.domain.model.GoalType
+import dev.saketanand.setwise.ui.LeaveGuard
 import dev.saketanand.setwise.ui.ObserveAsEvents
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
@@ -52,6 +53,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
+import dev.saketanand.setwise.ui.rememberLeaveGuardState
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -78,7 +80,11 @@ fun TemplateFromGoalScreenRoot(
             TemplateFromGoalEvent.SaveFailed -> Toast.makeText(context, R.string.goal_save_failed, Toast.LENGTH_SHORT).show()
         }
     }
-    TemplateFromGoalScreen(uiState = uiState, goal = goal, onAction = viewModel::onAction, onBack = onBack)
+    // A goal typed and not saved: leaving asks first (#139).
+    val hasDraft = goal.text.isNotBlank()
+    val leaveGuard = rememberLeaveGuardState()
+    LeaveGuard(leaveGuard, hasChanges = hasDraft, onLeave = onBack)
+    TemplateFromGoalScreen(uiState = uiState, goal = goal, onAction = viewModel::onAction, onBack = { leaveGuard.leave(hasDraft, onBack) })
 }
 
 @Composable
