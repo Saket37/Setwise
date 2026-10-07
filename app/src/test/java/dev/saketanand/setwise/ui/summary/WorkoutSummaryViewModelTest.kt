@@ -97,6 +97,25 @@ class WorkoutSummaryViewModelTest {
     }
 
     @Test
+    fun `after Edit sets, a new insight is asked for`() = runTest(dispatcher) {
+        model.availability = ModelAvailability.Ready
+        model.answer = { "A steady session." }
+        viewModel()
+        assertEquals(1, model.requests.size)
+
+        // Edit sets → Save: the sets change and the saved insight is cleared (finishEditing).
+        model.answer = { "More sets than before." }
+        val before = workouts.session.value!!
+        workouts.session.value = before.copy(
+            insight = null,
+            exercises = before.exercises.map { e -> e.copy(sets = e.sets + e.sets.first().copy(id = 2, setNumber = 2)) },
+        )
+
+        assertEquals(2, model.requests.size) // was never asked again (#141)
+        assertEquals(WORKOUT_ID to "More sets than before.", workouts.insights.last())
+    }
+
+    @Test
     fun `save as template creates it once`() = runTest(dispatcher) {
         val vm = viewModel()
 
