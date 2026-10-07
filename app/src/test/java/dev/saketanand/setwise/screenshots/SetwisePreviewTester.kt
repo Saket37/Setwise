@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.screenshots
 
+import com.dropbox.differ.SimpleImageComparator
 import com.github.takahirom.roborazzi.AndroidComposePreviewTester
 import com.github.takahirom.roborazzi.ComposePreviewTester
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
@@ -11,11 +12,21 @@ import com.github.takahirom.roborazzi.annotations.ManualClockOptions
  * The screenshot tests' previews (#50): every @Preview in the app, light and dark, but not the
  * Pixel 10 copies of each screen (the design size and 130% font are enough to catch a change).
  * Roborazzi generates a test per preview from this; the goldens are in src/test/screenshots.
+ *
+ * A pixel may differ by up to [MAX_DISTANCE] (Roborazzi's default is 0.007). Linux and macOS
+ * anti-alias the dialogs' rounded corners and shadows a few levels apart (at most 0.017 seen),
+ * which isn't a change; a changed text, colour or layout is still caught, even a few pixels of it.
  */
 @OptIn(ExperimentalRoborazziApi::class)
 class SetwisePreviewTester : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> {
 
-    private val tester = AndroidComposePreviewTester()
+    private val tester = AndroidComposePreviewTester(
+        capturer = { parameter ->
+            val options = parameter.roborazziOptions
+            val compare = options.compareOptions.copy(imageComparator = SimpleImageComparator(maxDistance = MAX_DISTANCE))
+            AndroidComposePreviewTester.DefaultCapturer().capture(parameter.copy(roborazziOptions = options.copy(compareOptions = compare)))
+        },
+    )
 
     override fun options(): ComposePreviewTester.Options = tester.options()
 
@@ -36,5 +47,6 @@ class SetwisePreviewTester : ComposePreviewTester<AndroidPreviewJUnit4TestParame
     private companion object {
         val NEVER_IDLE = setOf("SetwiseTextInputDialogPreview")
         const val FROZEN_AT_MS = 500L
+        const val MAX_DISTANCE = 0.02F
     }
 }
