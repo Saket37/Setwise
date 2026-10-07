@@ -104,6 +104,8 @@ fun ActiveWorkoutScreenRoot(
     pickedExerciseIds: ImmutableList<Long>?,
     onPickedExercisesConsumed: () -> Unit,
     onAddExercises: () -> Unit,
+    /** The picker, searching for [query] (an exercise the quick log didn't find, #138). */
+    onFindExercise: (query: String) -> Unit,
     onOpenCardioEntry: (workoutExerciseId: Long) -> Unit,
     onOpenExercise: (exerciseId: Long) -> Unit,
     onFinished: (workoutId: Long) -> Unit,
@@ -230,6 +232,10 @@ fun ActiveWorkoutScreenRoot(
                 // Editing a finished workout: leaving saves the edits (they're already written).
                 ActiveWorkoutAction.OnMinimizeClick -> if (uiState.isEditingFinished) viewModel.onAction(ActiveWorkoutAction.OnFinishClick) else minimize()
                 ActiveWorkoutAction.OnAddExerciseClick -> addExercises()
+                ActiveWorkoutAction.OnQuickLogFindExercise -> uiState.quickLog.unknownExercise?.let { words ->
+                    viewModel.onAction(action)
+                    onFindExercise(words)
+                }
                 is ActiveWorkoutAction.OnLogCardioClick -> onOpenCardioEntry(action.workoutExerciseId)
                 is ActiveWorkoutAction.OnExerciseHistoryClick -> onOpenExercise(action.exerciseId)
                 else -> viewModel.onAction(action)

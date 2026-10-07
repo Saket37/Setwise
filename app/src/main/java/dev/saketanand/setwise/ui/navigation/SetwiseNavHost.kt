@@ -167,7 +167,8 @@ fun SetwiseNavHost(
                 viewModel = koinViewModel { parametersOf(route) },
                 pickedExerciseIds = pickedExerciseIds,
                 onPickedExercisesConsumed = { entry.clearPickedExerciseIds() },
-                onAddExercises = { navController.navigate(Route.ExercisePicker) },
+                onAddExercises = { navController.navigate(Route.ExercisePicker()) },
+                onFindExercise = { query -> navController.navigate(Route.ExercisePicker(query)) },
                 onOpenCardioEntry = { id -> navController.navigate(Route.CardioEntry(id)) },
                 onOpenExercise = { exerciseId -> navController.navigate(Route.ExerciseDetail(exerciseId)) },
                 onFinished = { workoutId ->
@@ -209,6 +210,7 @@ fun SetwiseNavHost(
             val createdExerciseId by entry.savedStateHandle.getStateFlow<Long?>(CREATED_EXERCISE_ID, null)
                 .collectAsStateWithLifecycle()
             ExercisePickerScreenRoot(
+                initialQuery = entry.toRoute<Route.ExercisePicker>().query,
                 createdExerciseId = createdExerciseId,
                 onCreatedExerciseConsumed = { entry.savedStateHandle[CREATED_EXERCISE_ID] = null },
                 onExercisesPicked = { ids ->
@@ -253,7 +255,7 @@ fun SetwiseNavHost(
                 viewModel = koinViewModel { parametersOf(route.templateId) },
                 pickedExerciseIds = pickedExerciseIds,
                 onPickedExercisesConsumed = { entry.clearPickedExerciseIds() },
-                onAddExercises = { navController.navigate(Route.ExercisePicker) },
+                onAddExercises = { navController.navigate(Route.ExercisePicker()) },
                 onSaved = { navController.popBackStack() },
                 onBack = { navController.popBackStack() },
             )

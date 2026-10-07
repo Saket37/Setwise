@@ -658,6 +658,10 @@
         <item quantity="other">Add %d sets</item>
     </plurals>
     <string name="quick_log_try_saying">Try saying</string>
+    <!-- %1$s = the words it couldn't match, e.g. "zercher" -->
+    <string name="quick_log_unknown_exercise">No exercise called “%1$s” yet.</string>
+    <!-- %1$s = the name, e.g. "Zercher": opens the exercise picker on it, where it can be created -->
+    <string name="quick_log_find_exercise">Find or create “%1$s”</string>
     <string name="quick_log_no_exercise">Which exercise? Start with its name, like “bench 3x8 at 60”.</string>
     <string name="quick_log_nothing">No sets found in that. Try “3x8 at 60” or “60 for 8”.</string>
     <string name="quick_log_no_last_time">That exercise hasn\'t been done before, so there\'s no last time.</string>
