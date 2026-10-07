@@ -54,6 +54,11 @@
         <item quantity="one">%d set done</item>
         <item quantity="other">%d sets done</item>
     </plurals>
+    <!-- After "10 sets done · ": logged cardio, which isn't counted as sets -->
+    <plurals name="cardio_entries">
+        <item quantity="one">%d cardio entry</item>
+        <item quantity="other">%d cardio entries</item>
+    </plurals>
 
     <!-- Start workout sheet -->
     <string name="start_a_workout">Start a workout</string>

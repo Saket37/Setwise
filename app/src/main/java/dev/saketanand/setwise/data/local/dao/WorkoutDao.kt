@@ -40,13 +40,21 @@ interface WorkoutDao {
     @Query("SELECT * FROM workouts WHERE endedAt IS NOT NULL ORDER BY endedAt DESC LIMIT 1")
     fun observeLastFinished(): Flow<WorkoutEntity?>
 
-    /** Workout in progress (endedAt is null), with how many sets are ticked off. */
+    /**
+     * Workout in progress (endedAt is null), with how many sets are ticked off and, apart, how
+     * many cardio entries are logged: a cardio entry isn't a set (#136).
+     */
     @Query(
         """
         SELECT w.id, w.name, w.startedAt,
             (SELECT COUNT(*) FROM sets s
              JOIN workout_exercises we ON s.workoutExerciseId = we.id
-             WHERE we.workoutId = w.id AND s.isCompleted = 1) AS completedSets
+             JOIN exercises e ON we.exerciseId = e.id
+             WHERE we.workoutId = w.id AND s.isCompleted = 1 AND e.type != 'CARDIO') AS completedSets,
+            (SELECT COUNT(*) FROM sets s
+             JOIN workout_exercises we ON s.workoutExerciseId = we.id
+             JOIN exercises e ON we.exerciseId = e.id
+             WHERE we.workoutId = w.id AND s.isCompleted = 1 AND e.type = 'CARDIO') AS cardioEntries
         FROM workouts w
         WHERE w.endedAt IS NULL
         ORDER BY w.startedAt DESC
