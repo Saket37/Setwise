@@ -17,6 +17,7 @@ import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -133,6 +134,26 @@ class SettingsViewModelTest {
 
         assertEquals(setOf(DayOfWeek.TUESDAY, DayOfWeek.SATURDAY), vm.state.value.trainingDays)
         assertNull(vm.state.value.editor)
+    }
+
+    @Test
+    fun `None can be picked in the dialog, and picking days turns it off`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAction(SettingsAction.OnTrainingDaysClick)
+        vm.onAction(SettingsAction.OnDayToggle(DayOfWeek.TUESDAY))
+        vm.onAction(SettingsAction.OnNoFixedDaysToggle)
+        vm.onAction(SettingsAction.OnSaveTrainingDays)
+
+        assertEquals(true, vm.state.value.noFixedTrainingDays)
+        assertEquals(emptySet<DayOfWeek>(), vm.state.value.trainingDays)
+
+        vm.onAction(SettingsAction.OnTrainingDaysClick)
+        assertEquals(SettingsEditor.TrainingDays(persistentSetOf(), noFixedDays = true), vm.state.value.editor)
+        vm.onAction(SettingsAction.OnDayToggle(DayOfWeek.SATURDAY))
+        vm.onAction(SettingsAction.OnSaveTrainingDays)
+
+        assertEquals(false, vm.state.value.noFixedTrainingDays)
+        assertEquals(setOf(DayOfWeek.SATURDAY), vm.state.value.trainingDays)
     }
 
     @Test

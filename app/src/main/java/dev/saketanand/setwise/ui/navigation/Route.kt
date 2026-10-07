@@ -28,6 +28,12 @@ sealed interface Route {
     /** Body composition: body checks, BMR, reports (from Settings). */
     @Serializable data object Body : Route
 
+    /** Each body measure over time (design 16). */
+    @Serializable data object BodyProgress : Route
+
+    /** One body check and everything its report said (design 17). */
+    @Serializable data class BodyReport(val measurementId: Long) : Route
+
     /** Import workouts shared from another app (Strong); [sharedText]: what was shared, if any. */
     @Serializable data class ImportWorkouts(
         val sharedText: String = "",

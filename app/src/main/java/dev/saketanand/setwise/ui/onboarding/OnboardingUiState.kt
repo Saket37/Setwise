@@ -15,6 +15,8 @@ data class OnboardingUiState(
     /** The steps shown, in order (Notifications left out when there's nothing to ask). */
     val steps: List<OnboardingStep> = OnboardingStep.entries,
     val trainingDays: ImmutableSet<DayOfWeek> = persistentSetOf(),
+    /** "None" picked: no fixed days. */
+    val noFixedDays: Boolean = false,
     val askAboutUnloggedDays: Boolean = true,
     /** The weight typed isn't a plausible body weight. */
     val isBodyWeightInvalid: Boolean = false,

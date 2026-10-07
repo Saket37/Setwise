@@ -20,6 +20,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import dev.saketanand.setwise.ui.body.BodyProgressScreenRoot
+import dev.saketanand.setwise.ui.body.BodyReportScreenRoot
 import dev.saketanand.setwise.ui.body.BodyScreenRoot
 import dev.saketanand.setwise.ui.exercises.CreateExerciseScreenRoot
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailScreenRoot
@@ -137,7 +139,23 @@ fun SetwiseNavHost(
         }
 
         composable<Route.Body> {
-            BodyScreenRoot(onBack = { navController.popBackStack() })
+            BodyScreenRoot(
+                onBack = { navController.popBackStack() },
+                onOpenProgress = { navController.navigate(Route.BodyProgress) },
+                onOpenCheck = { id -> navController.navigate(Route.BodyReport(id)) },
+            )
+        }
+
+        composable<Route.BodyProgress> {
+            BodyProgressScreenRoot(onBack = { navController.popBackStack() })
+        }
+
+        composable<Route.BodyReport> { entry ->
+            val route = entry.toRoute<Route.BodyReport>()
+            BodyReportScreenRoot(
+                onBack = { navController.popBackStack() },
+                viewModel = koinViewModel { parametersOf(route) },
+            )
         }
 
         // Workout flow
