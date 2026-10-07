@@ -47,6 +47,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.domain.model.DayCheckIn
 import dev.saketanand.setwise.ui.ObserveAsEvents
 import dev.saketanand.setwise.ui.designsystem.components.IconTile
 import dev.saketanand.setwise.ui.designsystem.components.NumberKind
@@ -174,7 +175,14 @@ fun OnboardingScreen(
                         })
                     }
                     OnboardingStep.CheckIns -> {
-                        StepText(R.string.onboarding_checkins_title, R.string.onboarding_checkins_message)
+                        StepText(
+                            R.string.onboarding_checkins_title,
+                            if (uiState.noFixedDays) {
+                                stringResource(R.string.onboarding_checkins_message_no_fixed, DayCheckIn.NO_FIXED_DAYS_GAP)
+                            } else {
+                                stringResource(R.string.onboarding_checkins_message)
+                            },
+                        )
                         SetwiseSettingsGroup(title = null, modifier = Modifier.padding(top = 4.dp)) {
                             SetwiseSwitchRow(
                                 label = stringResource(R.string.ask_about_unlogged_days),
@@ -222,7 +230,10 @@ fun OnboardingScreen(
 
 /** The step's title and message, as two rows of the step's Column. */
 @Composable
-private fun ColumnScope.StepText(title: Int, message: Int) {
+private fun ColumnScope.StepText(title: Int, message: Int) = StepText(title, stringResource(message))
+
+@Composable
+private fun ColumnScope.StepText(title: Int, message: String) {
     Text(
         text = stringResource(title),
         style = MaterialTheme.typography.headlineLarge,
@@ -230,7 +241,7 @@ private fun ColumnScope.StepText(title: Int, message: Int) {
         modifier = Modifier.semantics { heading() },
     )
     Text(
-        text = stringResource(message),
+        text = message,
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -310,7 +321,7 @@ private fun OnboardingButtons(uiState: OnboardingUiState, onContinue: () -> Unit
                 }
             ),
             onClick = onContinue,
-            enabled = !uiState.isFinishing,
+            enabled = uiState.canContinue,
             modifier = Modifier.fillMaxWidth(),
         )
         // Keeps the layout steady: the Skip button's space is kept on Welcome.

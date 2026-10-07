@@ -72,6 +72,7 @@ class OnboardingViewModel(
         when (step) {
             OnboardingStep.Welcome -> next()
             OnboardingStep.TrainingDays -> {
+                if (!state.canContinue) return // days or None first; Skip leaves it unset
                 if (state.trainingDays.isNotEmpty() || state.noFixedDays) {
                     save { userSettings.setTrainingDays(state.trainingDays, noFixedDays = state.noFixedDays) }
                 }

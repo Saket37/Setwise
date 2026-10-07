@@ -170,7 +170,7 @@ class HomeViewModel(
                 today = today,
                 trainedDays = workoutDays.toSet(),
                 marks = marks,
-                trainingDays = settings.trainingDays,
+                plan = settings.trainingPlan,
                 firstWorkoutDate = workoutDays.minOrNull(),
             )
             if (DayCheckIn.shouldAsk(settings, today, settings.checkInLastAskedOn, activeWorkout != null, days)) {
