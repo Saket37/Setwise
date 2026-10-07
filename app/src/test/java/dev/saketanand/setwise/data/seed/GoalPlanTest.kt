@@ -127,4 +127,25 @@ class GoalPlanTest {
         val plan = GoalPlanner.plan(GoalReader.read("lose fat at home, 3 days, 40 minutes"), library)
         assertEquals(listOf("Jump Rope", "Outdoor Run"), plan.map { it.exercises.last().exercise.name }) // never Swimming
     }
+
+    @Test
+    fun `with dumbbells only, nothing that hangs from a bar, no Nordic curl, and a loaded squat`() {
+        // As reported (#143).
+        val plan = GoalPlanner.plan(GoalReader.read("build muscle with dumbbells only, 4 days a week, an hour"), library)
+        val names = plan.flatMap { it.exercises }.map { it.exercise.name }
+
+        assertTrue(names.toString(), names.none { "Hanging" in it || "Pull-up" in it || "Chin-up" in it || " Dip" in it })
+        assertTrue(names.none { "Nordic" in it })
+        assertTrue(names.toString(), "Goblet Squat (Dumbbell)" in names)
+        assertTrue(names.none { it == "Bodyweight Squat" })
+        assertTrue(plan.flatMap { it.exercises }.all { Gear.of(it.exercise) in setOf(Gear.Dumbbell, Gear.Bodyweight) })
+    }
+
+    @Test
+    fun `a pull-up bar named, or a full gym, allows what hangs from it`() {
+        assertEquals(setOf(Gear.Dumbbell, Gear.Bars, Gear.Bodyweight), GoalReader.read("dumbbells and a pull-up bar at home").gear)
+        val withBar = GoalPlanner.plan(GoalReader.read("build muscle, dumbbells and a pull-up bar, 3 days"), library)
+        assertTrue(withBar.flatMap { it.exercises }.any { Gear.of(it.exercise) == Gear.Bars })
+        assertTrue(Gear.Bars in GoalReader.read("get stronger").gear) // a full gym
+    }
 }
