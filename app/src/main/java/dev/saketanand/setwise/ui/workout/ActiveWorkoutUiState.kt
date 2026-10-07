@@ -143,6 +143,8 @@ data class QuickLogUi(
     val preview: QuickLogPreview? = null,
     /** Why the last line couldn't be used; cleared when the line is edited. */
     val problem: QuickLogResult.Reason? = null,
+    /** [QuickLogResult.Reason.UnknownExercise]: the name it couldn't match ("zercher"). */
+    val unknownExercise: String? = null,
     /** On-device speech recognition is listening to the mic. */
     val isListening: Boolean = false,
     /** What it has heard so far, while listening. */

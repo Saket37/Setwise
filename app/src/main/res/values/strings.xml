@@ -54,6 +54,11 @@
         <item quantity="one">%d set done</item>
         <item quantity="other">%d sets done</item>
     </plurals>
+    <!-- After "10 sets done · ": logged cardio, which isn't counted as sets -->
+    <plurals name="cardio_entries">
+        <item quantity="one">%d cardio entry</item>
+        <item quantity="other">%d cardio entries</item>
+    </plurals>
 
     <!-- Start workout sheet -->
     <string name="start_a_workout">Start a workout</string>
@@ -203,7 +208,6 @@
     <string name="stat_duration">Duration</string>
     <string name="stat_volume">Volume</string>
     <string name="stat_sets">Sets</string>
-    <string name="stat_exercises">Exercises</string>
     <string name="stat_calories">Calories</string>
     <string name="unit_kg">kg</string>
     <string name="unit_kcal">kcal</string>
@@ -232,6 +236,8 @@
     <string name="end_time">End time</string>
     <string name="save">Save</string>
     <string name="calories_by_model">Estimated on this phone</string>
+    <!-- The summary's Calories tile while the estimate is worked out -->
+    <string name="calories_estimating">Estimating…</string>
     <string name="calories_by_formula">Estimated by formula</string>
     <string name="edit_sets">Edit sets</string>
     <string name="editing_sets">Editing sets · finished workout</string>
@@ -247,7 +253,7 @@
     <string name="onboarding_welcome_title">Welcome to Setwise</string>
     <string name="onboarding_welcome_message">Log sets fast, see last time\'s numbers, and keep your rests on time. A few quick questions to set it up. All optional.</string>
     <string name="onboarding_days_title">Which days do you usually train?</string>
-    <string name="onboarding_days_message">If one of these days passes without a workout, Setwise can ask what happened. Pick none if it changes week to week.</string>
+    <string name="onboarding_days_message">If one of these days passes without a workout, Setwise can ask what happened. Pick None if it changes week to week.</string>
     <string name="onboarding_weight_title">What do you weigh?</string>
     <string name="onboarding_weight_message">Used to estimate the calories you burn. It stays on this phone.</string>
     <string name="onboarding_weight_invalid">Enter a weight between 20 and 400 kg.</string>
@@ -275,6 +281,8 @@
     <string name="training_days">Training days</string>
     <string name="not_set">Not set</string>
     <string name="every_day">Every day</string>
+    <!-- Training days: no fixed days (they change week to week) -->
+    <string name="no_fixed_days">None</string>
     <string name="ask_about_unlogged_days_detail">Once a day at most, never during a workout</string>
     <!-- History -->
     <string name="history">History</string>
@@ -652,6 +660,10 @@
         <item quantity="other">Add %d sets</item>
     </plurals>
     <string name="quick_log_try_saying">Try saying</string>
+    <!-- %1$s = the words it couldn't match, e.g. "zercher" -->
+    <string name="quick_log_unknown_exercise">No exercise called “%1$s” yet.</string>
+    <!-- %1$s = the name, e.g. "Zercher": opens the exercise picker on it, where it can be created -->
+    <string name="quick_log_find_exercise">Find or create “%1$s”</string>
     <string name="quick_log_no_exercise">Which exercise? Start with its name, like “bench 3x8 at 60”.</string>
     <string name="quick_log_nothing">No sets found in that. Try “3x8 at 60” or “60 for 8”.</string>
     <string name="quick_log_no_last_time">That exercise hasn\'t been done before, so there\'s no last time.</string>
@@ -713,6 +725,24 @@
     <string name="goal_type_strength">Strength</string>
     <string name="goal_type_muscle">Muscle</string>
     <string name="goal_type_general">General fitness</string>
+    <string name="goal_type_fat_loss">Fat loss</string>
+    <!-- A cardio finisher's minutes in a drafted template -->
+    <string name="goal_scheme_minutes">%1$d min</string>
+    <string name="goal_advice_title">About your goal</string>
+    <string name="goal_advice_title_by_model">About your goal · Gemini Nano</string>
+    <!-- %1$s kg, %2$s time as typed ("2 months"), %3$s kg a week, %4$s–%5$s steady kg a week, %6$d–%7$d weeks (the plural follows %7$d) -->
+    <plurals name="goal_advice_fast">
+        <item quantity="one">%1$s kg in %2$s is about %3$s kg a week. A pace that usually lasts is %4$s to %5$s kg a week, so %6$d to %7$d week is a steadier aim.</item>
+        <item quantity="other">%1$s kg in %2$s is about %3$s kg a week. A pace that usually lasts is %4$s to %5$s kg a week, so %6$d to %7$d weeks is a steadier aim.</item>
+    </plurals>
+    <string name="goal_advice_steady">%1$s kg in %2$s is about %3$s kg a week: a steady pace that usually lasts.</string>
+    <!-- %1$s–%2$s steady kg a week, %3$s kg, %4$d–%5$d weeks (the plural follows %5$d) -->
+    <plurals name="goal_advice_no_time">
+        <item quantity="one">At a steady %1$s to %2$s kg a week, %3$s kg takes about %4$d to %5$d week.</item>
+        <item quantity="other">At a steady %1$s to %2$s kg a week, %3$s kg takes about %4$d to %5$d weeks.</item>
+    </plurals>
+    <string name="goal_advice_losing">These workouts help you keep muscle while you lose fat; most of the loss comes from eating a little less.</string>
+    <string name="goal_advice_gaining">These workouts give muscle a reason to grow; enough food and sleep do the rest.</string>
     <plurals name="goal_draft">
         <item quantity="one">Draft · %d template</item>
         <item quantity="other">Draft · %d templates</item>
@@ -776,6 +806,8 @@
     <string name="check_in_title">Did you train?</string>
     <string name="check_in_subtitle">Nothing was logged on these days.</string>
     <string name="not_now">Not now</string>
+    <!-- In the start-time picker, when the time picked hasn't happened yet -->
+    <string name="start_time_in_future">That\'s later than now. Pick an earlier time.</string>
     <string name="mark_all_as_rest">Mark all as rest</string>
     <string name="check_in_settings_hint">You can turn these questions off in Settings.</string>
 

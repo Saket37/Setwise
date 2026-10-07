@@ -36,6 +36,24 @@ class ProgressionTest {
     }
 
     @Test
+    fun `a heavier single after the working sets is a top set, not the plan`() {
+        // As reported (#134): 3 × 62.5 kg × 8, then 1 × 65 kg × 7 suggested "65 kg × 7 · 1 set".
+        val once = listOf(session(2, kg(62.5, 8, 8, 8) + kg(65.0, 7)))
+        assertEquals(NextSession(62.5, 8, null, 3, ProgressionRule.Repeat, SetFact(62.5, 8, null)), Progression.next(bench, once, now))
+
+        // Twice at 62.5 with every rep: the step is added to the working weight.
+        val twice = listOf(session(2, kg(62.5, 8, 8, 8) + kg(65.0, 7)), session(5, kg(62.5, 8, 8, 8)))
+        val next = Progression.next(bench, twice, now)!!
+        assertEquals(ProgressionRule.AddWeight, next.rule)
+        assertEquals(SetFact(62.5, 8, null), next.done)
+        assertEquals(3, next.sets)
+
+        // Even sets at each weight (a pyramid): the heaviest is still the working weight.
+        val pyramid = listOf(session(2, kg(60.0, 10) + kg(62.5, 8) + kg(65.0, 6)))
+        assertEquals(SetFact(65.0, 6, null), Progression.next(bench, pyramid, now)?.done)
+    }
+
+    @Test
     fun `reps short, or the first time at a weight, is the same again`() {
         val short = listOf(session(2, kg(60.0, 8, 8, 6)), session(5, kg(60.0, 8, 8, 8)))
         assertEquals(NextSession(60.0, 8, null, 3, ProgressionRule.Repeat, SetFact(60.0, 8, null)), Progression.next(bench, short, now))

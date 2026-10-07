@@ -25,11 +25,19 @@ data class QuickLogTarget(
 sealed interface QuickLogResult {
     data class Sets(val target: QuickLogTarget, val sets: List<SetFact>, val source: SuggestionSource) : QuickLogResult
     data class Cardio(val target: QuickLogTarget, val values: CardioValues) : QuickLogResult
-    data class NotUnderstood(val reason: Reason) : QuickLogResult
+
+    /**
+     * [exerciseWords]: the name it couldn't match ("zercher"); [rest]: the line without it
+     * ("3x5"), to log once an exercise is picked or created (#138).
+     */
+    data class NotUnderstood(val reason: Reason, val exerciseWords: String? = null, val rest: String? = null) : QuickLogResult
 
     enum class Reason {
-        /** No exercise named, none open, or none like it in the library. */
+        /** No exercise named, and none open. */
         NoExercise,
+
+        /** An exercise was named, but none like it is in the library. */
+        UnknownExercise,
 
         /** An exercise, but no sets, cardio or "same as last time" in it. */
         NothingToLog,
@@ -68,7 +76,7 @@ class QuickLogInterpreter(
         val line = QuickLogParser.withDigits(text)
         val parse = QuickLogParser.parse(line)
         val target = target(parse.exercisePhrase, session, openWorkoutExerciseId, recent, library)
-            ?: return QuickLogResult.NotUnderstood(QuickLogResult.Reason.NoExercise)
+            ?: return notFound(parse.exercisePhrase, line)
         val exercise = target.exercise
 
         if (exercise.type == ExerciseType.CARDIO) {
@@ -94,6 +102,13 @@ class QuickLogInterpreter(
         modelSets(line, exercise, parse.sets)?.let { return QuickLogResult.Sets(target, it.fitTo(exercise), SuggestionSource.Model) }
         if (parse.sets.isNotEmpty()) return QuickLogResult.Sets(target, parse.sets.fitTo(exercise), SuggestionSource.Keywords)
         return QuickLogResult.NotUnderstood(QuickLogResult.Reason.NothingToLog)
+    }
+
+    /** No exercise: none named (and none open), or a name the library doesn't have. */
+    private fun notFound(phrase: String?, line: String): QuickLogResult.NotUnderstood {
+        if (phrase.isNullOrBlank()) return QuickLogResult.NotUnderstood(QuickLogResult.Reason.NoExercise)
+        val rest = line.replaceFirst(Regex(Regex.escape(phrase), RegexOption.IGNORE_CASE), " ").replace(Regex("\\s+"), " ").trim()
+        return QuickLogResult.NotUnderstood(QuickLogResult.Reason.UnknownExercise, exerciseWords = phrase.trim(), rest = rest)
     }
 
     private suspend fun target(
