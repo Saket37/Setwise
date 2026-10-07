@@ -49,7 +49,8 @@ import kotlinx.collections.immutable.ImmutableList
 
 /**
  * 2 × 2 tiles: Duration, Volume, Sets, and Calories: the estimate, "Add your weight" (tap)
- * when there's no body weight, else the exercise count.
+ * when there's no body weight, else "Estimating…" while it's worked out, so the tile keeps its
+ * place (#141).
  */
 @Composable
 fun SummaryStats(uiState: WorkoutSummaryUiState, onAddBodyWeight: () -> Unit, modifier: Modifier = Modifier) {
@@ -92,7 +93,12 @@ fun SummaryStats(uiState: WorkoutSummaryUiState, onAddBodyWeight: () -> Unit, mo
                         .clickable(onClickLabel = stringResource(R.string.add_your_weight), onClick = onAddBodyWeight),
                 )
             } else {
-                SummaryTile(stringResource(R.string.stat_exercises), uiState.exerciseCount.toString(), modifier = tile.weight(1f))
+                SummaryTile(
+                    label = stringResource(R.string.stat_calories),
+                    value = "–",
+                    modifier = tile.weight(1f),
+                    caption = stringResource(R.string.calories_estimating),
+                )
             }
         }
     }

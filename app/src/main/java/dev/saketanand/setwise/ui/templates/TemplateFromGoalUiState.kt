@@ -2,6 +2,7 @@ package dev.saketanand.setwise.ui.templates
 
 import androidx.compose.runtime.Immutable
 import dev.saketanand.setwise.domain.model.Gear
+import dev.saketanand.setwise.domain.model.GoalAdvice
 import dev.saketanand.setwise.domain.model.GoalType
 
 /** Everything "Build from a goal" draws. */
@@ -9,6 +10,8 @@ import dev.saketanand.setwise.domain.model.GoalType
 data class TemplateFromGoalUiState(
     /** What was read from the goal: days, minutes, equipment, goal type. Null before anything is typed. */
     val understood: GoalChipsUi? = null,
+    /** "About your goal" when it names a weight to lose or gain (#125). */
+    val advice: GoalAdviceUi? = null,
     val templates: List<PlannedTemplateUi> = emptyList(),
     /** The on-device model is choosing exercises (code's draft is already shown). */
     val isChoosing: Boolean = false,
@@ -19,6 +22,10 @@ data class TemplateFromGoalUiState(
     val canSave: Boolean get() = templates.isNotEmpty() && !isSaving
 }
 
+/** Code's [advice]; [modelText] the on-device model's wording of it, when it passed the checks. */
+@Immutable
+data class GoalAdviceUi(val advice: GoalAdvice, val modelText: String? = null)
+
 @Immutable
 data class GoalChipsUi(val type: GoalType, val daysPerWeek: Int, val minutes: Int, val gear: Set<Gear>)
 
@@ -28,7 +35,7 @@ data class PlannedTemplateUi(val name: String, val estimatedMinutes: Int, val ex
 
 /** "Back Squat (Barbell)   4 × 5" (timed: "3 × 45 s"). */
 @Immutable
-data class PlannedExerciseUi(val name: String, val sets: Int, val reps: Int, val isTimed: Boolean)
+data class PlannedExerciseUi(val name: String, val sets: Int, val reps: Int, val isTimed: Boolean, val isCardio: Boolean = false)
 
 sealed interface TemplateFromGoalAction {
     data class OnGoalChange(val text: String) : TemplateFromGoalAction

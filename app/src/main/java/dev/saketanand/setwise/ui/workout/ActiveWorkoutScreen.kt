@@ -63,6 +63,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.ui.LocalWallClock
 import dev.saketanand.setwise.ui.ObserveAsEvents
 import dev.saketanand.setwise.ui.RecognizeSpeech
 import dev.saketanand.setwise.ui.currentLocale
@@ -81,8 +82,10 @@ import dev.saketanand.setwise.ui.rememberElapsedTime
 import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toShortDayLabel
 import dev.saketanand.setwise.util.toShortTimeLabel
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.util.Locale
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.launch
@@ -300,11 +303,16 @@ fun ActiveWorkoutScreen(
     uiState.dialog?.let { ActiveWorkoutDialogs(dialog = it, workoutName = uiState.name, onAction = onAction) }
 
     if (uiState.isStartTimePickerVisible && uiState.startTime != null) {
+        val clock = LocalWallClock.current
         SetwiseTimePickerDialog(
             title = stringResource(R.string.pick_start_time),
             initial = uiState.startTime,
             onConfirm = { onAction(ActiveWorkoutAction.OnStartTimeChange(it)) },
             onDismiss = { onAction(ActiveWorkoutAction.OnStartTimePickerDismiss) },
+            isAllowed = { time ->
+                isPickableStartTime(time, Instant.ofEpochMilli(uiState.startedAtMillis), Instant.ofEpochMilli(clock()), ZoneId.systemDefault())
+            },
+            notAllowedMessage = stringResource(R.string.start_time_in_future),
         )
     }
 }
