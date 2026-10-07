@@ -56,6 +56,7 @@ fun ExercisePickerScreenRoot(
     onExercisesPicked: (exerciseIds: List<Long>) -> Unit,
     onCreateExercise: (initialName: String) -> Unit,
     onBack: () -> Unit,
+    initialQuery: String = "",
     viewModel: ExercisePickerViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -72,7 +73,7 @@ fun ExercisePickerScreenRoot(
     // The search text lives here, not in the ViewModel: the field must change in the same frame
     // as the keystroke (a round trip through a StateFlow can drop letters or move the cursor).
     // It's saved across process death and the ViewModel gets every change.
-    val searchState = rememberTextFieldState()
+    val searchState = rememberTextFieldState(initialQuery)
     LaunchedEffect(searchState) {
         snapshotFlow { searchState.text.toString() }
             .collect { viewModel.onAction(ExercisePickerAction.OnQueryChange(it)) }
@@ -81,7 +82,8 @@ fun ExercisePickerScreenRoot(
     // dropUnlessResumed: a double tap (or Add + Back) during the exit animation must not pop
     // the back stack twice.
     val addExercises = dropUnlessResumed { onExercisesPicked(viewModel.state.value.selectedIds) }
-    val createExercise = dropUnlessResumed { onCreateExercise(viewModel.state.value.query.trim()) }
+    // "zercher" typed (or from the quick log) is created as "Zercher": names start with a capital.
+    val createExercise = dropUnlessResumed { onCreateExercise(viewModel.state.value.query.trim().replaceFirstChar { it.titlecase() }) }
     val goBack = dropUnlessResumed(block = onBack)
 
     ExercisePickerScreen(

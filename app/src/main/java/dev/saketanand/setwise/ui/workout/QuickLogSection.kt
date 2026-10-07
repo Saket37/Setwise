@@ -85,22 +85,7 @@ fun QuickLogSection(
         when {
             quickLog.isListening -> ListeningRow(heard = quickLog.heard)
             preview != null -> QuickLogCard(preview = preview, onAction = onAction)
-            quickLog.micProblem != null -> Text(
-                text = stringResource(if (quickLog.micProblem == MicProblem.Failed) R.string.quick_log_mic_failed else R.string.quick_log_nothing_heard),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier
-                    .padding(horizontal = 4.dp)
-                    .semantics { liveRegion = LiveRegionMode.Polite },
-            )
-            quickLog.problem != null -> Text(
-                text = stringResource(quickLog.problem.messageRes()),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier
-                    .padding(horizontal = 4.dp)
-                    .semantics { liveRegion = LiveRegionMode.Polite },
-            )
+            quickLog.micProblem != null || quickLog.unknownExercise != null || quickLog.problem != null -> QuickLogProblem(quickLog, onAction)
             isFieldFocused && field.text.isEmpty() -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     text = stringResource(R.string.quick_log_try_saying).uppercase(currentLocale()),
@@ -278,8 +263,52 @@ private fun ValueWithUnit(value: String, unit: String) {
     }
 }
 
+/** Why the line (or the mic) gave nothing to add; for an unknown exercise, a way to find or create it. */
+@Composable
+private fun QuickLogProblem(quickLog: QuickLogUi, onAction: (ActiveWorkoutAction) -> Unit) {
+    val unknown = quickLog.unknownExercise
+    if (unknown != null && quickLog.micProblem == null) {
+        UnknownExercise(unknown, onFind = { onAction(ActiveWorkoutAction.OnQuickLogFindExercise) })
+        return
+    }
+    val message = when {
+        quickLog.micProblem == MicProblem.Failed -> R.string.quick_log_mic_failed
+        quickLog.micProblem != null -> R.string.quick_log_nothing_heard
+        else -> quickLog.problem?.messageRes() ?: return
+    }
+    Text(
+        text = stringResource(message),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.error,
+        modifier = Modifier
+            .padding(horizontal = 4.dp)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+    )
+}
+
+/** "No exercise called “zercher” yet" and "Find or create “Zercher”" (#138). */
+@Composable
+private fun UnknownExercise(words: String, onFind: () -> Unit) {
+    val name = words.replaceFirstChar { it.titlecase(currentLocale()) }
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.padding(horizontal = 4.dp)) {
+        Text(
+            text = stringResource(R.string.quick_log_unknown_exercise, words),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        )
+        SetwiseButton(
+            text = stringResource(R.string.quick_log_find_exercise, name),
+            onClick = onFind,
+            style = SetwiseButtonStyle.Text,
+            size = SetwiseButtonSize.Medium,
+        )
+    }
+}
+
 private fun QuickLogResult.Reason.messageRes() = when (this) {
     QuickLogResult.Reason.NoExercise -> R.string.quick_log_no_exercise
+    QuickLogResult.Reason.UnknownExercise -> R.string.quick_log_no_exercise
     QuickLogResult.Reason.NothingToLog -> R.string.quick_log_nothing
     QuickLogResult.Reason.NoLastTime -> R.string.quick_log_no_last_time
 }

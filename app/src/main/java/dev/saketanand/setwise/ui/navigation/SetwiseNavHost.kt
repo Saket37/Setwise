@@ -20,6 +20,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import dev.saketanand.setwise.ui.body.BodyProgressScreenRoot
+import dev.saketanand.setwise.ui.body.BodyReportScreenRoot
 import dev.saketanand.setwise.ui.body.BodyScreenRoot
 import dev.saketanand.setwise.ui.exercises.CreateExerciseScreenRoot
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailScreenRoot
@@ -137,7 +139,23 @@ fun SetwiseNavHost(
         }
 
         composable<Route.Body> {
-            BodyScreenRoot(onBack = { navController.popBackStack() })
+            BodyScreenRoot(
+                onBack = { navController.popBackStack() },
+                onOpenProgress = { navController.navigate(Route.BodyProgress) },
+                onOpenCheck = { id -> navController.navigate(Route.BodyReport(id)) },
+            )
+        }
+
+        composable<Route.BodyProgress> {
+            BodyProgressScreenRoot(onBack = { navController.popBackStack() })
+        }
+
+        composable<Route.BodyReport> { entry ->
+            val route = entry.toRoute<Route.BodyReport>()
+            BodyReportScreenRoot(
+                onBack = { navController.popBackStack() },
+                viewModel = koinViewModel { parametersOf(route) },
+            )
         }
 
         // Workout flow
@@ -149,7 +167,8 @@ fun SetwiseNavHost(
                 viewModel = koinViewModel { parametersOf(route) },
                 pickedExerciseIds = pickedExerciseIds,
                 onPickedExercisesConsumed = { entry.clearPickedExerciseIds() },
-                onAddExercises = { navController.navigate(Route.ExercisePicker) },
+                onAddExercises = { navController.navigate(Route.ExercisePicker()) },
+                onFindExercise = { query -> navController.navigate(Route.ExercisePicker(query)) },
                 onOpenCardioEntry = { id -> navController.navigate(Route.CardioEntry(id)) },
                 onOpenExercise = { exerciseId -> navController.navigate(Route.ExerciseDetail(exerciseId)) },
                 onFinished = { workoutId ->
@@ -191,6 +210,7 @@ fun SetwiseNavHost(
             val createdExerciseId by entry.savedStateHandle.getStateFlow<Long?>(CREATED_EXERCISE_ID, null)
                 .collectAsStateWithLifecycle()
             ExercisePickerScreenRoot(
+                initialQuery = entry.toRoute<Route.ExercisePicker>().query,
                 createdExerciseId = createdExerciseId,
                 onCreatedExerciseConsumed = { entry.savedStateHandle[CREATED_EXERCISE_ID] = null },
                 onExercisesPicked = { ids ->
@@ -235,7 +255,7 @@ fun SetwiseNavHost(
                 viewModel = koinViewModel { parametersOf(route.templateId) },
                 pickedExerciseIds = pickedExerciseIds,
                 onPickedExercisesConsumed = { entry.clearPickedExerciseIds() },
-                onAddExercises = { navController.navigate(Route.ExercisePicker) },
+                onAddExercises = { navController.navigate(Route.ExercisePicker()) },
                 onSaved = { navController.popBackStack() },
                 onBack = { navController.popBackStack() },
             )
