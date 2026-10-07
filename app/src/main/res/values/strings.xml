@@ -54,6 +54,11 @@
         <item quantity="one">%d set done</item>
         <item quantity="other">%d sets done</item>
     </plurals>
+    <!-- After "10 sets done · ": logged cardio, which isn't counted as sets -->
+    <plurals name="cardio_entries">
+        <item quantity="one">%d cardio entry</item>
+        <item quantity="other">%d cardio entries</item>
+    </plurals>
 
     <!-- Start workout sheet -->
     <string name="start_a_workout">Start a workout</string>
@@ -248,7 +253,7 @@
     <string name="onboarding_welcome_title">Welcome to Setwise</string>
     <string name="onboarding_welcome_message">Log sets fast, see last time\'s numbers, and keep your rests on time. A few quick questions to set it up. All optional.</string>
     <string name="onboarding_days_title">Which days do you usually train?</string>
-    <string name="onboarding_days_message">If one of these days passes without a workout, Setwise can ask what happened. Pick none if it changes week to week.</string>
+    <string name="onboarding_days_message">If one of these days passes without a workout, Setwise can ask what happened. Pick None if it changes week to week.</string>
     <string name="onboarding_weight_title">What do you weigh?</string>
     <string name="onboarding_weight_message">Used to estimate the calories you burn. It stays on this phone.</string>
     <string name="onboarding_weight_invalid">Enter a weight between 20 and 400 kg.</string>
@@ -276,6 +281,8 @@
     <string name="training_days">Training days</string>
     <string name="not_set">Not set</string>
     <string name="every_day">Every day</string>
+    <!-- Training days: no fixed days (they change week to week) -->
+    <string name="no_fixed_days">None</string>
     <string name="ask_about_unlogged_days_detail">Once a day at most, never during a workout</string>
     <!-- History -->
     <string name="history">History</string>
@@ -498,6 +505,25 @@
     <string name="body_bmr_how">Scan a report, add body fat, or set height, age and sex in your profile</string>
     <string name="body_source_report">report</string>
     <string name="body_delete_check">Delete this check</string>
+    <string name="body_tips_title">Suggestions</string>
+    <string name="body_tips_footer">From this report and your last one · not medical advice</string>
+    <string name="body_tips_footer_by_model">Written on this phone by Gemini Nano · not medical advice</string>
+    <!-- %1$s = the weaker side ("left leg"), %2$s = the other side -->
+    <string name="body_tip_uneven_legs">Your %1$s is rated Under while your %2$s isn\'t: single-leg work like split squats or step-ups helps even them out.</string>
+    <string name="body_tip_uneven_arms">Your %1$s is rated Under while your %2$s isn\'t: single-arm work like one-arm dumbbell rows and presses helps even them out.</string>
+    <!-- %1$s = the last report's day, then changes like "−0.4 kg" -->
+    <string name="body_tip_since_fat_muscle">Since %1$s, fat mass is %2$s and muscle %3$s.</string>
+    <string name="body_tip_since_fat">Since %1$s, fat mass is %2$s.</string>
+    <string name="body_tip_since_muscle">Since %1$s, muscle is %2$s.</string>
+    <!-- A change in a sentence: "fat mass is down 0.4 kg" -->
+    <string name="body_tip_down">down %1$s</string>
+    <string name="body_tip_up">up %1$s</string>
+    <string name="body_tip_unchanged">unchanged</string>
+    <string name="body_tip_keep_going">Keep the current training and eating.</string>
+    <!-- %1$s = trunk fat, e.g. "20.3%" -->
+    <string name="body_tip_fat_over_trunk">Trunk fat is the one segment rated Over (%1$s); steady overall fat loss brings it down with the rest.</string>
+    <!-- %1$s = segments, e.g. "trunk, right leg" -->
+    <string name="body_tip_fat_over">Fat is rated Over in your %1$s; steady overall fat loss brings it down.</string>
     <string name="body_read_title">Read from your report</string>
     <string name="body_add_title">Add a body check</string>
     <string name="body_read_on_device">Read on this phone · check before saving</string>
@@ -693,6 +719,24 @@
     <string name="goal_type_strength">Strength</string>
     <string name="goal_type_muscle">Muscle</string>
     <string name="goal_type_general">General fitness</string>
+    <string name="goal_type_fat_loss">Fat loss</string>
+    <!-- A cardio finisher's minutes in a drafted template -->
+    <string name="goal_scheme_minutes">%1$d min</string>
+    <string name="goal_advice_title">About your goal</string>
+    <string name="goal_advice_title_by_model">About your goal · Gemini Nano</string>
+    <!-- %1$s kg, %2$s time as typed ("2 months"), %3$s kg a week, %4$s–%5$s steady kg a week, %6$d–%7$d weeks (the plural follows %7$d) -->
+    <plurals name="goal_advice_fast">
+        <item quantity="one">%1$s kg in %2$s is about %3$s kg a week. A pace that usually lasts is %4$s to %5$s kg a week, so %6$d to %7$d week is a steadier aim.</item>
+        <item quantity="other">%1$s kg in %2$s is about %3$s kg a week. A pace that usually lasts is %4$s to %5$s kg a week, so %6$d to %7$d weeks is a steadier aim.</item>
+    </plurals>
+    <string name="goal_advice_steady">%1$s kg in %2$s is about %3$s kg a week: a steady pace that usually lasts.</string>
+    <!-- %1$s–%2$s steady kg a week, %3$s kg, %4$d–%5$d weeks (the plural follows %5$d) -->
+    <plurals name="goal_advice_no_time">
+        <item quantity="one">At a steady %1$s to %2$s kg a week, %3$s kg takes about %4$d to %5$d week.</item>
+        <item quantity="other">At a steady %1$s to %2$s kg a week, %3$s kg takes about %4$d to %5$d weeks.</item>
+    </plurals>
+    <string name="goal_advice_losing">These workouts help you keep muscle while you lose fat; most of the loss comes from eating a little less.</string>
+    <string name="goal_advice_gaining">These workouts give muscle a reason to grow; enough food and sleep do the rest.</string>
     <plurals name="goal_draft">
         <item quantity="one">Draft · %d template</item>
         <item quantity="other">Draft · %d templates</item>
@@ -756,8 +800,93 @@
     <string name="check_in_title">Did you train?</string>
     <string name="check_in_subtitle">Nothing was logged on these days.</string>
     <string name="not_now">Not now</string>
+    <!-- In the start-time picker, when the time picked hasn't happened yet -->
+    <string name="start_time_in_future">That\'s later than now. Pick an earlier time.</string>
     <string name="mark_all_as_rest">Mark all as rest</string>
     <string name="check_in_settings_hint">You can turn these questions off in Settings.</string>
+
+    <!-- Body progress and report details -->
+    <string name="body_progress">Body progress</string>
+    <string name="body_progress_empty">No body checks yet. Add one, or scan a report, to follow your progress.</string>
+    <string name="body_progress_summary">Since %1$s: %2$s.</string>
+    <string name="body_progress_fat_part">body fat %1$s</string>
+    <string name="body_progress_muscle_part">muscle %1$s</string>
+    <string name="body_progress_not_enough">Not enough checks in this range yet.</string>
+    <string name="body_progress_since">Since %1$s</string>
+    <string name="body_progress_one_check">One check in this range</string>
+    <string name="body_progress_need_more">Add another check, or a longer range, to see a trend.</string>
+    <string name="body_progress_chart">%1$s from %2$s on %3$s to %4$s on %5$s</string>
+    <plurals name="body_progress_checks">
+        <item quantity="one">%1$d check</item>
+        <item quantity="other">%1$d checks</item>
+    </plurals>
+    <string name="body_progress_segments">Lean muscle by segment</string>
+    <string name="body_progress_segments_span">%1$s → %2$s · both sides added</string>
+    <string name="body_progress_note">Typed in and read from reports. Changes are first to latest check in the range.</string>
+    <string name="range_1m">1M</string>
+    <string name="range_3m">3M</string>
+    <string name="range_6m">6M</string>
+    <string name="range_1y">1Y</string>
+    <string name="range_all">All</string>
+    <string name="measure_weight">Weight</string>
+    <string name="measure_body_fat">Body fat</string>
+    <string name="measure_muscle">Skeletal muscle</string>
+    <string name="measure_visceral">Visceral fat</string>
+    <string name="measure_bmr">BMR</string>
+    <string name="measure_fat_mass">Body fat mass</string>
+    <string name="measure_fat_free_mass">Fat-free mass</string>
+    <string name="measure_body_water">Body water</string>
+    <string name="measure_waist_hip">Waist–hip ratio</string>
+    <string name="measure_fitness_score">Fitness score</string>
+    <string name="measure_bmi">BMI</string>
+    <string name="value_kg">%1$s kg</string>
+    <string name="value_percent">%1$s%%</string>
+    <string name="value_points">%1$s pts</string>
+    <string name="value_level">Level %1$s</string>
+    <string name="value_kcal">%1$s kcal</string>
+    <string name="value_litres">%1$s L</string>
+    <string name="range_between">%1$s–%2$s</string>
+    <string name="range_below">below %1$s</string>
+    <string name="range_above">above %1$s</string>
+    <string name="rating_under">Under</string>
+    <string name="rating_normal">Normal</string>
+    <string name="rating_over">Over</string>
+    <string name="segment_arms">Arms</string>
+    <string name="segment_trunk">Trunk</string>
+    <string name="segment_legs">Legs</string>
+    <string name="segment_right_arm">Right arm</string>
+    <string name="segment_left_arm">Left arm</string>
+    <string name="segment_right_leg">Right leg</string>
+    <string name="segment_left_leg">Left leg</string>
+    <string name="body_report_title">Report · %1$s</string>
+    <string name="body_report_score_detail">The report\'s overall score, out of 100</string>
+    <string name="body_report_composition">BODY COMPOSITION</string>
+    <string name="body_report_markers">HEALTH MARKERS</string>
+    <string name="body_report_normal">Normal %1$s</string>
+    <string name="body_report_segments">BY BODY SEGMENT</string>
+    <string name="body_report_lean">Lean muscle</string>
+    <string name="body_report_fat">Fat</string>
+    <string name="body_report_lean_note">Lean mass in each arm, leg and the trunk, rated against your size.</string>
+    <string name="body_report_fat_note">Body fat % of each segment.</string>
+    <string name="body_report_control">THE REPORT\'S SUGGESTED CHANGE</string>
+    <string name="body_report_control_muscle">muscle</string>
+    <string name="body_report_control_fat">fat</string>
+    <string name="body_report_control_note">As printed on the report, to reach its normal ranges.</string>
+    <string name="body_delete_check_title">Delete this check?</string>
+    <string name="body_delete_check_message">Its values and report details are removed. This can\'t be undone.</string>
+    <string name="body_full_report">Full report: segments, body water, ranges</string>
+    <!-- %1$s = day, e.g. "Tue, 6 Oct"; shown in capitals -->
+    <string name="body_latest">Latest · %1$s</string>
+    <string name="body_latest_from_report">From a report</string>
+    <string name="body_latest_typed">Typed in</string>
+    <!-- %1$s = where the BMR comes from, %2$d = the report's fitness score -->
+    <string name="body_bmr_source_with_score">%1$s · fitness score %2$d</string>
+    <!-- Under a change in muscle mass, e.g. "+0.5 kg" -->
+    <string name="body_change_muscle">muscle</string>
+    <string name="body_progress_card">Progress</string>
+    <string name="body_progress_card_since">Last 3 months · since %1$s</string>
+    <string name="body_progress_card_empty">Add checks over time to see what changes</string>
+    <string name="body_open_check">Open this check</string>
     <string name="set_removed">Removed set %1$d</string>
     <string name="undo">Undo</string>
 </resources>

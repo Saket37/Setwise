@@ -36,7 +36,8 @@ interface UserSettingsRepository {
     /** False (nothing saved) if the height is implausible. */
     suspend fun setHeightCm(cm: Double?): Boolean
 
-    suspend fun setTrainingDays(days: Set<DayOfWeek>)
+    /** The days, or none with [noFixedDays] ("None": they change week to week); days given turn None off. */
+    suspend fun setTrainingDays(days: Set<DayOfWeek>, noFixedDays: Boolean = false)
 
     suspend fun setAskAboutUnloggedDays(ask: Boolean)
 

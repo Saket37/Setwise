@@ -47,10 +47,12 @@ import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
 import dev.saketanand.setwise.ui.designsystem.theme.numberLarge
 import dev.saketanand.setwise.ui.designsystem.theme.numberSmall
 import dev.saketanand.setwise.ui.designsystem.theme.pr
+import dev.saketanand.setwise.util.toClockLabel
 import dev.saketanand.setwise.util.toWeightLabel
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.time.Duration.Companion.seconds
 
 /** Design "Ask your history": the reply (or that it's looking), then "You can also ask". */
 @Composable
@@ -300,13 +302,16 @@ private fun periodLabel(name: PeriodName): String = when (name) {
 /** The full name: with equipment variants, "Bicep Curl" alone doesn't say which. */
 private fun dev.saketanand.setwise.domain.model.Exercise.shortName() = name
 
-/** "100 × 5", "12 reps", "45 s". */
-private fun AnsweredSet.short(locale: Locale): String = when {
+/** "100 × 5", "12 reps", "45 s" (a hold), "30:05" (cardio, like the app's other times; #135). */
+internal fun AnsweredSet.short(locale: Locale): String = when {
     weightKg != null && reps != null -> "${weightKg.toWeightLabel(locale)} × $reps"
     reps != null -> "$reps reps"
-    seconds != null -> "$seconds s"
+    seconds != null && seconds < SECONDS_PER_MINUTE -> "$seconds s"
+    seconds != null -> seconds.seconds.toClockLabel()
     else -> ""
 }
+
+private const val SECONDS_PER_MINUTE = 60
 
 /** "100 kg for 5 reps". */
 @Composable
