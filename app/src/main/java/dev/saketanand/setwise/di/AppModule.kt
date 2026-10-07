@@ -20,6 +20,7 @@ import dev.saketanand.setwise.data.seed.SeedPreferences
 import dev.saketanand.setwise.domain.CalorieSync
 import dev.saketanand.setwise.domain.ai.AiCheck
 import dev.saketanand.setwise.domain.ai.BodyReportReader
+import dev.saketanand.setwise.domain.ai.BodyTipsWriter
 import dev.saketanand.setwise.domain.ai.CalorieEstimator
 import dev.saketanand.setwise.domain.ai.ExerciseAssistant
 import dev.saketanand.setwise.domain.ai.FileTextReader
@@ -93,6 +94,7 @@ val appModule = module {
     singleOf(::ExerciseAssistant)
     singleOf(::QuickLogInterpreter)
     singleOf(::PlateauNoteWriter)
+    singleOf(::BodyTipsWriter)
     singleOf(::HistoryAssistant)
     singleOf(::WeeklyRecapWriter)
     single { ModelDownloader(get(), get(ApplicationScope)) }

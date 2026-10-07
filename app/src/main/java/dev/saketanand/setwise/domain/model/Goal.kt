@@ -2,8 +2,8 @@ package dev.saketanand.setwise.domain.model
 
 import java.util.Locale
 
-/** What a training plan is for: decides sets × reps. */
-enum class GoalType { Strength, Muscle, General }
+/** What a training plan is for: decides sets × reps (and, for fat loss, a cardio finisher). */
+enum class GoalType { Strength, Muscle, FatLoss, General }
 
 /** Kinds of equipment a plan may use; each library exercise belongs to one ([Gear.of]). */
 enum class Gear {
@@ -66,7 +66,9 @@ object GoalReader {
         )
     }
 
+    /** Fat loss first: "lose 12 kg and get stronger" is mostly about the 12 kg. */
     private fun type(text: String): GoalType = when {
+        GoalTargetReader.LOSE.any { " $it" in text } -> GoalType.FatLoss
         STRENGTH.any { " $it" in text } -> GoalType.Strength
         GENERAL.any { " $it" in text } -> GoalType.General
         else -> GoalType.Muscle
@@ -105,7 +107,7 @@ object GoalReader {
     private const val MINUTES_PER_HOUR = 60
 
     private val STRENGTH = listOf("strong", "strength", "powerlift", "heavier", "1rm", "max ")
-    private val GENERAL = listOf("fit", "fitness", "fat", "lose", "weight loss", "lean", "endurance", "conditioning", "health", "cardio")
+    private val GENERAL = listOf("fit", "fitness", "lean", "endurance", "conditioning", "health", "cardio")
     private val NUMBER_WORDS = mapOf("one" to 1, "two" to 2, "three" to 3, "four" to 4, "five" to 5, "six" to 6, "seven" to 7)
     private val GEAR_WORDS = listOf(
         listOf("barbell", "barbells", "bar") to Gear.Barbell,

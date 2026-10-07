@@ -28,7 +28,10 @@ class GoalPlanTest {
         assertEquals(Goal(GoalType.Strength, 3, 45, setOf(Gear.Barbell, Gear.Dumbbell, Gear.Bodyweight), listOf("squat", "bench press")), design)
 
         assertEquals(Goal(GoalType.Muscle, 4, 60), GoalReader.read("build muscle 4 days a week, about an hour"))
-        assertEquals(Goal(GoalType.General, 3, 30, setOf(Gear.Bodyweight)), GoalReader.read("lose fat, three times per week, half an hour, at home"))
+        assertEquals(Goal(GoalType.FatLoss, 3, 30, setOf(Gear.Bodyweight)), GoalReader.read("lose fat, three times per week, half an hour, at home"))
+        // As reported (#125): typed "loose", it was read as Muscle.
+        assertEquals(GoalType.FatLoss, GoalReader.read("I need to loose 12kg weight,, how can I do in 2 months?").type)
+        assertEquals(GoalType.General, GoalReader.read("get fit and healthy").type)
         assertEquals(90, GoalReader.read("1.5 hours").minutes)
         // Unnamed days come from the profile's training days.
         assertEquals(5, GoalReader.read("get fit", defaultDays = 5).daysPerWeek)
@@ -99,5 +102,29 @@ class GoalPlanTest {
         val second = GoalPlanner.plan(goal, library, variation = 1)
         assertEquals(first[0].exercises.take(2).map { it.exercise }, second[0].exercises.take(2).map { it.exercise }) // named lifts stay
         assertTrue(first.flatMap { it.exercises }.map { it.exercise } != second.flatMap { it.exercises }.map { it.exercise })
+    }
+
+    @Test
+    fun `a fat-loss plan uses higher reps and ends each day with 10 minutes of cardio`() {
+        val goal = GoalReader.read("lose 12 kg, 5 days a week, 45 minutes")
+        val plan = GoalPlanner.plan(goal, library)
+
+        assertEquals(listOf("Push", "Pull", "Legs"), plan.map { it.name })
+        plan.forEach { template ->
+            val finisher = template.exercises.last()
+            assertTrue(finisher.exercise.name, finisher.isCardio)
+            assertEquals(1 to 10, finisher.sets to finisher.reps)
+            assertTrue(template.exercises.dropLast(1).none { it.isCardio })
+            assertTrue("${template.name}: ${template.estimatedMinutes} min", template.estimatedMinutes in 35..50)
+        }
+        assertEquals(3, plan.map { it.exercises.last().exercise.id }.toSet().size) // a different cardio each day
+        val accessory = plan.first().exercises.first { !it.isCardio && !it.isTimed && it.reps > 10 }
+        assertEquals(15, accessory.reps)
+    }
+
+    @Test
+    fun `at home, the finisher is cardio without machines`() {
+        val plan = GoalPlanner.plan(GoalReader.read("lose fat at home, 3 days, 40 minutes"), library)
+        assertEquals(listOf("Jump Rope", "Outdoor Run"), plan.map { it.exercises.last().exercise.name }) // never Swimming
     }
 }
