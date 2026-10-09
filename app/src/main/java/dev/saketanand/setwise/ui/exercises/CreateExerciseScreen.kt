@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -100,7 +101,7 @@ fun CreateExerciseScreen(
             .imePadding(),
     ) {
         SetwiseTopAppBar(
-            title = stringResource(R.string.new_exercise),
+            title = stringResource(if (uiState.isEditing) R.string.edit_exercise else R.string.new_exercise),
             onBack = { onAction(CreateExerciseAction.OnCloseClick) },
             navigationIcon = R.drawable.ic_close,
             navigationContentDescription = stringResource(R.string.close),
@@ -119,7 +120,12 @@ fun CreateExerciseScreen(
                 placeholder = stringResource(R.string.exercise_name_placeholder),
             )
             uiState.match?.let { match ->
-                MatchCard(match = match, isNameTaken = uiState.isNameTaken, onUse = { onAction(CreateExerciseAction.OnUseMatchClick) })
+                MatchCard(
+                    match = match,
+                    isNameTaken = uiState.isNameTaken,
+                    // Editing: the name is only taken; there's nothing to use instead.
+                    onUse = if (uiState.isEditing) null else { { onAction(CreateExerciseAction.OnUseMatchClick) } },
+                )
             }
             // Right under the name: the fields below are pre-filled from it.
             uiState.suggestionSource?.let { source ->
@@ -139,15 +145,8 @@ fun CreateExerciseScreen(
                     )
                 }
             }
-            ChipGroup(stringResource(R.string.logged_as)) {
-                ExerciseKindOption.entries.forEach { kind ->
-                    SetwiseFilterChip(
-                        label = stringResource(kind.labelRes()),
-                        selected = uiState.kind == kind,
-                        onClick = { onAction(CreateExerciseAction.OnKindClick(kind)) },
-                    )
-                }
-            }
+            // Editing: its sets were logged this way, so it stays.
+            if (!uiState.isEditing) KindChips(selected = uiState.kind, onAction = onAction)
             if (uiState.kind != ExerciseKindOption.Cardio) {
                 ChipGroup(stringResource(R.string.muscle_group)) {
                     uiState.muscleGroups.forEach { group ->
@@ -188,9 +187,8 @@ fun CreateExerciseScreen(
                 }
             }
         }
-        val name = uiState.name.trim()
         SetwiseButton(
-            text = if (name.isEmpty()) stringResource(R.string.create_exercise) else stringResource(R.string.create_exercise_named, name),
+            text = saveLabel(uiState),
             onClick = { onAction(CreateExerciseAction.OnCreateClick) },
             enabled = uiState.canCreate,
             modifier = Modifier
@@ -200,9 +198,35 @@ fun CreateExerciseScreen(
     }
 }
 
+/** "Logged as": weight × reps, bodyweight, timed or cardio. */
+@Composable
+private fun KindChips(selected: ExerciseKindOption, onAction: (CreateExerciseAction) -> Unit) {
+    ChipGroup(stringResource(R.string.logged_as)) {
+        ExerciseKindOption.entries.forEach { kind ->
+            SetwiseFilterChip(
+                label = stringResource(kind.labelRes()),
+                selected = selected == kind,
+                onClick = { onAction(CreateExerciseAction.OnKindClick(kind)) },
+            )
+        }
+    }
+}
+
+/** "Save" when editing, otherwise "Create “Name”" (or "Create exercise" with no name yet). */
+@Composable
+@ReadOnlyComposable
+private fun saveLabel(uiState: CreateExerciseUiState): String {
+    val name = uiState.name.trim()
+    return when {
+        uiState.isEditing -> stringResource(R.string.save)
+        name.isEmpty() -> stringResource(R.string.create_exercise)
+        else -> stringResource(R.string.create_exercise_named, name)
+    }
+}
+
 /** "Already in your library? Bench Press (Dumbbell)   Use this". */
 @Composable
-private fun MatchCard(match: Exercise, isNameTaken: Boolean, onUse: () -> Unit) {
+private fun MatchCard(match: Exercise, isNameTaken: Boolean, onUse: (() -> Unit)?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -220,12 +244,14 @@ private fun MatchCard(match: Exercise, isNameTaken: Boolean, onUse: () -> Unit) 
             )
             Text(match.name, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        SetwiseButton(
-            text = stringResource(R.string.use_this),
-            onClick = onUse,
-            style = SetwiseButtonStyle.Text,
-            size = SetwiseButtonSize.Medium,
-        )
+        if (onUse != null) {
+            SetwiseButton(
+                text = stringResource(R.string.use_this),
+                onClick = onUse,
+                style = SetwiseButtonStyle.Text,
+                size = SetwiseButtonSize.Medium,
+            )
+        }
     }
 }
 
@@ -259,6 +285,24 @@ private fun CreateExercisePreview() = SetwiseScreenPreview {
             equipment = "Dumbbell",
             muscleGroups = listOf("Chest", "Back", "Shoulders", "Quads", "Hamstrings", "Biceps", "Triceps", "Core"),
             match = Exercise(1, "Bench Press (Dumbbell)", ExerciseType.STRENGTH, "Chest", "Dumbbell", 120, false, false, null, null, null),
+        ),
+        onAction = {},
+    )
+}
+
+@PreviewScreens
+@Composable
+private fun EditExercisePreview() = SetwiseScreenPreview {
+    CreateExerciseScreen(
+        uiState = CreateExerciseUiState(
+            name = "Bench Press (Dumbbell)",
+            muscleGroup = "Chest",
+            equipment = "Dumbbell",
+            restSec = 90,
+            muscleGroups = listOf("Chest", "Back", "Shoulders", "Quads", "Hamstrings", "Biceps", "Triceps", "Core"),
+            match = Exercise(1, "Bench Press (Dumbbell)", ExerciseType.STRENGTH, "Chest", "Dumbbell", 120, false, false, null, null, null),
+            isNameTaken = true,
+            isEditing = true,
         ),
         onAction = {},
     )

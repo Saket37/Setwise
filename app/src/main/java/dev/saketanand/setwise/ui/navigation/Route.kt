@@ -28,6 +28,12 @@ sealed interface Route {
     /** Body composition: body checks, BMR, reports (from Settings). */
     @Serializable data object Body : Route
 
+    /** Each body measure over time (design 16). */
+    @Serializable data object BodyProgress : Route
+
+    /** One body check and everything its report said (design 17). */
+    @Serializable data class BodyReport(val measurementId: Long) : Route
+
     /** Import workouts shared from another app (Strong); [sharedText]: what was shared, if any. */
     @Serializable data class ImportWorkouts(
         val sharedText: String = "",
@@ -50,12 +56,16 @@ sealed interface Route {
 
     /**
      * Search + pick exercises. Opened from Active workout and Template editor; the picked ids are
-     * returned to the caller via the previous back-stack entry (see SetwiseNavHost).
+     * returned to the caller via the previous back-stack entry (see SetwiseNavHost). [query]:
+     * what to search for on opening (the quick log's unknown exercise, #138).
      */
-    @Serializable data object ExercisePicker : Route
+    @Serializable data class ExercisePicker(val query: String = "") : Route
 
-    /** Create a custom exercise (with LLM matching / classification). */
-    @Serializable data class CreateExercise(val initialName: String = "") : Route
+    /**
+     * Create a custom exercise (with LLM matching / classification), or edit one: [exerciseId]
+     * is NEW_EXERCISE_ID to create, a custom exercise's id to edit it (#146).
+     */
+    @Serializable data class CreateExercise(val initialName: String = "", val exerciseId: Long = NEW_EXERCISE_ID) : Route
 
     /** Exercise history, progression hint and plateau note. */
     @Serializable data class ExerciseDetail(val exerciseId: Long) : Route
@@ -70,6 +80,7 @@ sealed interface Route {
 
     companion object {
         const val NEW_TEMPLATE_ID = 0L
+        const val NEW_EXERCISE_ID = 0L
 
         /** No workout has this id (Room's start at 1): its screen finds nothing and closes. */
         const val NO_WORKOUT_ID = -1L

@@ -2,6 +2,8 @@ package dev.saketanand.setwise.di
 
 import android.util.Log
 import dev.saketanand.setwise.MainViewModel
+import dev.saketanand.setwise.ui.body.BodyProgressViewModel
+import dev.saketanand.setwise.ui.body.BodyReportViewModel
 import dev.saketanand.setwise.ui.body.BodyViewModel
 import dev.saketanand.setwise.ui.exercises.CreateExerciseViewModel
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailViewModel
@@ -31,6 +33,11 @@ val viewModelModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::BodyViewModel)
+    viewModelOf(::BodyProgressViewModel)
+    // The route, read by type (as the active workout's); without one the screen finds nothing and closes.
+    viewModel { params ->
+        BodyReportViewModel(params.getOrNull<Route.BodyReport>()?.measurementId ?: Route.NO_WORKOUT_ID, get(), get())
+    }
     viewModel { params ->
         ImportViewModel(
             shared = params.get(),
@@ -85,7 +92,14 @@ val viewModelModule = module {
 
     viewModelOf(::ExercisePickerViewModel)
     viewModel { params ->
-        CreateExerciseViewModel(initialName = params.get(), exerciseRepository = get(), assistant = get(), savedStateHandle = get())
+        CreateExerciseViewModel(
+            initialName = params[0],
+            exerciseRepository = get(),
+            assistant = get(),
+            savedStateHandle = get(),
+            editor = get(),
+            exerciseId = params[1],
+        )
     }
     viewModel { params ->
         ExerciseDetailViewModel(
@@ -94,6 +108,7 @@ val viewModelModule = module {
             workoutRepository = get(),
             dateProvider = get(),
             plateauNotes = get(),
+            editor = get(),
         )
     }
 

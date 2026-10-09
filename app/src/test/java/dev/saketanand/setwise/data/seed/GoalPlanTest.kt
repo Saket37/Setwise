@@ -28,7 +28,10 @@ class GoalPlanTest {
         assertEquals(Goal(GoalType.Strength, 3, 45, setOf(Gear.Barbell, Gear.Dumbbell, Gear.Bodyweight), listOf("squat", "bench press")), design)
 
         assertEquals(Goal(GoalType.Muscle, 4, 60), GoalReader.read("build muscle 4 days a week, about an hour"))
-        assertEquals(Goal(GoalType.General, 3, 30, setOf(Gear.Bodyweight)), GoalReader.read("lose fat, three times per week, half an hour, at home"))
+        assertEquals(Goal(GoalType.FatLoss, 3, 30, setOf(Gear.Bodyweight)), GoalReader.read("lose fat, three times per week, half an hour, at home"))
+        // As reported (#125): typed "loose", it was read as Muscle.
+        assertEquals(GoalType.FatLoss, GoalReader.read("I need to loose 12kg weight,, how can I do in 2 months?").type)
+        assertEquals(GoalType.General, GoalReader.read("get fit and healthy").type)
         assertEquals(90, GoalReader.read("1.5 hours").minutes)
         // Unnamed days come from the profile's training days.
         assertEquals(5, GoalReader.read("get fit", defaultDays = 5).daysPerWeek)
@@ -99,5 +102,50 @@ class GoalPlanTest {
         val second = GoalPlanner.plan(goal, library, variation = 1)
         assertEquals(first[0].exercises.take(2).map { it.exercise }, second[0].exercises.take(2).map { it.exercise }) // named lifts stay
         assertTrue(first.flatMap { it.exercises }.map { it.exercise } != second.flatMap { it.exercises }.map { it.exercise })
+    }
+
+    @Test
+    fun `a fat-loss plan uses higher reps and ends each day with 10 minutes of cardio`() {
+        val goal = GoalReader.read("lose 12 kg, 5 days a week, 45 minutes")
+        val plan = GoalPlanner.plan(goal, library)
+
+        assertEquals(listOf("Push", "Pull", "Legs"), plan.map { it.name })
+        plan.forEach { template ->
+            val finisher = template.exercises.last()
+            assertTrue(finisher.exercise.name, finisher.isCardio)
+            assertEquals(1 to 10, finisher.sets to finisher.reps)
+            assertTrue(template.exercises.dropLast(1).none { it.isCardio })
+            assertTrue("${template.name}: ${template.estimatedMinutes} min", template.estimatedMinutes in 35..50)
+        }
+        assertEquals(3, plan.map { it.exercises.last().exercise.id }.toSet().size) // a different cardio each day
+        val accessory = plan.first().exercises.first { !it.isCardio && !it.isTimed && it.reps > 10 }
+        assertEquals(15, accessory.reps)
+    }
+
+    @Test
+    fun `at home, the finisher is cardio without machines`() {
+        val plan = GoalPlanner.plan(GoalReader.read("lose fat at home, 3 days, 40 minutes"), library)
+        assertEquals(listOf("Jump Rope", "Outdoor Run"), plan.map { it.exercises.last().exercise.name }) // never Swimming
+    }
+
+    @Test
+    fun `with dumbbells only, nothing that hangs from a bar, no Nordic curl, and a loaded squat`() {
+        // As reported (#143).
+        val plan = GoalPlanner.plan(GoalReader.read("build muscle with dumbbells only, 4 days a week, an hour"), library)
+        val names = plan.flatMap { it.exercises }.map { it.exercise.name }
+
+        assertTrue(names.toString(), names.none { "Hanging" in it || "Pull-up" in it || "Chin-up" in it || " Dip" in it })
+        assertTrue(names.none { "Nordic" in it })
+        assertTrue(names.toString(), "Goblet Squat (Dumbbell)" in names)
+        assertTrue(names.none { it == "Bodyweight Squat" })
+        assertTrue(plan.flatMap { it.exercises }.all { Gear.of(it.exercise) in setOf(Gear.Dumbbell, Gear.Bodyweight) })
+    }
+
+    @Test
+    fun `a pull-up bar named, or a full gym, allows what hangs from it`() {
+        assertEquals(setOf(Gear.Dumbbell, Gear.Bars, Gear.Bodyweight), GoalReader.read("dumbbells and a pull-up bar at home").gear)
+        val withBar = GoalPlanner.plan(GoalReader.read("build muscle, dumbbells and a pull-up bar, 3 days"), library)
+        assertTrue(withBar.flatMap { it.exercises }.any { Gear.of(it.exercise) == Gear.Bars })
+        assertTrue(Gear.Bars in GoalReader.read("get stronger").gear) // a full gym
     }
 }

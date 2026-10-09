@@ -8,13 +8,16 @@ import java.util.Locale
  */
 data class PlannedExercise(val exercise: Exercise, val sets: Int, val reps: Int, val position: Int = 0) {
     val isTimed: Boolean get() = exercise.isTimed
+
+    /** A cardio finisher: [reps] is its minutes, [sets] 1. */
+    val isCardio: Boolean get() = exercise.type == ExerciseType.CARDIO
 }
 
 /** One template of a plan ("Strength A"), with its estimated minutes. */
 data class PlannedTemplate(val name: String, val category: String, val exercises: List<PlannedExercise>) {
     /** As Home estimates a template: each set's rest plus about 40 s of work. */
     val estimatedMinutes: Int
-        get() = (exercises.sumOf { it.sets * (it.exercise.defaultRestSec + WORK_SECONDS_PER_SET) } / SECONDS_PER_MINUTE.toDouble())
+        get() = (exercises.sumOf { it.seconds() } / SECONDS_PER_MINUTE.toDouble())
             .let { kotlin.math.round(it).toInt() }
 }
 
@@ -29,7 +32,7 @@ enum class Slot(private val matches: (Exercise, String) -> Boolean) {
     HorizontalPull({ e, n -> e.muscleGroup == "Back" && "row" in n && "upright" !in n }),
     VerticalPull({ _, n -> ("pulldown" in n && "straight-arm" !in n) || "pull-up" in n || "chin-up" in n }),
     SingleLeg({ _, n -> "lunge" in n || "split squat" in n || "step-up" in n }),
-    LegCurl({ _, n -> "leg curl" in n || "nordic" in n }),
+    LegCurl({ _, n -> "leg curl" in n }), // not the Nordic curl: far too hard for most to do for reps (#143)
     Calves({ e, _ -> e.muscleGroup == "Calves" }),
     Core({ e, _ -> e.muscleGroup == "Core" }),
     Biceps({ e, _ -> e.muscleGroup == "Biceps" }),
@@ -77,17 +80,20 @@ object GoalPlanner {
      */
     fun candidates(slot: Slot, goal: Goal, library: List<Exercise>, doneIds: Set<Long>): List<Exercise> {
         val gearOrder = (if (slot.isMainLift) MAIN_LIFT_GEAR else ACCESSORY_GEAR).getValue(goal.type)
-        return library
-            .filter { slot.fits(it) && Gear.of(it.equipment) in goal.gear }
+        val fitting = library.filter { slot.fits(it) && Gear.of(it) in goal.gear }
+        // A main lift is loaded when it can be: Goblet Squat over Bodyweight Squat with dumbbells (#143).
+        val loadedMain = slot.isMainLift && fitting.any { Gear.of(it) !in UNLOADED }
+        return fitting
             .sortedWith(
                 compareBy<Exercise>(
                     { exercise -> if (goal.focus.any { it in exercise.name.lowercase(Locale.ROOT) }) 0 else 1 },
+                    { if (loadedMain && Gear.of(it) in UNLOADED) 1 else 0 },
                     { if (it.id in doneIds) 0 else 1 },
                     // Plank before other core work: a steady hold suits every goal.
                     { if (slot == Slot.Core && !it.name.startsWith("Plank")) 1 else 0 },
                     // Higher reps on a hinge: the Romanian deadlift, not a heavy conventional pull.
                     { if (slot == Slot.Hinge && goal.type != GoalType.Strength && "Romanian" !in it.name) 1 else 0 },
-                    { gearOrder.indexOf(Gear.of(it.equipment)) },
+                    { gearOrder.indexOf(Gear.of(it)) },
                 ),
             )
     }
@@ -107,6 +113,10 @@ object GoalPlanner {
         pick: (day: Int, position: Int, slot: Slot, candidates: List<Exercise>) -> Exercise? = { _, _, _, _ -> null },
     ): List<PlannedTemplate> {
         val used = mutableSetOf<Long>()
+        val cardio = cardioCandidates(goal, library, doneIds)
+        // Fat loss: a short cardio finisher each day, its minutes kept out of the lifting time.
+        val finisherMinutes = if (goal.type == GoalType.FatLoss && cardio.isNotEmpty() && goal.minutes >= MIN_MINUTES_FOR_FINISHER) FINISHER_MINUTES else 0
+        val liftingSeconds = (goal.minutes - finisherMinutes) * SECONDS_PER_MINUTE
         return days(goal).mapIndexed { dayIndex, day ->
             val planned = mutableListOf<PlannedExercise>()
             var seconds = 0
@@ -122,7 +132,7 @@ object GoalPlanner {
                 if (exercise != null) {
                     val (sets, reps) = scheme(goal.type, slot, planned.size, exercise)
                     val cost = sets * (exercise.defaultRestSec + WORK_SECONDS_PER_SET)
-                    if (planned.size >= MIN_EXERCISES && seconds + cost > goal.minutes * SECONDS_PER_MINUTE) {
+                    if (planned.size >= MIN_EXERCISES && seconds + cost > liftingSeconds) {
                         full = true
                     } else {
                         planned += PlannedExercise(exercise, sets, reps, position)
@@ -132,9 +142,25 @@ object GoalPlanner {
                     }
                 }
             }
-            PlannedTemplate(day.name, day.category, withTimeFilled(planned, goal.minutes * SECONDS_PER_MINUTE - seconds))
+            val lifting = withTimeFilled(planned, liftingSeconds - seconds)
+            PlannedTemplate(day.name, day.category, lifting + finisher(lifting, cardio, finisherMinutes, dayIndex + variation, day.slots.size))
         }.filter { it.exercises.isNotEmpty() }
     }
+
+    /** A day's cardio finisher (a different one each day while there's a choice), or none. */
+    private fun finisher(lifting: List<PlannedExercise>, cardio: List<Exercise>, minutes: Int, turn: Int, position: Int): List<PlannedExercise> =
+        if (minutes > 0 && lifting.isNotEmpty()) listOf(PlannedExercise(cardio[turn % cardio.size], 1, minutes, position)) else emptyList()
+
+    /** Cardio for a finisher with the goal's equipment: done before first, then the usual machines. */
+    fun cardioCandidates(goal: Goal, library: List<Exercise>, doneIds: Set<Long>): List<Exercise> =
+        library.filter { it.type == ExerciseType.CARDIO && Gear.of(it) in goal.gear && it.name !in NOT_FINISHERS }
+            .sortedWith(
+                compareBy<Exercise>(
+                    { if (it.id in doneIds) 0 else 1 },
+                    { CARDIO_ORDER.indexOf(it.name).let { i -> if (i < 0) CARDIO_ORDER.size else i } },
+                    { it.name },
+                ),
+            )
 
     /**
      * Time left over (every slot used): one more set at a time, main lifts first (up to
@@ -151,7 +177,7 @@ object GoalPlanner {
                 val item = result[i]
                 val cap = if (item.reps <= 5) MAX_MAIN_SETS else MAX_OTHER_SETS
                 val cost = item.exercise.defaultRestSec + WORK_SECONDS_PER_SET
-                if (item.sets < cap && cost <= left) {
+                if (!item.isCardio && item.sets < cap && cost <= left) {
                     result[i] = item.copy(sets = item.sets + 1)
                     left -= cost
                     added = true
@@ -164,12 +190,17 @@ object GoalPlanner {
     /** Sets × reps (seconds for a timed exercise) by goal; a strength plan's first two main lifts are 4 × 5. */
     fun scheme(type: GoalType, slot: Slot, position: Int, exercise: Exercise): Pair<Int, Int> = when {
         exercise.isTimed -> TIMED
+        type == GoalType.FatLoss && slot.isMainLift -> MUSCLE_MAIN
+        type == GoalType.FatLoss -> FAT_LOSS_ACCESSORY
         type == GoalType.Strength && slot.isMainLift && position < HEAVY_LIFTS -> HEAVY
         type == GoalType.Strength && slot.isMainLift -> STRENGTH_MAIN
         type == GoalType.Strength -> STRENGTH_ACCESSORY
         type == GoalType.Muscle && slot.isMainLift -> MUSCLE_MAIN
         else -> HIGHER_REPS
     }
+
+    /** Gear that adds no load: bodyweight, and bars to hang from. */
+    private val UNLOADED = setOf(Gear.Bodyweight, Gear.Bars)
 
     private const val MIN_EXERCISES = 3
     private const val MAX_EXERCISES = 8
@@ -187,6 +218,17 @@ object GoalPlanner {
     private val STRENGTH_ACCESSORY = 3 to 10
     private val MUSCLE_MAIN = 3 to 10
     private val HIGHER_REPS = 3 to 12
+    private val FAT_LOSS_ACCESSORY = 3 to 15
+
+    /** Fat loss: minutes of cardio at the end of each day, when the session has room. */
+    private const val FINISHER_MINUTES = 10
+    private const val MIN_MINUTES_FOR_FINISHER = 30
+    private val CARDIO_ORDER = listOf(
+        "Rowing Machine", "Stationary Bike", "Treadmill", "Elliptical", "Stair Climber", "Jump Rope", "Outdoor Run", "Outdoor Walk",
+    )
+
+    /** Cardio that doesn't follow lifting in the same session (it needs a pool). */
+    private val NOT_FINISHERS = setOf("Swimming")
     private const val MAX_MAIN_SETS = 5
     private const val MAX_OTHER_SETS = 4
 
@@ -202,18 +244,24 @@ object GoalPlanner {
 
     /** Equipment each goal prefers for its main lifts, best first: a barbell to lift heavy. */
     private val MAIN_LIFT_GEAR = mapOf(
-        GoalType.Strength to listOf(Gear.Barbell, Gear.Dumbbell, Gear.Machine, Gear.Kettlebell, Gear.Cable, Gear.Bodyweight),
-        GoalType.Muscle to listOf(Gear.Barbell, Gear.Dumbbell, Gear.Machine, Gear.Cable, Gear.Kettlebell, Gear.Bodyweight),
-        GoalType.General to listOf(Gear.Dumbbell, Gear.Kettlebell, Gear.Machine, Gear.Bodyweight, Gear.Cable, Gear.Barbell),
+        GoalType.Strength to listOf(Gear.Barbell, Gear.Dumbbell, Gear.Machine, Gear.Kettlebell, Gear.Cable, Gear.Bodyweight, Gear.Bars),
+        GoalType.Muscle to listOf(Gear.Barbell, Gear.Dumbbell, Gear.Machine, Gear.Cable, Gear.Kettlebell, Gear.Bodyweight, Gear.Bars),
+        GoalType.General to listOf(Gear.Dumbbell, Gear.Kettlebell, Gear.Machine, Gear.Bodyweight, Gear.Cable, Gear.Barbell, Gear.Bars),
+        GoalType.FatLoss to listOf(Gear.Dumbbell, Gear.Kettlebell, Gear.Machine, Gear.Bodyweight, Gear.Cable, Gear.Barbell, Gear.Bars),
     )
 
     /** And for accessories: dumbbells and cables, as usual. */
     private val ACCESSORY_GEAR = mapOf(
-        GoalType.Strength to listOf(Gear.Dumbbell, Gear.Cable, Gear.Machine, Gear.Barbell, Gear.Kettlebell, Gear.Bodyweight),
-        GoalType.Muscle to listOf(Gear.Dumbbell, Gear.Cable, Gear.Machine, Gear.Barbell, Gear.Kettlebell, Gear.Bodyweight),
-        GoalType.General to listOf(Gear.Dumbbell, Gear.Bodyweight, Gear.Machine, Gear.Kettlebell, Gear.Cable, Gear.Barbell),
+        GoalType.Strength to listOf(Gear.Dumbbell, Gear.Cable, Gear.Machine, Gear.Barbell, Gear.Kettlebell, Gear.Bodyweight, Gear.Bars),
+        GoalType.Muscle to listOf(Gear.Dumbbell, Gear.Cable, Gear.Machine, Gear.Barbell, Gear.Kettlebell, Gear.Bodyweight, Gear.Bars),
+        GoalType.General to listOf(Gear.Dumbbell, Gear.Bodyweight, Gear.Machine, Gear.Kettlebell, Gear.Cable, Gear.Barbell, Gear.Bars),
+        GoalType.FatLoss to listOf(Gear.Dumbbell, Gear.Cable, Gear.Machine, Gear.Bodyweight, Gear.Kettlebell, Gear.Barbell, Gear.Bars),
     )
 }
+
+/** As Home estimates a template: each set's rest plus about 40 s of work; a cardio finisher its minutes. */
+private fun PlannedExercise.seconds(): Int =
+    if (isCardio) reps * SECONDS_PER_MINUTE else sets * (exercise.defaultRestSec + WORK_SECONDS_PER_SET)
 
 private const val WORK_SECONDS_PER_SET = 40
 private const val SECONDS_PER_MINUTE = 60

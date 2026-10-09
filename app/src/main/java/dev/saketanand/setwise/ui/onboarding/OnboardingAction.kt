@@ -17,6 +17,9 @@ sealed interface OnboardingAction {
     data object OnBack : OnboardingAction
 
     data class OnDayToggle(val day: DayOfWeek) : OnboardingAction
+
+    /** The "None" chip: no fixed days (clears the days). */
+    data object OnNoFixedDaysToggle : OnboardingAction
     data class OnAskToggle(val ask: Boolean) : OnboardingAction
     data object OnBodyWeightEdited : OnboardingAction
 

@@ -509,14 +509,41 @@ class ActiveWorkoutViewModelTest {
         val vm = viewModel()
 
         vm.onAction(ActiveWorkoutAction.OnQuickLogSubmit("zercher squat 3x5 at 80"))
-        assertEquals(QuickLogResult.Reason.NoExercise, vm.state.value.quickLog.problem)
+        assertEquals(QuickLogResult.Reason.UnknownExercise, vm.state.value.quickLog.problem)
 
         // The same line (as when a spoken one is filled in and read at once): still said.
         vm.onAction(ActiveWorkoutAction.OnQuickLogEdited("zercher squat 3x5 at 80"))
-        assertEquals(QuickLogResult.Reason.NoExercise, vm.state.value.quickLog.problem)
+        assertEquals(QuickLogResult.Reason.UnknownExercise, vm.state.value.quickLog.problem)
 
         vm.onAction(ActiveWorkoutAction.OnQuickLogEdited("zercher squat 3x5 at 8"))
         assertEquals(null, vm.state.value.quickLog.problem)
+    }
+
+    @Test
+    fun `an exercise it doesn't know can be found or created, then the line's sets are read for it`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogSubmit("zercher 3x5 at 60"))
+        assertEquals(QuickLogResult.Reason.UnknownExercise, vm.state.value.quickLog.problem) // not "Which exercise?" (#138)
+        assertEquals("zercher", vm.state.value.quickLog.unknownExercise)
+
+        vm.onAction(ActiveWorkoutAction.OnQuickLogFindExercise) // the picker opens on "zercher"
+        vm.onAction(ActiveWorkoutAction.OnExercisesPicked(listOf(99L))) // created there, and picked
+
+        val preview = vm.state.value.quickLog.preview!!
+        assertEquals("Zercher Squat (Barbell)", preview.exerciseName)
+        assertEquals(List(3) { SetFact(60.0, 5, null) }, preview.sets)
+    }
+
+    @Test
+    fun `backing out of the picker leaves no sets waiting for the next exercise added`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAction(ActiveWorkoutAction.OnQuickLogSubmit("zercher 3x5 at 60"))
+        vm.onAction(ActiveWorkoutAction.OnQuickLogFindExercise)
+        vm.onAction(ActiveWorkoutAction.OnQuickLogEdited("bench 3x8"))
+
+        vm.onAction(ActiveWorkoutAction.OnExercisesPicked(listOf(99L)))
+        assertEquals(null, vm.state.value.quickLog.preview)
     }
 
     @Test
@@ -668,7 +695,15 @@ class ActiveWorkoutViewModelTest {
 
         override suspend fun addExercises(workoutId: Long, exerciseIds: List<Long>): List<Long> {
             added += exerciseIds
-            return exerciseIds.indices.map { 500L + it }
+            val ids = exerciseIds.indices.map { 500L + it }
+            // In the session too, with three open sets: as the real repository does.
+            session.value = session.value?.let { s ->
+                s.copy(exercises = s.exercises + exerciseIds.mapIndexed { i, exerciseId ->
+                    val sets = listOf(set(600L + 3 * i), set(601L + 3 * i), set(602L + 3 * i))
+                    SessionExercise(ids[i], exercise(exerciseId, "Zercher Squat (Barbell)", ExerciseType.STRENGTH), sets, emptyList())
+                })
+            }
+            return ids
         }
 
         override suspend fun updateStartTime(workoutId: Long, startedAt: Instant) {

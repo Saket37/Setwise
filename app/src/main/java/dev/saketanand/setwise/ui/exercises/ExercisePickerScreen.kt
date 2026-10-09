@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
@@ -56,6 +58,8 @@ fun ExercisePickerScreenRoot(
     onExercisesPicked: (exerciseIds: List<Long>) -> Unit,
     onCreateExercise: (initialName: String) -> Unit,
     onBack: () -> Unit,
+    initialQuery: String = "",
+    onOpenExercise: (exerciseId: Long) -> Unit = {},
     viewModel: ExercisePickerViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -72,7 +76,7 @@ fun ExercisePickerScreenRoot(
     // The search text lives here, not in the ViewModel: the field must change in the same frame
     // as the keystroke (a round trip through a StateFlow can drop letters or move the cursor).
     // It's saved across process death and the ViewModel gets every change.
-    val searchState = rememberTextFieldState()
+    val searchState = rememberTextFieldState(initialQuery)
     LaunchedEffect(searchState) {
         snapshotFlow { searchState.text.toString() }
             .collect { viewModel.onAction(ExercisePickerAction.OnQueryChange(it)) }
@@ -81,8 +85,13 @@ fun ExercisePickerScreenRoot(
     // dropUnlessResumed: a double tap (or Add + Back) during the exit animation must not pop
     // the back stack twice.
     val addExercises = dropUnlessResumed { onExercisesPicked(viewModel.state.value.selectedIds) }
-    val createExercise = dropUnlessResumed { onCreateExercise(viewModel.state.value.query.trim()) }
+    // "zercher" typed (or from the quick log) is created as "Zercher": names start with a capital.
+    val createExercise = dropUnlessResumed { onCreateExercise(viewModel.state.value.query.trim().replaceFirstChar { it.titlecase() }) }
     val goBack = dropUnlessResumed(block = onBack)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val openExercise: (Long) -> Unit = { id ->
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) onOpenExercise(id)
+    }
 
     ExercisePickerScreen(
         uiState = uiState,
@@ -92,6 +101,7 @@ fun ExercisePickerScreenRoot(
                 ExercisePickerAction.OnAddClick -> addExercises()
                 ExercisePickerAction.OnCreateNewClick -> createExercise()
                 ExercisePickerAction.OnBackClick -> goBack()
+                is ExercisePickerAction.OnExerciseLongPress -> openExercise(action.exerciseId)
                 else -> viewModel.onAction(action)
             }
         },

@@ -98,6 +98,7 @@ fun TemplateFromGoalScreen(
         ) {
             item(key = "goal") { GoalField(goal) }
             uiState.understood?.let { understood -> item(key = "understood") { Understood(understood) } }
+            uiState.advice?.let { advice -> item(key = "advice") { AdviceCard(advice) } }
             if (uiState.templates.isNotEmpty()) {
                 item(key = "draft") { Draft(uiState, onRegenerate = { onAction(TemplateFromGoalAction.OnRegenerateClick) }) }
             }
@@ -207,7 +208,9 @@ private fun PlannedTemplate(template: PlannedTemplateUi, modifier: Modifier = Mo
             ) {
                 Text(exercise.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                 Text(
-                    text = if (exercise.isTimed) {
+                    text = if (exercise.isCardio) {
+                        stringResource(R.string.goal_scheme_minutes, exercise.reps)
+                    } else if (exercise.isTimed) {
                         stringResource(R.string.goal_scheme_seconds, exercise.sets, exercise.reps)
                     } else {
                         stringResource(R.string.goal_scheme, exercise.sets, exercise.reps)
@@ -237,12 +240,14 @@ private fun Gear.labelRes() = when (this) {
     Gear.Cable -> R.string.gear_cables
     Gear.Machine -> R.string.gear_machines
     Gear.Bodyweight -> R.string.gear_bodyweight
+    Gear.Bars -> R.string.gear_bars
 }
 
 private fun GoalType.labelRes() = when (this) {
     GoalType.Strength -> R.string.goal_type_strength
     GoalType.Muscle -> R.string.goal_type_muscle
     GoalType.General -> R.string.goal_type_general
+    GoalType.FatLoss -> R.string.goal_type_fat_loss
 }
 
 // Previews: one per scenario

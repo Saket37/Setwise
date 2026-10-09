@@ -23,6 +23,8 @@ data class CreateExerciseUiState(
     val isSaving: Boolean = false,
     /** Where the pre-filled details came from (caption under them); null: nothing suggested. */
     val suggestionSource: SuggestionSource? = null,
+    /** Editing a custom exercise (#146): "Edit exercise", Save, and how it's logged is fixed. */
+    val isEditing: Boolean = false,
 ) {
     val canCreate: Boolean
         get() = name.isNotBlank() && !isNameTaken && !isSaving &&

@@ -17,3 +17,13 @@ sealed interface CreateExerciseResult {
     /** An exercise with this name (ignoring case) already exists. */
     data class NameTaken(val existing: Exercise) : CreateExerciseResult
 }
+
+sealed interface EditExerciseResult {
+    data object Saved : EditExerciseResult
+
+    /** Another exercise has this name (ignoring case). */
+    data class NameTaken(val existing: Exercise) : EditExerciseResult
+}
+
+/** Where an exercise is used: what deleting it would touch. */
+data class ExerciseUsage(val workouts: Int, val templates: Int)

@@ -12,6 +12,7 @@ import dev.saketanand.setwise.data.prefs.DataStoreUserSettingsRepository
 import dev.saketanand.setwise.data.prefs.LegacyBodyMeasurements
 import dev.saketanand.setwise.data.repository.BodyRepositoryImpl
 import dev.saketanand.setwise.data.repository.DayMarkRepositoryImpl
+import dev.saketanand.setwise.data.repository.ExerciseEditorImpl
 import dev.saketanand.setwise.data.repository.ExerciseRepositoryImpl
 import dev.saketanand.setwise.data.repository.TemplateRepositoryImpl
 import dev.saketanand.setwise.data.repository.WorkoutRepositoryImpl
@@ -20,6 +21,7 @@ import dev.saketanand.setwise.data.seed.SeedPreferences
 import dev.saketanand.setwise.domain.CalorieSync
 import dev.saketanand.setwise.domain.ai.AiCheck
 import dev.saketanand.setwise.domain.ai.BodyReportReader
+import dev.saketanand.setwise.domain.ai.BodyTipsWriter
 import dev.saketanand.setwise.domain.ai.CalorieEstimator
 import dev.saketanand.setwise.domain.ai.ExerciseAssistant
 import dev.saketanand.setwise.domain.ai.FileTextReader
@@ -37,6 +39,7 @@ import dev.saketanand.setwise.domain.ai.WorkoutImporter
 import dev.saketanand.setwise.domain.ai.WorkoutInsightWriter
 import dev.saketanand.setwise.domain.repository.BodyRepository
 import dev.saketanand.setwise.domain.repository.DayMarkRepository
+import dev.saketanand.setwise.domain.repository.ExerciseEditor
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.domain.repository.TemplateRepository
 import dev.saketanand.setwise.domain.repository.UserSettingsRepository
@@ -93,6 +96,7 @@ val appModule = module {
     singleOf(::ExerciseAssistant)
     singleOf(::QuickLogInterpreter)
     singleOf(::PlateauNoteWriter)
+    singleOf(::BodyTipsWriter)
     singleOf(::HistoryAssistant)
     singleOf(::WeeklyRecapWriter)
     single { ModelDownloader(get(), get(ApplicationScope)) }
@@ -130,6 +134,7 @@ val appModule = module {
 
     // Repositories: bound to their domain interface, so callers depend on ExerciseRepository.
     singleOf(::ExerciseRepositoryImpl) bind ExerciseRepository::class
+    singleOf(::ExerciseEditorImpl) bind ExerciseEditor::class
     singleOf(::WorkoutRepositoryImpl) bind WorkoutRepository::class
     singleOf(::TemplateRepositoryImpl) bind TemplateRepository::class
     singleOf(::DayMarkRepositoryImpl) bind DayMarkRepository::class
