@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
+import dev.saketanand.setwise.domain.model.CalorieMethod
 import dev.saketanand.setwise.domain.model.CardioMetric
 import dev.saketanand.setwise.domain.model.CardioValues
 import dev.saketanand.setwise.ui.ObserveAsEvents
@@ -142,8 +143,8 @@ fun rememberCardioFields() = CardioFields(
 
 /**
  * Design "Treadmill": last time on top, then the inputs this exercise uses (duration always;
- * incline, speed range, distance, level), and "Log cardio". Empty fields use last time's values.
- * (The calorie estimate comes with milestone 10.)
+ * incline, speed range, distance, level), "About 310 kcal · ACSM treadmill formula at 78 kg" as
+ * they're typed, and "Log cardio". Empty fields use last time's values.
  */
 @Composable
 fun CardioEntryScreen(
@@ -232,6 +233,7 @@ fun CardioEntryScreen(
                     )
                 }
             }
+            uiState.calories?.let { basis -> CaloriesLine(basis = basis, uiState = uiState, fields = fields) }
             uiState.error?.let { error ->
                 Text(
                     text = stringResource(
@@ -353,6 +355,7 @@ private fun CardioEntryTreadmillPreview() = SetwiseScreenPreview {
             metrics = setOf(CardioMetric.DURATION, CardioMetric.INCLINE, CardioMetric.SPEED, CardioMetric.DISTANCE),
             lastTime = CardioValues(1_800, inclinePct = 5.0, speedMinKmh = 5.5, speedMaxKmh = 7.5, distanceKm = 3.9),
             inclinePct = 6.0,
+            calories = CardioCalorieBasis(CalorieMethod.ACSM_TREADMILL, met = null, kcalPerMetHour = 78.0, weightKg = 78.0, fromBmr = false),
         ),
         fields = rememberCardioFields(),
         onAction = {},

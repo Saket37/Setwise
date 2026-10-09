@@ -72,6 +72,29 @@ class ActiveWorkoutUiMappersTest {
     }
 
     @Test
+    fun `with a progression hint, the working sets hint what it suggests`() {
+        val startedAt = at(2026, 10, 4, 18, 0, ZoneId.of("Asia/Kolkata"))
+
+        // A 40 kg warm-up, then 3 × 60 × 8, twice: ready for 62.5.
+        fun done(daysBefore: Long) = ExerciseSession(
+            daysBefore,
+            startedAt.minus(Duration.ofDays(daysBefore)),
+            listOf(LoggedSet(40.0, 10, null, null)) + List(3) { LoggedSet(60.0, 8, null, null) },
+        )
+        val previous = listOf(PreviousSet(40.0, 10), PreviousSet(60.0, 8), PreviousSet(60.0, 8), PreviousSet(60.0, 8))
+        val ui = SessionExercise(1, exercise(ExerciseType.STRENGTH), List(5) { set(it + 1) }, previous, history = listOf(done(3), done(6)))
+            .toUi(hintsAt = startedAt)
+
+        assertEquals(62.5, ui.nextSession?.weightKg)
+        assertEquals(
+            listOf("40" to "10", "62.5" to "8", "62.5" to "8", "62.5" to "8", "62.5" to "8"), // the warm-up keeps its own; set 5 follows set 4
+            ui.sets.map { it.weightHint to it.repsHint },
+        )
+        // Logged afterwards: no hint, so last time's values.
+        assertEquals("60", SessionExercise(1, exercise(ExerciseType.STRENGTH), List(4) { set(it + 1) }, previous, history = listOf(done(3), done(6))).toUi().sets[1].weightHint)
+    }
+
+    @Test
     fun `a ticked-off set that beats the earlier best gets the trophy right away`() {
         val bests = PersonalBests.from(listOf(PreviousSet(60.0, 8)))
         val sets = listOf(set(1, 60.0, 8).copy(isCompleted = true), set(2, 62.5, 6).copy(isCompleted = true), set(3, 65.0, 5))

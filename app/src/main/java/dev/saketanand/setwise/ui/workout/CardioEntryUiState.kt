@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.workout
 
 import androidx.compose.runtime.Immutable
+import dev.saketanand.setwise.domain.model.CalorieMethod
 import dev.saketanand.setwise.domain.model.CardioMetric
 import dev.saketanand.setwise.domain.model.CardioValues
 
@@ -20,6 +21,8 @@ data class CardioEntryUiState(
     val level: Int = 1,
     val error: CardioInputError? = null,
     val isSaving: Boolean = false,
+    /** What "About 310 kcal · ACSM treadmill formula at 78 kg" is worked out from; null without a body weight. */
+    val calories: CardioCalorieBasis? = null,
 ) {
     val isEditing: Boolean get() = logged != null
 
@@ -45,4 +48,15 @@ data class CardioInputs(
     val speedFrom: String = "",
     val speedTo: String = "",
     val distance: String = "",
+)
+
+/** The exercise's calorie formula and the person's burn per MET-hour (from their BMR, else their weight). */
+@Immutable
+data class CardioCalorieBasis(
+    val method: CalorieMethod?,
+    val met: Double?,
+    val kcalPerMetHour: Double,
+    val weightKg: Double,
+    /** [kcalPerMetHour] came from the BMR rather than the weight. */
+    val fromBmr: Boolean,
 )
