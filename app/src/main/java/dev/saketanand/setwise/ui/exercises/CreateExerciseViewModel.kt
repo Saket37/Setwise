@@ -7,8 +7,11 @@ import androidx.lifecycle.viewModelScope
 import dev.saketanand.setwise.domain.ai.ExerciseAssistant
 import dev.saketanand.setwise.domain.ai.ExerciseSuggestion
 import dev.saketanand.setwise.domain.model.CreateExerciseResult
+import dev.saketanand.setwise.domain.model.EditExerciseResult
 import dev.saketanand.setwise.domain.model.Exercise
+import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.NewExercise
+import dev.saketanand.setwise.domain.repository.ExerciseEditor
 import dev.saketanand.setwise.domain.repository.ExerciseRepository
 import dev.saketanand.setwise.ui.navigation.Route
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +25,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -35,7 +39,11 @@ import kotlinx.coroutines.launch
  * is offered instead ("Use this"), and the details are suggested from the name, never over a
  * field the user picked. An exact name can't be created twice.
  *
+ * Editing a custom exercise (#146): the same form, filled in from it, without suggestions or
+ * "Use this"; how it's logged can't change. A name another exercise has can't be saved.
+ *
  * @param initialName from [Route.CreateExercise]: the picker's search text.
+ * @param exerciseId from [Route.CreateExercise]: the exercise to edit, or [Route.NEW_EXERCISE_ID].
  */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class) // mapLatest, debounce
 class CreateExerciseViewModel(
@@ -43,7 +51,11 @@ class CreateExerciseViewModel(
     private val exerciseRepository: ExerciseRepository,
     private val assistant: ExerciseAssistant,
     private val savedStateHandle: SavedStateHandle,
+    private val editor: ExerciseEditor,
+    private val exerciseId: Long = Route.NEW_EXERCISE_ID,
 ) : ViewModel() {
+
+    private val isEditing = exerciseId != Route.NEW_EXERCISE_ID
 
     /** What the user picked; in SavedStateHandle via [Form] so it survives the app being killed. */
     private val form = MutableStateFlow(
@@ -63,15 +75,34 @@ class CreateExerciseViewModel(
     private val eventChannel = Channel<CreateExerciseEvent>(Channel.BUFFERED)
     val events: Flow<CreateExerciseEvent> = eventChannel.receiveAsFlow()
 
-    /** The same exercise from the library (3+ letters typed); a new answer replaces one in progress. */
+    /**
+     * The same exercise from the library (3+ letters typed); a new answer replaces one in progress.
+     * Editing: only another exercise with exactly this name.
+     */
     private val match: Flow<Exercise?> = combine(typedName.debounce(MATCH_DEBOUNCE_MS), exerciseRepository.observeExercises("", null)) { name, library ->
         name to library
-    }.mapLatest { (name, library) -> if (name.length < MIN_MATCH_LENGTH) null else assistant.findMatch(name, library) }
+    }.mapLatest { (name, library) ->
+        when {
+            isEditing -> library.firstOrNull { it.id != exerciseId && it.name.equals(name, ignoreCase = true) }
+            name.length < MIN_MATCH_LENGTH -> null
+            else -> assistant.findMatch(name, library)
+        }
+    }
 
     /** Details suggested from the name, once typing pauses; applied in init to fields not picked. */
     private val suggestion = MutableStateFlow<ExerciseSuggestion?>(null)
 
     init {
+        // Editing: the form starts from the exercise, unless it was restored from saved state.
+        if (isEditing && savedStateHandle.get<String>(KEY_NAME) == null) {
+            viewModelScope.launch {
+                exerciseRepository.observeExercise(exerciseId).first()?.let { exercise -> update { formOf(exercise) } }
+            }
+        }
+        if (!isEditing) suggestFromName()
+    }
+
+    private fun suggestFromName() {
         viewModelScope.launch {
             typedName.debounce(SUGGEST_DEBOUNCE_MS)
                 .mapLatest { name -> if (name.length < MIN_MATCH_LENGTH) null else assistant.suggestDetails(name) }
@@ -100,6 +131,7 @@ class CreateExerciseViewModel(
             isNameTaken = match != null && match.name.equals(form.name.trim(), ignoreCase = true),
             isSaving = saving,
             suggestionSource = suggestion?.source?.takeIf { form.picked.size < Field.entries.size },
+            isEditing = isEditing,
         )
     }
         .catch { e ->
@@ -112,8 +144,9 @@ class CreateExerciseViewModel(
         when (action) {
             is CreateExerciseAction.OnNameChange -> update { it.copy(name = action.name) }
             // A new kind brings its usual equipment and rest (they can still be changed).
-            is CreateExerciseAction.OnKindClick ->
+            is CreateExerciseAction.OnKindClick -> if (!isEditing) {
                 update { it.copy(kind = action.kind, equipment = null, restSec = null, picked = it.picked + Field.Kind.name) }
+            }
             is CreateExerciseAction.OnMuscleGroupClick -> update {
                 it.copy(muscleGroup = action.muscleGroup.takeUnless { group -> group == it.muscleGroup }, picked = it.picked + Field.Muscle.name)
             }
@@ -122,7 +155,7 @@ class CreateExerciseViewModel(
                 val rest = state.value.restSec + action.steps * CreateExerciseUiState.REST_STEP_SEC
                 it.copy(restSec = rest.coerceIn(CreateExerciseUiState.REST_RANGE_SEC))
             }
-            CreateExerciseAction.OnUseMatchClick -> state.value.match?.let { eventChannel.trySend(CreateExerciseEvent.Done(it.id)) }
+            CreateExerciseAction.OnUseMatchClick -> state.value.match?.takeUnless { isEditing }?.let { eventChannel.trySend(CreateExerciseEvent.Done(it.id)) }
             CreateExerciseAction.OnCreateClick -> create()
             // Navigation: CreateExerciseScreenRoot handles it.
             CreateExerciseAction.OnCloseClick -> Unit
@@ -142,14 +175,13 @@ class CreateExerciseViewModel(
                 equipment = state.equipment,
                 restSec = state.restSec,
             )
-            runCatching { exerciseRepository.createExercise(exercise) }
-                .onSuccess { result ->
-                    val id = when (result) {
-                        is CreateExerciseResult.Created -> result.exerciseId
-                        // Created elsewhere meanwhile: use that one.
-                        is CreateExerciseResult.NameTaken -> result.existing.id
+            runCatching { if (isEditing) save(exercise) else exerciseRepository.createExercise(exercise).id }
+                .onSuccess { id ->
+                    if (id != null) {
+                        eventChannel.send(CreateExerciseEvent.Done(id))
+                    } else {
+                        isSaving.value = false // the name was taken meanwhile; the match says so
                     }
-                    eventChannel.send(CreateExerciseEvent.Done(id))
                 }
                 .onFailure { e ->
                     Log.e(TAG, "Creating exercise ${state.name} failed", e)
@@ -158,6 +190,29 @@ class CreateExerciseViewModel(
                 }
         }
     }
+
+    /** Null: another exercise has its name now. */
+    private suspend fun save(exercise: NewExercise): Long? = when (editor.editExercise(exerciseId, exercise)) {
+        EditExerciseResult.Saved -> exerciseId
+        is EditExerciseResult.NameTaken -> null
+    }
+
+    private val CreateExerciseResult.id: Long
+        get() = when (this) {
+            is CreateExerciseResult.Created -> this.exerciseId
+            // Created elsewhere meanwhile: use that one.
+            is CreateExerciseResult.NameTaken -> existing.id
+        }
+
+    /** An exercise being edited, as the form; every field counts as picked. */
+    private fun formOf(exercise: Exercise) = Form(
+        name = exercise.name,
+        kind = ExerciseKindOption.entries.firstOrNull { it.type == exercise.type && it.isTimed == exercise.isTimed } ?: ExerciseKindOption.WeightReps,
+        muscleGroup = exercise.muscleGroup.takeUnless { exercise.type == ExerciseType.CARDIO },
+        equipment = exercise.equipment,
+        restSec = exercise.defaultRestSec,
+        picked = Field.entries.map { it.name }.toSet(),
+    )
 
     /** The suggestion, into each field the user hasn't picked. */
     private fun apply(suggestion: ExerciseSuggestion) {

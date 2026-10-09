@@ -119,6 +119,8 @@
     <string name="change_start_time">Change start time</string>
     <string name="finish">Finish</string>
     <string name="exercise_options">Exercise options</string>
+    <!-- The picker's long press, for screen readers -->
+    <string name="open_exercise">Open exercise</string>
     <string name="remove_exercise">Remove exercise</string>
     <!-- Set table column headers (uppercased in code) -->
     <string name="column_set">Set</string>
@@ -667,8 +669,27 @@
     <string name="quick_log_no_exercise">Which exercise? Start with its name, like “bench 3x8 at 60”.</string>
     <string name="quick_log_nothing">No sets found in that. Try “3x8 at 60” or “60 for 8”.</string>
     <string name="quick_log_no_last_time">That exercise hasn\'t been done before, so there\'s no last time.</string>
+    <!-- Exercise detail: edit, delete or merge a custom exercise (#146) -->
+    <string name="delete_exercise">Delete exercise</string>
+    <!-- %1$s = the exercise's name -->
+    <string name="delete_exercise_title">Delete %1$s?</string>
+    <string name="delete_exercise_message">It isn\'t in any workout, so your history stays the same.</string>
+    <plurals name="delete_exercise_in_templates">
+        <item quantity="one">It isn\'t in any workout, so your history stays the same. It\'s also taken out of %1$d template.</item>
+        <item quantity="other">It isn\'t in any workout, so your history stays the same. It\'s also taken out of %1$d templates.</item>
+    </plurals>
+    <!-- %1$s = the exercise's name -->
+    <string name="merge_exercise_title">Merge %1$s into…</string>
+    <!-- %1$s = the exercise's name, %2$d = workouts it's in -->
+    <plurals name="merge_exercise_message">
+        <item quantity="one">%1$s is in %2$d workout, so it can\'t just be deleted. Pick the exercise it should have been: its sets move there, and %1$s is deleted.</item>
+        <item quantity="other">%1$s is in %2$d workouts, so it can\'t just be deleted. Pick the exercise it should have been: its sets move there, and %1$s is deleted.</item>
+    </plurals>
+    <string name="merge_exercise_none">No other exercise is logged the same way.</string>
+    <string name="merge">Merge</string>
     <!-- Create exercise -->
     <string name="new_exercise">New exercise</string>
+    <string name="edit_exercise">Edit exercise</string>
     <string name="exercise_name">Name</string>
     <string name="exercise_name_placeholder">e.g. Flat Dumbbell Press</string>
     <string name="already_in_library">Already in your library?</string>
