@@ -87,6 +87,10 @@ class BodyViewModelTest {
         vm.onAction(BodyAction.OnAddManually)
         vm.onAction(BodyAction.OnSave("81.2", "92", "", "", ""))
         assertTrue(vm.state.value.editor!!.isInvalid)
+        assertEquals(setOf(BodyField.BodyFat), vm.state.value.editor!!.invalidFields) // marked under its field (#142)
+        vm.onAction(BodyAction.OnSave("", "", "", "", ""))
+        assertEquals(true, vm.state.value.editor!!.isEmpty)
+        assertEquals(emptySet<BodyField>(), vm.state.value.editor!!.invalidFields)
         assertTrue(body.saved.isEmpty())
 
         vm.onAction(BodyAction.OnDismissEditor)
