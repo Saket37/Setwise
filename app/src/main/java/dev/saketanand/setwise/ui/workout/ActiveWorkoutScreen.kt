@@ -74,6 +74,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseEmptyState
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTimePickerDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
+import dev.saketanand.setwise.ui.designsystem.preview.PREVIEW_NOW_MILLIS
 import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
 import dev.saketanand.setwise.ui.navigation.Route
@@ -486,7 +487,7 @@ private fun ActiveWorkoutFinishDialogPreview() = SetwiseScreenPreview {
 internal val SampleActiveWorkoutState = ActiveWorkoutUiState(
     isLoading = false,
     name = "Push Day",
-    startedAtMillis = System.currentTimeMillis() - 38 * 60_000,
+    startedAtMillis = PREVIEW_NOW_MILLIS - 38 * 60_000,
     startTime = LocalTime.of(18, 42),
     expandedExerciseId = 1,
     exercises = listOf(

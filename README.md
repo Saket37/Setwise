@@ -87,8 +87,8 @@ cd Setwise
 These are the checks CI runs on every pull request:
 
 ```bash
-# Build, unit tests (JVM and Robolectric), coverage, lint, detekt, Compose stability
-./gradlew assembleDebug testDebugUnitTest koverVerifyDebug lintDebug \
+# Build, unit tests (JVM and Robolectric), screenshots, coverage, lint, detekt, Compose stability
+./gradlew assembleDebug verifyRoborazziDebug koverVerifyDebug lintDebug \
   detektDebug detektDebugUnitTest detektDebugAndroidTest debugComposeCompilerCheck
 
 # Instrumented tests (Room, migrations, accessibility) on a device or emulator.
@@ -97,6 +97,14 @@ ANDROID_SERIAL=emulator-5554 ./gradlew connectedDebugAndroidTest
 ```
 
 CI also runs the instrumented tests on an API 34 emulator, plus CodeQL and a dependency vulnerability scan.
+
+### Screenshot tests
+
+Every `@Preview` is a screenshot test ([Roborazzi](https://github.com/takahirom/roborazzi) on Robolectric): screens in light and dark at the design size (390×844 dp) and at 130% font, components in light and dark. They render through the app's real theme, on a fixed preview clock (`PREVIEW_NOW_MILLIS`), and are compared with the goldens in `app/src/test/screenshots`.
+
+- **A screen looks different:** `verifyRoborazziDebug` fails. On CI, the run's summary lists the changed screens, and the **screenshot-diffs** artifact has the old and new images side by side.
+- **The change is intended:** run the **Record screenshots** workflow (Actions tab) on your branch, download its **screenshots** artifact into `app/src/test/screenshots`, and commit. Record on CI rather than locally (`./gradlew recordRoborazziDebug`): CI's Linux renders text slightly differently from macOS.
+- **A new screen or state:** add a `@PreviewScreens` preview with a sample state; it gets screenshots automatically.
 
 ### Development notes
 

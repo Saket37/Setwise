@@ -1,6 +1,5 @@
 package dev.saketanand.setwise.ui.workout
 
-import android.os.SystemClock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +38,7 @@ import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
+import dev.saketanand.setwise.ui.designsystem.preview.PREVIEW_BOOT_MILLIS
 import dev.saketanand.setwise.ui.designsystem.preview.PreviewComponents
 import dev.saketanand.setwise.ui.designsystem.preview.SetwisePreview
 import dev.saketanand.setwise.util.toClockLabel
@@ -171,7 +171,7 @@ private fun rememberRemainingMillis(endsAtElapsed: Long): LongState {
 private fun RestTimerBarPreview() = SetwisePreview(padding = 0.dp) {
     RestTimerBar(
         rest = RestUi(
-            endsAtElapsed = SystemClock.elapsedRealtime() + 56_000,
+            endsAtElapsed = PREVIEW_BOOT_MILLIS + 56_000,
             totalMillis = 90_000,
             nextSetNumber = 3,
             nextExerciseName = null,
