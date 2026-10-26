@@ -58,10 +58,10 @@ class HistoryViewModel(
         dateProvider.today(),
         workoutRepository.observeHistory(),
         dayMarkRepository.observeMarks(),
-        userSettingsRepository.settings.map { it.trainingDays },
+        userSettingsRepository.settings.map { it.trainingPlan },
         selectedEpochDay.map { day -> day?.let(LocalDate::ofEpochDay) },
-    ) { today, history, marks, trainingDays, selected ->
-        historyUi(history, today, dateProvider.zone, selected, marks, trainingDays)
+    ) { today, history, marks, plan, selected ->
+        historyUi(history, today, dateProvider.zone, selected, marks, plan)
     }
         .combine(ask) { ui, ask -> ui.copy(ask = ask) }
         .catch { e ->

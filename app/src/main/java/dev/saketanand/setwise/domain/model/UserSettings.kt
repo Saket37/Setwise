@@ -36,6 +36,8 @@ data class UserSettings(
     /** An ongoing notification while a workout runs (time, sets done; the rest countdown). */
     val workoutNotification: Boolean = true,
 ) {
+    val trainingPlan: TrainingPlan get() = TrainingPlan(trainingDays, noFixedTrainingDays)
+
     /** Age this year (from the birth year). */
     fun ageOn(today: LocalDate): Int? = birthYear?.let { today.year - it }
 

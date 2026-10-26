@@ -2,6 +2,7 @@ package dev.saketanand.setwise.ui.history
 
 import dev.saketanand.setwise.domain.model.DayState
 import dev.saketanand.setwise.domain.model.DayStatus
+import dev.saketanand.setwise.domain.model.TrainingPlan
 import dev.saketanand.setwise.domain.model.WorkoutHistoryItem
 import java.time.DayOfWeek
 import java.time.Instant
@@ -89,7 +90,7 @@ class HistoryUiMappersTest {
             today = today,
             zone = zone,
             marks = mapOf(LocalDate.of(2026, 10, 1) to DayStatus.Missed),
-            trainingDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+            plan = TrainingPlan(setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)),
         )
         val state = ui.days.associate { it.date to it.state }
 
