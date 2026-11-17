@@ -6,6 +6,7 @@ import dev.saketanand.setwise.domain.model.CalorieFormula
 import dev.saketanand.setwise.domain.model.ExerciseType
 import dev.saketanand.setwise.domain.model.WorkoutFacts
 import dev.saketanand.setwise.domain.model.WorkoutSession
+import dev.saketanand.setwise.domain.model.liftingHours
 import java.time.Duration
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -163,21 +164,21 @@ class CalorieEstimator(private val model: OnDeviceModel) {
         private const val MAX_SETS_PER_EXERCISE = 10
 
         /**
-         * "Completed sets: 18 (18 per hour)": lifting sets per hour of lifting time (the workout
-         * minus its cardio), the density the formula's intensity comes from. Null without sets.
+         * "Completed sets: 18 (18 per hour)": lifting sets per hour of lifting time
+         * ([liftingHours]), the density the formula's intensity comes from. When
+         * the clock was too short for the sets, says the lifting time is estimated. Null without sets.
          */
         private fun strengthDensity(session: WorkoutSession, minutes: Long): String? {
             val sets = session.exercises
                 .filter { it.exercise.type != ExerciseType.CARDIO }
                 .sumOf { exercise -> exercise.sets.count { it.isCompleted } }
             if (sets == 0) return null
-            val cardioMinutes = session.exercises
-                .filter { it.exercise.type == ExerciseType.CARDIO }
-                .flatMap { exercise -> exercise.sets.filter { it.isCompleted }.mapNotNull { it.cardio?.durationSec } }
-                .sum() / 60.0
-            val liftingHours = (minutes - cardioMinutes) / 60.0
+            val liftingHours = session.liftingHours()
             if (liftingHours <= 0) return "Completed sets: $sets"
-            return "Completed sets: $sets (${(sets / liftingHours).roundToInt()} per hour)"
+            val density = "Completed sets: $sets (${(sets / liftingHours).roundToInt()} per hour)"
+            val liftingMinutes = (liftingHours * 60).roundToInt()
+            // Logged afterwards: the formula used the sets' typical time, so the model should too.
+            return if (liftingMinutes > minutes) "$density\nLifting time: about $liftingMinutes min (sets logged afterwards)" else density
         }
 
         /** "Rest between sets: median 1:30 (8 rests)" from when sets were ticked off. */

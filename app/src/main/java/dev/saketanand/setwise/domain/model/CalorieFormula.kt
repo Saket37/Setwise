@@ -1,6 +1,5 @@
 package dev.saketanand.setwise.domain.model
 
-import java.time.Duration
 import kotlin.math.roundToInt
 
 /** How hard a workout was; stored with its calories ("light", "moderate", "vigorous"). */
@@ -37,27 +36,20 @@ object CalorieFormula {
     private const val HOURS_PER_DAY = 24.0
 
     /**
-     * Null without a body weight, or for a workout with no time.
+     * Null without a body weight, for an unfinished workout, or one with nothing done.
      * @param bmrKcal resting burn per day, when known: personalises every MET-hour.
      */
     fun estimate(session: WorkoutSession, bodyWeightKg: Double?, bmrKcal: Int? = null): CalorieEstimate? {
         val weight = bodyWeightKg?.takeIf { it > 0 } ?: return null
+        if (session.endedAt == null) return null
         val kcalPerMetHour = kcalPerMetHour(weight, bmrKcal)
-        val end = session.endedAt ?: return null
-        val totalHours = Duration.between(session.startedAt, end).seconds / 3600.0
-        if (totalHours <= 0) return null
 
-        val cardio = session.exercises.filter { it.exercise.type == ExerciseType.CARDIO }
-        val cardioEntries = cardio.flatMap { exercise ->
-            exercise.sets.filter { it.isCompleted }.mapNotNull { set -> set.cardio?.let { exercise.exercise to it } }
-        }
+        val cardioEntries = session.cardioEntries()
         val cardioHours = cardioEntries.sumOf { (_, values) -> (values.durationSec ?: 0) / 3600.0 }
         val cardioKcal = cardioEntries.sumOf { (exercise, values) -> cardioKcal(exercise, values, kcalPerMetHour) }
 
-        val strengthSets = session.exercises
-            .filter { it.exercise.type != ExerciseType.CARDIO }
-            .sumOf { exercise -> exercise.sets.count { it.isCompleted } }
-        val strengthHours = (totalHours - cardioHours).coerceAtLeast(0.0)
+        val strengthSets = session.liftingSets().sumOf { (_, sets) -> sets }
+        val strengthHours = session.liftingHours()
         val strengthIntensity = strengthIntensity(strengthSets, strengthHours)
         val strengthKcal = if (strengthSets > 0) strengthIntensity.met() * kcalPerMetHour * strengthHours else 0.0
 
