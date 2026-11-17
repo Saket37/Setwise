@@ -12,6 +12,7 @@ import java.time.YearMonth
 import java.time.ZoneId
 import kotlin.time.Duration.Companion.minutes
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -124,6 +125,18 @@ class HistoryUiMappersTest {
         assertEquals(MonthSummaryUi(workouts = 2, restDays = 1, missedDays = 0), monthSummary(YearMonth.of(2026, 9), ui))
         assertEquals(YearMonth.of(2026, 9), ui.firstMonth) // 28 days back from 3 Oct
         assertEquals(YearMonth.of(2026, 10), ui.lastMonth)
+    }
+
+    @Test
+    fun `the strip's label names the months of the days in view`() {
+        val midOctober = (8..15).map { LocalDate.of(2026, 10, it) }
+        val acrossMonths = listOf(LocalDate.of(2026, 10, 2), LocalDate.of(2026, 9, 27), LocalDate.of(2026, 9, 30))
+        val acrossYears = listOf(LocalDate.of(2026, 1, 2), LocalDate.of(2025, 12, 29))
+
+        assertEquals(YearMonth.of(2026, 10)..YearMonth.of(2026, 10), visibleMonths(midOctober))
+        assertEquals(YearMonth.of(2026, 9)..YearMonth.of(2026, 10), visibleMonths(acrossMonths))
+        assertEquals(YearMonth.of(2025, 12)..YearMonth.of(2026, 1), visibleMonths(acrossYears))
+        assertNull(visibleMonths(emptyList()))
     }
 
     private fun workout(id: Long, y: Int, m: Int, d: Int, hour: Int = 18, minute: Int = 0): WorkoutHistoryItem {

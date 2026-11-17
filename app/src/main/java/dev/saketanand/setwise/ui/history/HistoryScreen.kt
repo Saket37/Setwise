@@ -28,7 +28,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -37,7 +39,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -76,6 +80,7 @@ import dev.saketanand.setwise.util.toShortDayLabel
 import dev.saketanand.setwise.util.toShortDurationLabel
 import java.text.NumberFormat
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
@@ -253,22 +258,33 @@ fun HistoryScreen(
 @Composable
 private fun WorkoutList(uiState: HistoryUiState, onAction: (HistoryAction) -> Unit) {
     val listState = rememberLazyListState()
+    // The pinned month header's height plus the gap below it: a jump lands just under it.
+    var headerSpace by remember { mutableIntStateOf(0) }
+    val gap = with(LocalDensity.current) { ListGap.roundToPx() }
     // A day tapped in the strip → its workouts (or the nearest earlier ones) at the top.
     LaunchedEffect(uiState.selectedDate) {
         val date = uiState.selectedDate ?: return@LaunchedEffect
         val index = listIndexOf(date, uiState.months) ?: return@LaunchedEffect // empty day: card instead
-        // One item back: keep the month header (or the row above) in view for context.
-        listState.animateScrollToItem((index - 1).coerceAtLeast(0))
+        listState.animateScrollToItem(index, scrollOffset = -headerSpace)
     }
     LazyColumn(
         state = listState,
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(ListGap),
     ) {
         uiState.months.forEach { month ->
-            item(key = "month-${month.month}", contentType = "month") {
+            // Pinned while its workouts scroll under it (#195); the next month pushes it off.
+            stickyHeader(key = "month-${month.month}", contentType = "month") {
                 val label = month.month.format(DateTimeFormatter.ofPattern("LLLL yyyy", currentLocale()))
-                SectionLabel(label, Modifier.padding(top = 8.dp, bottom = 2.dp))
+                SectionLabel(
+                    text = label,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(top = 8.dp, bottom = 2.dp)
+                        .onSizeChanged { size -> headerSpace = size.height + gap }
+                        .semantics { heading() },
+                )
             }
             items(month.workouts, key = { "workout-${it.id}" }, contentType = { "workout" }) { workout ->
                 HistoryWorkoutRow(
@@ -283,8 +299,9 @@ private fun WorkoutList(uiState: HistoryUiState, onAction: (HistoryAction) -> Un
 
 /**
  * Day chips from today (right edge) back to the first workout; scroll left for the past.
- * Today is tinted, the selected day outlined, trained days dotted. The 1st of a month shows the
- * month ("OCT") instead of the weekday, for orientation while scrolling.
+ * Today is tinted, the selected day outlined, trained days dotted. Above it, the month of the
+ * days in view ("October 2026", "September – October 2026"); the 1st of a month also shows the
+ * month ("OCT") instead of the weekday, where it changes.
  */
 @Composable
 private fun DayStrip(days: ImmutableList<DayUi>, selectedDate: LocalDate?, onDayClick: (LocalDate) -> Unit) {
@@ -295,17 +312,51 @@ private fun DayStrip(days: ImmutableList<DayUi>, selectedDate: LocalDate?, onDay
         val visible = stripState.layoutInfo.visibleItemsInfo.map { it.index }
         if (index !in visible.drop(1).dropLast(1)) stripState.animateScrollToItem((index - 3).coerceAtLeast(0))
     }
-    LazyRow(
-        state = stripState,
-        // Newest first + reverse layout: opens at today, on the right.
-        reverseLayout = true,
-        contentPadding = PaddingValues(horizontal = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        items(days, key = { it.date.toEpochDay() }, contentType = { "day" }) { day ->
-            DayChip(day = day, onClick = { onDayClick(day.date) })
+    // Chips at least half in view; before the first layout, today's month.
+    val months by remember(days) {
+        derivedStateOf {
+            val info = stripState.layoutInfo
+            val inView = info.visibleItemsInfo
+                .filter { it.offset + it.size / 2 in info.viewportStartOffset..info.viewportEndOffset }
+                .mapNotNull { days.getOrNull(it.index)?.date }
+            visibleMonths(inView.ifEmpty { listOfNotNull(days.firstOrNull()?.date) })
         }
     }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        months?.let { StripMonthLabel(it, Modifier.padding(horizontal = 20.dp)) }
+        LazyRow(
+            state = stripState,
+            // Newest first + reverse layout: opens at today, on the right.
+            reverseLayout = true,
+            contentPadding = PaddingValues(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            items(days, key = { it.date.toEpochDay() }, contentType = { "day" }) { day ->
+                DayChip(day = day, onClick = { onDayClick(day.date) })
+            }
+        }
+    }
+}
+
+/** "October 2026", "September – October 2026", or "December 2025 – January 2026". */
+@Composable
+private fun StripMonthLabel(months: ClosedRange<YearMonth>, modifier: Modifier = Modifier) {
+    val locale = currentLocale()
+    val monthYear = DateTimeFormatter.ofPattern("LLLL yyyy", locale)
+    val text = when {
+        months.start == months.endInclusive -> months.start.format(monthYear)
+        months.start.year == months.endInclusive.year ->
+            stringResource(R.string.month_range, months.start.format(DateTimeFormatter.ofPattern("LLLL", locale)), months.endInclusive.format(monthYear))
+        else -> stringResource(R.string.month_range, months.start.format(monthYear), months.endInclusive.format(monthYear))
+    }
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -438,6 +489,7 @@ private fun EmptyDayCard(date: LocalDate, state: DayState, canCheckIn: Boolean, 
 
 /** 7 chips fill a phone's width (like the design's week); more scroll in. */
 private val DayChipWidth = 46.dp
+private val ListGap = 8.dp
 
 /** "FRI | 2  Push Day [2 PRs] · 1h 9m · 8,420 kg". */
 @Composable
