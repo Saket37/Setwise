@@ -12,6 +12,7 @@ import java.time.YearMonth
 import java.time.ZoneId
 import kotlin.time.Duration.Companion.minutes
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -100,6 +101,45 @@ class HistoryUiMappersTest {
         assertEquals(DayState.Trained, state[LocalDate.of(2026, 9, 30)])
         assertEquals(DayState.Rest, state[LocalDate.of(2026, 9, 29)]) // not a training day
         assertEquals(DayState.None, state[LocalDate.of(2026, 9, 27)]) // before the first workout
+    }
+
+    @Test
+    fun `an unanswered day offers the unanswered days around it, up to a workout or an answer`() {
+        // Sat 3 Oct; no plan; workouts Thu 10 and Wed 30 Sep; Sun 20 Sep said missed.
+        val history = listOf(workout(1, 2026, 9, 30), workout(2, 2026, 9, 10))
+        val marks = mapOf(
+            LocalDate.of(2026, 9, 20) to DayStatus.Missed,
+            LocalDate.of(2026, 9, 22) to DayStatus.Rest,
+            LocalDate.of(2026, 9, 24) to DayStatus.Rest,
+        )
+        fun run(selected: LocalDate) = historyUi(history, today, zone, selected, marks).unloggedRun
+
+        val september = run(LocalDate.of(2026, 9, 15))!!
+        assertEquals((11..19).map { LocalDate.of(2026, 9, it) }, september.days)
+        assertEquals(LocalDate.of(2026, 9, 11), september.from)
+        assertEquals(LocalDate.of(2026, 9, 19), september.to)
+        // Up to yesterday: today isn't part of it.
+        assertEquals(listOf(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 2)), run(LocalDate.of(2026, 10, 2))!!.days)
+        // On its own between two answers: its own Rest / Missed are enough.
+        assertNull(run(LocalDate.of(2026, 9, 23)))
+        // A workout day, or an answered one: nothing to mark.
+        assertNull(run(LocalDate.of(2026, 9, 30)))
+        assertNull(run(LocalDate.of(2026, 9, 20)))
+        assertNull(historyUi(history, today, zone, selectedDate = null, marks = marks).unloggedRun)
+    }
+
+    @Test
+    fun `with training days a run passes rest days but only holds the planned ones`() {
+        // Trains Mon / Wed / Fri; workouts Mon 7 and Wed 30 Sep; nothing said in between.
+        val ui = historyUi(
+            history = listOf(workout(1, 2026, 9, 30), workout(2, 2026, 9, 7)),
+            today = today,
+            zone = zone,
+            selectedDate = LocalDate.of(2026, 9, 18),
+            plan = TrainingPlan(setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)),
+        )
+
+        assertEquals(listOf(9, 11, 14, 16, 18, 21, 23, 25, 28).map { LocalDate.of(2026, 9, it) }, ui.unloggedRun!!.days)
     }
 
     @Test

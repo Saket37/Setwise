@@ -104,7 +104,8 @@ class HistoryViewModel(
             }
             is HistoryAction.OnCalendarDayClick -> savedStateHandle[KEY_SELECTED_DAY] = action.date.toEpochDay()
             is HistoryAction.OnLogWorkoutClick -> logWorkout(action.date)
-            is HistoryAction.OnMarkDay -> markDay(action.date, action.status)
+            is HistoryAction.OnMarkDay -> markDays(listOf(action.date), action.status)
+            is HistoryAction.OnMarkDays -> markDays(action.dates, action.status)
             // Navigation: HistoryScreenRoot handles it.
             is HistoryAction.OnWorkoutClick -> Unit
         }
@@ -130,11 +131,12 @@ class HistoryViewModel(
         }
     }
 
-    private fun markDay(day: LocalDate, status: DayStatus?) {
+    private fun markDays(days: List<LocalDate>, status: DayStatus?) {
+        if (days.isEmpty()) return
         viewModelScope.launch {
-            runCatching { dayMarkRepository.mark(listOf(day), status, dateProvider.now()) }
+            runCatching { dayMarkRepository.mark(days, status, dateProvider.now()) }
                 .onFailure { e ->
-                    Log.e(TAG, "Marking $day as $status failed", e)
+                    Log.e(TAG, "Marking ${days.size} day(s) from ${days.first()} as $status failed", e)
                     eventChannel.send(HistoryEvent.SaveFailed)
                 }
         }

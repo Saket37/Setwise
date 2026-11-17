@@ -27,24 +27,42 @@ fun historyUi(
     val trainedDays = workouts.mapTo(HashSet()) { it.date }
     val firstWorkoutDate = workouts.minOfOrNull { it.date }
     val firstDay = minOf(firstWorkoutDate ?: today, today.minusDays(MIN_STRIP_DAYS - 1L))
+    val days = generateSequence(today) { it.minusDays(1) }
+        .takeWhile { !it.isBefore(firstDay) }
+        .map { day ->
+            DayUi(
+                date = day,
+                isToday = day == today,
+                state = DayCheckIn.stateOf(day, today, trainedDays, marks, plan, firstWorkoutDate),
+                isSelected = day == selectedDate,
+            )
+        }
+        .toImmutableList()
     return HistoryUiState(
         isLoading = false,
-        days = generateSequence(today) { it.minusDays(1) }
-            .takeWhile { !it.isBefore(firstDay) }
-            .map { day ->
-                DayUi(
-                    date = day,
-                    isToday = day == today,
-                    state = DayCheckIn.stateOf(day, today, trainedDays, marks, plan, firstWorkoutDate),
-                    isSelected = day == selectedDate,
-                )
-            }
-            .toImmutableList(),
+        days = days,
         // The list is newest first, so grouping keeps months (and workouts in them) newest first.
         months = workouts.groupBy { YearMonth.from(it.date) }.map { (month, inMonth) -> HistoryMonthUi(month, inMonth) },
         selectedDate = selectedDate,
         today = today,
+        unloggedRun = unloggedRunAround(selectedDate, days, marks),
     )
+}
+
+/**
+ * The unanswered days around [selected] (#194): out from it both ways through days nobody logged
+ * or answered, planned rest days included, up to a workout, an answered day or the strip's ends.
+ * Only the unanswered ones are in it. Null unless [selected] is unanswered and has company.
+ * @param days newest first, as the strip has them.
+ */
+fun unloggedRunAround(selected: LocalDate?, days: List<DayUi>, marks: Map<LocalDate, DayStatus>): UnloggedRunUi? {
+    val index = days.indexOfFirst { it.date == selected }
+    if (index < 0 || days[index].state != DayState.Unanswered) return null
+    fun open(day: DayUi) = day.state == DayState.Unanswered || (day.state == DayState.Rest && day.date !in marks)
+    val newer = days.subList(0, index).asReversed().takeWhile(::open)
+    val older = days.subList(index + 1, days.size).takeWhile(::open)
+    val run = (older.asReversed() + days[index] + newer).filter { it.state == DayState.Unanswered }.map { it.date }
+    return run.takeIf { it.size > 1 }?.let { UnloggedRunUi(it.toImmutableList()) }
 }
 
 /** Workouts in [month], and its days marked (or counted as) rest or missed. */

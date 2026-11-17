@@ -220,6 +220,7 @@ fun HistoryScreen(
                     date = selected,
                     state = uiState.selectedDayState,
                     canCheckIn = uiState.canCheckInSelectedDay,
+                    unloggedRun = uiState.unloggedRun,
                     onAction = onAction,
                 )
             }
@@ -354,11 +355,15 @@ internal fun dayDescription(date: LocalDate, state: DayState): String {
         DayState.Trained -> stringResource(R.string.a11y_week_day_trained, dayName)
         DayState.Rest -> stringResource(R.string.a11y_day_rest, dayName)
         DayState.Missed -> stringResource(R.string.a11y_day_missed, dayName)
-        DayState.Unanswered, DayState.None -> dayName
+        DayState.Unanswered -> stringResource(R.string.a11y_day_not_logged, dayName)
+        DayState.None -> dayName
     }
 }
 
-/** Under the date: • trained, ✕ missed, moon = rest; nothing otherwise (same height either way). */
+/**
+ * Under the date: • trained, ✕ missed, moon = rest, ○ a past day nobody logged or answered
+ * (#194); nothing otherwise (same height either way).
+ */
 @Composable
 internal fun DayMark(state: DayState) {
     // Every mark in the same 10dp box, so the dates above line up whatever the mark.
@@ -369,17 +374,29 @@ internal fun DayMark(state: DayState) {
                 Icon(painterResource(R.drawable.ic_close), null, Modifier.fillMaxSize(), tint = MaterialTheme.colorScheme.error)
             DayState.Rest ->
                 Icon(painterResource(R.drawable.ic_moon), null, Modifier.fillMaxSize(), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            DayState.Unanswered, DayState.None -> Unit
+            DayState.Unanswered -> Box(
+                Modifier
+                    .size(6.dp)
+                    .border(1.5.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape),
+            )
+            DayState.None -> Unit
         }
     }
 }
 
 /**
  * "Wed, 23 Sep · No workout logged  ✕": the selected day has nothing to jump to. A past day also
- * gets "+ Log workout [Rest] [Missed]" (tapping the selected one clears it).
+ * gets "+ Log workout [Rest] [Missed]" (tapping the selected one clears it), and, inside a run
+ * of unanswered days, a way to mark them all.
  */
 @Composable
-private fun EmptyDayCard(date: LocalDate, state: DayState, canCheckIn: Boolean, onAction: (HistoryAction) -> Unit) {
+private fun EmptyDayCard(
+    date: LocalDate,
+    state: DayState,
+    canCheckIn: Boolean,
+    unloggedRun: UnloggedRunUi?,
+    onAction: (HistoryAction) -> Unit,
+) {
     Column(
         modifier = Modifier
             .padding(horizontal = 20.dp)
@@ -432,6 +449,13 @@ private fun EmptyDayCard(date: LocalDate, state: DayState, canCheckIn: Boolean, 
                 onMissedClick = { onAction(HistoryAction.OnMarkDay(date, if (isMissed) null else DayStatus.Missed)) },
                 modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
             )
+            unloggedRun?.let { run ->
+                UnloggedRunActions(
+                    run = run,
+                    onMark = { status -> onAction(HistoryAction.OnMarkDays(run.days, status)) },
+                    modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
+                )
+            }
         }
     }
 }

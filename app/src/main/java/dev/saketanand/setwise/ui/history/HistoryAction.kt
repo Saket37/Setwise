@@ -20,6 +20,9 @@ sealed interface HistoryAction {
     /** "Rest" / "Missed" on an empty past day; null clears the mark. */
     data class OnMarkDay(val date: LocalDate, val status: DayStatus?) : HistoryAction
 
+    /** "Mark all as rest / missed" for a run of unanswered days (#194). */
+    data class OnMarkDays(val dates: List<LocalDate>, val status: DayStatus) : HistoryAction
+
     /** Send on the ask bar (or a suggested question). */
     data class OnAsk(val question: String) : HistoryAction
 
