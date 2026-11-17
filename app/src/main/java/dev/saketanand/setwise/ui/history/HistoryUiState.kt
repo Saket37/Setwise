@@ -22,6 +22,8 @@ data class HistoryUiState(
     val today: LocalDate? = null,
     /** "Ask about your training": the question asked and its reply. */
     val ask: AskUi = AskUi(),
+    /** The unanswered days the selected one is part of, to mark all at once; null for one day. */
+    val unloggedRun: UnloggedRunUi? = null,
 ) {
     val isEmpty: Boolean get() = !isLoading && months.isEmpty()
 
@@ -48,7 +50,17 @@ data class HistoryUiState(
 @Immutable
 data class MonthSummaryUi(val workouts: Int, val restDays: Int, val missedDays: Int)
 
-/** One chip of the day strip: "S 3" and its mark: • trained, ✕ missed, moon = rest, blank = unanswered. */
+/**
+ * A stretch of past days nobody logged or answered (#194), oldest first: "42 days not logged,
+ * 6 Oct – 16 Nov · Mark all as rest / missed". Never empty.
+ */
+@Immutable
+data class UnloggedRunUi(val days: ImmutableList<LocalDate>) {
+    val from: LocalDate get() = days.first()
+    val to: LocalDate get() = days.last()
+}
+
+/** One chip of the day strip: "S 3" and its mark: • trained, ✕ missed, moon = rest, ○ not logged. */
 @Immutable
 data class DayUi(
     val date: LocalDate,

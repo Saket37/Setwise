@@ -141,6 +141,17 @@ class HistoryViewModelTest {
     }
 
     @Test
+    fun `mark all marks every day of the run at once`() = runTest(dispatcher) {
+        val marks = FakeDayMarkRepository()
+        val vm = viewModel(marks = marks)
+        val days = (6..8).map { LocalDate.of(2026, 9, it) }
+
+        vm.onAction(HistoryAction.OnMarkDays(days, DayStatus.Missed))
+
+        assertEquals(days.associateWith { DayStatus.Missed }, marks.marks.value)
+    }
+
+    @Test
     fun `log workout starts one at 6 PM on that day`() = runTest(dispatcher) {
         val recording = object : StubWorkoutRepository() {
             override suspend fun startWorkout(templateId: Long?, startedAt: Instant, discardRunningWorkoutId: Long?): Long {
