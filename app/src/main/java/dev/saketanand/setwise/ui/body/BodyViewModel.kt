@@ -154,7 +154,10 @@ class BodyViewModel(
         val visceral = decimal(action.visceral, BodyRules.VISCERAL)
         val bmr = if (action.bmr.isBlank()) Result.success(null) else action.bmr.trim().toIntOrNull()?.takeIf { it in BodyRules.BMR_KCAL }
             ?.let { Result.success(it) } ?: Result.failure(IllegalArgumentException("Not a believable BMR: ${action.bmr}"))
-        val measurement = if (listOf(weight, fat, muscle, visceral, bmr).any { it.isFailure }) {
+        val invalid = mapOf(
+            BodyField.Weight to weight, BodyField.BodyFat to fat, BodyField.Muscle to muscle, BodyField.Bmr to bmr, BodyField.Visceral to visceral,
+        ).filterValues { it.isFailure }.keys
+        val measurement = if (invalid.isNotEmpty()) {
             null
         } else {
             BodyMeasurement(
@@ -170,7 +173,7 @@ class BodyViewModel(
             ).takeUnless { it.isEmpty }
         }
         if (measurement == null) {
-            screen.update { it.copy(editor = editor.copy(isInvalid = true)) }
+            screen.update { it.copy(editor = editor.copy(invalidFields = invalid, isEmpty = invalid.isEmpty())) }
             return
         }
         screen.update { it.copy(editor = null) }

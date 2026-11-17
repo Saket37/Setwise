@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -67,6 +68,19 @@ class ExercisePickerViewModelTest {
         assertTrue(vm.state.value.recent.first { it.id == 1L }.isSelected)
 
         vm.onAction(ExercisePickerAction.OnExerciseToggle(3))
+        assertEquals(listOf(1L), vm.state.value.selectedIds)
+    }
+
+    @Test
+    fun `a selected exercise deleted from its detail isn't picked any more`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAction(ExercisePickerAction.OnExerciseToggle(3))
+        vm.onAction(ExercisePickerAction.OnExerciseToggle(1))
+        advanceUntilIdle()
+
+        repository.library.value = repository.library.value.filterNot { it.id == 3L }
+        advanceUntilIdle()
+
         assertEquals(listOf(1L), vm.state.value.selectedIds)
     }
 
@@ -171,7 +185,7 @@ class ExercisePickerViewModelTest {
     }
 
     private class FakeExerciseRepository : ExerciseRepository {
-        private val library = MutableStateFlow(
+        val library = MutableStateFlow(
             listOf(
                 exercise(1, "Bench Press", "Chest"),
                 exercise(2, "Plank", "Core"),

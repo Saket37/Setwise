@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import dev.saketanand.setwise.R
@@ -57,6 +59,7 @@ fun ExercisePickerScreenRoot(
     onCreateExercise: (initialName: String) -> Unit,
     onBack: () -> Unit,
     initialQuery: String = "",
+    onOpenExercise: (exerciseId: Long) -> Unit = {},
     viewModel: ExercisePickerViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -85,6 +88,10 @@ fun ExercisePickerScreenRoot(
     // "zercher" typed (or from the quick log) is created as "Zercher": names start with a capital.
     val createExercise = dropUnlessResumed { onCreateExercise(viewModel.state.value.query.trim().replaceFirstChar { it.titlecase() }) }
     val goBack = dropUnlessResumed(block = onBack)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val openExercise: (Long) -> Unit = { id ->
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) onOpenExercise(id)
+    }
 
     ExercisePickerScreen(
         uiState = uiState,
@@ -94,6 +101,7 @@ fun ExercisePickerScreenRoot(
                 ExercisePickerAction.OnAddClick -> addExercises()
                 ExercisePickerAction.OnCreateNewClick -> createExercise()
                 ExercisePickerAction.OnBackClick -> goBack()
+                is ExercisePickerAction.OnExerciseLongPress -> openExercise(action.exerciseId)
                 else -> viewModel.onAction(action)
             }
         },

@@ -65,9 +65,9 @@ class WeekFactsTest {
         assertEquals(
             listOf(
                 "Week: 4 workouts, 4 h 34 min trained, 3 personal records",
-                "Volume: 38200 kg, +8% on the week before",
+                "Volume: 38200 kg, up 8% on the week before",
                 "Best set: Back Squat 100 kg x 5 (a record)",
-                "Legs volume: +18% on the week before",
+                "Legs volume: up 18% on the week before",
                 "Stalled: Overhead Press, flat for 4 weeks (its plan: lighter weight, more reps)",
             ),
             WeeklyRecapWriter.factLines(facts).lines(),

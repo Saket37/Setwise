@@ -64,9 +64,16 @@ data class BodyEditor(
     val byModel: Boolean = false,
     /** What else the report said (segments, body water, ranges…): saved with the check, not edited here. */
     val details: ReportDetails = ReportDetails(),
-    /** The last Save had a value that isn't believable, or nothing at all. */
-    val isInvalid: Boolean = false,
-)
+    /** The fields whose value at the last Save isn't believable: marked under each (#142). */
+    val invalidFields: Set<BodyField> = emptySet(),
+    /** The last Save had nothing filled in. */
+    val isEmpty: Boolean = false,
+) {
+    val isInvalid: Boolean get() = invalidFields.isNotEmpty() || isEmpty
+}
+
+/** The values a body check sheet takes. */
+enum class BodyField { Weight, BodyFat, Muscle, Bmr, Visceral }
 
 /** What changed in the last 3 months (each null without two values), and the weight line. */
 @Immutable

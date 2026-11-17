@@ -221,16 +221,19 @@ fun SetwiseNavHost(
                 },
                 onCreateExercise = { name -> navController.navigate(Route.CreateExercise(name)) },
                 onBack = { navController.popBackStack() },
+                onOpenExercise = { exerciseId -> navController.navigate(Route.ExerciseDetail(exerciseId)) },
             )
         }
 
         composable<Route.CreateExercise> { entry ->
             val route = entry.toRoute<Route.CreateExercise>()
             CreateExerciseScreenRoot(
-                viewModel = koinViewModel { parametersOf(route.initialName) },
+                viewModel = koinViewModel { parametersOf(route.initialName, route.exerciseId) },
                 onExerciseCreated = { exerciseId ->
-                    // The picker selects it (and its list, a Room Flow, already shows a new one).
-                    navController.previousBackStackEntry?.savedStateHandle?.set(CREATED_EXERCISE_ID, exerciseId)
+                    // The picker selects it (and its list, a Room Flow, already shows a new one). Edited: just back.
+                    if (route.exerciseId == Route.NEW_EXERCISE_ID) {
+                        navController.previousBackStackEntry?.savedStateHandle?.set(CREATED_EXERCISE_ID, exerciseId)
+                    }
                     navController.popBackStack()
                 },
                 onBack = { navController.popBackStack() },
@@ -242,6 +245,7 @@ fun SetwiseNavHost(
             ExerciseDetailScreenRoot(
                 viewModel = koinViewModel { parametersOf(route.exerciseId) },
                 onBack = { navController.popBackStack() },
+                onEdit = { navController.navigate(Route.CreateExercise(exerciseId = route.exerciseId)) },
                 onOpenWorkout = { workoutId -> navController.navigate(Route.WorkoutSummary(workoutId)) },
             )
         }

@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /**
  * Screen: [ExercisePickerScreenRoot].
@@ -103,6 +104,18 @@ class ExercisePickerViewModel(
             ),
         )
 
+    init {
+        // A selected exercise deleted or merged from its detail (long press, #146) isn't picked any more.
+        viewModelScope.launch {
+            exerciseRepository.observeExercises("", null).collect { library ->
+                if (library.isEmpty()) return@collect // not seeded yet
+                val ids = library.mapTo(HashSet()) { it.id }
+                val kept = selectedIds.value.filter { it in ids }
+                if (kept.size != selectedIds.value.size) savedStateHandle[KEY_SELECTED_IDS] = kept.toLongArray()
+            }
+        }
+    }
+
     fun onAction(action: ExercisePickerAction) {
         when (action) {
             is ExercisePickerAction.OnQueryChange -> {
@@ -125,6 +138,7 @@ class ExercisePickerViewModel(
             ExercisePickerAction.OnAddClick,
             ExercisePickerAction.OnCreateNewClick,
             ExercisePickerAction.OnBackClick,
+            is ExercisePickerAction.OnExerciseLongPress,
             -> Unit
         }
     }

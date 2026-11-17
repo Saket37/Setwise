@@ -61,8 +61,11 @@ sealed interface Route {
      */
     @Serializable data class ExercisePicker(val query: String = "") : Route
 
-    /** Create a custom exercise (with LLM matching / classification). */
-    @Serializable data class CreateExercise(val initialName: String = "") : Route
+    /**
+     * Create a custom exercise (with LLM matching / classification), or edit one: [exerciseId]
+     * is NEW_EXERCISE_ID to create, a custom exercise's id to edit it (#146).
+     */
+    @Serializable data class CreateExercise(val initialName: String = "", val exerciseId: Long = NEW_EXERCISE_ID) : Route
 
     /** Exercise history, progression hint and plateau note. */
     @Serializable data class ExerciseDetail(val exerciseId: Long) : Route
@@ -77,6 +80,7 @@ sealed interface Route {
 
     companion object {
         const val NEW_TEMPLATE_ID = 0L
+        const val NEW_EXERCISE_ID = 0L
 
         /** No workout has this id (Room's start at 1): its screen finds nothing and closes. */
         const val NO_WORKOUT_ID = -1L

@@ -240,6 +240,7 @@ private fun Gear.labelRes() = when (this) {
     Gear.Cable -> R.string.gear_cables
     Gear.Machine -> R.string.gear_machines
     Gear.Bodyweight -> R.string.gear_bodyweight
+    Gear.Bars -> R.string.gear_bars
 }
 
 private fun GoalType.labelRes() = when (this) {

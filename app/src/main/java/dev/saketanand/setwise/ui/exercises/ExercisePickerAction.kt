@@ -21,4 +21,7 @@ sealed interface ExercisePickerAction {
     data object OnCreateNewClick : ExercisePickerAction
 
     data object OnBackClick : ExercisePickerAction
+
+    /** Long press on an exercise: its detail, where a custom one can be edited or deleted (#146). */
+    data class OnExerciseLongPress(val exerciseId: Long) : ExercisePickerAction
 }

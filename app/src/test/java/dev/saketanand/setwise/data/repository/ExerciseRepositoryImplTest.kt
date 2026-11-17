@@ -101,5 +101,13 @@ class ExerciseRepositoryImplTest {
         override suspend fun findByNameIgnoringCase(name: String): ExerciseEntity? = rows.find { it.name.equals(name, ignoreCase = true) }
         override suspend fun getByName(name: String): ExerciseEntity? = rows.find { it.name == name }
         override suspend fun insert(exercise: ExerciseEntity): Long = error("unused")
+        override suspend fun updateCustom(id: Long, name: String, muscleGroup: String, equipment: String, restSec: Int): Int = error("unused")
+        override suspend fun countWorkouts(id: Long): Int = error("unused")
+        override suspend fun countTemplates(id: Long): Int = error("unused")
+        override suspend fun removeFromTemplates(id: Long) = error("unused")
+        override suspend fun deleteCustom(id: Long): Int = error("unused")
+        override suspend fun moveWorkouts(from: Long, into: Long) = error("unused")
+        override suspend fun dropFromTemplatesWith(from: Long, into: Long) = error("unused")
+        override suspend fun moveTemplates(from: Long, into: Long) = error("unused")
     }
 }

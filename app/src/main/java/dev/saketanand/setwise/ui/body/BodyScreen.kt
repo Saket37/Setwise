@@ -23,17 +23,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDefaults
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -67,6 +62,7 @@ import dev.saketanand.setwise.ui.designsystem.components.NumberKind
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonSize
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseButtonStyle
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseDatePickerDialog
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButton
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseIconButtonDefaults
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseLineChart
@@ -80,8 +76,6 @@ import dev.saketanand.setwise.util.toWeightInput
 import dev.saketanand.setwise.util.toWeightLabel
 import java.io.File
 import java.text.NumberFormat
-import java.time.Instant
-import java.time.ZoneOffset
 import java.util.Locale
 import org.koin.androidx.compose.koinViewModel
 
@@ -429,11 +423,13 @@ private fun CheckSheet(editor: BodyEditor, onAction: (BodyAction) -> Unit) {
                 Text(editor.day.toShortDayLabel(locale), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                 SetwiseButton(text = stringResource(R.string.change), onClick = { pickingDay = true }, style = SetwiseButtonStyle.Text, size = SetwiseButtonSize.Medium)
             }
-            Field(stringResource(R.string.body_weight_field), weight, "kg", NumberKind.Decimal)
-            Field(stringResource(R.string.body_fat_field), fat, "%", NumberKind.Decimal)
-            Field(stringResource(R.string.body_muscle_field), muscle, "kg", NumberKind.Decimal)
-            Field(stringResource(R.string.body_bmr_field), bmr, "kcal", NumberKind.Integer)
-            Field(stringResource(R.string.body_visceral_field), visceral, null, NumberKind.Decimal)
+            // A value that isn't believable is marked under its own field (#142).
+            val invalid = editor.invalidFields
+            Field(stringResource(R.string.body_weight_field), weight, "kg", NumberKind.Decimal, BodyField.Weight in invalid)
+            Field(stringResource(R.string.body_fat_field), fat, "%", NumberKind.Decimal, BodyField.BodyFat in invalid)
+            Field(stringResource(R.string.body_muscle_field), muscle, "kg", NumberKind.Decimal, BodyField.Muscle in invalid)
+            Field(stringResource(R.string.body_bmr_field), bmr, "kcal", NumberKind.Integer, BodyField.Bmr in invalid)
+            Field(stringResource(R.string.body_visceral_field), visceral, null, NumberKind.Decimal, BodyField.Visceral in invalid)
             val profileParts = listOfNotNull(
                 editor.profileHeightCm?.let { stringResource(R.string.height_cm, it.toWeightLabel(locale)) },
                 editor.profileAge?.let { stringResource(R.string.body_profile_age, it) },
@@ -442,8 +438,13 @@ private fun CheckSheet(editor: BodyEditor, onAction: (BodyAction) -> Unit) {
             if (profileParts.isNotEmpty()) {
                 Text(stringResource(R.string.body_fills_profile, profileParts.joinToString(", ")), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (editor.isInvalid) {
-                Text(stringResource(R.string.body_invalid), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            if (editor.isEmpty) {
+                Text(
+                    text = stringResource(R.string.body_nothing_filled),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                )
             }
             SetwiseButton(
                 text = stringResource(R.string.save),
@@ -455,43 +456,38 @@ private fun CheckSheet(editor: BodyEditor, onAction: (BodyAction) -> Unit) {
         }
     }
     if (pickingDay) {
-        val latestMillis = editor.latestDay.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-        val picker = rememberDatePickerState(
-            initialSelectedDateMillis = editor.day.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
-            yearRange = DatePickerDefaults.YearRange.first..editor.latestDay.year,
-            selectableDates = remember(latestMillis) {
-                // Up to today: a reading can't be for a day that hasn't happened (#128).
-                object : SelectableDates {
-                    override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= latestMillis
-                    override fun isSelectableYear(year: Int) = year <= editor.latestDay.year
-                }
-            },
+        SetwiseDatePickerDialog(
+            initial = editor.day,
+            latest = editor.latestDay, // up to today: a reading can't be for a day that hasn't happened (#128)
+            onConfirm = { onAction(BodyAction.OnDayChange(it)) },
+            onDismiss = { pickingDay = false },
         )
-        DatePickerDialog(
-            onDismissRequest = { pickingDay = false },
-            confirmButton = {
-                SetwiseButton(text = stringResource(R.string.ok), onClick = {
-                    picker.selectedDateMillis?.let { onAction(BodyAction.OnDayChange(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate())) }
-                    pickingDay = false
-                }, style = SetwiseButtonStyle.Text, size = SetwiseButtonSize.Medium)
-            },
-        ) { DatePicker(state = picker) }
     }
 }
 
 @Composable
-private fun Field(label: String, state: androidx.compose.foundation.text.input.TextFieldState, unit: String?, kind: NumberKind) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-        SetwiseNumberField(
-            state = state,
-            contentDescription = label,
-            kind = kind,
-            imeAction = ImeAction.Next,
-            maxLength = 6,
-            minHeight = 44.dp,
-            modifier = Modifier.width(96.dp),
-        )
-        Text(unit.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(32.dp))
+private fun Field(label: String, state: androidx.compose.foundation.text.input.TextFieldState, unit: String?, kind: NumberKind, isInvalid: Boolean) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+            SetwiseNumberField(
+                state = state,
+                contentDescription = label,
+                kind = kind,
+                imeAction = ImeAction.Next,
+                maxLength = 6,
+                minHeight = 44.dp,
+                modifier = Modifier.width(96.dp),
+            )
+            Text(unit.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(32.dp))
+        }
+        if (isInvalid) {
+            Text(
+                text = stringResource(R.string.body_value_invalid),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+            )
+        }
     }
 }
