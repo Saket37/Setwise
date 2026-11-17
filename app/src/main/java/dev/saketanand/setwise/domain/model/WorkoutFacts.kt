@@ -39,7 +39,7 @@ data class WorkoutFacts(
             val minutes = session.endedAt?.let { Duration.between(session.startedAt, it).toMinutes() } ?: 0
             val lifts = session.exercises.filter { it.exercise.type != ExerciseType.CARDIO }
             val sets = lifts.sumOf { exercise -> exercise.sets.count { it.isCompleted } }
-            val liftingHours = (minutes - cardioMinutes(session)) / 60.0
+            val liftingHours = session.liftingHours()
             val volume = lifts.sumOf { exercise ->
                 exercise.sets.filter { it.isCompleted }.sumOf { (it.weightKg ?: 0.0) * (it.reps ?: 0) }
             }
@@ -84,11 +84,6 @@ data class WorkoutFacts(
                 .sorted()
             return times.zipWithNext { a, b -> Duration.between(a, b).seconds }.count { it in MIN_REST_SEC..MAX_REST_SEC }
         }
-
-        private fun cardioMinutes(session: WorkoutSession): Double = session.exercises
-            .filter { it.exercise.type == ExerciseType.CARDIO }
-            .flatMap { exercise -> exercise.sets.filter { it.isCompleted }.mapNotNull { it.cardio?.durationSec } }
-            .sum() / 60.0
 
         /** This workout's best set against last time's, by how the exercise is measured. */
         private fun SessionExercise.change(): ExerciseChange? {

@@ -10,6 +10,7 @@ import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutSet
 import dev.saketanand.setwise.testing.FakeOnDeviceModel
 import java.time.Instant
+import kotlin.math.roundToInt
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -103,5 +104,16 @@ class CalorieEstimatorTest {
         // Short enough for a system instruction (the guide: under ~150 words), at low temperature.
         assertTrue(request.system.split(" ").size < 150)
         assertEquals(0.2f, request.temperature)
+    }
+
+    @Test
+    fun `for sets logged afterwards the prompt gives the lifting time the formula used`() {
+        val loggedAfter = session.copy(endedAt = start.plusSeconds(60))
+        val log = CalorieEstimator.prompt(loggedAfter, 70.0, formula.estimate).prompt.substringAfter("## Workout\n<workout>\n").substringBefore("\n</workout>")
+
+        assertTrue(log, "Length: 1 min\n" in log)
+        // 18 sets × (40 s + the exercise's rest).
+        val minutes = (18 * (40 + session.exercises.single().exercise.defaultRestSec) / 60.0).roundToInt()
+        assertTrue(log, "\nLifting time: about $minutes min (sets logged afterwards)\n" in log)
     }
 }

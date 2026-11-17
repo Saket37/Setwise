@@ -11,6 +11,7 @@ import dev.saketanand.setwise.domain.model.Intensity
 import dev.saketanand.setwise.domain.model.SessionExercise
 import dev.saketanand.setwise.domain.model.WorkoutSession
 import dev.saketanand.setwise.domain.model.WorkoutSet
+import dev.saketanand.setwise.domain.model.liftingHours
 import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -28,6 +29,23 @@ class CalorieFormulaTest {
         assertEquals(CalorieEstimate(245, Intensity.Light), CalorieFormula.estimate(session(60, strength(8)), 70.0))
         // 30 sets in an hour: vigorous, MET 6.
         assertEquals(CalorieEstimate(420, Intensity.Vigorous), CalorieFormula.estimate(session(60, strength(30)), 70.0))
+    }
+
+    @Test
+    fun `sets logged faster than they could be done count the time they typically take`() {
+        // 15 sets saved a minute after starting: 15 × (40 s work + 120 s rest) = 40 min;
+        // 22.5 sets / h is moderate, MET 5 × 70 kg × 2/3 h.
+        assertEquals(CalorieEstimate(233, Intensity.Moderate), CalorieFormula.estimate(session(1, strength(15)), 70.0))
+        // Saved the same second: the same estimate, not none.
+        assertEquals(CalorieEstimate(233, Intensity.Moderate), CalorieFormula.estimate(session(0, strength(15)), 70.0))
+        assertEquals(40.0 / 60, session(1, strength(15)).liftingHours(), 1e-9)
+    }
+
+    @Test
+    fun `a short but real session keeps its own time`() {
+        // 10 sets in 15 min is quick but possible (over 70 s a set): 40 / h, vigorous, MET 6 × 70 kg × 1/4 h.
+        assertEquals(CalorieEstimate(105, Intensity.Vigorous), CalorieFormula.estimate(session(15, strength(10)), 70.0))
+        assertEquals(0.25, session(15, strength(10)).liftingHours(), 1e-9)
     }
 
     @Test
