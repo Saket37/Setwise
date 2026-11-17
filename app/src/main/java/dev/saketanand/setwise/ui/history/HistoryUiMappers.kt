@@ -73,6 +73,16 @@ fun listIndexOf(date: LocalDate, months: List<HistoryMonthUi>): Int? {
     return null
 }
 
+/**
+ * The months the strip's visible days fall in, for the label above it (#195): the same month
+ * twice when they're all in one. Null with nothing visible yet.
+ */
+fun visibleMonths(dates: Collection<LocalDate>): ClosedRange<YearMonth>? {
+    val first = dates.minOrNull() ?: return null
+    val last = dates.max()
+    return YearMonth.from(first)..YearMonth.from(last)
+}
+
 private fun WorkoutHistoryItem.toUi(zone: ZoneId) = HistoryWorkoutUi(
     id = id,
     name = name,

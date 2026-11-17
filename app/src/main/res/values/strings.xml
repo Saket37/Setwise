@@ -819,6 +819,8 @@
     </plurals>
     <string name="a11y_day_rest">%1$s, rest day</string>
     <string name="a11y_day_missed">%1$s, missed</string>
+    <!-- Months the History strip shows: "September – October 2026" -->
+    <string name="month_range">%1$s – %2$s</string>
     <string name="log_workout">Log workout</string>
     <string name="mark_rest">Rest</string>
     <string name="mark_missed">Missed</string>
