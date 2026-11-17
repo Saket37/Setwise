@@ -107,6 +107,22 @@ class OnboardingViewModelTest {
     }
 
     @Test
+    fun `training days need a day or None to continue, Skip still works`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAction(OnboardingAction.OnContinue()) // Welcome
+
+        assertEquals(false, vm.state.value.canContinue)
+        vm.onAction(OnboardingAction.OnContinue()) // nothing picked: stays (#158)
+        assertEquals(OnboardingStep.TrainingDays, vm.state.value.step)
+
+        vm.onAction(OnboardingAction.OnNoFixedDaysToggle)
+        assertTrue(vm.state.value.canContinue)
+        vm.onAction(OnboardingAction.OnNoFixedDaysToggle) // None off again
+        vm.onAction(OnboardingAction.OnSkipStep)
+        assertEquals(OnboardingStep.BodyWeight, vm.state.value.step)
+    }
+
+    @Test
     fun `skipping a step saves nothing for it`() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onAction(OnboardingAction.OnContinue())
@@ -149,6 +165,7 @@ class OnboardingViewModelTest {
         val handle = SavedStateHandle()
         val vm = viewModel(handle)
         vm.onAction(OnboardingAction.OnContinue())
+        vm.onAction(OnboardingAction.OnDayToggle(DayOfWeek.MONDAY)) // training days need an answer to continue
         vm.onAction(OnboardingAction.OnContinue())
         assertEquals(OnboardingStep.BodyWeight, viewModel(handle).state.value.step)
 

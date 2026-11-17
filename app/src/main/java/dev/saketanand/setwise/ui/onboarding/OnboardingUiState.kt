@@ -26,4 +26,7 @@ data class OnboardingUiState(
     val stepIndex: Int get() = steps.indexOf(step)
     val stepCount: Int get() = steps.size
     val isLastStep: Boolean get() = step == steps.last()
+
+    /** Training days needs an answer (days or None) to continue; Skip leaves it unset (#158). */
+    val canContinue: Boolean get() = !isFinishing && (step != OnboardingStep.TrainingDays || trainingDays.isNotEmpty() || noFixedDays)
 }
