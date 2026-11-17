@@ -28,6 +28,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -153,6 +154,7 @@ fun CardioEntryScreen(
     modifier: Modifier = Modifier,
 ) {
     val last = uiState.lastTime
+    val focusManager = LocalFocusManager.current
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -176,6 +178,7 @@ fun CardioEntryScreen(
                 )
             }
             DurationSection(fields = fields, last = last)
+            if (uiState.error == CardioInputError.MissingDuration) InputError(uiState.error)
             if (CardioMetric.INCLINE in uiState.metrics) {
                 StepperSection(
                     title = stringResource(R.string.cardio_incline),
@@ -201,6 +204,7 @@ fun CardioEntryScreen(
                         LabeledField(stringResource(R.string.cardio_speed_to), fields.speedTo, last?.speedMaxKmh?.toWeightInput(), Modifier.weight(1f))
                     }
                 }
+                if (uiState.error == CardioInputError.SpeedOrder) InputError(uiState.error)
             }
             if (CardioMetric.DISTANCE in uiState.metrics) {
                 Section(title = stringResource(R.string.cardio_distance), unit = stringResource(R.string.unit_km)) {
@@ -232,22 +236,14 @@ fun CardioEntryScreen(
                     )
                 }
             }
-            uiState.error?.let { error ->
-                Text(
-                    text = stringResource(
-                        when (error) {
-                            CardioInputError.MissingDuration -> R.string.cardio_missing_duration
-                            CardioInputError.SpeedOrder -> R.string.cardio_speed_order
-                        },
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
         }
         SetwiseButton(
             text = stringResource(if (uiState.isEditing) R.string.save_cardio else R.string.log_cardio),
-            onClick = { onAction(CardioEntryAction.OnLogClick(fields.inputs())) },
+            onClick = {
+                // Closes the keyboard, so an error under the fields isn't hidden behind it (#137).
+                focusManager.clearFocus()
+                onAction(CardioEntryAction.OnLogClick(fields.inputs()))
+            },
             enabled = !uiState.isSaving,
             modifier = Modifier
                 .fillMaxWidth()
