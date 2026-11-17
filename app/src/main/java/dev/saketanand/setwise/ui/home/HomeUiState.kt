@@ -103,6 +103,7 @@ data class ActiveWorkoutUi(
     /** For the live "running for 12:34" text. */
     val startedAtMillis: Long,
     val completedSets: Int,
+    val cardioEntries: Int = 0,
 )
 
 /** The three tiles: workouts · time trained · new PRs (current week, Monday–Sunday). */

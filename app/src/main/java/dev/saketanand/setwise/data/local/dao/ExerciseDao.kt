@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import dev.saketanand.setwise.data.local.entity.ExerciseEntity
 import dev.saketanand.setwise.data.local.relation.RecentExerciseRow
 import kotlinx.coroutines.flow.Flow
@@ -132,4 +133,70 @@ interface ExerciseDao {
         """
     )
     suspend fun renameBuiltIn(from: String, to: String): Int
+
+    /**
+     * A custom exercise's details (#146); built-in ones aren't changed. Returns 1 if updated.
+     * A name another exercise has throws (unique index): check with [findByNameIgnoringCase] first.
+     */
+    @Query(
+        """
+        UPDATE exercises SET name = :name, muscleGroup = :muscleGroup, equipment = :equipment, defaultRestSec = :restSec
+        WHERE id = :id AND isCustom = 1
+        """
+    )
+    suspend fun updateCustom(id: Long, name: String, muscleGroup: String, equipment: String, restSec: Int): Int
+
+    /** How many workouts (finished or not) have this exercise. */
+    @Query("SELECT COUNT(DISTINCT workoutId) FROM workout_exercises WHERE exerciseId = :id")
+    suspend fun countWorkouts(id: Long): Int
+
+    /** How many templates have this exercise. */
+    @Query("SELECT COUNT(DISTINCT templateId) FROM template_exercises WHERE exerciseId = :id")
+    suspend fun countTemplates(id: Long): Int
+
+    @Query("DELETE FROM template_exercises WHERE exerciseId = :id")
+    suspend fun removeFromTemplates(id: Long)
+
+    /** Only a custom exercise; Room's RESTRICT keys refuse one that's still in a workout or template. */
+    @Query("DELETE FROM exercises WHERE id = :id AND isCustom = 1")
+    suspend fun deleteCustom(id: Long): Int
+
+    /**
+     * Deletes a custom exercise that isn't in any workout, taking it out of templates first.
+     * Returns false (and changes nothing) if it's in a workout, or isn't custom.
+     */
+    @Transaction
+    suspend fun deleteUnused(id: Long): Boolean {
+        if (countWorkouts(id) > 0) return false
+        removeFromTemplates(id)
+        check(deleteCustom(id) == 1) { "Exercise $id isn't custom" } // rolls back the templates
+        return true
+    }
+
+    @Query("UPDATE workout_exercises SET exerciseId = :into WHERE exerciseId = :from")
+    suspend fun moveWorkouts(from: Long, into: Long)
+
+    /** [from] in a template that already has [into]: dropped, so the template doesn't list it twice. */
+    @Query(
+        """
+        DELETE FROM template_exercises
+        WHERE exerciseId = :from AND templateId IN (SELECT templateId FROM template_exercises WHERE exerciseId = :into)
+        """
+    )
+    suspend fun dropFromTemplatesWith(from: Long, into: Long)
+
+    @Query("UPDATE template_exercises SET exerciseId = :into WHERE exerciseId = :from")
+    suspend fun moveTemplates(from: Long, into: Long)
+
+    /**
+     * Merges custom exercise [from] into [into]: its workouts and template places become
+     * [into]'s, then [from] is deleted. All or nothing.
+     */
+    @Transaction
+    suspend fun merge(from: Long, into: Long) {
+        dropFromTemplatesWith(from, into)
+        moveTemplates(from, into)
+        moveWorkouts(from, into)
+        check(deleteCustom(from) == 1) { "Exercise $from isn't custom" } // rolls back the moves
+    }
 }

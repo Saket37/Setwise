@@ -9,6 +9,7 @@ import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.timer.NotificationPermission
 import dev.saketanand.setwise.ui.toggled
 import dev.saketanand.setwise.util.parseWeight
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,7 +56,10 @@ class OnboardingViewModel(
             OnboardingAction.OnSkipAll -> finish()
             OnboardingAction.OnBack -> goTo(_state.value.stepIndex - 1)
             is OnboardingAction.OnDayToggle -> _state.update {
-                it.copy(trainingDays = it.trainingDays.toggled(action.day))
+                it.copy(trainingDays = it.trainingDays.toggled(action.day), noFixedDays = false)
+            }
+            OnboardingAction.OnNoFixedDaysToggle -> _state.update {
+                it.copy(noFixedDays = !it.noFixedDays, trainingDays = persistentSetOf())
             }
             is OnboardingAction.OnAskToggle -> _state.update { it.copy(askAboutUnloggedDays = action.ask) }
             OnboardingAction.OnBodyWeightEdited -> _state.update { it.copy(isBodyWeightInvalid = false) }
@@ -68,7 +72,9 @@ class OnboardingViewModel(
         when (step) {
             OnboardingStep.Welcome -> next()
             OnboardingStep.TrainingDays -> {
-                if (state.trainingDays.isNotEmpty()) save { userSettings.setTrainingDays(state.trainingDays) }
+                if (state.trainingDays.isNotEmpty() || state.noFixedDays) {
+                    save { userSettings.setTrainingDays(state.trainingDays, noFixedDays = state.noFixedDays) }
+                }
                 next()
             }
             OnboardingStep.BodyWeight -> {

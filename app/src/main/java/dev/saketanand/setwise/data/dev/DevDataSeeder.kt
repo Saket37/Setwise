@@ -13,11 +13,13 @@ import dev.saketanand.setwise.data.local.entity.TemplateExerciseEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutEntity
 import dev.saketanand.setwise.data.local.entity.WorkoutExerciseEntity
 import dev.saketanand.setwise.domain.model.ExerciseType
+import dev.saketanand.setwise.domain.repository.BodyRepository
 import dev.saketanand.setwise.domain.repository.WorkoutRepository
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import kotlin.math.max
+import kotlinx.coroutines.flow.first
 
 /**
  * DEBUG ONLY: fills an empty database with fake templates and workout history so the Workout
@@ -33,13 +35,18 @@ class DevDataSeeder(
     private val templateDao: TemplateDao,
     private val workoutDao: WorkoutDao,
     private val workoutRepository: WorkoutRepository,
+    private val bodyRepository: BodyRepository,
 ) {
 
     suspend fun seedIfEmpty() {
         try {
             if (workoutDao.count() > 0) return
             database.withTransaction { seed() }
-            Log.i(TAG, "Seeded fake templates and workout history")
+            // Body checks too, unless some were added already (they don't depend on workouts).
+            if (bodyRepository.observeMeasurements().first().isEmpty()) {
+                DevBodyChecks.all(LocalDate.now()).forEach { bodyRepository.add(it) }
+            }
+            Log.i(TAG, "Seeded fake templates, workout history and body checks")
         } catch (e: Exception) {
             Log.e(TAG, "Fake data seeding failed", e)
         }

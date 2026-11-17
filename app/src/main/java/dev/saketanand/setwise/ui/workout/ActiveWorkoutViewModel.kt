@@ -85,6 +85,9 @@ class ActiveWorkoutViewModel(
     /** The line the card (or "couldn't understand") is about. */
     private var readLine: String? = null
 
+    /** The sets of a line whose exercise wasn't found ("3x5"): logged on the exercise picked next (#138). */
+    private var awaitingExerciseFor: String? = null
+
     /** Exercise the user opened or closed; null = automatic (first one with sets left). */
     private val expandedChoice = savedStateHandle.getStateFlow<Long?>(KEY_EXPANDED, null)
 
@@ -194,16 +197,10 @@ class ActiveWorkoutViewModel(
             ActiveWorkoutAction.OnStopListening -> viewModelScope.launch { speechInput.stop() }
             ActiveWorkoutAction.OnPhoneSpeechUsed -> prepareOnDeviceSpeech()
             ActiveWorkoutAction.OnQuickLogConfirm -> confirmQuickLog()
-            ActiveWorkoutAction.OnQuickLogEdit -> {
-                pendingQuickLog = null
-                overlays.update { it.copy(quickLog = QuickLogUi()) }
-            }
+            ActiveWorkoutAction.OnQuickLogEdit -> clearQuickLog()
             is ActiveWorkoutAction.OnQuickLogEdited -> {
                 val quickLog = overlays.value.quickLog
-                if (!quickLog.isReading && action.text.trim() != readLine && (quickLog.preview != null || quickLog.problem != null)) {
-                    pendingQuickLog = null
-                    overlays.update { it.copy(quickLog = QuickLogUi()) }
-                }
+                if (!quickLog.isReading && action.text.trim() != readLine && (quickLog.preview != null || quickLog.problem != null)) clearQuickLog()
             }
 
             ActiveWorkoutAction.OnRenameClick -> showDialog(ActiveWorkoutDialog.Rename(state.value.name))
@@ -217,6 +214,7 @@ class ActiveWorkoutViewModel(
                 savedStateHandle[KEY_EXPANDED] = if (isOpen) ALL_COLLAPSED else action.workoutExerciseId
             }
             is ActiveWorkoutAction.OnExercisesPicked -> addExercises(action.exerciseIds)
+            ActiveWorkoutAction.OnQuickLogFindExercise -> awaitingExerciseFor = (pendingQuickLog as? QuickLogResult.NotUnderstood)?.rest
             is ActiveWorkoutAction.OnRemoveExerciseClick -> requestRemoveExercise(action.workoutExerciseId)
 
             is ActiveWorkoutAction.OnAddSetClick -> write { workoutRepository.addSet(action.workoutExerciseId) }
@@ -287,12 +285,33 @@ class ActiveWorkoutViewModel(
     // Exercises
 
     private fun addExercises(exerciseIds: List<Long>) {
+        val followUp = awaitingExerciseFor
+        awaitingExerciseFor = null
         if (exerciseIds.isEmpty()) return
         write {
             val newIds = workoutRepository.addExercises(workoutId, exerciseIds)
             // Open the first one added: that's what the user wants to log next.
             savedStateHandle[KEY_EXPANDED] = newIds.firstOrNull()
+            val added = newIds.firstOrNull()
+            if (followUp != null && added != null) readFoundExercise(followUp, added)
         }
+    }
+
+    /** The card goes; a line's sets no longer wait for an exercise to be picked. */
+    private fun clearQuickLog() {
+        pendingQuickLog = null
+        awaitingExerciseFor = null
+        overlays.update { it.copy(quickLog = QuickLogUi()) }
+    }
+
+    /** The waiting line's sets ("3x5"), read for the exercise just picked or created: "Understood as" again. */
+    private suspend fun readFoundExercise(sets: String, workoutExerciseId: Long) {
+        val current = workoutRepository.observeSession(workoutId).first { session -> session?.exercises?.any { it.id == workoutExerciseId } == true }
+            ?: return
+        val result = interpret(sets, current, openId = workoutExerciseId)
+        readLine = sets
+        pendingQuickLog = result
+        overlays.update { it.copy(quickLog = result.toUi()) }
     }
 
     private fun requestRemoveExercise(workoutExerciseId: Long) {
@@ -393,6 +412,7 @@ class ActiveWorkoutViewModel(
     private fun readQuickLog(text: String) {
         val current = session ?: return
         if (text.isBlank() || overlays.value.quickLog.isReading) return
+        awaitingExerciseFor = null
         readLine = text.trim()
         overlays.update { it.copy(quickLog = QuickLogUi(isReading = true)) }
         viewModelScope.launch {
@@ -402,10 +422,10 @@ class ActiveWorkoutViewModel(
         }
     }
 
-    private suspend fun interpret(text: String, current: WorkoutSession): QuickLogResult = runCatching {
+    private suspend fun interpret(text: String, current: WorkoutSession, openId: Long? = state.value.expandedExerciseId): QuickLogResult = runCatching {
         val recent = exerciseRepository.observeRecentExercises(RECENT_EXERCISES).first().map { it.exercise }
         val library = exerciseRepository.observeExercises("", null).first()
-        quickLogInterpreter.interpret(text, current, state.value.expandedExerciseId, recent, library)
+        quickLogInterpreter.interpret(text, current, openId, recent, library)
     }.getOrElse { e ->
         if (e is CancellationException) throw e
         Log.e(TAG, "Reading quick log '$text' failed", e)
@@ -484,7 +504,7 @@ class ActiveWorkoutViewModel(
     }
 
     private fun QuickLogResult.toUi(): QuickLogUi = when (this) {
-        is QuickLogResult.NotUnderstood -> QuickLogUi(problem = reason)
+        is QuickLogResult.NotUnderstood -> QuickLogUi(problem = reason, unknownExercise = exerciseWords)
         is QuickLogResult.Sets -> QuickLogUi(
             preview = QuickLogPreview(
                 exerciseName = target.exercise.name,

@@ -1,6 +1,7 @@
 package dev.saketanand.setwise.ui.designsystem.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +20,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
@@ -47,6 +49,9 @@ fun SetwiseListCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
+    /** A long press, read out to screen readers as [onLongClickLabel]; needs [onClick]. */
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null,
     overlineContent: (@Composable () -> Unit)? = null,
     supportingContent: (@Composable () -> Unit)? = null,
     leadingContent: (@Composable () -> Unit)? = null,
@@ -85,7 +90,19 @@ fun SetwiseListCard(
         }
     }
 
-    if (onClick != null) {
+    if (onClick != null && onLongClick != null) {
+        // Surface's onClick has no long press.
+        Surface(
+            modifier = cardModifier
+                .clip(shape)
+                .combinedClickable(enabled = enabled, onLongClickLabel = onLongClickLabel, onLongClick = onLongClick, onClick = onClick),
+            shape = shape,
+            color = colors.containerColor,
+            contentColor = colors.contentColor,
+            border = border,
+            content = content,
+        )
+    } else if (onClick != null) {
         Surface(
             onClick = onClick,
             enabled = enabled,

@@ -17,7 +17,7 @@ internal fun cleanOcr(text: String): String =
 internal fun fit(value: Double, believable: ClosedFloatingPointRange<Double>, repairFrom: Double = REPAIR_FROM): Double? =
     if (value in believable) value else listOf(value / TENTHS, value / HUNDREDTHS).firstOrNull { value >= repairFrom && it in believable }
 
-/** The numbers in [text] ("13,9" is 13.9), in order. */
+/** The numbers in [text] ("12,7" is 12.7), in order. */
 internal fun numbersIn(text: String): List<Double> =
     Regex("\\d+(?:[.,]\\d+)?").findAll(text).mapNotNull { it.value.replace(',', '.').toDoubleOrNull() }.toList()
 

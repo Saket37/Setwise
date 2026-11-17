@@ -56,6 +56,21 @@ class WorkoutRepositoryTest {
     fun tearDown() = db.close()
 
     @Test
+    fun theRunningWorkoutCountsCardioApartFromSets() = runTest {
+        val treadmill = db.exerciseDao().insert(exercise("Treadmill").copy(type = ExerciseType.CARDIO, muscleGroup = "Cardio"))
+        val current = repository.startWorkout(templateId = null, startedAt = Instant.ofEpochMilli(1_000))
+        val (_, cardioItem) = repository.addExercises(current, listOf(bench, treadmill))
+        val sets = repository.observeSession(current).first()!!.exercises.first().sets
+        sets.take(2).forEach { repository.setCompleted(it.id, Instant.ofEpochMilli(2_000), weightKg = 60.0, reps = 8, durationSec = null) }
+        repository.logCardio(cardioItem, CardioValues(1_200, distanceKm = 3.0), Instant.ofEpochMilli(3_000))
+
+        val running = repository.observeActiveWorkout().first()!!
+
+        assertEquals(2, running.completedSets) // not 3 (#136)
+        assertEquals(1, running.cardioEntries)
+    }
+
+    @Test
     fun previousSetsComeFromTheLastFinishedSessionOnly() = runTest {
         finishedWorkout(startedAt = 1_000, bench to listOf(50.0 to 10))
         finishedWorkout(startedAt = 2_000, bench to listOf(60.0 to 8, 62.5 to 6))

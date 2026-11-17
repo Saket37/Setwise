@@ -2,8 +2,8 @@ package dev.saketanand.setwise.domain.model
 
 import java.util.Locale
 
-/** What a training plan is for: decides sets × reps. */
-enum class GoalType { Strength, Muscle, General }
+/** What a training plan is for: decides sets × reps (and, for fat loss, a cardio finisher). */
+enum class GoalType { Strength, Muscle, FatLoss, General }
 
 /** Kinds of equipment a plan may use; each library exercise belongs to one ([Gear.of]). */
 enum class Gear {
@@ -13,9 +13,21 @@ enum class Gear {
     Cable,
     Machine,
     Bodyweight,
+
+    /** A pull-up bar, dip bars or rings: the library lists what needs them as bodyweight (#143). */
+    Bars,
     ;
 
     companion object {
+        /** What [exercise] needs: its equipment, or [Bars] for a bodyweight move done hanging or on bars. */
+        fun of(exercise: Exercise): Gear {
+            val name = exercise.name.lowercase(Locale.ROOT)
+            val onBars = NEEDS_BARS.any { it in name } && "bench dip" !in name
+            return if (onBars && of(exercise.equipment) == Bodyweight) Bars else of(exercise.equipment)
+        }
+
+        private val NEEDS_BARS = listOf("pull-up", "chin-up", "hanging", " dip", "inverted row", "muscle-up")
+
         /** A library exercise's equipment ("EZ Bar", "Smith Machine", "None"…) as a [Gear]. */
         fun of(equipment: String): Gear = when (equipment.lowercase(Locale.ROOT)) {
             "barbell", "ez bar", "trap bar" -> Barbell
@@ -66,7 +78,9 @@ object GoalReader {
         )
     }
 
+    /** Fat loss first: "lose 12 kg and get stronger" is mostly about the 12 kg. */
     private fun type(text: String): GoalType = when {
+        GoalTargetReader.LOSE.any { " $it" in text } -> GoalType.FatLoss
         STRENGTH.any { " $it" in text } -> GoalType.Strength
         GENERAL.any { " $it" in text } -> GoalType.General
         else -> GoalType.Muscle
@@ -93,7 +107,11 @@ object GoalReader {
 
     /** Named equipment (plus bodyweight); "home" / "no equipment" alone: bodyweight; nothing named: a full gym. */
     private fun gear(text: String): Set<Gear> {
-        val named = GEAR_WORDS.filter { (words, _) -> words.any { " $it " in text } }.map { it.second }.toSet()
+        // "a pull-up bar" is bars, not a barbell: those words are read first, then taken out.
+        val bars = BAR_WORDS.any { " $it " in text }
+        val rest = BAR_WORDS.fold(text) { t, words -> t.replace(" $words ", " ") }
+        val named = GEAR_WORDS.filter { (words, _) -> words.any { " $it " in rest } }.map { it.second }.toSet() +
+            listOfNotNull(Gear.Bars.takeIf { bars })
         return when {
             named.isNotEmpty() -> named + Gear.Bodyweight
             BODYWEIGHT_ONLY.any { " $it " in text } -> setOf(Gear.Bodyweight)
@@ -105,7 +123,7 @@ object GoalReader {
     private const val MINUTES_PER_HOUR = 60
 
     private val STRENGTH = listOf("strong", "strength", "powerlift", "heavier", "1rm", "max ")
-    private val GENERAL = listOf("fit", "fitness", "fat", "lose", "weight loss", "lean", "endurance", "conditioning", "health", "cardio")
+    private val GENERAL = listOf("fit", "fitness", "lean", "endurance", "conditioning", "health", "cardio")
     private val NUMBER_WORDS = mapOf("one" to 1, "two" to 2, "three" to 3, "four" to 4, "five" to 5, "six" to 6, "seven" to 7)
     private val GEAR_WORDS = listOf(
         listOf("barbell", "barbells", "bar") to Gear.Barbell,
@@ -114,6 +132,9 @@ object GoalReader {
         listOf("cable", "cables") to Gear.Cable,
         listOf("machine", "machines") to Gear.Machine,
     )
+
+    /** Bars to hang from or dip on ([Gear.Bars]). */
+    private val BAR_WORDS = listOf("pull up bar", "pullup bar", "chin up bar", "chinup bar", "dip bars", "dip station", "rings")
     private val BODYWEIGHT_ONLY = listOf("home", "bodyweight", "no equipment", "calisthenics")
 
     /** Lift words people name, and the word library names use for them. */

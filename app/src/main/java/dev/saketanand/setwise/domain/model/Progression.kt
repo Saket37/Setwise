@@ -165,7 +165,11 @@ object Progression {
             (amount(set, measure) ?: 0) > 0 && (measure != Measure.Weight || (set.weightKg ?: 0.0) > 0)
         }
         if (sets.isEmpty()) return null
-        val top = sets.maxOf { it.weightKg ?: 0.0 }
+        // The working weight is the one with the most sets (the heavier on a tie): 3 × 62.5 kg then
+        // a 65 kg single works at 62.5; the single is a top set, not the workload (#134).
+        val top = sets.groupBy { kotlin.math.round((it.weightKg ?: 0.0) * WEIGHT_KEY) }.values
+            .maxWith(compareBy<List<LoggedSet>>({ it.size }, { it.first().weightKg ?: 0.0 }))
+            .first().weightKg ?: 0.0
         val amounts = sets.filter { abs((it.weightKg ?: 0.0) - top) < EPSILON }.mapNotNull { amount(it, measure) }
         val target = amounts.groupingBy { it }.eachCount().entries
             .maxWith(compareBy<Map.Entry<Int, Int>>({ it.value }, { it.key })).key
@@ -188,6 +192,9 @@ object Progression {
     private fun round(kg: Double) = (kg * 100).roundToLong() / 100.0
 
     private const val TIME_STEP_SEC = 5
+
+    /** Weights are grouped to the gram, so 62.5 and 62.50000001 are one weight. */
+    private const val WEIGHT_KEY = 1000.0
     private const val DELOAD = 0.95
     private const val DELOAD_EXTRA_REPS = 2
     private const val MIN_STEP_KG = 0.5

@@ -2,6 +2,7 @@ package dev.saketanand.setwise.di
 
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
+import dev.saketanand.setwise.ui.body.BodyReportViewModel
 import dev.saketanand.setwise.ui.exercises.CreateExerciseViewModel
 import dev.saketanand.setwise.ui.exercises.ExerciseDetailViewModel
 import dev.saketanand.setwise.ui.importing.ImportViewModel
@@ -35,6 +36,7 @@ class KoinModulesTest {
                 definition<CreateExerciseViewModel>(String::class),
                 definition<ExerciseDetailViewModel>(Long::class),
                 definition<TemplateEditorViewModel>(Long::class),
+                definition<BodyReportViewModel>(Long::class),
             ),
         )
     }

@@ -313,6 +313,7 @@ fun ResumeWorkoutCard(
             RunningForText(
                 startedAtMillis = activeWorkout.startedAtMillis,
                 completedSets = activeWorkout.completedSets,
+                cardioEntries = activeWorkout.cardioEntries,
             )
         },
         // Decorative: the card's text already says what tapping does.
@@ -333,15 +334,17 @@ fun ResumeWorkoutCard(
  * redraws only this line, not the whole Resume card.
  */
 @Composable
-private fun RunningForText(startedAtMillis: Long, completedSets: Int) {
+private fun RunningForText(startedAtMillis: Long, completedSets: Int, cardioEntries: Int = 0) {
     val running = rememberElapsedTime(startedAtMillis)
-    Text(
-        text = stringResource(
-            R.string.running_for,
-            running.toClockLabel(),
-            pluralStringResource(R.plurals.sets_done, completedSets, completedSets),
-        ),
-    )
+    // "10 sets done · 1 cardio entry": a cardio entry isn't a set (#136).
+    val sets = pluralStringResource(R.plurals.sets_done, completedSets, completedSets)
+    val cardio = pluralStringResource(R.plurals.cardio_entries, cardioEntries, cardioEntries)
+    val done = when {
+        cardioEntries == 0 -> sets
+        completedSets == 0 -> cardio
+        else -> "$sets · $cardio"
+    }
+    Text(text = stringResource(R.string.running_for, running.toClockLabel(), done))
 }
 
 /** "Ready to train?" + "Last session: Pull Day · 2 days ago" (subtitle only when lastWorkout != null). */

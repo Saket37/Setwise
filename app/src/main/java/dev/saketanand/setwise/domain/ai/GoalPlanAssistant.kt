@@ -5,6 +5,7 @@ import com.google.mlkit.genai.schema.annotations.Generable
 import com.google.mlkit.genai.schema.annotations.Guide
 import dev.saketanand.setwise.domain.model.Exercise
 import dev.saketanand.setwise.domain.model.Goal
+import dev.saketanand.setwise.domain.model.GoalAdvice
 import dev.saketanand.setwise.domain.model.GoalPlanner
 import dev.saketanand.setwise.domain.model.PlannedTemplate
 import dev.saketanand.setwise.domain.model.Slot
@@ -64,8 +65,54 @@ class GoalPlanAssistant(private val model: OnDeviceModel) {
         return Plan(byModel, byModel = byModel != byCode)
     }
 
+    /**
+     * "About your goal" in words, by the model, from code's facts ([GoalAdvice.factLines]): kept
+     * only if every number in it is one of the facts' and it's short plain prose
+     * ([WorkoutInsightWriter.accept]). Null when the model isn't there, fails or the note doesn't
+     * pass: the screen then words the facts itself.
+     */
+    suspend fun note(advice: GoalAdvice): String? {
+        if (model.availability() != ModelAvailability.Ready) return null
+        val facts = advice.factLines()
+
+        // Any failure of the model keeps the screen's own wording; OnDeviceModel doesn't narrow what it throws.
+        @Suppress("TooGenericExceptionCaught")
+        val answer = try {
+            model.generate(notePrompt(facts))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "The model couldn't write the goal note", e)
+            return null
+        }
+        val accepted = WorkoutInsightWriter.accept(answer, facts)
+        Log.d(TAG, "Goal note ${if (accepted != null) "used" else "rejected"}: ${answer.take(LOGGED_CHARS)}")
+        return accepted
+    }
+
     companion object {
         private const val TAG = "GoalPlanAssistant"
+        private const val LOGGED_CHARS = 400
+
+        fun notePrompt(factLines: String): ModelRequest = ModelRequest(
+            system = "You write a short, honest note about someone's training goal. Use only the facts given, with numbers exactly as written. " +
+                "2 or 3 short sentences, under 60 words, plain text: the pace the goal asks for and how it compares with a steady pace, " +
+                "then how these workouts help. Encouraging, not alarming. No greetings, lists, emoji, medical advice or diet plans.",
+            prompt = "## Example\n$NOTE_EXAMPLE\n\n## Facts\n<facts>\n$factLines\n</facts>",
+            temperature = 0.2f,
+            maxOutputTokens = 120,
+        )
+
+        private val NOTE_EXAMPLE = """
+            <facts>
+            Goal: lose 8 kg in 6 weeks
+            Pace it asks for: about 1.3 kg a week, faster than steady
+            Steady pace that usually lasts: 0.5 to 1 kg a week
+            At a steady pace it takes: about 8 to 16 weeks
+            These workouts: keep muscle while losing fat; most of the loss comes from eating a little less
+            </facts>
+            Losing 8 kg in 6 weeks means about 1.3 kg a week, faster than the 0.5 to 1 kg a week that usually lasts, so 8 to 16 weeks is a kinder target. These workouts keep your muscle while you lose fat; most of the loss comes from eating a little less.
+        """.trimIndent()
         private const val MAX_OPTIONS = 4
 
         /** Body parts and words that make a goal about a slot ("my knees" → squats and lunges). */

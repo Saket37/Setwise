@@ -11,6 +11,7 @@ sealed interface SettingsAction {
 
     data object OnTrainingDaysClick : SettingsAction
     data class OnDayToggle(val day: DayOfWeek) : SettingsAction
+    data object OnNoFixedDaysToggle : SettingsAction
     data object OnSaveTrainingDays : SettingsAction
 
     data class OnAskAboutUnloggedDaysChange(val ask: Boolean) : SettingsAction

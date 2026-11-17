@@ -53,6 +53,9 @@ sealed interface ActiveWorkoutAction {
 
     data class OnDeleteSet(val setId: Long) : ActiveWorkoutAction
 
+    /** "Find or create “zercher”": the picker opens on that name; the line's sets wait for its pick (#138). */
+    data object OnQuickLogFindExercise : ActiveWorkoutAction
+
     /** Undo on "Set removed": put it back. */
     data class OnUndoRemoveSet(val set: RemovedSet) : ActiveWorkoutAction
 

@@ -162,6 +162,8 @@ fun OnboardingScreen(
                         SetwiseDayPicker(
                             selected = uiState.trainingDays,
                             onToggle = { onAction(OnboardingAction.OnDayToggle(it)) },
+                            noneSelected = uiState.noFixedDays,
+                            onNoneClick = { onAction(OnboardingAction.OnNoFixedDaysToggle) },
                             modifier = Modifier.padding(top = 12.dp),
                         )
                     }

@@ -124,11 +124,20 @@ fun canCompleteSet(typedReps: String, repsHint: String): Boolean = loggedAmount(
  * day). A start in the future becomes now.
  */
 fun pickedStartTime(time: LocalTime, currentStart: Instant, now: Instant, zone: ZoneId): Instant {
+    val picked = nearestStart(time, currentStart, zone)
+    return if (picked.isAfter(now)) now else picked
+}
+
+/** Whether [time] can be the start: not in the future, read as [pickedStartTime] reads it. The picker says why not (#140). */
+fun isPickableStartTime(time: LocalTime, currentStart: Instant, now: Instant, zone: ZoneId): Boolean =
+    !nearestStart(time, currentStart, zone).isAfter(now)
+
+/** [time] on whichever day (the start's own, the day before or after) is closest to [currentStart]. */
+private fun nearestStart(time: LocalTime, currentStart: Instant, zone: ZoneId): Instant {
     val startDay = currentStart.atZone(zone).toLocalDate()
-    val picked = (-1L..1L)
+    return (-1L..1L)
         .map { startDay.plusDays(it).atTime(time).atZone(zone).toInstant() }
         .minBy { java.time.Duration.between(it, currentStart).abs() }
-    return if (picked.isAfter(now)) now else picked
 }
 
 /** How long a workout logged afterwards is assumed to last; editable on the summary. */

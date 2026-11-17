@@ -42,8 +42,12 @@ class WorkoutSummaryViewModel(
     private val dateProvider: DateProvider,
 ) : ViewModel() {
 
-    /** The model is asked once per screen; its text is saved, so reopening shows it straight away. */
-    private var insightRequested = false
+    /**
+     * The facts the model was last asked about: asked once per set of facts; its text is saved, so
+     * reopening shows it straight away. Edited sets or times clear the saved insight and change the
+     * facts, so it's asked again (#141).
+     */
+    private var insightRequestedFor: WorkoutFacts? = null
 
     /** Screen-only state on top of the workout: the edit-times dialog, the saved template. */
     private val overlays = MutableStateFlow(Overlays())
@@ -159,8 +163,6 @@ class WorkoutSummaryViewModel(
             return
         }
         overlays.update { it.copy(editTimes = null) }
-        // New times clear the saved insight (it mentions length and rests): ask the model again.
-        insightRequested = false
         viewModelScope.launch {
             val (startedAt, endedAt) = times
             val saved = runCatching { workoutRepository.updateFinishedTimes(workoutId, startedAt, endedAt) }
@@ -187,8 +189,8 @@ class WorkoutSummaryViewModel(
 
     /** Has the model write the insight (if it's there), and saves it: the session then re-emits with it. */
     private fun requestInsight(facts: WorkoutFacts) {
-        if (insightRequested) return
-        insightRequested = true
+        if (insightRequestedFor == facts) return
+        insightRequestedFor = facts
         viewModelScope.launch {
             val text = runCatching { insightWriter.write(facts, PersonFacts.from(userSettingsRepository.settings.first())) }
                 .onFailure { e -> Log.w(TAG, "Writing the insight of workout $workoutId failed", e) }

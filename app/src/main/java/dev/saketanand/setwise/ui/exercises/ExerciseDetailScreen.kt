@@ -1,5 +1,6 @@
 package dev.saketanand.setwise.ui.exercises
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -40,10 +42,13 @@ import dev.saketanand.setwise.domain.model.NextSession
 import dev.saketanand.setwise.domain.model.PreviousSet
 import dev.saketanand.setwise.domain.model.ProgressionRule
 import dev.saketanand.setwise.domain.model.SetFact
+import dev.saketanand.setwise.ui.ObserveAsEvents
 import dev.saketanand.setwise.ui.currentLocale
 import dev.saketanand.setwise.ui.designsystem.components.SectionLabel
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseBarChart
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseEmptyState
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseMenuItem
+import dev.saketanand.setwise.ui.designsystem.components.SetwiseOverflowMenu
 import dev.saketanand.setwise.ui.designsystem.components.SetwiseTopAppBar
 import dev.saketanand.setwise.ui.designsystem.preview.PreviewScreens
 import dev.saketanand.setwise.ui.designsystem.preview.SetwiseScreenPreview
@@ -63,14 +68,24 @@ import org.koin.androidx.compose.koinViewModel
 /**
  * Destination: [Route.ExerciseDetail].
  * @param onOpenWorkout A session: its workout summary.
+ * @param onEdit ⋮ → Edit, on a custom exercise.
  */
 @Composable
 fun ExerciseDetailScreenRoot(
     onBack: () -> Unit,
     onOpenWorkout: (workoutId: Long) -> Unit,
+    onEdit: () -> Unit,
     viewModel: ExerciseDetailViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    ObserveAsEvents(viewModel.events) { event ->
+        when (event) {
+            // A toast: the screen has no SnackbarHost.
+            ExerciseDetailEvent.ChangeFailed -> Toast.makeText(context, R.string.save_failed, Toast.LENGTH_SHORT).show()
+        }
+    }
+    val edit = dropUnlessResumed(block = onEdit)
     // The exercise was deleted: nothing to show.
     // The latest callback, not the one from when the effect started (#35).
     val onBackLatest by rememberUpdatedState(onBack)
@@ -79,12 +94,19 @@ fun ExerciseDetailScreenRoot(
         uiState = uiState,
         onBack = dropUnlessResumed(block = onBack),
         onSessionClick = { workoutId -> onOpenWorkout(workoutId) },
+        onAction = { action ->
+            when (action) {
+                ExerciseDetailAction.OnEditClick -> edit()
+                else -> viewModel.onAction(action)
+            }
+        },
     )
 }
 
 /**
  * Design "Exercise detail": the name, a progress chart (one bar per week), a plateau note when
- * it has stalled, what to try next session (and the rule behind it), and its sessions.
+ * it has stalled, what to try next session (and the rule behind it), and its sessions. A custom
+ * exercise has ⋮: Edit, and Delete exercise (#146).
  */
 @Composable
 fun ExerciseDetailScreen(
@@ -92,6 +114,7 @@ fun ExerciseDetailScreen(
     onBack: () -> Unit,
     onSessionClick: (workoutId: Long) -> Unit,
     modifier: Modifier = Modifier,
+    onAction: (ExerciseDetailAction) -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -112,7 +135,22 @@ fun ExerciseDetailScreen(
             } else {
                 null
             },
-        )
+        ) {
+            if (uiState.isCustom) {
+                SetwiseOverflowMenu(
+                    contentDescription = stringResource(R.string.exercise_options),
+                    items = persistentListOf(
+                        SetwiseMenuItem(stringResource(R.string.edit_exercise), { onAction(ExerciseDetailAction.OnEditClick) }),
+                        SetwiseMenuItem(
+                            label = stringResource(R.string.delete_exercise),
+                            onClick = { onAction(ExerciseDetailAction.OnDeleteClick) },
+                            isDestructive = true,
+                        ),
+                    ),
+                )
+            }
+        }
+        uiState.manage?.let { manage -> ManageExerciseDialog(exerciseName = uiState.name, manage = manage, onAction = onAction) }
         when {
             uiState.isLoading || uiState.isMissing -> Unit
             uiState.progress == null -> SetwiseEmptyState(

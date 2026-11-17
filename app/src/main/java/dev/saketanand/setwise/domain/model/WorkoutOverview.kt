@@ -17,7 +17,9 @@ data class ActiveWorkout(
     val id: Long,
     val name: String,
     val startedAt: Instant,
+    /** Ticked-off sets; cardio entries are counted apart, in [cardioEntries]. */
     val completedSets: Int,
+    val cardioEntries: Int = 0,
 )
 
 /** A finished workout in the History list, with its totals (ticked-off sets only). */

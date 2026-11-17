@@ -28,6 +28,6 @@ data class BodyMeasurementEntity(
     /** The report's suggested change ("Muscle-Fat Control"). */
     val muscleControlKg: Double? = null,
     val fatControlKg: Double? = null,
-    /** The normal range printed beside each value, as JSON ({"Weight": {"low": 53.4, "high": 72.2}}). */
+    /** The normal range printed beside each value, as JSON ({"Weight": {"low": 56.0, "high": 75.0}}). */
     val ranges: String? = null,
 )

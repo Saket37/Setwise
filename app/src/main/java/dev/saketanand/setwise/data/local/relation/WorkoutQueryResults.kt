@@ -11,6 +11,7 @@ data class ActiveWorkoutRow(
     val name: String,
     val startedAt: Long,
     val completedSets: Int,
+    val cardioEntries: Int,
 )
 
 /** Totals for finished workouts in a time window (e.g. this week). */

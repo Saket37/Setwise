@@ -21,6 +21,7 @@ data class SettingsUiState(
     val bmr: BmrEstimate? = null,
     val bodyFatPercent: Double? = null,
     val trainingDays: Set<DayOfWeek> = emptySet(),
+    val noFixedTrainingDays: Boolean = false,
     val askAboutUnloggedDays: Boolean = true,
     /** Rest timer: null = each exercise's own. */
     val restSecOverride: Int? = null,
@@ -53,7 +54,7 @@ sealed interface SettingsEditor {
     data class BodyWeight(val isInvalid: Boolean = false) : SettingsEditor
 
     /** Days picked so far (saved on Save). */
-    data class TrainingDays(val selected: ImmutableSet<DayOfWeek>) : SettingsEditor
+    data class TrainingDays(val selected: ImmutableSet<DayOfWeek>, val noFixedDays: Boolean = false) : SettingsEditor
 
     data object Name : SettingsEditor
 

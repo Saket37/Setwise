@@ -28,7 +28,8 @@ class WeeklyRecapWriter(private val model: OnDeviceModel) {
             Log.w(TAG, "The model couldn't write the weekly recap", e)
             return null
         }
-        val accepted = WorkoutInsightWriter.accept(answer, lines)
+        // Numbers from the facts, and no lift said to go the wrong way (#144).
+        val accepted = WorkoutInsightWriter.accept(answer, lines)?.takeIf { directionsAgree(it, facts, person) }
         Log.d(TAG, "Week of ${facts.weekStart}: ${if (accepted != null) "used" else "rejected"} in ${(System.nanoTime() - startedAt) / 1_000_000} ms: ${answer.take(400)}")
         return accepted
     }
@@ -50,7 +51,7 @@ class WeeklyRecapWriter(private val model: OnDeviceModel) {
             val hours = facts.timeTrained.toHours()
             val minutes = facts.timeTrained.toMinutes() % 60
             add("Week: ${facts.workouts} workouts, ${if (hours > 0) "$hours h $minutes min" else "$minutes min"} trained, ${facts.prs} personal records")
-            add("Volume: ${facts.volumeKg.toLong()} kg" + facts.volumeChangePercent?.let { ", ${it.signed()}% on the week before" }.orEmpty())
+            add("Volume: ${facts.volumeKg.toLong()} kg" + facts.volumeChangePercent?.let { ", ${it.change()} on the week before" }.orEmpty())
             facts.bestSet?.let { set ->
                 val what = when {
                     set.weightKg != null && set.reps != null -> "${set.weightKg.kg()} kg x ${set.reps}"
@@ -59,7 +60,7 @@ class WeeklyRecapWriter(private val model: OnDeviceModel) {
                 }
                 add("Best set: ${set.exerciseName} $what" + if (set.isPr) " (a record)" else "")
             }
-            facts.bodyPartChange?.let { add("${it.part.name} volume: ${it.percent.signed()}% on the week before") }
+            facts.bodyPartChange?.let { add("${it.part.name} volume: ${it.percent.change()} on the week before") }
             facts.plateau?.let { add("Stalled: ${it.exerciseName}, flat for ${it.weeks} weeks (its plan: lighter weight, more reps)") }
         }.joinToString("\n")
 
@@ -70,7 +71,40 @@ class WeeklyRecapWriter(private val model: OnDeviceModel) {
             else -> "Plan: $workouts workouts, ${workouts - planned} more than the $planned planned"
         }
 
-        private fun Int.signed() = if (this > 0) "+$this" else "$this"
+        /** "up 8%", "down 5%", "unchanged": the direction in words, so the model isn't left to read a sign. */
+        private fun Int.change() = when {
+            this > 0 -> "up $this%"
+            this < 0 -> "down ${-this}%"
+            else -> "unchanged"
+        }
+
+        /**
+         * The recap says nothing went the wrong way: no loss words about the week's best lift, no
+         * gain words about a stalled one, and no loss words at all unless a fact went down (seen:
+         * "deadlift improved significantly … regain lost ground", #144).
+         */
+        fun directionsAgree(recap: String, facts: WeekFacts, person: PersonFacts = PersonFacts()): Boolean {
+            // By clause: "volume was down 5%, but your deadlift hit 140 kg" is two facts, both right.
+            val clauses = recap.lowercase(Locale.ROOT).split(Regex("(?<=[.!?;,:])\\s+|\\s+(?:but|while|although|though)\\s+"))
+            val bestLost = facts.bestSet?.let { clauses.about(it.exerciseName).say(LOSS) } == true
+            val stalledUp = facts.plateau?.let { clauses.about(it.exerciseName).say(GAIN) } == true
+            return !bestLost && !stalledUp && (anyDown(facts, person) || !clauses.say(LOSS))
+        }
+
+        /** Something the week's facts say went down: volume, a body part's volume, or days missed. */
+        private fun anyDown(facts: WeekFacts, person: PersonFacts): Boolean =
+            (facts.volumeChangePercent ?: 0) < 0 || (facts.bodyPartChange?.percent ?: 0) < 0 ||
+                person.plannedDaysPerWeek?.let { facts.workouts < it } == true
+
+        /** The clauses that name [exercise] ("Deadlift (Barbell)" → "deadlift"). */
+        private fun List<String>.about(exercise: String): List<String> =
+            exercise.substringBefore(" (").lowercase(Locale.ROOT).let { lift -> filter { lift in it } }
+
+        private fun List<String>.say(words: List<String>): Boolean =
+            any { clause -> words.any { Regex("\\b$it").containsMatchIn(clause) } }
+
+        private val LOSS = listOf("lost", "lose", "losing", "regain", "drop", "dropped", "down", "declin", "fell", "fall", "decreas", "worse", "slipp")
+        private val GAIN = listOf("improv", "gain", "increas", "rose", "stronger", "better", "progress", "climb")
         private fun Double.kg() = if (this % 1.0 == 0.0) toLong().toString() else "%.1f".format(Locale.ROOT, this)
 
         private const val SYSTEM =
@@ -83,9 +117,9 @@ class WeeklyRecapWriter(private val model: OnDeviceModel) {
         private val EXAMPLE = """
             <facts>
             Week: 4 workouts, 4 h 34 min trained, 3 personal records
-            Volume: 38200 kg, +8% on the week before
+            Volume: 38200 kg, up 8% on the week before
             Best set: Back Squat 100 kg x 5 (a record)
-            Legs volume: +18% on the week before
+            Legs volume: up 18% on the week before
             Stalled: Overhead Press, flat for 4 weeks (its plan: lighter weight, more reps)
             </facts>
             A strong week: 4 sessions and 3 records, led by a 100 kg squat. Leg volume was up 18% on the week before. Overhead press is still flat, so try its lighter, higher-rep plan this week.

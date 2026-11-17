@@ -102,6 +102,7 @@ fun ExerciseList(
     }
 
     val onToggle: (Long) -> Unit = { id -> onAction(ExercisePickerAction.OnExerciseToggle(id)) }
+    val onOpen: (Long) -> Unit = { id -> onAction(ExercisePickerAction.OnExerciseLongPress(id)) }
 
     LazyColumn(
         modifier = modifier,
@@ -114,14 +115,14 @@ fun ExerciseList(
                 SectionLabel(stringResource(R.string.recent), Modifier.padding(vertical = 4.dp))
             }
             items(uiState.recent, key = { "recent-${it.id}" }, contentType = { "exercise" }) { exercise ->
-                ExercisePickerRow(exercise = exercise, onToggle = onToggle)
+                ExercisePickerRow(exercise = exercise, onToggle = onToggle, onOpen = onOpen)
             }
             item(key = "allHeader", contentType = "header") {
                 SectionLabel(stringResource(R.string.all_exercises), Modifier.padding(top = 10.dp, bottom = 4.dp))
             }
         }
         items(uiState.exercises, key = { "all-${it.id}" }, contentType = { "exercise" }) { exercise ->
-            ExercisePickerRow(exercise = exercise, onToggle = onToggle)
+            ExercisePickerRow(exercise = exercise, onToggle = onToggle, onOpen = onOpen)
         }
     }
 }
@@ -129,12 +130,14 @@ fun ExerciseList(
 /**
  * Initials tile, name, "Chest · last 60 kg × 8" (or "Chest · Barbell"), and a check circle.
  * The whole row toggles; screen readers hear it as a checkbox ("checked" / "not checked").
+ * A long press opens the exercise (#146).
  */
 @Composable
 fun ExercisePickerRow(
     exercise: ExerciseRowUi,
     onToggle: (exerciseId: Long) -> Unit,
     modifier: Modifier = Modifier,
+    onOpen: (exerciseId: Long) -> Unit = {},
 ) {
     val containerColor by animateColorAsState(
         if (exercise.isSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Transparent,
@@ -142,6 +145,8 @@ fun ExercisePickerRow(
     )
     SetwiseListCard(
         onClick = { onToggle(exercise.id) },
+        onLongClick = { onOpen(exercise.id) },
+        onLongClickLabel = stringResource(R.string.open_exercise),
         modifier = modifier.semantics {
             role = Role.Checkbox
             toggleableState = ToggleableState(exercise.isSelected)

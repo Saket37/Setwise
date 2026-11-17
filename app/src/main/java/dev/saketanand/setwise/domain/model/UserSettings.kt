@@ -7,8 +7,10 @@ import java.time.LocalDate
 data class UserSettings(
     /** For calorie estimates; null until the user enters it. */
     val bodyWeightKg: Double? = null,
-    /** Days they usually train; empty = not set (then every unlogged day may be asked about). */
+    /** Days they usually train; empty = not set or [noFixedTrainingDays] (then every unlogged day may be asked about). */
     val trainingDays: Set<DayOfWeek> = emptySet(),
+    /** They picked "None": no fixed days, they change week to week (#156). Not the same as never answering. */
+    val noFixedTrainingDays: Boolean = false,
     /** Whether to ask about past days without a workout (day check-in). On by default. */
     val askAboutUnloggedDays: Boolean = true,
     /** Onboarding was finished or skipped: it isn't shown again. */

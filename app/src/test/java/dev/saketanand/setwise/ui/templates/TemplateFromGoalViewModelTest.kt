@@ -46,6 +46,22 @@ class TemplateFromGoalViewModelTest {
     private fun viewModel() = TemplateFromGoalViewModel(templates, Library, FakeUserSettingsRepository(), GoalPlanAssistant(FakeOnDeviceModel()), Dates)
 
     @Test
+    fun `a goal with a weight to lose gets a note, and reads as fat loss`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onAction(TemplateFromGoalAction.OnGoalChange("I need to loose 12kg weight,, how can I do in 2 months?"))
+        advanceUntilIdle()
+
+        val state = vm.state.value
+        assertEquals(GoalType.FatLoss, state.understood?.type) // was Muscle (#125)
+        assertEquals(12.0, state.advice?.advice?.target?.kg)
+        assertEquals(null, state.advice?.modelText) // no model on this phone: the screen words it
+
+        vm.onAction(TemplateFromGoalAction.OnGoalChange("get stronger at squat"))
+        advanceUntilIdle()
+        assertEquals(null, vm.state.value.advice)
+    }
+
+    @Test
     fun `a typed goal is read and drafted after a pause`() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onAction(TemplateFromGoalAction.OnGoalChange("get stronger at squat, 2 days a week"))

@@ -4,9 +4,9 @@ import androidx.compose.runtime.Immutable
 import dev.saketanand.setwise.domain.model.BmrEstimate
 import dev.saketanand.setwise.domain.model.BodyMeasurement
 import dev.saketanand.setwise.domain.model.ReportDetails
+import dev.saketanand.setwise.ui.designsystem.components.ChartPoint
 import java.time.LocalDate
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 /** Everything [BodyScreen] draws. */
 @Immutable
@@ -17,9 +17,12 @@ data class BodyUiState(
     val bmr: BmrEstimate? = null,
     /** The newest value of each, from any check. */
     val latest: LatestBody = LatestBody(),
-    /** Up to the last [CHART_POINTS] checks with a value, oldest first. */
-    val weightTrend: ImmutableList<Double?> = persistentListOf(),
-    val bodyFatTrend: ImmutableList<Double?> = persistentListOf(),
+    /** The last 3 months, for the Progress card (design 15); null with no checks. */
+    val progress: RecentProgress? = null,
+    /** Each check's weight change from the one before it, by id. */
+    val weightChanges: Map<Long, Double> = emptyMap(),
+    /** The newest check with a full report: its fitness score and a link to it. */
+    val latestReport: BodyMeasurement? = null,
     /** A photo is being read. */
     val isReading: Boolean = false,
     /** The last photo had nothing that looked like a report. */
@@ -30,6 +33,9 @@ data class BodyUiState(
 
 @Immutable
 data class LatestBody(
+    /** The newest check's day and whether it came from a report ("Latest · Tue, 6 Oct · From a report"). */
+    val measuredOn: LocalDate? = null,
+    val fromReport: Boolean = false,
     val weightKg: Double? = null,
     val bodyFatPercent: Double? = null,
     val muscleMassKg: Double? = null,
@@ -58,8 +64,24 @@ data class BodyEditor(
     val byModel: Boolean = false,
     /** What else the report said (segments, body water, ranges…): saved with the check, not edited here. */
     val details: ReportDetails = ReportDetails(),
-    /** The last Save had a value that isn't believable, or nothing at all. */
-    val isInvalid: Boolean = false,
-)
+    /** The fields whose value at the last Save isn't believable: marked under each (#142). */
+    val invalidFields: Set<BodyField> = emptySet(),
+    /** The last Save had nothing filled in. */
+    val isEmpty: Boolean = false,
+) {
+    val isInvalid: Boolean get() = invalidFields.isNotEmpty() || isEmpty
+}
 
-const val CHART_POINTS = 8
+/** The values a body check sheet takes. */
+enum class BodyField { Weight, BodyFat, Muscle, Bmr, Visceral }
+
+/** What changed in the last 3 months (each null without two values), and the weight line. */
+@Immutable
+data class RecentProgress(
+    val since: LocalDate?,
+    val weightChange: Double?,
+    val fatChange: Double?,
+    val muscleChange: Double?,
+    /** x: epoch days. */
+    val weightPoints: ImmutableList<ChartPoint>,
+)

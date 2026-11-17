@@ -14,6 +14,7 @@ import dev.saketanand.setwise.domain.repository.UserSettingsRepository
 import dev.saketanand.setwise.ui.toggled
 import dev.saketanand.setwise.util.DateProvider
 import dev.saketanand.setwise.util.parseWeight
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,6 +50,7 @@ class SettingsViewModel(
             bodyFatPercent = body.firstOrNull { it.bodyFatPercent != null }?.bodyFatPercent,
             bodyWeightKg = settings.bodyWeightKg,
             trainingDays = settings.trainingDays,
+            noFixedTrainingDays = settings.noFixedTrainingDays,
             askAboutUnloggedDays = settings.askAboutUnloggedDays,
             restSecOverride = settings.restSecOverride,
             restSound = settings.restSound,
@@ -115,16 +117,22 @@ class SettingsViewModel(
                 save { userSettings.setBodyWeightKg(null) }
             }
 
-            SettingsAction.OnTrainingDaysClick -> editor.value = SettingsEditor.TrainingDays(state.value.trainingDays.toImmutableSet())
+            SettingsAction.OnTrainingDaysClick -> editor.value =
+                SettingsEditor.TrainingDays(state.value.trainingDays.toImmutableSet(), state.value.noFixedTrainingDays)
             is SettingsAction.OnDayToggle -> editor.update { current ->
                 (current as? SettingsEditor.TrainingDays)?.let {
-                    it.copy(selected = it.selected.toggled(action.day))
+                    it.copy(selected = it.selected.toggled(action.day), noFixedDays = false)
+                } ?: current
+            }
+            SettingsAction.OnNoFixedDaysToggle -> editor.update { current ->
+                (current as? SettingsEditor.TrainingDays)?.let {
+                    it.copy(selected = persistentSetOf(), noFixedDays = !it.noFixedDays)
                 } ?: current
             }
             SettingsAction.OnSaveTrainingDays -> {
-                val days = (editor.value as? SettingsEditor.TrainingDays)?.selected ?: return
+                val days = editor.value as? SettingsEditor.TrainingDays ?: return
                 editor.value = null
-                save { userSettings.setTrainingDays(days) }
+                save { userSettings.setTrainingDays(days.selected, noFixedDays = days.noFixedDays) }
             }
 
             is SettingsAction.OnAskAboutUnloggedDaysChange -> save { userSettings.setAskAboutUnloggedDays(action.ask) }

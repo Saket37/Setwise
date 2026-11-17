@@ -41,6 +41,7 @@ fun ActiveWorkoutRow.toDomain(): ActiveWorkout = ActiveWorkout(
     name = name,
     startedAt = Instant.ofEpochMilli(startedAt),
     completedSets = completedSets,
+    cardioEntries = cardioEntries,
 )
 
 fun WorkoutHistoryRow.toDomain(): WorkoutHistoryItem = WorkoutHistoryItem(

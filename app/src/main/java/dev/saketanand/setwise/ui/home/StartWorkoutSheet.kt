@@ -127,6 +127,8 @@ fun StartWorkoutSheet(
                 showTimePicker = false
             },
             onDismiss = { showTimePicker = false },
+            isAllowed = { !it.isAfter(LocalTime.now()) },
+            notAllowedMessage = stringResource(R.string.start_time_in_future),
         )
     }
 }
