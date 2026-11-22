@@ -33,7 +33,7 @@ jsoup = "1.23.2"
 # Code checks
 kover = "0.9.11"
 detekt = "2.0.0-alpha.6"
-composeRules = "0.6.7"
+composeRules = "0.6.8"
 composeGuard = "2.6.0"
 
 # Testing
