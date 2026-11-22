@@ -47,7 +47,7 @@ jobs:
       # Writes a summary comment on the PR.
       pull-requests: write
     steps:
-      - uses: actions/dependency-review-action@v5.0.0
+      - uses: actions/dependency-review-action@v5.0.1
         with:
           fail-on-severity: moderate
           # The graph for this PR's head is submitted by the job above; wait for it.
